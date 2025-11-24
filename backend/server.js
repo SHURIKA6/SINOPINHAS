@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const axios = require('axios');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
@@ -15,10 +16,85 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
+// Criar tabela de usuários (se não existir)
+const initDB = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+};
+initDB();
+
+// Registrar usuário
+app.post('/api/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username e password são obrigatórios' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const result = await pool.query(
+      'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
+      [username.toLowerCase(), hashedPassword]
+    );
+
+    res.json({ success: true, user: result.rows[0] });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Username já existe' });
+    }
+    console.error('Error registering:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Login
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username.toLowerCase()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+    }
+
+    const user = result.rows[0];
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+    }
+
+    res.json({ 
+      success: true, 
+      user: { id: user.id, username: user.username } 
+    });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Listar vídeos
 app.get('/api/videos', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM videos ORDER BY created_at DESC');
+    const result = await pool.query(`
+      SELECT v.*, u.username 
+      FROM videos v 
+      LEFT JOIN users u ON v.owner_id = u.id::text
+      ORDER BY v.created_at DESC
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching videos:', err);
@@ -26,13 +102,15 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
-// Upload de vídeo
+// Upload de vídeo (requer autenticação)
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
-    const { title } = req.body;
-    const ownerId = req.body.ownerId || 'anonymous';
+    const { title, userId } = req.body;
 
-    // Cria vídeo na Bunny
+    if (!userId) {
+      return res.status(401).json({ error: 'Você precisa estar logado para enviar vídeos' });
+    }
+
     const createRes = await axios.post(
       `https://video.bunnycdn.com/library/${process.env.BUNNY_LIBRARY_ID}/videos`,
       { title },
@@ -41,7 +119,6 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
     const videoId = createRes.data.guid;
 
-    // Faz upload do arquivo
     await axios.put(
       `https://video.bunnycdn.com/library/${process.env.BUNNY_LIBRARY_ID}/videos/${videoId}`,
       req.file.buffer,
@@ -53,10 +130,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       }
     );
 
-    // Salva no banco
     await pool.query(
       'INSERT INTO videos (bunny_id, title, owner_id) VALUES ($1, $2, $3)',
-      [videoId, title, ownerId]
+      [videoId, title, userId]
     );
 
     res.json({ success: true, videoId });
@@ -70,9 +146,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 app.delete('/api/videos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { ownerId } = req.body;
+    const { userId } = req.body;
 
-    // Busca o vídeo
     const result = await pool.query('SELECT * FROM videos WHERE id = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Vídeo não encontrado' });
@@ -80,21 +155,15 @@ app.delete('/api/videos/:id', async (req, res) => {
 
     const video = result.rows[0];
 
-    // Verifica permissão (admin ou dono)
-    const isAdmin = ownerId === 'admin_master';
-    const isOwner = video.owner_id === ownerId;
-
-    if (!isAdmin && !isOwner) {
+    if (video.owner_id !== userId) {
       return res.status(403).json({ error: 'Sem permissão para deletar' });
     }
 
-    // Deleta da Bunny
     await axios.delete(
       `https://video.bunnycdn.com/library/${process.env.BUNNY_LIBRARY_ID}/videos/${video.bunny_id}`,
       { headers: { AccessKey: process.env.BUNNY_API_KEY } }
     );
 
-    // Deleta do banco
     await pool.query('DELETE FROM videos WHERE id = $1', [id]);
 
     res.json({ success: true });
@@ -104,7 +173,6 @@ app.delete('/api/videos/:id', async (req, res) => {
   }
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
