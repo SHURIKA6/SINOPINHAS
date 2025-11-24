@@ -16,7 +16,10 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
-// Criar tabela de usuários (se não existir)
+// Senha admin (coloca nas variáveis do Railway)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+
+// Criar tabela de usuários
 const initDB = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -28,6 +31,107 @@ const initDB = async () => {
   `);
 };
 initDB();
+
+// Login Admin
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (password === ADMIN_PASSWORD) {
+      res.json({ success: true, isAdmin: true });
+    } else {
+      res.status(401).json({ error: 'Senha admin incorreta' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Listar todos os usuários (admin)
+app.post('/api/admin/users', async (req, res) => {
+  try {
+    const { adminPassword } = req.body;
+    
+    if (adminPassword !== ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Sem permissão' });
+    }
+
+    const result = await pool.query(`
+      SELECT 
+        u.id, 
+        u.username, 
+        u.created_at,
+        COUNT(v.id) as video_count
+      FROM users u
+      LEFT JOIN videos v ON v.owner_id = u.id::text
+      GROUP BY u.id
+      ORDER BY u.created_at DESC
+    `);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Resetar senha de usuário (admin)
+app.post('/api/admin/reset-password', async (req, res) => {
+  try {
+    const { adminPassword, userId } = req.body;
+    
+    if (adminPassword !== ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Sem permissão' });
+    }
+
+    // Gera senha temporária
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    
+    await pool.query(
+      'UPDATE users SET password = $1 WHERE id = $2',
+      [hashedPassword, userId]
+    );
+
+    res.json({ success: true, tempPassword });
+  } catch (err) {
+    console.error('Error resetting password:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Deletar usuário (admin)
+app.post('/api/admin/delete-user', async (req, res) => {
+  try {
+    const { adminPassword, userId } = req.body;
+    
+    if (adminPassword !== ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Sem permissão' });
+    }
+
+    // Deleta vídeos do usuário primeiro
+    const videos = await pool.query('SELECT * FROM videos WHERE owner_id = $1', [userId.toString()]);
+    
+    for (const video of videos.rows) {
+      try {
+        await axios.delete(
+          `https://video.bunnycdn.com/library/${process.env.BUNNY_LIBRARY_ID}/videos/${video.bunny_id}`,
+          { headers: { AccessKey: process.env.BUNNY_API_KEY } }
+        );
+      } catch (err) {
+        console.error('Error deleting video from Bunny:', err);
+      }
+    }
+
+    await pool.query('DELETE FROM videos WHERE owner_id = $1', [userId.toString()]);
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Registrar usuário
 app.post('/api/register', async (req, res) => {
@@ -102,13 +206,13 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
-// Upload de vídeo (requer autenticação)
+// Upload de vídeo
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
     const { title, userId } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Você precisa estar logado para enviar vídeos' });
+      return res.status(401).json({ error: 'Você precisa estar logado' });
     }
 
     const createRes = await axios.post(
@@ -156,7 +260,7 @@ app.delete('/api/videos/:id', async (req, res) => {
     const video = result.rows[0];
 
     if (video.owner_id !== userId) {
-      return res.status(403).json({ error: 'Sem permissão para deletar' });
+      return res.status(403).json({ error: 'Sem permissão' });
     }
 
     await axios.delete(
