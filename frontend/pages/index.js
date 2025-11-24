@@ -115,7 +115,7 @@ export default function Home() {
       <Head>
         <title>SINOPINHAS - Streaming de Vídeos</title>
         <meta name="description" content="Plataforma de streaming de vídeos" />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>▶️</text></svg>" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
       </Head>
 
       <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: 'Arial, sans-serif' }}>
@@ -134,17 +134,10 @@ export default function Home() {
         )}
 
         <header style={{
-          background: '#212121', padding: '12px 24px', display: 'flex',
+          background: '#212121', padding: '16px 24px', display: 'flex',
           alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #303030'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 32, height: 32, background: 'linear-gradient(135deg, #ff0000, #cc0000)',
-              borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, fontWeight: 'bold'
-            }}>▶</div>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>SINOPINHAS</h1>
-          </div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '0.5px' }}>SINOPINHAS</h1>
           {userId === 'admin_master' && (
             <span style={{ fontSize: 12, background: '#10b981', padding: '4px 12px', borderRadius: 12, fontWeight: 600 }}>ADMIN</span>
           )}
