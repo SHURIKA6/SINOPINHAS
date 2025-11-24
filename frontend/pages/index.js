@@ -9,6 +9,17 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    // Gera ID único para o usuário (persiste no localStorage)
+    let id = localStorage.getItem('user_id');
+    if (!id) {
+      id = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('user_id', id);
+    }
+    setUserId(id);
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -39,6 +50,7 @@ export default function Home() {
     const form = new FormData();
     form.append('file', file);
     form.append('title', file.name);
+    form.append('ownerId', userId);
 
     try {
       await axios.post(
@@ -64,6 +76,29 @@ export default function Home() {
     }
   };
 
+  const deleteVideo = async (videoId, ownerId) => {
+    // Verifica se pode deletar
+    const isAdmin = userId === 'admin_master';
+    const isOwner = ownerId === userId;
+
+    if (!isAdmin && !isOwner) {
+      return showToast('Você não pode deletar este vídeo', 'error');
+    }
+
+    if (!confirm('Tem certeza que deseja deletar este vídeo?')) return;
+
+    try {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}`, {
+        data: { ownerId: userId }
+      });
+
+      showToast('Vídeo deletado com sucesso!', 'success');
+      await loadVideos();
+    } catch (err) {
+      showToast('Erro ao deletar vídeo', 'error');
+    }
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
@@ -86,9 +121,12 @@ export default function Home() {
     setIsDragging(false);
   };
 
+  const canDelete = (ownerId) => {
+    return userId === 'admin_master' || ownerId === userId;
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: 'Arial, sans-serif' }}>
-      {/* Toast Notification */}
       {toast && (
         <div style={{
           position: 'fixed',
@@ -110,7 +148,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Header */}
       <header style={{
         background: '#212121',
         padding: '12px 24px',
@@ -131,11 +168,13 @@ export default function Home() {
             fontSize: 20,
             fontWeight: 'bold'
           }}>▶</div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>MeuStream</h1>
+          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>SINOPINHAS</h1>
         </div>
+        {userId === 'admin_master' && (
+          <span style={{ fontSize: 12, background: '#10b981', padding: '4px 12px', borderRadius: 12 }}>ADMIN</span>
+        )}
       </header>
 
-      {/* Tabs */}
       <div style={{
         background: '#212121',
         padding: '0 24px',
@@ -177,10 +216,8 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Content */}
       <div style={{ padding: 24, maxWidth: 1280, margin: '0 auto' }}>
         
-        {/* ABA: VÍDEOS */}
         {activeTab === 'videos' && (
           <div>
             <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>
@@ -237,12 +274,37 @@ export default function Home() {
                     background: '#1a1a1a',
                     borderRadius: 12,
                     overflow: 'hidden',
-                    cursor: 'pointer',
+                    position: 'relative',
                     transition: 'transform 0.2s',
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                   >
+                    {canDelete(v.owner_id) && (
+                      <button
+                        onClick={() => deleteVideo(v.id, v.owner_id)}
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          zIndex: 10,
+                          background: 'rgba(0,0,0,0.7)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: 36,
+                          height: 36,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontSize: 18,
+                          color: '#fff'
+                        }}
+                        title="Deletar vídeo"
+                      >
+                        🗑️
+                      </button>
+                    )}
                     <iframe
                       src={`https://iframe.mediadelivery.net/embed/548459/${v.bunny_id}?autoplay=false&preload=true`}
                       loading="lazy"
@@ -281,7 +343,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* ABA: UPLOAD */}
         {activeTab === 'upload' && (
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>
