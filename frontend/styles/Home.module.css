@@ -1,0 +1,247 @@
+.container {
+  min-height: 100vh;
+  background: #0f0f0f;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  background: #212121;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #303030;
+}
+
+.logoBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoIcon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ff0000, #cc0000);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.tabs {
+  background: #212121;
+  padding: 0 24px;
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid #303030;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 16px 0;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tabActive {
+  color: #fff;
+  border-bottom: 3px solid #fff;
+}
+
+.content {
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 64px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  color: #aaa;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.emptyText {
+  font-size: 18px;
+  margin: 0;
+}
+
+.emptyButton {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #ff0000;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.videoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.videoCard {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.videoCard:hover {
+  transform: scale(1.02);
+}
+
+.videoIframe {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: none;
+}
+
+.videoInfo {
+  padding: 12px;
+}
+
+.videoTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.videoViews {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.uploadContainer {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.uploadBox {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  border: 2px dashed #404040;
+}
+
+.uploadIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.fileInput {
+  display: none;
+}
+
+.selectButton {
+  display: inline-block;
+  padding: 12px 32px;
+  background: #3ea6ff;
+  color: #fff;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.filePreview {
+  margin-top: 16px;
+  padding: 16px;
+  background: #0f0f0f;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.fileLabel {
+  margin: 0;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.fileName {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.fileSize {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.uploadButton {
+  margin-top: 24px;
+  padding: 12px 48px;
+  background: #ff0000;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+
+.uploadButton:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.progressBar {
+  margin-top: 16px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 6px;
+  background: #303030;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #3ea6ff;
+  transition: width 0.3s;
+}
