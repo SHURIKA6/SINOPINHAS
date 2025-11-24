@@ -3,6 +3,11 @@ import axios from 'axios';
 import Head from 'next/head';
 
 export default function Home() {
+  const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [videos, setVideos] = useState([]);
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -10,15 +15,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    let id = localStorage.getItem('user_id');
-    if (!id) {
-      id = 'user_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('user_id', id);
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
-    setUserId(id);
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -33,7 +35,6 @@ export default function Home() {
       setVideos(res.data);
     } catch (err) {
       showToast('Erro ao carregar vídeos', 'error');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -43,14 +44,50 @@ export default function Home() {
     loadVideos();
   }, []);
 
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    
+    if (!username || !password) {
+      return showToast('Preencha todos os campos', 'error');
+    }
+
+    try {
+      const endpoint = isLogin ? '/api/login' : '/api/register';
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+        username,
+        password
+      });
+
+      setUser(res.data.user);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      setShowAuth(false);
+      setUsername('');
+      setPassword('');
+      showToast(isLogin ? 'Login realizado!' : 'Conta criada com sucesso!', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Erro ao autenticar', 'error');
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    showToast('Logout realizado', 'success');
+  };
+
   const upload = async () => {
+    if (!user) {
+      setShowAuth(true);
+      return showToast('Faça login para enviar vídeos', 'error');
+    }
+
     if (!file) return showToast('Escolha um vídeo primeiro!', 'error');
 
     setProgress(0);
     const form = new FormData();
     form.append('file', file);
     form.append('title', file.name);
-    form.append('ownerId', userId);
+    form.append('userId', user.id.toString());
 
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, form, {
@@ -67,48 +104,28 @@ export default function Home() {
       await loadVideos();
       setActiveTab('videos');
     } catch (err) {
-      showToast('Erro ao enviar vídeo. Tente novamente.', 'error');
+      showToast(err.response?.data?.error || 'Erro ao enviar vídeo', 'error');
       setProgress(0);
-      console.error(err);
     }
   };
 
-  const deleteVideo = async (videoId, ownerId) => {
-    const isAdmin = userId === 'admin_master';
-    const isOwner = ownerId === userId;
-
-    if (!isAdmin && !isOwner) {
-      return showToast('Você não pode deletar este vídeo', 'error');
-    }
-
+  const deleteVideo = async (videoId) => {
+    if (!user) return showToast('Faça login para deletar vídeos', 'error');
     if (!confirm('Tem certeza que deseja deletar este vídeo?')) return;
 
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}`, {
-        data: { ownerId: userId }
+        data: { userId: user.id.toString() }
       });
 
       showToast('Vídeo deletado com sucesso!', 'success');
       await loadVideos();
     } catch (err) {
-      showToast('Erro ao deletar vídeo', 'error');
-      console.error(err);
+      showToast(err.response?.data?.error || 'Erro ao deletar vídeo', 'error');
     }
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type.startsWith('video/')) {
-      setFile(droppedFile);
-      showToast('Arquivo carregado! Clique em "Publicar" para enviar.', 'success');
-    } else {
-      showToast('Por favor, arraste um arquivo de vídeo válido.', 'error');
-    }
-  };
-
-  const canDelete = (ownerId) => userId === 'admin_master' || ownerId === userId;
+  const canDelete = (ownerId) => user && user.id.toString() === ownerId;
 
   return (
     <>
@@ -124,7 +141,7 @@ export default function Home() {
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
             background: toast.type === 'success' ? '#10b981' : '#ef4444',
             color: '#fff', padding: '16px 24px', borderRadius: 12,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', animation: 'slideIn 0.3s ease', maxWidth: 400
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', animation: 'slideIn 0.3s ease'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20 }}>{toast.type === 'success' ? '✓' : '✕'}</span>
@@ -133,14 +150,92 @@ export default function Home() {
           </div>
         )}
 
+        {showAuth && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center'
+          }} onClick={() => setShowAuth(false)}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+            }} onClick={(e) => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px', fontSize: 24 }}>
+                {isLogin ? 'Login' : 'Criar Conta'}
+              </h2>
+              
+              <form onSubmit={handleAuth}>
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  style={{
+                    width: '100%', padding: 12, marginBottom: 16,
+                    background: '#0f0f0f', border: '1px solid #303030',
+                    borderRadius: 8, color: '#fff', fontSize: 15
+                  }}
+                />
+                
+                <input
+                  type="password"
+                  placeholder="Senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    width: '100%', padding: 12, marginBottom: 16,
+                    background: '#0f0f0f', border: '1px solid #303030',
+                    borderRadius: 8, color: '#fff', fontSize: 15
+                  }}
+                />
+
+                <button type="submit" style={{
+                  width: '100%', padding: 12, background: '#ff0000',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: 16
+                }}>
+                  {isLogin ? 'Entrar' : 'Criar Conta'}
+                </button>
+
+                <button type="button" onClick={() => setIsLogin(!isLogin)} style={{
+                  width: '100%', padding: 12, background: 'none',
+                  color: '#aaa', border: 'none', fontSize: 14, cursor: 'pointer'
+                }}>
+                  {isLogin ? 'Não tem conta? Criar agora' : 'Já tem conta? Fazer login'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
         <header style={{
           background: '#212121', padding: '16px 24px', display: 'flex',
           alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #303030'
         }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '0.5px' }}>SINOPINHAS</h1>
-          {userId === 'admin_master' && (
-            <span style={{ fontSize: 12, background: '#10b981', padding: '4px 12px', borderRadius: 12, fontWeight: 600 }}>ADMIN</span>
-          )}
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>SINOPINHAS</h1>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {user ? (
+              <>
+                <span style={{ fontSize: 14, color: '#aaa' }}>
+                  Olá, <strong style={{ color: '#fff' }}>{user.username}</strong>
+                </span>
+                <button onClick={logout} style={{
+                  padding: '8px 16px', background: '#303030', color: '#fff',
+                  border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer'
+                }}>
+                  Sair
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setShowAuth(true)} style={{
+                padding: '8px 16px', background: '#ff0000', color: '#fff',
+                border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer'
+              }}>
+                Login
+              </button>
+            )}
+          </div>
         </header>
 
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '1px solid #303030' }}>
@@ -171,55 +266,39 @@ export default function Home() {
                   }} />
                 </div>
               ) : videos.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 12, color: '#aaa' }}>
+                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 12 }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>📹</div>
                   <p style={{ fontSize: 18, margin: 0 }}>Nenhum vídeo enviado ainda</p>
-                  <button onClick={() => setActiveTab('upload')} style={{
-                    marginTop: 16, padding: '10px 24px', background: '#ff0000', color: '#fff',
-                    border: 'none', borderRadius: 20, fontSize: 15, fontWeight: 600, cursor: 'pointer'
-                  }}>
-                    Fazer primeiro upload
-                  </button>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
                   {videos.map((v) => (
                     <div key={v.id} style={{
-                      background: '#1a1a1a', borderRadius: 12, overflow: 'hidden',
-                      position: 'relative', transition: 'transform 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                      background: '#1a1a1a', borderRadius: 12, overflow: 'hidden', position: 'relative'
+                    }}>
                       {canDelete(v.owner_id) && (
-                        <button onClick={() => deleteVideo(v.id, v.owner_id)} style={{
+                        <button onClick={() => deleteVideo(v.id)} style={{
                           position: 'absolute', top: 8, right: 8, zIndex: 10,
                           background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%',
                           width: 36, height: 36, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#ef4444'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.8)'}
-                        title="Deletar vídeo">
+                          justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff'
+                        }}>
                           🗑️
                         </button>
                       )}
                       <iframe
-                        src={`https://iframe.mediadelivery.net/embed/548459/${v.bunny_id}?autoplay=false&preload=true`}
+                        src={`https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false&preload=true`}
                         loading="lazy"
                         style={{ width: '100%', aspectRatio: '16/9', border: 'none' }}
                         allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                         allowFullScreen
                       />
                       <div style={{ padding: 12 }}>
-                        <h3 style={{
-                          margin: 0, fontSize: 15, fontWeight: 600, color: '#fff',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                        }}>
+                        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {v.title}
                         </h3>
                         <p style={{ margin: '8px 0 0', fontSize: 13, color: '#aaa' }}>
-                          {v.views || 0} visualizações
+                          Por {v.username || 'Anônimo'}
                         </p>
                       </div>
                     </div>
@@ -232,27 +311,59 @@ export default function Home() {
           {activeTab === 'upload' && (
             <div style={{ maxWidth: 640, margin: '0 auto' }}>
               <h2 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
+              
+              {!user && (
+                <div style={{
+                  background: '#1a1a1a', padding: 24, borderRadius: 12, marginBottom: 24,
+                  textAlign: 'center', border: '2px dashed #ff0000'
+                }}>
+                  <p style={{ margin: '0 0 16px', fontSize: 16 }}>
+                    Você precisa estar logado para enviar vídeos
+                  </p>
+                  <button onClick={() => setShowAuth(true)} style={{
+                    padding: '12px 32px', background: '#ff0000', color: '#fff',
+                    border: 'none', borderRadius: 20, fontSize: 15, fontWeight: 600, cursor: 'pointer'
+                  }}>
+                    Fazer Login
+                  </button>
+                </div>
+              )}
+
               <div
-                onDrop={handleDrop}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const droppedFile = e.dataTransfer.files[0];
+                  if (droppedFile && droppedFile.type.startsWith('video/')) {
+                    setFile(droppedFile);
+                    showToast('Arquivo carregado!', 'success');
+                  }
+                }}
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
                 style={{
                   background: isDragging ? '#1e293b' : '#1a1a1a', borderRadius: 12, padding: 32,
                   textAlign: 'center', border: isDragging ? '2px dashed #3ea6ff' : '2px dashed #404040',
-                  transition: 'all 0.3s'
+                  opacity: !user ? 0.5 : 1, pointerEvents: !user ? 'none' : 'auto'
                 }}>
                 <div style={{ fontSize: 64, marginBottom: 16 }}>{isDragging ? '📥' : '☁️'}</div>
                 <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
                   {isDragging ? 'Solte o arquivo aqui!' : 'Arraste um vídeo ou clique para selecionar'}
                 </p>
                 
-                <input type="file" accept="video/*" onChange={(e) => {
-                  const selectedFile = e.target.files[0];
-                  if (selectedFile) {
-                    setFile(selectedFile);
-                    showToast('Arquivo selecionado! Pronto para enviar.', 'success');
-                  }
-                }} style={{ display: 'none' }} id="file-input" />
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const selectedFile = e.target.files[0];
+                    if (selectedFile) {
+                      setFile(selectedFile);
+                      showToast('Arquivo selecionado!', 'success');
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                  id="file-input"
+                />
                 
                 <label htmlFor="file-input" style={{
                   display: 'inline-block', padding: '12px 32px', background: '#3ea6ff', color: '#fff',
@@ -262,9 +373,7 @@ export default function Home() {
                 </label>
 
                 {file && (
-                  <div style={{
-                    marginTop: 24, padding: 16, background: '#0f0f0f', borderRadius: 8, textAlign: 'left'
-                  }}>
+                  <div style={{ marginTop: 24, padding: 16, background: '#0f0f0f', borderRadius: 8, textAlign: 'left' }}>
                     <p style={{ margin: 0, fontSize: 14, color: '#aaa' }}>Arquivo selecionado:</p>
                     <p style={{ margin: '4px 0 0', fontSize: 15, fontWeight: 600 }}>{file.name}</p>
                     <p style={{ margin: '4px 0 0', fontSize: 13, color: '#aaa' }}>
