@@ -7,7 +7,10 @@ require('dotenv').config();
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 app.use(cors());
 app.use(express.json());
