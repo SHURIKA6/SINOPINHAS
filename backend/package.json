@@ -7,11 +7,11 @@
     "deploy": "npx wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.3.11",
     "axios": "^1.6.0",
-    "pg": "^8.11.3" 
+    "hono": "^4.3.11",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
-    "wrangler": "^3.57.0"
+    "wrangler": "^4.50.0"
   }
 }
