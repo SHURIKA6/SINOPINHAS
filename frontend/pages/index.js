@@ -22,6 +22,57 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const fetchLogs = async () => {
+  try {
+    const res = await axios.get(`${API}/api/admin/logs?admin_password=${adminPassword}`);
+    setLogs(res.data);
+  } catch (err) {
+    showToast('Erro ao buscar registros', 'error');
+  }
+};
+  activeTab === 'admin'
+{isAdmin && (
+  <div style={{ marginTop: 40, background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
+    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
+      <h3 style={{color:'#fff'}}>👮‍♂️ Central de Inteligência (Logs)</h3>
+      <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
+    </div>
+    
+    <div style={{overflowX: 'auto'}}>
+      <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
+        <thead>
+          <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+            <th style={{padding:10}}>Data/Hora</th>
+            <th style={{padding:10}}>Usuário</th>
+            <th style={{padding:10}}>IP (Rastreio)</th>
+            <th style={{padding:10}}>Ação</th>
+            <th style={{padding:10}}>Detalhes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {logs.map(log => (
+            <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+              <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
+              <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
+                {log.username || 'Anônimo'}
+              </td>
+              <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>
+                {log.ip}
+              </td>
+              <td style={{padding:10}}>{log.action}</td>
+              <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                {log.details}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+// Chame isso quando o admin logar com sucesso:
+// Dentro de handleAdminLogin, adicione: fetchLogs();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
