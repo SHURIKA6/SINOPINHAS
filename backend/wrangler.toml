@@ -1,3 +1,13 @@
+# wrangler.toml (COMPLEMENTAR)
+
 name = "backend"
 main = "server.js"
 compatibility_date = "2025-11-25"
+
+[vars]
+# Variáveis do seu .env
+DATABASE_URL = "postgresql://postgres.xyxhqbwsxffqtdopwneu:Du0J9Wn3vjrh8P2S@aws-0-us-west-2.pooler.supabase.com:5432/postgres" 
+BUNNY_LIBRARY_ID = "548459"
+BUNNY_API_KEY = "17bad4bb-0ef8-42c3-88e2e1cfeb9f-f2a0-4567"
+BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
+ADMIN_PASSWORD = "admin123" # A senha padrão do seu server.js
