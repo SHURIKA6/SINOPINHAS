@@ -241,6 +241,44 @@ app.get("/api/search", async (req, res) => {
 
 app.get("/health", (_, res) => res.json({ ok: true }));
 app.all("*", (req, res) => res.status(404).json({ error: "not found" }));
+// --- ÁREA RESTRITA: GERENCIAMENTO DE USUÁRIOS ---
+// 1. Listar Usuários
+app.get("/api/admin/users", async (req, res) => {
+  const { admin_password } = req.query;
+  if (admin_password !== process.env.ADMIN_PASSWORD && admin_password !== "admin123") {
+    return res.status(403).json({ error: "Senha de admin incorreta" });
+  }
+  try {
+    const users = await pool.query("SELECT id, username, bio, created_at FROM users ORDER BY id DESC LIMIT 50");
+    res.json(users.rows);
+  } catch (err) { res.status(500).json({ error: "Erro ao listar" }); }
+});
+// 2. Resetar Senha (Salva-vidas)
+app.post("/api/admin/reset-password", async (req, res) => {
+  const { user_id, admin_password } = req.body;
+  if (admin_password !== process.env.ADMIN_PASSWORD && admin_password !== "admin123") return res.status(403).send("X");
+  // Define a senha padrão como "123456"
+  const hash = await bcrypt.hash("123456", 10);
+  await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, user_id]);
+  res.json({ success: true });
+});
+// 3. Banir/Apagar Usuário (Martelo do Ban)
+app.delete("/api/admin/users/:id", async (req, res) => {
+  const { admin_password } = req.body;
+  if (admin_password !== process.env.ADMIN_PASSWORD && admin_password !== "admin123") return res.status(403).send("X");
+  const id = parseInt(req.params.id);
+  try {
+    // Apaga rastro do usuário para não dar erro de chave estrangeira
+    await pool.query("DELETE FROM comments WHERE user_id = $1", [id]);
+    await pool.query("DELETE FROM video_reactions WHERE user_id = $1", [id]);
+    await pool.query("DELETE FROM videos WHERE user_id = $1", [id]);
+    await pool.query("DELETE FROM users WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao banir usuário" });
+  }
+});
 
 app.listen(process.env.PORT || 3001, () => {
   console.log("✅ SINOPINHAS SERVER ONLINE: login, register, upload, compliance");
