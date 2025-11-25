@@ -128,7 +128,7 @@ app.post('/api/register', async (req, res) => {
     );
     logAudit(result.rows[0].id, "REGISTER", { username }, req);
     res.json({ user: result.rows[0] });
-  } catch (err) {
+  } catch (err) { /*TESTE */ 
     res.status(400).json({ error: "Username já existe" });
   }
 });
