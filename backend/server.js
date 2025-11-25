@@ -22,18 +22,27 @@ const pool = new Pool({
 
 app.use(express.json());
 
-function logAudit(user_id, action, meta, req) {
-  const log = {
-    time: new Date().toISOString(),
-    user_id: user_id || "anon",
-    action,
-    meta,
-    ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || "???",
-    ua: req.headers['user-agent']
-  };
-  fs.appendFileSync("./audit.log", JSON.stringify(log) + "\n");
-}
+// Função de Inteligência: Salva IP e Ação no Banco
+async function logAudit(user_id, action, meta, req) {
+  try {
+    // Pega o IP real, mesmo atrás de proxies do Railway/Cloudflare
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || "UNKNOWN";
+    const ua = req.headers['user-agent'] || "UNKNOWN";
+    const details = JSON.stringify(meta);
 
+    // Se user_id for "anon" ou texto, converte para NULL ou trata
+    const safeUserId = (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) 
+      ? parseInt(user_id) 
+      : null;
+
+    await pool.query(
+      "INSERT INTO audit_logs (user_id, action, ip, user_agent, details) VALUES ($1, $2, $3, $4, $5)",
+      [safeUserId, action, ip, ua, details]
+    );
+  } catch (err) {
+    console.error("FALHA AO GRAVAR LOG:", err.message);
+  }
+}
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -199,17 +208,26 @@ app.get("/api/inbox/:user_id", async (req, res) => {
   res.json(rows.rows);
 });
 
-// ----------- Admin/login/auditlog -----------
-app.post('/api/admin/login', async (req, res) => {
-  if (req.body.password === ADMIN_PASSWORD) return res.json({ success: true });
-  res.status(401).json({ error: "Senha errada" });
-});
-app.get("/api/admin/auditlog", (req, res) => {
-  if (req.query.admin_password !== ADMIN_PASSWORD) return res.status(403).send("forbidden");
-  const logs = fs.existsSync("./audit.log")
-    ? fs.readFileSync("./audit.log", "utf8").split("\n").slice(-100).reverse()
-    : [];
-  res.json({ logs });
+// Rota Blindada para Admin ver os Logs
+app.get("/api/admin/logs", async (req, res) => {
+  const { admin_password } = req.query;
+  if (admin_password !== process.env.ADMIN_PASSWORD && admin_password !== "admin123") {
+    return res.status(403).json({ error: "Acesso Negado: Credenciais Inválidas" });
+  }
+
+  try {
+    // Busca os últimos 100 registros, juntando com o nome do usuário
+    const result = await pool.query(`
+      SELECT a.*, u.username 
+      FROM audit_logs a
+      LEFT JOIN users u ON a.user_id = u.id
+      ORDER BY a.created_at DESC 
+      LIMIT 100
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar logs" });
+  }
 });
 
 app.get("/api/search", async (req, res) => {
