@@ -41,13 +41,26 @@ async function logAudit(user_id, action, meta, req) {
     const ua = req.headers['user-agent'] || "UNKNOWN";
     const details = JSON.stringify(meta);
 
+    // --- NOVO: LÓGICA DE IDENTIFICAÇÃO DO DISPOSITIVO ---
+    let deviceType = 'PC';
+    if (ua.match(/Mobi|Android|iPhone|iPad|Tablet|Nexus|Silk/i)) {
+        deviceType = 'Mobile';
+    } else if (ua.match(/Windows|Macintosh|Linux/i)) {
+        deviceType = 'PC';
+    } else {
+        deviceType = 'Outro';
+    }
+    // --- FIM DA LÓGICA ---
+
     const safeUserId = (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) 
       ? parseInt(user_id) 
       : null;
 
+    // Você precisará atualizar a query para incluir a nova coluna device_type
+    // A query abaixo é um exemplo que assume que você criou a coluna 'device_type'
     await pool.query(
-      "INSERT INTO audit_logs (user_id, action, ip, user_agent, details) VALUES ($1, $2, $3, $4, $5)",
-      [safeUserId, action, ip, ua, details]
+      "INSERT INTO audit_logs (user_id, action, ip, user_agent, details, device_type) VALUES ($1, $2, $3, $4, $5, $6)",
+      [safeUserId, action, ip, ua, details, deviceType]
     );
   } catch (err) {
     console.error("FALHA AO GRAVAR LOG:", err.message);
