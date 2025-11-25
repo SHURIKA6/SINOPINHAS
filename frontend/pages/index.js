@@ -386,7 +386,7 @@ export default function Home() {
     // ... (mantenha os estilos) ...
   }}>
     {/* AJUSTE DO NOME DA ABA */}
-    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : 'Mesma Senha da Sky'} 
+    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : 'SAFADEZA'} 
   </button>
 ))}
         </div>
