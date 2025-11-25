@@ -8,23 +8,20 @@ require("dotenv").config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const app = express();
-app.use(require("cors")({
-  origin: "*", // para produção real, use seu domínio frontend como 'https://sinopinhas.vercel.app'
+app.use(cors({
+  origin: "*", // use seu domínio na produção real
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
 }));
-const upload = multer({ storage: multer.memoryStorage() });
-
-const pool = new Pool({
+  const upload = multer({ storage: multer.memoryStorage() });
+  const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-app.use(cors());
-app.use(express.json());
+  app.use(express.json());
 
-// ----------- FUNÇÃO DE LOG/COMPLIANCE ----------
-function logAudit(user_id, action, meta, req) {
+  function logAudit(user_id, action, meta, req) {
   const log = {
     time: new Date().toISOString(),
     user_id: user_id || "anon",
@@ -36,8 +33,7 @@ function logAudit(user_id, action, meta, req) {
   fs.appendFileSync("./audit.log", JSON.stringify(log) + "\n");
 }
 
-// ----------- INICIAR DB (1x) --------------
-async function initDB() {
+  async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -115,12 +111,12 @@ app.post('/api/login', async (req, res) => {
   res.json({ user: { id: user.id, username: user.username, avatar: user.avatar, bio: user.bio } });
 });
 
-// ----------- Upload vídeo (Drive ou Bunny) -----------
+// ----------- Upload vídeo -----------
 app.post('/api/upload', upload.single("file"), async (req, res) => {
   const { title, user_id, gdrive_id } = req.body;
   if (!user_id || !(gdrive_id || req.file)) return res.status(400).json({ error: "Preencha todos os campos" });
   await pool.query("INSERT INTO videos (title, user_id, gdrive_id) VALUES ($1, $2, $3)",
-    [title, user_id, gdrive_id || null]);
+    [title, parseInt(user_id), gdrive_id || null]);
   logAudit(user_id, "UPLOAD_VIDEO", { title, by_file: !!req.file }, req);
   res.json({ success: true });
 });
@@ -138,7 +134,8 @@ app.get("/api/videos", async (req, res) => {
 // ----------- Comentários, reações ----------
 app.post("/api/comment", async (req, res) => {
   const { video_id, user_id, comment } = req.body;
-  await pool.query("INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)", [video_id, user_id, comment]);
+  await pool.query("INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
+    [parseInt(video_id), parseInt(user_id), comment]);
   logAudit(user_id, "COMMENT", { video_id, comment }, req);
   res.json({ ok: true });
 });
@@ -147,18 +144,20 @@ app.get("/api/comments/:video_id", async (req, res) => {
   const rows = await pool.query(
     `SELECT c.*, u.username, u.avatar FROM comments c
      LEFT JOIN users u ON c.user_id = u.id
-     WHERE video_id = $1 ORDER BY c.created_at DESC LIMIT 30`, [video_id]);
+     WHERE video_id = $1 ORDER BY c.created_at DESC LIMIT 30`, [parseInt(video_id)]);
   res.json(rows.rows);
 });
 app.post("/api/like", async (req, res) => {
   const { video_id, user_id } = req.body;
-  await pool.query("INSERT INTO video_reactions (video_id, user_id, reaction) VALUES ($1, $2, 'like')", [video_id, user_id]);
+  await pool.query("INSERT INTO video_reactions (video_id, user_id, reaction) VALUES ($1, $2, 'like')",
+    [parseInt(video_id), parseInt(user_id)]);
   logAudit(user_id, "LIKE_VIDEO", { video_id }, req);
   res.json({ ok: true });
 });
 app.post("/api/dislike", async (req, res) => {
   const { video_id, user_id } = req.body;
-  await pool.query("INSERT INTO video_reactions (video_id, user_id, reaction) VALUES ($1, $2, 'dislike')", [video_id, user_id]);
+  await pool.query("INSERT INTO video_reactions (video_id, user_id, reaction) VALUES ($1, $2, 'dislike')",
+    [parseInt(video_id), parseInt(user_id)]);
   logAudit(user_id, "DISLIKE_VIDEO", { video_id }, req);
   res.json({ ok: true });
 });
@@ -166,7 +165,8 @@ app.post("/api/dislike", async (req, res) => {
 // ----------- Denúncia -----------
 app.post("/api/report", async (req, res) => {
   const { video_id, user_id, reason } = req.body;
-  await pool.query("INSERT INTO reports (video_id, user_id, reason) VALUES ($1, $2, $3)", [video_id, user_id, reason]);
+  await pool.query("INSERT INTO reports (video_id, user_id, reason) VALUES ($1, $2, $3)",
+    [parseInt(video_id), parseInt(user_id), reason]);
   logAudit(user_id, "REPORT_VIDEO", { video_id, reason }, req);
   res.json({ received: true });
 });
@@ -184,14 +184,16 @@ app.get("/api/mural", async (req, res) => {
 });
 app.post("/api/send-message", async (req, res) => {
   const { from_id, to_id, msg } = req.body;
-  await pool.query("INSERT INTO inbox (from_id, to_id, msg) VALUES ($1, $2, $3)", [from_id, to_id, msg]);
+  await pool.query("INSERT INTO inbox (from_id, to_id, msg) VALUES ($1, $2, $3)",
+    [parseInt(from_id), parseInt(to_id), msg]);
   logAudit(from_id, "SEND_MSG", { to_id }, req);
   res.json({ ok: true });
 });
 app.get("/api/inbox/:user_id", async (req, res) => {
   const { user_id } = req.params;
   const rows = await pool.query(
-    "SELECT * FROM inbox WHERE to_id = $1 OR from_id = $1 ORDER BY created_at DESC LIMIT 40", [user_id]
+    "SELECT * FROM inbox WHERE to_id = $1 OR from_id = $1 ORDER BY created_at DESC LIMIT 40",
+    [parseInt(user_id)]
   );
   res.json(rows.rows);
 });
@@ -209,6 +211,7 @@ app.get("/api/admin/auditlog", (req, res) => {
   res.json({ logs });
 });
 
+  
 app.get("/api/search", async (req, res) => {
   const q = `%${(req.query.q || "").toLowerCase()}%`;
   const videos = await pool.query(
@@ -217,10 +220,7 @@ app.get("/api/search", async (req, res) => {
      ORDER BY v.created_at DESC LIMIT 30`, [q]);
   res.json(videos.rows);
 });
-
-app.get("/health", (_, res) => res.json({ ok: true }));
-
-// Fallback para evitar erro 405 em métodos errados
+  app.get("/health", (_, res) => res.json({ ok: true }));
 app.all("*", (req, res) => res.status(404).json({ error: "not found" }));
 
 app.listen(process.env.PORT || 3001, () => {
