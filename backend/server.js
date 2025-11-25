@@ -8,20 +8,21 @@ require("dotenv").config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const app = express();
-app.use(require("cors")({
-  origin: "*", // OU 'https://sinopinhas.vercel.app' se quiser trancar para produção
+app.use(cors({
+  origin: "*", // para produção use 'https://sinopinhas.vercel.app'
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
 }));
-  const upload = multer({ storage: multer.memoryStorage() });
-  const pool = new Pool({
+const upload = multer({ storage: multer.memoryStorage() });
+
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-  app.use(express.json());
+app.use(express.json());
 
-  function logAudit(user_id, action, meta, req) {
+function logAudit(user_id, action, meta, req) {
   const log = {
     time: new Date().toISOString(),
     user_id: user_id || "anon",
@@ -33,7 +34,7 @@ app.use(require("cors")({
   fs.appendFileSync("./audit.log", JSON.stringify(log) + "\n");
 }
 
-  async function initDB() {
+async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -211,7 +212,6 @@ app.get("/api/admin/auditlog", (req, res) => {
   res.json({ logs });
 });
 
-  
 app.get("/api/search", async (req, res) => {
   const q = `%${(req.query.q || "").toLowerCase()}%`;
   const videos = await pool.query(
@@ -220,7 +220,8 @@ app.get("/api/search", async (req, res) => {
      ORDER BY v.created_at DESC LIMIT 30`, [q]);
   res.json(videos.rows);
 });
-  app.get("/health", (_, res) => res.json({ ok: true }));
+
+app.get("/health", (_, res) => res.json({ ok: true }));
 app.all("*", (req, res) => res.status(404).json({ error: "not found" }));
 
 app.listen(process.env.PORT || 3001, () => {
