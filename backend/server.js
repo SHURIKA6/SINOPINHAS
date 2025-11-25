@@ -8,9 +8,9 @@ require("dotenv").config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const app = express();
-app.use(cors({
-  origin: "*",
-  methods: "GET,POST,DELETE,PUT,OPTIONS",
+app.use(require("cors")({
+  origin: "*", // para produção real, use seu domínio frontend como 'https://sinopinhas.vercel.app'
+  methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
 }));
 const upload = multer({ storage: multer.memoryStorage() });
