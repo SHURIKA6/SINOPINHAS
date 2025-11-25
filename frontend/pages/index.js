@@ -6,6 +6,10 @@ import Head from "next/head";
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
+  // --- ESTADOS DE CONTEÚDO RESTRITO ---
+  const [secretPassword, setSecretPassword] = useState('');
+  const [showSecretAuth, setShowSecretAuth] = useState(false);
+  const [showSecretTab, setShowSecretTab] = useState(false); // Controla a exibição da aba secreta
   // --- 1. TODOS OS ESTADOS (VARIÁVEIS) ---
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -175,6 +179,19 @@ export default function Home() {
     }
   };
 
+  const handleSecretAuth = (e) => {
+    e.preventDefault();
+    if (secretPassword === '0000') {
+      setShowSecretAuth(false);
+      setShowSecretTab(true);
+      setActiveTab('secret');
+      setSecretPassword('');
+      showToast('Acesso liberado!', 'success');
+    } else {
+      showToast('Senha Incorreta.', 'error');
+    }
+  };
+  
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -333,6 +350,13 @@ export default function Home() {
             letterSpacing: "2px", background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
           }}>SINOPINHAS</h1>
+          {/* Adicione este botão junto dos outros do Header (Logo antes do botão Admin) */}
+<button onClick={() => setShowSecretAuth(true)} style={{
+  padding: '7px 16px', background: '#e53e3e', color: '#fff',
+  border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer'
+}}>
+  Conteúdo Restrito
+</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
             {isAdmin && (
               <span style={{ padding: '6px 12px', background: '#10b981', borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#fff" }}>
@@ -357,16 +381,14 @@ export default function Home() {
 
         {/* TABS */}
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
-          {['videos', 'upload', isAdmin ? 'admin' : null].filter(Boolean).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              background: 'none', border: 'none', color: activeTab === tab ? '#fff' : '#aaa',
-              fontSize: 17, fontWeight: 500, padding: '16px 0', cursor: 'pointer',
-              borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
-              transition: 'all .18s', textTransform: 'capitalize'
-            }}>
-              {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : 'Admin'}
-            </button>
-          ))}
+          {['videos', 'upload', isAdmin ? 'admin' : null, showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+  <button key={tab} onClick={() => setActiveTab(tab)} style={{
+    // ... (mantenha os estilos) ...
+  }}>
+    {/* AJUSTE DO NOME DA ABA */}
+    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : 'Mesma Senha da Sky'} 
+  </button>
+))}
         </div>
 
         {/* CONTENT */}
@@ -598,6 +620,50 @@ export default function Home() {
         )}
         
       </div>
+      {/* --- MODAL DE SENHA SECRETA (No final, antes do último </div>) --- */}
+{showSecretAuth && (
+  <div style={{
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+    alignItems: 'center', justifyContent: 'center'
+  }} onClick={() => setShowSecretAuth(false)}>
+    <div style={{
+      background: '#1a1a1a', borderRadius: 12, padding: 32,
+      maxWidth: 400, width: '90%'
+    }} onClick={e => e.stopPropagation()}>
+      <h2 style={{ margin: '0 0 24px' }}>🔒 Mesma Senha da Sky</h2>
+      <form onSubmit={handleSecretAuth}>
+        <input
+          type="password" placeholder="Digite a senha (0000)"
+          value={secretPassword}
+          onChange={e => setSecretPassword(e.target.value)}
+          style={{
+            width: '100%', padding: 12, marginBottom: 16,
+            background: '#0f0f0f', border: '1px solid #303030',
+            borderRadius: 8, color: '#fff', fontSize: 15
+          }}
+        />
+        <button type="submit" style={{
+          width: '100%', padding: 12, background: '#e53e3e',
+          color: '#fff', border: 'none', borderRadius: 8,
+          fontSize: 15, fontWeight: 600, cursor: 'pointer'
+        }}>
+          Liberar Acesso
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+{/* --- ABA DE CONTEÚDO RESTRITO (No bloco de conteúdo principal) --- */}
+{activeTab === 'secret' && showSecretTab && (
+  <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
+    <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>Conteúdo Restrito (Secret Videos)</h2>
+    <div style={{ textAlign: 'center', padding: 64, background: '#303030', borderRadius: 16, color: '#fff' }}>
+        <p style={{ fontSize: 20 }}>Coloque aqui o seu código de vídeos secretos.</p>
+        <p style={{ fontSize: 14, color: '#aaa' }}>Você pode usar o mesmo layout da aba "Vídeos" para listar os vídeos específicos desta aba.</p>
+    </div>
+  </div>
+)}
     </>
   );
 }
