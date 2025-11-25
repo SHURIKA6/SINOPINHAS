@@ -631,10 +631,10 @@ export default function Home() {
       background: '#1a1a1a', borderRadius: 12, padding: 32,
       maxWidth: 400, width: '90%'
     }} onClick={e => e.stopPropagation()}>
-      <h2 style={{ margin: '0 0 24px' }}>🔒 Mesma Senha da Sky</h2>
+      <h2 style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
       <form onSubmit={handleSecretAuth}>
         <input
-          type="password" placeholder="Digite a senha (0000)"
+          type="password" placeholder="MESMA SENHA DA SKY"
           value={secretPassword}
           onChange={e => setSecretPassword(e.target.value)}
           style={{
