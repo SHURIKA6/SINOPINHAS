@@ -8,6 +8,11 @@ require("dotenv").config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const app = express();
+app.use(cors({
+  origin: "*", // para testes/deploy, use "*" ou seu frontend
+  methods: "GET,POST,DELETE,PUT,OPTIONS",
+  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
+}));
 const upload = multer({ storage: multer.memoryStorage() });
 
 const pool = new Pool({
