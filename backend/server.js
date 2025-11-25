@@ -62,6 +62,20 @@
        avatar TEXT, bio TEXT, created_at TIMESTAMP DEFAULT NOW()
      );
      CREATE TABLE IF NOT EXISTS videos (
+     // Dentro de async function initDB()
+    CREATE TABLE IF NOT EXISTS videos (
+    id SERIAL PRIMARY KEY,
+     title TEXT,
+    user_id INTEGER REFERENCES users(id),
+    gdrive_id TEXT,
+    bunny_id TEXT,
+    -- is_restricted: Indicates if the video is restricted (e.g., flagged, reported, or admin-only access)
+    -- Usage: Set to TRUE to hide or limit access to the video in the application.
+    is_restricted BOOLEAN DEFAULT FALSE,
+    likes INTEGER DEFAULT 0,
+    views INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+    );
        id SERIAL PRIMARY KEY, title TEXT, user_id INTEGER REFERENCES users(id),
        gdrive_id TEXT, bunny_id TEXT, 
        likes INTEGER DEFAULT 0, views INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
@@ -132,51 +146,74 @@
  // [ROTAS DE VÍDEO E OPERAÇÕES]
  // =====================================================================
 
- // --- Upload de Vídeo com BunnyCDN ---
- app.post('/api/upload', upload.single("file"), async (req, res) => {
-   const { title, user_id } = req.body;
-   const API_KEY = process.env.BUNNY_API_KEY;
-   const LIBRARY_ID = process.env.BUNNY_LIBRARY_ID;
+// --- UPLOAD VÍDEO COM BUNNYCDN ---
+app.post('/api/upload', upload.single("file"), async (req, res) => {
+  const { title, user_id, is_restricted } = req.body; // <-- NOVO: is_restricted
+  const API_KEY = process.env.BUNNY_API_KEY;
+  const LIBRARY_ID = process.env.BUNNY_LIBRARY_ID;
 
-   if (!user_id || !req.file) return res.status(400).json({ error: "Arquivo obrigatório" });
+  if (!user_id || !req.file) return res.status(400).json({ error: "Arquivo obrigatório" });
 
-   try {
-     const createRes = await axios.post(
-       `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos`,
-       { title: title },
-       { headers: { AccessKey: API_KEY } }
-     );
-     const videoGuid = createRes.data.guid;
+  const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [parseInt(user_id)]);
+  if (userCheck.rows.length === 0) {
+      logAudit(user_id, "UPLOAD_FAILED_UNAUTH", { reason: "User ID not found" }, req);
+      return res.status(401).json({ error: "Acesso negado. Faça login para continuar." });
+  }
 
-     await axios.put(
-       `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos/${videoGuid}`,
-       req.file.buffer,
-       { headers: { AccessKey: API_KEY, "Content-Type": "application/octet-stream" } }
-     );
+  try {
+    const createRes = await axios.post( /* ... Código para criar vídeo no Bunny */
+      `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos`,
+      { title: title },
+      { headers: { AccessKey: API_KEY } }
+    );
+    const videoGuid = createRes.data.guid;
 
-     await pool.query(
-       "INSERT INTO videos (title, user_id, bunny_id) VALUES ($1, $2, $3)",
-       [title, parseInt(user_id), videoGuid]
-     );
+    await axios.put( /* ... Código para enviar o conteúdo ... */
+      `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos/${videoGuid}`,
+      req.file.buffer,
+      { headers: { AccessKey: API_KEY, "Content-Type": "application/octet-stream" } }
+    );
 
-     logAudit(user_id, "UPLOAD_VIDEO", { title, service: "BunnyCDN" }, req);
-     res.json({ success: true });
+    // Salva no Banco com a nova coluna is_restricted
+    await pool.query(
+      "INSERT INTO videos (title, user_id, bunny_id, is_restricted) VALUES ($1, $2, $3, $4)",
+      [title, parseInt(user_id), videoGuid, is_restricted === 'true' || false] // Salva como booleano
+    );
 
-   } catch (error) {
-     console.error("Erro no Upload:", error.response?.data || error.message);
-     res.status(500).json({ error: "Falha ao enviar vídeo para o servidor de streaming" });
-   }
- });
+    logAudit(user_id, "UPLOAD_VIDEO", { title, service: "BunnyCDN", restricted: is_restricted === 'true' }, req);
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error("Erro no Upload:", error.response?.data || error.message);
+    res.status(500).json({ error: "Falha ao enviar vídeo para o servidor de streaming" });
+  }
+});
+
+// --- NOVO: Listar Conteúdo Restrito ---
+app.get("/api/secret/videos", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT v.*, u.username, u.avatar FROM videos v
+      LEFT JOIN users u ON v.user_id = u.id
+      WHERE v.is_restricted = TRUE  <-- LISTA APENAS CONTEÚDO RESTRITO
+      ORDER BY v.created_at DESC LIMIT 50
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar conteúdo restrito" });
+  }
+});
 
  // --- Listar Vídeos (Página Principal) ---
- app.get("/api/videos", async (req, res) => {
-   const result = await pool.query(`
-     SELECT v.*, u.username, u.avatar FROM videos v
-     LEFT JOIN users u ON v.user_id = u.id
-     ORDER BY v.created_at DESC LIMIT 50
-   `);
-   res.json(result.rows);
- });
+app.get("/api/videos", async (req, res) => {
+  const result = await pool.query(`
+    SELECT v.*, u.username, u.avatar FROM videos v
+    LEFT JOIN users u ON v.user_id = u.id
+    WHERE v.is_restricted = FALSE  <-- FILTRO ADICIONADO
+    ORDER BY v.created_at DESC LIMIT 50
+  `);
+  res.json(result.rows);
+});
 
  // --- Deletar Vídeo (Admin ou Dono) ---
  app.delete("/api/videos/:id", async (req, res) => {
