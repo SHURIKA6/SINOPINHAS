@@ -1,0 +1,3 @@
+name = "sinopinhas-backend"
+main = "server.js"
+compatibility_date = "2025-11-25"
