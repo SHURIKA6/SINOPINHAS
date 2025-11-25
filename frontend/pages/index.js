@@ -6,11 +6,16 @@ import Head from "next/head";
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
-  // --- 1. ESTADOS (VARIÁVEIS) ---
+  // --- 1. TODOS OS ESTADOS (VARIÁVEIS) ---
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // Auth States
+  // Estados de Interface
+  const [activeTab, setActiveTab] = useState('videos');
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+  
+  // Estados de Auth
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
@@ -18,22 +23,23 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   
-  // Data States
+  // Estados de Dados
   const [videos, setVideos] = useState([]);
-  const [usersList, setUsersList] = useState([]); // Lista de usuários (Admin)
-  const [logs, setLogs] = useState([]);           // Lista de logs (Admin)
+  const [usersList, setUsersList] = useState([]); 
+  const [logs, setLogs] = useState([]); 
   
-  // Upload States
+  // Estados de Upload
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  
-  // UI States
-  const [activeTab, setActiveTab] = useState('videos');
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
 
-  // --- 2. EFEITOS (CARREGAMENTO INICIAL) ---
+  // Estados de Comentários
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState(null);
+  const [videoComments, setVideoComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
+  // --- 2. EFEITOS (CARREGAMENTO) ---
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedAdminPassword = localStorage.getItem('adminPassword');
@@ -45,7 +51,6 @@ export default function Home() {
     loadVideos();
   }, []);
 
-  // Carrega dados de Admin se a aba estiver ativa
   useEffect(() => {
     if (activeTab === 'admin' && isAdmin) {
       loadUsers();
@@ -71,7 +76,39 @@ export default function Home() {
     }
   };
 
-  // --- 4. FUNÇÕES DE ADMIN ---
+  const canDelete = (ownerId) => isAdmin || (user && user.id.toString() === ownerId);
+
+  // --- 4. FUNÇÕES DE COMENTÁRIOS ---
+  const openComments = async (video) => {
+    setCurrentVideo(video);
+    setShowCommentsModal(true);
+    try {
+      const res = await axios.get(`${API}/api/comments/${video.id}`);
+      setVideoComments(res.data);
+    } catch (err) { console.error(err); }
+  };
+
+  const sendComment = async (e) => {
+    e.preventDefault();
+    if (!user) return showToast('Faça login para comentar', 'error');
+    if (!newComment.trim()) return;
+
+    try {
+      await axios.post(`${API}/api/comment`, {
+        video_id: currentVideo.id,
+        user_id: user.id,
+        comment: newComment
+      });
+      setNewComment(""); 
+      const res = await axios.get(`${API}/api/comments/${currentVideo.id}`);
+      setVideoComments(res.data);
+      showToast('Comentário enviado!', 'success');
+    } catch (err) {
+      showToast('Erro ao comentar', 'error');
+    }
+  };
+
+  // --- 5. FUNÇÕES DE ADMIN ---
   const loadUsers = async () => {
     try {
       const res = await axios.get(`${API}/api/admin/users?admin_password=${adminPassword}`);
@@ -104,7 +141,7 @@ export default function Home() {
     } catch (err) { showToast('Erro ao banir', 'error'); }
   };
 
-  // --- 5. AUTENTICAÇÃO E UPLOAD ---
+  // --- 6. AUTENTICAÇÃO E UPLOAD ---
   const handleAuth = async (e) => {
     e.preventDefault();
     if (!username || !password) return showToast('Preencha todos os campos', 'error');
@@ -197,9 +234,7 @@ export default function Home() {
     }
   };
 
-  const canDelete = (ownerId) => isAdmin || (user && user.id.toString() === ownerId);
-
-  // --- 6. RENDERIZAÇÃO (VISUAL) ---
+  // --- 7. RENDERIZAÇÃO (VISUAL) ---
   return (
     <>
       <Head>
@@ -372,6 +407,15 @@ export default function Home() {
                         <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
                         <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
                         <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
+                        
+                        {/* BOTÃO COMENTÁRIOS */}
+                        <button onClick={() => openComments(v)} style={{
+                           marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
+                           color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
+                        }}>
+                          💬 Ver Comentários
+                        </button>
+
                       </div>
                     </div>
                   ))}
@@ -500,6 +544,59 @@ export default function Home() {
           )}
 
         </div>
+
+        {/* --- MODAL DE COMENTÁRIOS --- */}
+        {showCommentsModal && currentVideo && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex',
+            justifyContent: 'center', alignItems: 'center'
+          }} onClick={() => setShowCommentsModal(false)}>
+            
+            <div style={{
+              background: '#1a1a1a', width: '90%', maxWidth: 600, maxHeight: '80vh',
+              borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden'
+            }} onClick={e => e.stopPropagation()}>
+              
+              {/* Cabeçalho do Modal */}
+              <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between' }}>
+                <h3 style={{ margin: 0 }}>Comentários: {currentVideo.title}</h3>
+                <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer'}}>✕</button>
+              </div>
+
+              {/* Lista de Comentários (Rolagem) */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+                {videoComments.length === 0 ? (
+                  <p style={{ color: '#aaa', textAlign: 'center' }}>Seja o primeiro a comentar!</p>
+                ) : (
+                  videoComments.map((c, i) => (
+                    <div key={i} style={{ marginBottom: 16, borderBottom: '1px solid #333', paddingBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                        <span style={{ fontWeight: 'bold', color: '#8d6aff' }}>{c.username || 'Anônimo'}</span>
+                        <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <p style={{ margin: 0, color: '#ddd' }}>{c.comment}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Campo de Digitar */}
+              <form onSubmit={sendComment} style={{ padding: 16, background: '#222', borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
+                <input 
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                  placeholder="Escreva algo legal..."
+                  style={{ flex: 1, padding: 10, borderRadius: 20, border: 'none', background: '#333', color: '#fff' }}
+                />
+                <button type="submit" style={{ background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, padding: '0 20px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  Enviar
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+        
       </div>
     </>
   );
