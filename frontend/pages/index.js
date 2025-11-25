@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
 
+// Defina a URL do seu backend no .env.local:
+// NEXT_PUBLIC_API_URL=https://sinopinhas-production.up.railway.app
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -37,7 +41,7 @@ export default function Home() {
   const loadVideos = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`/api/videos`);
+      const res = await axios.get(`${API}/api/videos`);
       setVideos(res.data);
     } catch (err) {
       showToast('Erro ao carregar vídeos', 'error');
@@ -55,7 +59,7 @@ export default function Home() {
     if (!username || !password) return showToast('Preencha todos os campos', 'error');
     try {
       const endpoint = isLogin ? '/api/login' : '/api/register';
-      const res = await axios.post(endpoint, { username, password });
+      const res = await axios.post(`${API}${endpoint}`, { username, password });
       setUser(res.data.user);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setShowAuth(false);
@@ -70,7 +74,7 @@ export default function Home() {
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('/api/admin/login', { password: adminPassword });
+      const res = await axios.post(`${API}/api/admin/login`, { password: adminPassword });
       if (res.data.success) {
         setIsAdmin(true);
         localStorage.setItem('adminPassword', adminPassword);
@@ -109,7 +113,7 @@ export default function Home() {
     form.append('title', file.name);
     form.append('user_id', user.id.toString());
     try {
-      await axios.post('/api/upload', form, {
+      await axios.post(`${API}/api/upload`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (e) => {
           const percent = Math.round((e.loaded * 100) / e.total);
@@ -134,7 +138,7 @@ export default function Home() {
       const deleteData = isAdmin
         ? { adminPassword }
         : { userId: user.id.toString() };
-      await axios.delete(`/api/videos/${videoId}`, { data: deleteData });
+      await axios.delete(`${API}/api/videos/${videoId}`, { data: deleteData });
       showToast('Vídeo deletado!', 'success');
       await loadVideos();
     } catch (err) {
@@ -150,7 +154,6 @@ export default function Home() {
         <title>SINOPINHAS - Streaming de Vídeos</title>
         <meta name="description" content="Plataforma de streaming de vídeos" />
         <meta name="theme-color" content="#18142a" />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>▶️</text></svg>" />
       </Head>
       <div style={{
         minHeight: '100vh',
@@ -162,8 +165,7 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
             background: toast.type === 'success' ? '#10b981' : '#ef4444',
-            color: '#fff', padding: '16px 24px', borderRadius: 12,
-            boxShadow: '0 4px 12px #18142a33', animation: 'slideIn 0.3s ease'
+            color: '#fff', padding: '16px 24px', borderRadius: 12
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20 }}>{toast.type === 'success' ? '✓' : '✕'}</span>
@@ -360,8 +362,7 @@ export default function Home() {
                             background: 'rgba(0,0,0,0.8)', border: 'none',
                             borderRadius: '50%', width: 36, height: 36, display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer', fontSize: 18, color: '#fff',
-                            transition: 'background 0.2s'
+                            cursor: 'pointer', fontSize: 18, color: '#fff'
                           }}>🗑️
                         </button>
                       )}
@@ -468,41 +469,6 @@ export default function Home() {
             </div>
           )}
         </div>
-
-        <footer style={{
-          background: "linear-gradient(90deg, #18142a 70%, #3b2ba4 100%)",
-          color: "#fff",
-          fontSize: 15,
-          padding: "26px 0",
-          borderTop: "2px solid #8d6aff",
-          marginTop: 20
-        }}>
-          <div style={{
-            maxWidth: 1100, margin: "0 auto", display: "flex",
-            justifyContent: "space-between", gap: 30, flexWrap: "wrap"
-          }}>
-            <div>
-              <h3 style={{ color: "#8d6aff", fontWeight: 900 }}>SINOPINHAS</h3>
-              <p>
-                Plataforma de streaming social. <br />Poste, comente e reaja!
-              </p>
-            </div>
-            <ul style={{ listStyle: "none", padding: 0 }}>
-              <li><a href="/faq" style={{ color: "#fff" }}>FAQ</a></li>
-              <li><a href="/regras" style={{ color: "#fff" }}>Regras</a></li>
-              <li><a href="/perfil" style={{ color: "#fff" }}>Meu Perfil</a></li>
-              <li><a href="/contato" style={{ color: "#fff" }}>Sugestões</a></li>
-            </ul>
-            <div>
-              <p><b>Aviso:</b> Atividade rastreada. Não colaboramos com crimes. Denúncias serão apuradas conforme a lei.</p>
-              <p style={{ fontSize: 14, color: "#aaa" }}>SINOPINHAS® 2025</p>
-            </div>
-          </div>
-        </footer>
-        <style jsx>{`
-          @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        `}</style>
       </div>
     </>
   );
