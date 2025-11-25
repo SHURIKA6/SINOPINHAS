@@ -1,13 +1,17 @@
-# wrangler.toml (COMPLEMENTAR)
-
 name = "backend"
 main = "server.js"
-compatibility_date = "2025-11-25"
+compatibility_date = "2025-11-25" 
 
+# ESTA LINHA É ESSENCIAL PARA O PACOTE 'pg' FUNCIONAR
+compatibility_flags = ["nodejs_compat"]
+
+# Configuração do KV Store (Use o seu ID)
+[[kv_namespaces]]
+binding = "MURAL_STORE"
+id = "c03f688aa2f74835a143172205b316d7"
+
+# Variáveis de Ambiente
 [vars]
-# Variáveis do seu .env
-DATABASE_URL = "postgresql://postgres.xyxhqbwsxffqtdopwneu:Du0J9Wn3vjrh8P2S@aws-0-us-west-2.pooler.supabase.com:5432/postgres" 
 BUNNY_LIBRARY_ID = "548459"
-BUNNY_API_KEY = "17bad4bb-0ef8-42c3-88e2e1cfeb9f-f2a0-4567"
 BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
-ADMIN_PASSWORD = "admin123" # A senha padrão do seu server.js
+ADMIN_PASSWORD = "admin123"
