@@ -8,8 +8,8 @@ require("dotenv").config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const app = express();
-app.use(cors({
-  origin: "*", // use seu domínio na produção real
+app.use(require("cors")({
+  origin: "*", // ou seu domínio exato na produção, ex: 'https://sinopinhas.vercel.app'
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
 }));
