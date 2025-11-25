@@ -124,7 +124,7 @@
 }
 
 .videoIframe {
-  width: 100%;
+  width: 50%;
   aspect-ratio: 16/9;
   border: none;
 }
