@@ -15,6 +15,11 @@ id = "c03f688aa2f74835a143172205b316d7"
 BUNNY_LIBRARY_ID = "548459"
 BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
 ADMIN_PASSWORD = "admin123"
+BUNNY_API_KEY = "17bad4bb-0ef8-42c3-88e2e1cfeb9f-f2a0-4567"
 
 [observability]
+[observability.logs]
 enabled = false
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
