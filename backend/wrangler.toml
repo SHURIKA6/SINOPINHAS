@@ -15,3 +15,6 @@ id = "c03f688aa2f74835a143172205b316d7"
 BUNNY_LIBRARY_ID = "548459"
 BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
 ADMIN_PASSWORD = "admin123"
+
+[observability]
+enabled = false
