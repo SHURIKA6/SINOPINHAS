@@ -4,6 +4,7 @@ const multer = require("multer");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
+const axios = require("axios"); // <--- ADICIONE ESTA LINHA
 require("dotenv").config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
@@ -122,13 +123,43 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ----------- Upload vídeo -----------
+// --- UPLOAD COM BUNNYCDN ---
 app.post('/api/upload', upload.single("file"), async (req, res) => {
-  const { title, user_id, gdrive_id } = req.body;
-  if (!user_id || !(gdrive_id || req.file)) return res.status(400).json({ error: "Preencha todos os campos" });
-  await pool.query("INSERT INTO videos (title, user_id, gdrive_id) VALUES ($1, $2, $3)",
-    [title, parseInt(user_id), gdrive_id || null]);
-  logAudit(user_id, "UPLOAD_VIDEO", { title, by_file: !!req.file }, req);
-  res.json({ success: true });
+  const { title, user_id } = req.body;
+  const API_KEY = process.env.BUNNY_API_KEY;
+  const LIBRARY_ID = process.env.BUNNY_LIBRARY_ID;
+
+  if (!user_id || !req.file) return res.status(400).json({ error: "Arquivo obrigatório" });
+
+  try {
+    // 1. Criar o vídeo lá no BunnyCDN para pegar um ID
+    const createRes = await axios.post(
+      `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos`,
+      { title: title },
+      { headers: { AccessKey: API_KEY } }
+    );
+    const videoGuid = createRes.data.guid;
+
+    // 2. Enviar o conteúdo do arquivo (Upload)
+    await axios.put(
+      `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos/${videoGuid}`,
+      req.file.buffer,
+      { headers: { AccessKey: API_KEY, "Content-Type": "application/octet-stream" } }
+    );
+
+    // 3. Salvar no Banco de Dados com o ID do Bunny
+    await pool.query(
+      "INSERT INTO videos (title, user_id, bunny_id) VALUES ($1, $2, $3)",
+      [title, parseInt(user_id), videoGuid]
+    );
+
+    logAudit(user_id, "UPLOAD_VIDEO", { title, service: "BunnyCDN" }, req);
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error("Erro no Upload:", error.response?.data || error.message);
+    res.status(500).json({ error: "Falha ao enviar vídeo para o servidor de streaming" });
+  }
 });
 
 // ----------- Listar vídeos -----------
@@ -267,7 +298,7 @@ app.delete("/api/admin/users/:id", async (req, res) => {
   const { admin_password } = req.body;
   if (admin_password !== process.env.ADMIN_PASSWORD && admin_password !== "admin123") return res.status(403).send("X");
   const id = parseInt(req.params.id);
-  try {
+  try {     
     // Apaga rastro do usuário para não dar erro de chave estrangeira
     await pool.query("DELETE FROM comments WHERE user_id = $1", [id]);
     await pool.query("DELETE FROM video_reactions WHERE user_id = $1", [id]);
