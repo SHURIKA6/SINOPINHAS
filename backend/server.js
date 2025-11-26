@@ -4,7 +4,7 @@
 
 // 1. IMPORTS E CONFIGURAÇÃO (Usando ES Modules)
 import { Hono } from 'hono';
-import { Pool } from 'pg'; // Requer o flag "nodejs_compat" no wrangler.toml
+import { Pool } from '@neondatabase/serverless';
 import axios from 'axios';
 
 // 2. UTILITY: Hashing de Senha (Substitui bcrypt com Web Crypto API)
@@ -36,7 +36,7 @@ async function comparePassword(password, storedHashJSON) {
 
 // 3. UTILITY: Conexão com Banco de Dados (Substitui pool global e usa o env)
 async function queryDB(sql, params, env) {
-    // NOTA: Requer o flag 'nodejs_compat' no wrangler.toml
+    
     if (!env.DATABASE_URL) throw new Error("DATABASE_URL não configurada.");
     
     const pool = new Pool({
