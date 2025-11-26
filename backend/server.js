@@ -156,7 +156,45 @@ app.post('/api/admin/login', async (c) => {
     
     // Se a senha estiver errada, retorna 401
     return c.json({ error: "Senha incorreta" }, 401);
+    // server.js (Adicionar ao bloco de rotas)
+
+// --- Rota para Gerenciar Usuários ---
+app.get("/api/admin/users", async (c) => {
+    const adminPasswordFromQuery = c.req.query('admin_password');
+    const env = c.env;
+
+    if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
+        return c.json({ error: "Senha de admin incorreta" }, 403);
+    }
+    try {
+        const { rows } = await queryDB("SELECT id, username, bio, created_at, avatar FROM users ORDER BY id DESC LIMIT 50", [], env);
+        return c.json(rows);
+    } catch (err) { 
+        return c.json({ error: "Erro ao listar usuários: " + err.message }, 500); 
+    }
 });
+
+// --- Rota para Rastreamento (Logs) ---
+app.get("/api/admin/logs", async (c) => {
+    const adminPasswordFromQuery = c.req.query('admin_password');
+    const env = c.env;
+
+    if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
+        return c.json({ error: "Acesso Negado: Credenciais Inválidas" }, 403);
+    }
+    try {
+        const { rows } = await queryDB(`
+            SELECT a.*, u.username FROM audit_logs a
+            LEFT JOIN users u ON a.user_id = u.id
+            ORDER BY a.created_at DESC LIMIT 100
+        `, [], env);
+        return c.json(rows);
+    } catch (err) {
+        return c.json({ error: "Erro ao buscar logs: " + err.message }, 500);
+    }
+});
+    });
+
 
 // =====================================================================
 // [ROTAS DE VÍDEO E UPLOAD]
