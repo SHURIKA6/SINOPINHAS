@@ -143,57 +143,63 @@ app.post('/api/login', async (c) => {
     return c.json({ user: { id: user.id, username: user.username, avatar: user.avatar, bio: user.bio } });
 });
 
-// server.js (Apenas a rota /api/admin/login)
+// server.js (Substitua todo o bloco de rotas de admin pelo código abaixo)
 
+// --- ROTA 1: ADMIN LOGIN (POST) ---
 app.post('/api/admin/login', async (c) => {
     // CORREÇÃO: Lê o corpo JSON antes de acessar a propriedade
     const body = await c.req.json(); 
     
-    // Agora verifica a propriedade do objeto 'body'
+    // Agora verifica a propriedade do objeto 'body' com o segredo do Worker
     if (body.password === c.env.ADMIN_PASSWORD) {
         return c.json({ success: true });
     }
     
     // Se a senha estiver errada, retorna 401
     return c.json({ error: "Senha incorreta" }, 401);
-    // server.js (Adicionar ao bloco de rotas)
+});
 
-// --- Rota para Gerenciar Usuários ---
+// --- ROTA 2: GERENCIAR USUÁRIOS (GET) ---
 app.get("/api/admin/users", async (c) => {
+    // O Hono lê a senha da query string (admin_password=...)
     const adminPasswordFromQuery = c.req.query('admin_password');
     const env = c.env;
 
     if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
-        return c.json({ error: "Senha de admin incorreta" }, 403);
+        return c.json({ error: "Senha de admin incorreta" }, 403); // 403 Forbidden
     }
     try {
         const { rows } = await queryDB("SELECT id, username, bio, created_at, avatar FROM users ORDER BY id DESC LIMIT 50", [], env);
         return c.json(rows);
     } catch (err) { 
-        return c.json({ error: "Erro ao listar usuários: " + err.message }, 500); 
+        console.error("Erro ao listar usuários:", err);
+        return c.json({ error: "Erro ao listar usuários: Falha no DB" }, 500); 
     }
 });
 
-// --- Rota para Rastreamento (Logs) ---
+// --- ROTA 3: RASTREAMENTO/LOGS (GET) ---
 app.get("/api/admin/logs", async (c) => {
+    // O Hono lê a senha da query string (admin_password=...)
     const adminPasswordFromQuery = c.req.query('admin_password');
     const env = c.env;
 
     if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
-        return c.json({ error: "Acesso Negado: Credenciais Inválidas" }, 403);
+        return c.json({ error: "Acesso Negado: Credenciais Inválidas" }, 403); // 403 Forbidden
     }
     try {
         const { rows } = await queryDB(`
-            SELECT a.*, u.username FROM audit_logs a
+            -- Seleciona todas as colunas de 'a' e o username, INCLUINDO device_type
+            SELECT a.*, u.username, a.device_type
+            FROM audit_logs a
             LEFT JOIN users u ON a.user_id = u.id
             ORDER BY a.created_at DESC LIMIT 100
         `, [], env);
         return c.json(rows);
     } catch (err) {
-        return c.json({ error: "Erro ao buscar logs: " + err.message }, 500);
+        console.error("Erro ao buscar logs:", err);
+        return c.json({ error: "Erro ao buscar logs: Falha no DB" }, 500);
     }
 });
-    });
 
 
 // =====================================================================
