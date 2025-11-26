@@ -33,15 +33,16 @@ async function comparePassword(password, storedHashJSON) {
         return false;
     }
 }
-
-// 3. UTILITY: Conexão com Banco de Dados (Substitui pool global e usa o env)
+// 3. UTILITY: Função de Consulta ao Banco (Usa Pool do Neon)
+// server.js (Trecho da função queryDB)
 async function queryDB(sql, params, env) {
     
     if (!env.DATABASE_URL) throw new Error("DATABASE_URL não configurada.");
     
     const pool = new Pool({
         connectionString: env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false } 
+        // REMOVA esta linha ou comente-a:
+        // ssl: { rejectUnauthorized: false } 
     });
     try {
         const result = await pool.query(sql, params);
