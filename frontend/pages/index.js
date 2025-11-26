@@ -382,12 +382,12 @@ export default function Home() {
         {/* TABS */}
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
           {['videos', 'upload', isAdmin ? 'admin' : null, showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
-  <button key={tab} onClick={() => setActiveTab(tab)} style={{
-    // ... (mantenha os estilos) ...
-  }}>
-    {/* AJUSTE DO NOME DA ABA */}
-    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : 'SAFADEZA'} 
-  </button>
+  <button key={tab} onClick={() => setActiveTab(tab)} style={{
+    // ... (mantenha os estilos) ...
+  }}>
+    {/* AJUSTE DO NOME DA ABA */}
+    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : 'SAFADEZA'} 
+  </button>
 ))}
         </div>
 
@@ -503,8 +503,8 @@ export default function Home() {
               {/* LISTA DE USUÁRIOS */}
               <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
-                   <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
-                   <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
+                                     <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
+                                     <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
                 </div>
                 <div style={{maxHeight: 300, overflowY: 'auto'}}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -538,28 +538,34 @@ export default function Home() {
                   <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
-                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
+
+                {/* A TABELA CORRIGIDA COMEÇA AQUI */}
+                <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
                     <thead>
-                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-                        <th style={{padding:10}}>Data/Hora</th>
-                        <th style={{padding:10}}>Usuário</th>
-                        <th style={{padding:10}}>IP</th>
-                        <th style={{padding:10}}>Ação</th>
-                        <th style={{padding:10}}>Detalhes</th>
-                      </tr>
+                        <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+                            <th style={{padding:10}}>Data/Hora</th>
+                            <th style={{padding:10}}>Usuário</th>
+                            <th style={{padding:10}}>Dispositivo</th> {/* <-- COLUNA DISPOSITIVO */}
+                            <th style={{padding:10}}>IP</th>
+                            <th style={{padding:10}}>Ação</th>
+                            <th style={{padding:10}}>Detalhes</th>
+                        </tr>
                     </thead>
                     <tbody>
-                      {logs.map(log => (
-                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-                          <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
-                          <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
-                          <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
-                          <td style={{padding:10}}>{log.action}</td>
-                          <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
-                        </tr>
-                      ))}
+                        {logs.map(log => (
+                            <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+                                <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
+                                <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
+                                <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td> {/* <-- CAMPO DEVICE_TYPE */}
+                                <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
+                                <td style={{padding:10}}>{log.action}</td>
+                                <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
+                            </tr>
+                        ))}
                     </tbody>
-                  </table>
+                </table>
+                {/* FIM DA TABELA */}
+
                 </div>
               </div>
             </div>
@@ -664,6 +670,6 @@ export default function Home() {
     </div>
   </div>
 )}
-    </>
-  );
+    </>
+  );
 }
