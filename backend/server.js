@@ -115,8 +115,15 @@ app.post('/api/register', async (c) => {
         await logAudit(result.rows[0].id, "REGISTER", { username }, c);
         return c.json({ user: result.rows[0] });
     } catch (err) { 
-        return c.json({ error: "Username já existe" }, 400);
+    // Mude a resposta 400 para expor o erro real para fins de depuração
+    // A string 'duplicate key' é o erro real do DB
+    const errorMsg = err.message || "Erro desconhecido ao registrar.";
+    if (errorMsg.includes('duplicate key')) {
+        return c.json({ error: "Username já existe" }, 409); // 409 Conflict
     }
+    // Para todos os outros erros, mostre o erro real do DB (Ex: falha de permissão)
+    return c.json({ error: "Falha de DB: " + errorMsg }, 500); // Mude para 500
+  }
 });
 
 app.post('/api/login', async (c) => {
