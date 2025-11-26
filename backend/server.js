@@ -143,12 +143,20 @@ app.post('/api/login', async (c) => {
     return c.json({ user: { id: user.id, username: user.username, avatar: user.avatar, bio: user.bio } });
 });
 
-app.post('/api/admin/login', async (c) => {
-    // ADMIN_PASSWORD é lido do objeto env
-    if (c.req.body.password === c.env.ADMIN_PASSWORD) return c.json({ success: true });
-    return c.json({ error: "Senha errada" }, 401);
-});
+// server.js (Apenas a rota /api/admin/login)
 
+app.post('/api/admin/login', async (c) => {
+    // CORREÇÃO: Lê o corpo JSON antes de acessar a propriedade
+    const body = await c.req.json(); 
+    
+    // Agora verifica a propriedade do objeto 'body'
+    if (body.password === c.env.ADMIN_PASSWORD) {
+        return c.json({ success: true });
+    }
+    
+    // Se a senha estiver errada, retorna 401
+    return c.json({ error: "Senha incorreta" }, 401);
+});
 
 // =====================================================================
 // [ROTAS DE VÍDEO E UPLOAD]
