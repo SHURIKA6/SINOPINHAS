@@ -201,6 +201,60 @@ app.get("/api/admin/logs", async (c) => {
     }
 });
 
+// server.js (Adicionar ao bloco de rotas de administração)
+
+// --- ROTA DELETE: BANIR USUÁRIO ---
+app.delete("/api/admin/users/:id", async (c) => {
+    const { admin_password } = await c.req.json();
+    const env = c.env;
+
+    if (admin_password !== env.ADMIN_PASSWORD) return c.json({ error: "Acesso Negado" }, 403);
+    
+    const id = parseInt(c.req.param('id'));
+    try { 
+        // 1. Limpar referências (Comentários, Reações, Vídeos)
+        await queryDB("DELETE FROM comments WHERE user_id = $1", [id], env);
+        await queryDB("DELETE FROM video_reactions WHERE user_id = $1", [id], env);
+        await queryDB("DELETE FROM videos WHERE user_id = $1", [id], env);
+        
+        // 2. Apagar o usuário
+        const result = await queryDB("DELETE FROM users WHERE id = $1", [id], env);
+        
+        if (result.rowCount === 0) {
+            return c.json({ error: "Usuário não encontrado." }, 404);
+        }
+        
+        // await logAudit(id, "USER_BANNED_ADMIN", {}, c); // Opcional: logar antes ou depois
+        return c.json({ success: true });
+    } catch (err) {
+        console.error("Erro ao banir usuário:", err);
+        return c.json({ error: "Erro interno ao banir usuário." }, 500);
+    }
+});
+
+// --- ROTA POST: RESETAR SENHA ---
+app.post("/api/admin/reset-password", async (c) => {
+    const { user_id, admin_password } = await c.req.json();
+    const env = c.env;
+    
+    if (admin_password !== env.ADMIN_PASSWORD) return c.json({ error: "Acesso Negado" }, 403);
+    
+    try {
+        // Hashing da senha padrão "123456" com Web Crypto (substitui bcrypt)
+        const hash = await hashPassword("123456"); 
+        
+        const result = await queryDB("UPDATE users SET password = $1 WHERE id = $2 RETURNING id", [hash, user_id], env);
+        
+        if (result.rowCount === 0) {
+            return c.json({ error: "Usuário não encontrado." }, 404);
+        }
+
+        return c.json({ success: true });
+    } catch(err) {
+        console.error("Erro ao resetar senha:", err);
+        return c.json({ error: "Erro interno ao resetar senha." }, 500);
+    }
+});
 
 // =====================================================================
 // [ROTAS DE VÍDEO E UPLOAD]
@@ -360,6 +414,52 @@ app.get("/api/mural", async (c) => {
         return c.json({ mural });
     } catch (e) {
         return c.json({ error: "Erro ao ler mural" }, 500);
+    }
+});
+
+// server.js (Adicionar ao bloco de rotas sociais/de feedback)
+
+// --- ROTA DE BUSCA DE COMENTÁRIOS (GET) ---
+app.get("/api/comments/:video_id", async (c) => {
+    const { video_id } = c.req.param();
+    const env = c.env;
+
+    if (!video_id || isNaN(parseInt(video_id))) {
+        return c.json({ error: "ID de vídeo inválido" }, 400);
+    }
+    
+    try {
+        const { rows } = await queryDB(
+            `SELECT c.*, u.username, u.avatar FROM comments c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.video_id = $1 ORDER BY c.created_at DESC LIMIT 30`, 
+            [parseInt(video_id)], 
+            env
+        );
+        return c.json(rows);
+    } catch (err) { 
+        console.error("Erro ao buscar comentários:", err);
+        return c.json({ error: "Erro interno ao buscar comentários" }, 500); 
+    }
+});
+
+// --- ROTA DE ENVIO DE COMENTÁRIOS (POST) ---
+app.post("/api/comment", async (c) => {
+    const { video_id, user_id, comment } = await c.req.json();
+    const env = c.env;
+
+    try {
+        await queryDB(
+            "INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
+            [parseInt(video_id), parseInt(user_id), comment], 
+            env
+        );
+        // Não temos o 'req' no worker, usando 'c' para logAudit
+        await logAudit(user_id, "COMMENT", { video_id, comment }, c); 
+        return c.json({ ok: true });
+    } catch (err) {
+        console.error("Erro ao inserir comentário:", err);
+        return c.json({ error: "Erro ao enviar comentário" }, 500);
     }
 });
 
