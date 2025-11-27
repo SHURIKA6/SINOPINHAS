@@ -203,14 +203,19 @@ app.get("/api/admin/logs", async (c) => {
 
 // server.js (Adicionar ao bloco de rotas de administração)
 
+// server.js (Apenas a rota DELETE)
+
 // --- ROTA DELETE: BANIR USUÁRIO ---
 app.delete("/api/admin/users/:id", async (c) => {
+    // CORREÇÃO: Lê o ID do usuário diretamente do parâmetro da URL
+    const id = parseInt(c.req.param('id')); 
+
     const { admin_password } = await c.req.json();
     const env = c.env;
 
     if (admin_password !== env.ADMIN_PASSWORD) return c.json({ error: "Acesso Negado" }, 403);
     
-    const id = parseInt(c.req.param('id'));
+    // A lógica de exclusão do DB é executada APENAS se a senha estiver correta.
     try { 
         // 1. Limpar referências (Comentários, Reações, Vídeos)
         await queryDB("DELETE FROM comments WHERE user_id = $1", [id], env);
@@ -223,11 +228,10 @@ app.delete("/api/admin/users/:id", async (c) => {
         if (result.rowCount === 0) {
             return c.json({ error: "Usuário não encontrado." }, 404);
         }
-        
-        // await logAudit(id, "USER_BANNED_ADMIN", {}, c); // Opcional: logar antes ou depois
         return c.json({ success: true });
     } catch (err) {
-        console.error("Erro ao banir usuário:", err);
+        // O erro 500 está vindo daqui, provavelmente erro na query DELETE.
+        console.error("Erro ao banir usuário (DB):", err); 
         return c.json({ error: "Erro interno ao banir usuário." }, 500);
     }
 });
