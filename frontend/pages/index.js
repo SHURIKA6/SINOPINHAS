@@ -300,7 +300,7 @@ export default function Home() {
                 />
                 <input
                   type="password" placeholder="Senha"
-            166                  value={password} onChange={e => setPassword(e.target.value)}
+                  value={password} onChange={e => setPassword(e.target.value)}
                   style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
                 />
                 <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, marginBottom: 16, cursor:'pointer', fontWeight:600 }}>
