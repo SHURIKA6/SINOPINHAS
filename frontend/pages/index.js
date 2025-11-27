@@ -6,16 +6,19 @@ import Head from "next/head";
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
+
   const [secretPassword, setSecretPassword] = useState('');
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   
+
   const [activeTab, setActiveTab] = useState('videos');
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   
+
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
@@ -23,18 +26,22 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   
+
   const [videos, setVideos] = useState([]);
   const [usersList, setUsersList] = useState([]); 
   const [logs, setLogs] = useState([]); 
   
+
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
 
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [videoComments, setVideoComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -54,6 +61,7 @@ export default function Home() {
     }
   }, [activeTab, isAdmin]);
 
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -72,6 +80,7 @@ export default function Home() {
   };
 
   const canDelete = (ownerId) => isAdmin || (user && user.id.toString() === ownerId);
+
 
   const openComments = async (video) => {
     setCurrentVideo(video);
@@ -101,6 +110,7 @@ export default function Home() {
       showToast('Erro ao comentar', 'error');
     }
   };
+
 
   const loadUsers = async () => {
     try {
@@ -133,6 +143,7 @@ export default function Home() {
       loadVideos(); 
     } catch (err) { showToast('Erro ao banir', 'error'); }
   };
+
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -239,6 +250,7 @@ export default function Home() {
     }
   };
 
+
   return (
     <>
       <Head>
@@ -253,6 +265,7 @@ export default function Home() {
         color: '#fff',
         fontFamily: 'Arial, sans-serif'
       }}>
+
         {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
@@ -265,6 +278,7 @@ export default function Home() {
             </div>
           </div>
         )}
+
 
         {showAuth && (
           <div style={{
@@ -298,6 +312,7 @@ export default function Home() {
             </div>
           </div>
         )}
+
 
         {showAdminAuth && (
           <div style={{
@@ -395,6 +410,7 @@ export default function Home() {
           </div>
         </header>
 
+
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
           {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
@@ -409,8 +425,10 @@ export default function Home() {
           ))}
         </div>
 
+
         <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
           
+
           {activeTab === 'videos' && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
@@ -446,6 +464,7 @@ export default function Home() {
                         <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
                         <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
                         
+
                         <button onClick={() => openComments(v)} style={{
                            marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
                            color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
@@ -460,6 +479,7 @@ export default function Home() {
               )}
             </div>
           )}
+
 
           {activeTab === 'upload' && (
             <div style={{ maxWidth: 620, margin: '0 auto' }}>
@@ -509,9 +529,11 @@ export default function Home() {
             </div>
           )}
 
+
           {activeTab === 'admin' && isAdmin && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
               <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
+
 
               <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
@@ -543,9 +565,10 @@ export default function Home() {
                 </div>
               </div>
 
+
               <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
-                  <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (Logs)</h3>
+                  <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (ATUALIZADO)</h3>
                   <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
@@ -607,10 +630,12 @@ export default function Home() {
               borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden'
             }} onClick={e => e.stopPropagation()}>
               
+
               <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between' }}>
                 <h3 style={{ margin: 0 }}>Comentários: {currentVideo.title}</h3>
                 <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer'}}>✕</button>
               </div>
+
 
               <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
                 {videoComments.length === 0 ? (
@@ -628,6 +653,7 @@ export default function Home() {
                 )}
               </div>
 
+
               <form onSubmit={sendComment} style={{ padding: 16, background: '#222', borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
                 <input 
                   value={newComment}
@@ -642,6 +668,7 @@ export default function Home() {
             </div>
           </div>
         )}
+        
       </div>
     </>
   );
