@@ -405,7 +405,8 @@ app.delete("/api/videos/:id", async (c) => {
 
 // (Demais rotas sociais e de admin traduzidas para a sintaxe Hono e queryDB...)
 
-// --- Mural/Inbox (Substitui FS com KV Store) ---
+// server.js (Apenas a rota POST /api/mural)
+
 app.post("/api/mural", async (c) => {
     const { user_id, msg } = await c.req.json();
     const env = c.env;
@@ -414,9 +415,12 @@ app.post("/api/mural", async (c) => {
         // 1. Pega o mural atual
         let mural = await env.MURAL_STORE.get('mural_messages', { type: 'json' }) || [];
         
-        // (Busca o username no DB para o post, se necessário)
-        
-        const newPost = { user_id, msg, created_at: new Date().toISOString() };
+        // --- ADIÇÃO CRÍTICA: Buscar o username no Neon DB ---
+        const userQuery = await queryDB("SELECT username FROM users WHERE id = $1", [user_id], env);
+        const username = userQuery.rows[0]?.username || "Anônimo";
+        // --- FIM DA ADIÇÃO ---
+
+        const newPost = { user_id, username, msg, created_at: new Date().toISOString() };
         mural.push(newPost);
         
         // 2. Limita e salva no KV
@@ -427,9 +431,13 @@ app.post("/api/mural", async (c) => {
         return c.json({ ok: true });
 
     } catch (e) {
+        // Mude para 500 se for um erro de DB real, mas mantenha a resposta 
+        console.error("Erro ao postar no mural:", e);
         return c.json({ error: "Erro ao postar no mural" }, 500);
     }
 });
+
+// A rota GET /api/mural está correta para ler os dados.
 
 app.get("/api/mural", async (c) => {
     // Lê o mural do KV Store
@@ -438,6 +446,41 @@ app.get("/api/mural", async (c) => {
         return c.json({ mural });
     } catch (e) {
         return c.json({ error: "Erro ao ler mural" }, 500);
+    }
+});
+
+// server.js (Adicionar ao bloco de rotas sociais/de feedback)
+
+// --- ROTA DE ENVIAR MENSAGEM (POST) ---
+app.post("/api/send-message", async (c) => {
+    const { from_id, to_id, msg } = await c.req.json();
+    const env = c.env;
+
+    try {
+        await queryDB(
+            "INSERT INTO inbox (from_id, to_id, msg) VALUES ($1, $2, $3)",
+            [parseInt(from_id), parseInt(to_id), msg], env
+        );
+        await logAudit(from_id, "SEND_MSG", { to_id }, c);
+        return c.json({ ok: true });
+    } catch (err) {
+        return c.json({ error: "Erro ao enviar mensagem." }, 500);
+    }
+});
+
+// --- ROTA DE INBOX (GET) ---
+app.get("/api/inbox/:user_id", async (c) => {
+    const { user_id } = c.req.param();
+    const env = c.env;
+
+    try {
+        const { rows } = await queryDB(
+            "SELECT * FROM inbox WHERE to_id = $1 OR from_id = $1 ORDER BY created_at DESC LIMIT 40",
+            [parseInt(user_id)], env
+        );
+        return c.json(rows);
+    } catch (err) {
+        return c.json({ error: "Erro ao buscar caixa de mensagens." }, 500);
     }
 });
 
