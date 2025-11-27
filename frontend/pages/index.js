@@ -6,20 +6,16 @@ import Head from "next/head";
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
-  // --- ESTADOS DE CONTEÚDO RESTRITO ---
   const [secretPassword, setSecretPassword] = useState('');
   const [showSecretAuth, setShowSecretAuth] = useState(false);
-  const [showSecretTab, setShowSecretTab] = useState(false); // Controla a exibição da aba secreta
-  // --- 1. TODOS OS ESTADOS (VARIÁVEIS) ---
+  const [showSecretTab, setShowSecretTab] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // Estados de Interface
   const [activeTab, setActiveTab] = useState('videos');
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   
-  // Estados de Auth
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
@@ -27,23 +23,19 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   
-  // Estados de Dados
   const [videos, setVideos] = useState([]);
   const [usersList, setUsersList] = useState([]); 
   const [logs, setLogs] = useState([]); 
   
-  // Estados de Upload
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Estados de Comentários
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [videoComments, setVideoComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
-  // --- 2. EFEITOS (CARREGAMENTO) ---
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedAdminPassword = localStorage.getItem('adminPassword');
@@ -62,7 +54,6 @@ export default function Home() {
     }
   }, [activeTab, isAdmin]);
 
-  // --- 3. FUNÇÕES GERAIS ---
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -82,7 +73,6 @@ export default function Home() {
 
   const canDelete = (ownerId) => isAdmin || (user && user.id.toString() === ownerId);
 
-  // --- 4. FUNÇÕES DE COMENTÁRIOS ---
   const openComments = async (video) => {
     setCurrentVideo(video);
     setShowCommentsModal(true);
@@ -112,7 +102,6 @@ export default function Home() {
     }
   };
 
-  // --- 5. FUNÇÕES DE ADMIN ---
   const loadUsers = async () => {
     try {
       const res = await axios.get(`${API}/api/admin/users?admin_password=${adminPassword}`);
@@ -145,7 +134,6 @@ export default function Home() {
     } catch (err) { showToast('Erro ao banir', 'error'); }
   };
 
-  // --- 6. AUTENTICAÇÃO E UPLOAD ---
   const handleAuth = async (e) => {
     e.preventDefault();
     if (!username || !password) return showToast('Preencha todos os campos', 'error');
@@ -251,7 +239,6 @@ export default function Home() {
     }
   };
 
-  // --- 7. RENDERIZAÇÃO (VISUAL) ---
   return (
     <>
       <Head>
@@ -266,7 +253,6 @@ export default function Home() {
         color: '#fff',
         fontFamily: 'Arial, sans-serif'
       }}>
-        {/* TOAST */}
         {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
@@ -280,7 +266,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* LOGIN MODAL */}
         {showAuth && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -314,7 +299,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* ADMIN LOGIN MODAL */}
         {showAdminAuth && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -340,7 +324,40 @@ export default function Home() {
           </div>
         )}
 
-        {/* HEADER */}
+        {showSecretAuth && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center'
+          }} onClick={() => setShowSecretAuth(false)}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '90%'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
+              <form onSubmit={handleSecretAuth}>
+                <input
+                  type="password" placeholder="MESMA SENHA DA SKY"
+                  value={secretPassword}
+                  onChange={e => setSecretPassword(e.target.value)}
+                  style={{
+                    width: '100%', padding: 12, marginBottom: 16,
+                    background: '#0f0f0f', border: '1px solid #303030',
+                    borderRadius: 8, color: '#fff', fontSize: 15
+                  }}
+                />
+                <button type="submit" style={{
+                  width: '100%', padding: 12, background: '#e53e3e',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  fontSize: 15, fontWeight: 600, cursor: 'pointer'
+                }}>
+                  Liberar Acesso
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
         <header style={{
           background: '#212121', padding: '16px 24px', display: 'flex',
           alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #303030'
@@ -350,14 +367,13 @@ export default function Home() {
             letterSpacing: "2px", background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
           }}>SINOPINHAS</h1>
-          {/* Adicione este botão junto dos outros do Header (Logo antes do botão Admin) */}
-<button onClick={() => setShowSecretAuth(true)} style={{
-  padding: '7px 16px', background: '#e53e3e', color: '#fff',
-  border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer'
-}}>
-  Conteúdo Restrito
-</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+            <button onClick={() => setShowSecretAuth(true)} style={{
+              padding: '7px 16px', background: '#e53e3e', color: '#fff',
+              border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer'
+            }}>
+              Conteúdo Restrito
+            </button>
             {isAdmin && (
               <span style={{ padding: '6px 12px', background: '#10b981', borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#fff" }}>
                 ADMIN
@@ -379,22 +395,22 @@ export default function Home() {
           </div>
         </header>
 
-        {/* TABS */}
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
           {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
-  <button key={tab} onClick={() => setActiveTab(tab)} style={{
-    // ... (mantenha os estilos) ...
-  }}>
-    {/* AJUSTE DO NOME DA ABA */}
-    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? 'Mensagens' : 'SAFADEZA'} 
-  </button>
-))}
+            <button key={tab} onClick={() => setActiveTab(tab)} style={{
+              padding: '14px 20px', background: 'none', border: 'none',
+              borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
+              color: activeTab === tab ? '#fff' : '#aaa', fontSize: 16,
+              fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
+              transition: 'all 0.3s'
+            }}>
+              {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? 'Mensagens' : 'SAFADEZA'}
+            </button>
+          ))}
         </div>
 
-        {/* CONTENT */}
         <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
           
-          {/* TAB VÍDEOS */}
           {activeTab === 'videos' && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
@@ -430,7 +446,6 @@ export default function Home() {
                         <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
                         <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
                         
-                        {/* BOTÃO COMENTÁRIOS */}
                         <button onClick={() => openComments(v)} style={{
                            marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
                            color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
@@ -446,7 +461,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* TAB UPLOAD */}
           {activeTab === 'upload' && (
             <div style={{ maxWidth: 620, margin: '0 auto' }}>
               <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
@@ -495,21 +509,14 @@ export default function Home() {
             </div>
           )}
 
-          {/* TAB ADMIN (LOGS E USUÁRIOS) */}
           {activeTab === 'admin' && isAdmin && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
               <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
 
-              {/* NOVO: TAB INBOX */}
-  {activeTab === 'inbox' && user && ( 
-     <Inbox user={user} usersList={usersList} />
-  )}
-              
-              {/* LISTA DE USUÁRIOS */}
               <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
-                                     <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
-                                     <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
+                  <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
+                  <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
                 </div>
                 <div style={{maxHeight: 300, overflowY: 'auto'}}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -536,49 +543,58 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* LISTA DE LOGS */}
               <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
                   <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (Logs)</h3>
                   <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
-
-                {/* A TABELA CORRIGIDA COMEÇA AQUI */}
-                <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
+                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
                     <thead>
-                        <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-                            <th style={{padding:10}}>Data/Hora</th>
-                            <th style={{padding:10}}>Usuário</th>
-                            <th style={{padding:10}}>Dispositivo</th> {/* <-- COLUNA DISPOSITIVO */}
-                            <th style={{padding:10}}>IP</th>
-                            <th style={{padding:10}}>Ação</th>
-                            <th style={{padding:10}}>Detalhes</th>
-                        </tr>
+                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+                        <th style={{padding:10}}>Data/Hora</th>
+                        <th style={{padding:10}}>Usuário</th>
+                        <th style={{padding:10}}>Dispositivo</th>
+                        <th style={{padding:10}}>IP</th>
+                        <th style={{padding:10}}>Ação</th>
+                        <th style={{padding:10}}>Detalhes</th>
+                      </tr>
                     </thead>
                     <tbody>
-                        {logs.map(log => (
-                            <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-                                <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
-                                <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
-                                <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td> {/* <-- CAMPO DEVICE_TYPE */}
-                                <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
-                                <td style={{padding:10}}>{log.action}</td>
-                                <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
-                            </tr>
-                        ))}
+                      {logs.map(log => (
+                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+                          <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
+                          <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
+                          <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td>
+                          <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
+                          <td style={{padding:10}}>{log.action}</td>
+                          <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
+                        </tr>
+                      ))}
                     </tbody>
-                </table>
-                {/* FIM DA TABELA */}
-
+                  </table>
                 </div>
               </div>
             </div>
           )}
 
-        </div>
+          {activeTab === 'inbox' && (
+            <div>
+              <Inbox user={user} />
+            </div>
+          )}
 
-        {/* --- MODAL DE COMENTÁRIOS --- */}
+          {activeTab === 'secret' && showSecretTab && (
+            <div>
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>🔥 SAFADEZA (Conteúdo Restrito)</h2>
+              <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
+                <p style={{ fontSize: 20 }}>Aqui você pode adicionar vídeos restritos.</p>
+                <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o mesmo layout da aba "Vídeos" para exibir conteúdo específico desta seção.</p>
+              </div>
+            </div>
+          )}
+        </div>
+        
         {showCommentsModal && currentVideo && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -591,13 +607,11 @@ export default function Home() {
               borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden'
             }} onClick={e => e.stopPropagation()}>
               
-              {/* Cabeçalho do Modal */}
               <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between' }}>
                 <h3 style={{ margin: 0 }}>Comentários: {currentVideo.title}</h3>
                 <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer'}}>✕</button>
               </div>
 
-              {/* Lista de Comentários (Rolagem) */}
               <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
                 {videoComments.length === 0 ? (
                   <p style={{ color: '#aaa', textAlign: 'center' }}>Seja o primeiro a comentar!</p>
@@ -614,7 +628,6 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Campo de Digitar */}
               <form onSubmit={sendComment} style={{ padding: 16, background: '#222', borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
                 <input 
                   value={newComment}
@@ -629,52 +642,7 @@ export default function Home() {
             </div>
           </div>
         )}
-        
       </div>
-      {/* --- MODAL DE SENHA SECRETA (No final, antes do último </div>) --- */}
-{showSecretAuth && (
-  <div style={{
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
-    alignItems: 'center', justifyContent: 'center'
-  }} onClick={() => setShowSecretAuth(false)}>
-    <div style={{
-      background: '#1a1a1a', borderRadius: 12, padding: 32,
-      maxWidth: 400, width: '90%'
-    }} onClick={e => e.stopPropagation()}>
-      <h2 style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
-      <form onSubmit={handleSecretAuth}>
-        <input
-          type="password" placeholder="MESMA SENHA DA SKY"
-          value={secretPassword}
-          onChange={e => setSecretPassword(e.target.value)}
-          style={{
-            width: '100%', padding: 12, marginBottom: 16,
-            background: '#0f0f0f', border: '1px solid #303030',
-            borderRadius: 8, color: '#fff', fontSize: 15
-          }}
-        />
-        <button type="submit" style={{
-          width: '100%', padding: 12, background: '#e53e3e',
-          color: '#fff', border: 'none', borderRadius: 8,
-          fontSize: 15, fontWeight: 600, cursor: 'pointer'
-        }}>
-          Liberar Acesso
-        </button>
-      </form>
-    </div>
-  </div>
-)}
-{/* --- ABA DE CONTEÚDO RESTRITO (No bloco de conteúdo principal) --- */}
-{activeTab === 'secret' && showSecretTab && (
-  <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
-    <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>Conteúdo Restrito (Secret Videos)</h2>
-    <div style={{ textAlign: 'center', padding: 64, background: '#303030', borderRadius: 16, color: '#fff' }}>
-        <p style={{ fontSize: 20 }}>Coloque aqui o seu código de vídeos secretos.</p>
-        <p style={{ fontSize: 14, color: '#aaa' }}>Você pode usar o mesmo layout da aba "Vídeos" para listar os vídeos específicos desta aba.</p>
-    </div>
-  </div>
-)}
-    </>
-  );
+    </>
+  );
 }
