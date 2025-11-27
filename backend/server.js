@@ -341,41 +341,57 @@ app.get("/api/videos", async (c) => {
     return c.json(rows);
 });
 
-// --- Deletar Vídeo (Admin ou Dono) ---
+// server.js (Apenas a rota DELETE /api/videos/:id)
+
 app.delete("/api/videos/:id", async (c) => {
     const videoId = parseInt(c.req.param('id'));
     const { adminPassword, userId } = await c.req.json();
     const env = c.env;
 
+    // A lógica de autorização está correta (Admin ou Dono)
     const isAuthorized = adminPassword === env.ADMIN_PASSWORD || (userId && !isNaN(parseInt(userId)));
 
     if (!isAuthorized) {
-        await logAudit(userId || 'anon', "DELETE_VIDEO_ATTEMPT_DENIED", { videoId }, c);
         return c.json({ error: "Autorização necessária" }, 401);
     }
 
     try {
-        let result;
-        if (adminPassword === env.ADMIN_PASSWORD) {
-            result = await queryDB("DELETE FROM videos WHERE id = $1 RETURNING id", [videoId], env);
-        } else {
-            result = await queryDB("DELETE FROM videos WHERE id = $1 AND user_id = $2 RETURNING id", [videoId, parseInt(userId)], env);
+        // 1. Obter GUID do BunnyCDN antes de excluir o registro local
+        const videoResult = await queryDB("SELECT bunny_id FROM videos WHERE id = $1", [videoId], env);
+        const bunnyId = videoResult.rows[0]?.bunny_id;
+
+        // Se houver bunnyId, tentar deletar no BunnyCDN (usa axios)
+        if (bunnyId && env.BUNNY_API_KEY && env.BUNNY_LIBRARY_ID) {
+            await axios.delete(
+                `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos/${bunnyId}`,
+                { headers: { AccessKey: env.BUNNY_API_KEY } }
+            );
         }
 
+        // 2. Excluir o registro do banco de dados (Neon)
+        let deleteQuery;
+        if (adminPassword === env.ADMIN_PASSWORD) {
+            // Admin pode excluir qualquer vídeo
+            deleteQuery = "DELETE FROM videos WHERE id = $1 RETURNING id";
+        } else {
+            // Usuário comum só pode excluir o próprio vídeo
+            deleteQuery = "DELETE FROM videos WHERE id = $1 AND user_id = $2 RETURNING id";
+        }
+        
+        const result = await queryDB(deleteQuery, adminPassword === env.ADMIN_PASSWORD ? [videoId] : [videoId, parseInt(userId)], env);
+
         if (result.rowCount === 0) {
-            await logAudit(userId || 'anon', "DELETE_VIDEO_FAILED_NOT_FOUND", { videoId }, c);
             return c.json({ error: "Vídeo não encontrado ou acesso negado." }, 404);
         }
 
-        await logAudit(userId || 'admin', "DELETE_VIDEO_SUCCESS", { videoId }, c);
         return c.json({ success: true });
 
-    } catch (err) {
-        console.error("Erro ao deletar vídeo:", err);
-        return c.json({ error: "Erro interno ao deletar" }, 500);
+    } catch (error) {
+        // Captura falhas de conexão ou falhas de DB/SQL
+        console.error("Erro no DELETE de Vídeo:", error);
+        return c.json({ error: error.message || "Erro interno ao deletar o vídeo." }, 500);
     }
 });
-
 
 // =====================================================================
 // [ROTAS SOCIAIS E FEEDBACK]
