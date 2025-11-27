@@ -348,48 +348,32 @@ app.delete("/api/videos/:id", async (c) => {
     const { adminPassword, userId } = await c.req.json();
     const env = c.env;
 
-    // A lógica de autorização está correta (Admin ou Dono)
-    const isAuthorized = adminPassword === env.ADMIN_PASSWORD || (userId && !isNaN(parseInt(userId)));
-
-    if (!isAuthorized) {
-        return c.json({ error: "Autorização necessária" }, 401);
-    }
+    // ... (Lógica de autorização - MANTENHA IGUAL) ...
 
     try {
-        // 1. Obter GUID do BunnyCDN antes de excluir o registro local
+        // 1. Limpar TODAS as referências dependentes do VÍDEO (CRÍTICO)
+        // O erro diz que a tabela 'comments' impede a exclusão do vídeo, então exclua PRIMEIRO.
+        await queryDB("DELETE FROM comments WHERE video_id = $1", [videoId], env); // <-- ADICIONAR
+        await queryDB("DELETE FROM video_reactions WHERE video_id = $1", [videoId], env); // <-- ADICIONAR
+
+        // 2. Tentar excluir o vídeo do BunnyCDN (MANTENHA IGUAL)
         const videoResult = await queryDB("SELECT bunny_id FROM videos WHERE id = $1", [videoId], env);
-        const bunnyId = videoResult.rows[0]?.bunny_id;
+        // ... (Lógica de exclusão do BunnyCDN) ...
 
-        // Se houver bunnyId, tentar deletar no BunnyCDN (usa axios)
-        if (bunnyId && env.BUNNY_API_KEY && env.BUNNY_LIBRARY_ID) {
-            await axios.delete(
-                `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos/${bunnyId}`,
-                { headers: { AccessKey: env.BUNNY_API_KEY } }
-            );
-        }
-
-        // 2. Excluir o registro do banco de dados (Neon)
+        // 3. Excluir o registro do banco de dados (Neon)
         let deleteQuery;
         if (adminPassword === env.ADMIN_PASSWORD) {
-            // Admin pode excluir qualquer vídeo
             deleteQuery = "DELETE FROM videos WHERE id = $1 RETURNING id";
         } else {
-            // Usuário comum só pode excluir o próprio vídeo
             deleteQuery = "DELETE FROM videos WHERE id = $1 AND user_id = $2 RETURNING id";
         }
         
         const result = await queryDB(deleteQuery, adminPassword === env.ADMIN_PASSWORD ? [videoId] : [videoId, parseInt(userId)], env);
 
-        if (result.rowCount === 0) {
-            return c.json({ error: "Vídeo não encontrado ou acesso negado." }, 404);
-        }
-
-        return c.json({ success: true });
+        // ... (Lógica de checagem e retorno) ...
 
     } catch (error) {
-        // Captura falhas de conexão ou falhas de DB/SQL
-        console.error("Erro no DELETE de Vídeo:", error);
-        return c.json({ error: error.message || "Erro interno ao deletar o vídeo." }, 500);
+        // ... (Log de erro) ...
     }
 });
 
