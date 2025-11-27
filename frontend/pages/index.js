@@ -1,8 +1,8 @@
+import Inbox from './inbox';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
 
-// Defina a URL do seu backend no .env.local:
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
@@ -381,12 +381,12 @@ export default function Home() {
 
         {/* TABS */}
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
-          {['videos', 'upload', isAdmin ? 'admin' : null, showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+          {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
   <button key={tab} onClick={() => setActiveTab(tab)} style={{
     // ... (mantenha os estilos) ...
   }}>
     {/* AJUSTE DO NOME DA ABA */}
-    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : 'SAFADEZA'} 
+    {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? 'Mensagens' : 'SAFADEZA'} 
   </button>
 ))}
         </div>
@@ -499,6 +499,11 @@ export default function Home() {
           {activeTab === 'admin' && isAdmin && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
               <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
+
+              {/* NOVO: TAB INBOX */}
+  {activeTab === 'inbox' && user && ( 
+     <Inbox user={user} usersList={usersList} />
+  )}
               
               {/* LISTA DE USUÁRIOS */}
               <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
