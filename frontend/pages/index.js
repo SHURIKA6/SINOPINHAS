@@ -1,5 +1,5 @@
+import styles from '../styles/Home.module.css';
 import Inbox from './inbox';
-import styles from '../Home.module.css'; // Ajuste o caminho conforme sua estrutura
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
@@ -254,7 +254,7 @@ export default function Home() {
 
   // --- 7. RENDERIZAÇÃO (VISUAL) ---
   return (
-    <>
+    <div className={styles.container}>
       <Head>
         <title>SINOPINHAS - Streaming de Vídeos</title>
         <meta name="description" content="Plataforma de streaming de vídeos" />
@@ -414,7 +414,7 @@ export default function Home() {
         </header>
 
 
-        <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
+        <div className={styles.tabs}>
           {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: '14px 20px', background: 'none', border: 'none',
@@ -429,7 +429,7 @@ export default function Home() {
         </div>
 
 
-        <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
+        <div className={styles.content}>
           
 
           {activeTab === 'videos' && (
@@ -534,32 +534,32 @@ export default function Home() {
 
 
           {activeTab === 'admin' && isAdmin && (
-            <div style={{ maxWidth: 900, margin: '0 auto' }}>
-              <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
+            <div className={styles.content}>
+              <h2 className={styles.sectionTitle}>👮‍♂️ Painel de Controle</h2>
 
 
-              <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
-                  <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
-                  <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
+              <div className={styles.adminSection}>
+                <div className={styles.adminHeader}>
+                  <h3 className={styles.adminSubtitle}>👥 Gerenciar Usuários</h3>
+                  <button onClick={loadUsers} className={styles.adminButton}>Atualizar</button>
                 </div>
-                <div style={{maxHeight: 300, overflowY: 'auto'}}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                <div className={styles.userList}>
+                  <table className={styles.adminTable}>
                     <thead>
-                      <tr style={{textAlign:'left', color:'#aaa', borderBottom: '1px solid #444'}}>
-                        <th style={{padding:10}}>ID</th>
+                      <tr>
+                        <th>ID</th>
                         <th>Usuário</th>
                         <th>Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {usersList.map(u => (
-                        <tr key={u.id} style={{borderTop:'1px solid #333'}}>
-                          <td style={{padding:10, color:'#666'}}>#{u.id}</td>
-                          <td style={{fontWeight:'bold'}}>{u.username}</td>
+                        <tr key={u.id} className={styles.adminTableRow}>
+                          <td>#{u.id}</td>
+                          <td>{u.username}</td>
                           <td>
-                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#000' }}>🔑 Resetar</button>
-                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#fff' }}>🚫 Banir</button>
+                            <button onClick={() => resetPassword(u.id)} className={styles.resetButton}>🔑 Resetar</button>
+                            <button onClick={() => banUser(u.id)} className={styles.banButton}>🚫 Banir</button>
                           </td>
                         </tr>
                       ))}
@@ -569,33 +569,32 @@ export default function Home() {
               </div>
 
 
-              <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
-                  <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (ATUALIZADO)</h3>
-                  <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
+              <div className={styles.adminSection}>
+                <div className={styles.adminHeader}>
+                  <h3 className={styles.adminSubtitle}>📜 Central de Inteligência (Logs)</h3>
+                  <button onClick={fetchLogs} className={styles.adminButton}>Atualizar</button>
                 </div>
-                <div style={{overflowX: 'auto'}}>
-
-                <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
+                <div className={styles.logList}>
+                  <table className={styles.adminTable}>
                     <thead>
-                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-                        <th style={{padding:10}}>Data/Hora</th>
-                        <th style={{padding:10}}>Usuário</th>
-                        <th style={{padding:10}}>Dispositivo</th>
-                        <th style={{padding:10}}>IP</th>
-                        <th style={{padding:10}}>Ação</th>
-                        <th style={{padding:10}}>Detalhes</th>
+                      <tr className={styles.adminTableRow}>
+                        <th>Data/Hora</th>
+                        <th>Usuário</th>
+                        <th>Dispositivo</th>
+                        <th>IP</th>
+                        <th>Ação</th>
+                        <th>Detalhes</th>
                       </tr>
                     </thead>
                     <tbody>
                       {logs.map(log => (
-                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-                          <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
-                          <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
-                          <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td>
-                          <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
-                          <td style={{padding:10}}>{log.action}</td>
-                          <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
+                        <tr key={log.id} className={styles.adminTableRow}>
+                          <td>{new Date(log.created_at).toLocaleString()}</td>
+                          <td>{log.username || 'Anônimo'}</td>
+                          <td>{log.device_type || 'N/A'}</td>
+                          <td>{log.ip}</td>
+                          <td>{log.action}</td>
+                          <td>{log.details}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -608,8 +607,8 @@ export default function Home() {
 
           {activeTab === 'inbox' && user && (
             <Inbox user={user} usersList={usersList} />
-          )}
-
+          )
+        }   
           {activeTab === 'secret' && showSecretTab && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>🔥 SAFADEZA (Conteúdo Restrito)</h2>
@@ -717,6 +716,6 @@ export default function Home() {
     </div>
   </div>
 )}
-    </>
+    </div>
   );
 }
