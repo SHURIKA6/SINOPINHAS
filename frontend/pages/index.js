@@ -27,10 +27,8 @@ const sendFingerprint = async (action, metadata = {}) => {
   }
 };
 
-// ✅ COMPONENTE DE VÍDEO OTIMIZADO (LAZY LOADING)
+// ✅ COMPONENTE DE VÍDEO OTIMIZADO (MOSTRA PLAYER SEMPRE)
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret }) => {
-  const [showPlayer, setShowPlayer] = useState(false);
-  
   return (
     <div style={{ 
       background: isSecret ? "#3d1a1a" : "#20153e", 
@@ -67,58 +65,23 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
       )}
       
       <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative' }}>
-        {!showPlayer && video.thumbnail_url && (
-          <>
-            <img 
-              src={video.thumbnail_url} 
-              loading="lazy"
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                objectFit: 'cover',
-                position: 'absolute',
-                top: 0,
-                left: 0
-              }} 
-              alt={video.title}
-            />
-            <div 
-              onClick={() => setShowPlayer(true)}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 70,
-                height: 70,
-                background: 'rgba(141, 106, 255, 0.9)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 30,
-                color: '#fff',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                zIndex: 2
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)'}
-            >
-              ▶️
-            </div>
-          </>
-        )}
-        
-        {showPlayer && (
-          <iframe
-            src={video.gdrive_id ? `https://drive.google.com/file/d/${video.gdrive_id}/preview` : (video.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${video.bunny_id}?autoplay=true` : "")}
-            style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
-            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" 
-            allowFullScreen 
-            loading="lazy"
-          />
-        )}
+        <iframe
+          src={video.gdrive_id 
+            ? `https://drive.google.com/file/d/${video.gdrive_id}/preview` 
+            : video.bunny_id 
+              ? `https://iframe.mediadelivery.net/embed/548459/${video.bunny_id}?autoplay=false&preload=true` 
+              : ""
+          }
+          style={{ 
+            width: "100%", 
+            height: "100%", 
+            border: 'none', 
+            borderRadius: 7
+          }}
+          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" 
+          allowFullScreen 
+          loading="lazy"
+        />
       </div>
       
       <div style={{ padding: 14 }}>
@@ -169,6 +132,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
 });
 
 VideoCard.displayName = 'VideoCard';
+
 
 export default function Home() {
   const [termsAccepted, setTermsAccepted] = useState(false);
