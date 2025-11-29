@@ -27,7 +27,6 @@ const sendFingerprint = async (action, metadata = {}) => {
   }
 };
 
-// ✅ COMPONENTE DE VÍDEO OTIMIZADO (MOSTRA PLAYER SEMPRE)
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret }) => {
   return (
     <div style={{ 
@@ -65,23 +64,25 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
       )}
       
       <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative' }}>
-        <iframe
-          src={video.gdrive_id 
-            ? `https://drive.google.com/file/d/${video.gdrive_id}/preview` 
-            : video.bunny_id 
-              ? `https://iframe.mediadelivery.net/embed/548459/${video.bunny_id}?autoplay=false&preload=true` 
-              : ""
-          }
-          style={{ 
-            width: "100%", 
-            height: "100%", 
-            border: 'none', 
-            borderRadius: 7
-          }}
-          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" 
-          allowFullScreen 
-          loading="lazy"
-        />
+        {video.gdrive_id ? (
+          <iframe
+            src={`https://drive.google.com/file/d/${video.gdrive_id}/preview`}
+            style={{ width: "100%", height: "100%", border: 'none' }}
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" 
+            allowFullScreen 
+          />
+        ) : video.bunny_id ? (
+          <iframe
+            src={`https://iframe.mediadelivery.net/embed/548459/${video.bunny_id}?autoplay=false&preload=true`}
+            style={{ width: "100%", height: "100%", border: 'none' }}
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" 
+            allowFullScreen 
+          />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+            Sem vídeo
+          </div>
+        )}
       </div>
       
       <div style={{ padding: 14 }}>
@@ -131,7 +132,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
   );
 });
 
-VideoCard.displayName = 'VideoCard';
+
 
 
 export default function Home() {
