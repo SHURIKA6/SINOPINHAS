@@ -48,33 +48,139 @@ async function queryDB(sql, params, env) {
     }
 }
 
-// UTILITY: Log de Auditoria
+// UTILITY: Log de Auditoria COMPLETO (FORENSE)
 async function logAudit(user_id, action, meta, c) {
     try {
-        const ip = c.req.header('CF-Connecting-IP') || 'unknown';
-        const userAgent = c.req.header('User-Agent') || 'unknown';
-
-        let deviceType = 'PC';
-        if (userAgent.match(/Mobi|Android|iPhone|iPad|Tablet|Nexus|Silk/i)) {
-            deviceType = 'Mobile';
-        } else if (userAgent.match(/Windows|Macintosh|Linux/i)) {
-            deviceType = 'PC';
-        } else {
-            deviceType = 'Outro';
+        // 1. CAPTURAR IP REAL
+        const cfConnectingIP = c.req.header('CF-Connecting-IP');
+        const xForwardedFor = c.req.header('X-Forwarded-For');
+        const xRealIP = c.req.header('X-Real-IP');
+        
+        let realIP = cfConnectingIP || xRealIP || 'unknown';
+        if (xForwardedFor && !cfConnectingIP) {
+            realIP = xForwardedFor.split(',')[0].trim();
         }
+
+        // 2. CAPTURAR DADOS DE GEOLOCALIZAÇÃO (Cloudflare)
+        const cfCountry = c.req.header('CF-IPCountry') || 'unknown';
+        const cfCity = c.req.header('CF-IPCity') || 'unknown';
+        const cfRegion = c.req.header('CF-Region') || 'unknown';
+        const cfTimezone = c.req.header('CF-Timezone') || 'unknown';
+        const cfLatitude = c.req.header('CF-IPLatitude') || null;
+        const cfLongitude = c.req.header('CF-IPLongitude') || null;
+        const cfASN = c.req.header('CF-Connecting-ASN') || 'unknown'; // Provedor de internet
+
+        // 3. CAPTURAR INFORMAÇÕES DO NAVEGADOR
+        const userAgent = c.req.header('User-Agent') || 'unknown';
+        const acceptLanguage = c.req.header('Accept-Language') || 'unknown';
+        const referer = c.req.header('Referer') || 'direct';
+
+        // 4. DETERMINAR TIPO DE DISPOSITIVO
+        let deviceType = 'PC';
+        let browserInfo = 'Unknown';
+        
+        if (userAgent.match(/iPhone/i)) deviceType = 'iPhone';
+        else if (userAgent.match(/iPad/i)) deviceType = 'iPad';
+        else if (userAgent.match(/Android/i)) deviceType = 'Android';
+        else if (userAgent.match(/Windows/i)) deviceType = 'Windows PC';
+        else if (userAgent.match(/Macintosh/i)) deviceType = 'Mac';
+        else if (userAgent.match(/Linux/i)) deviceType = 'Linux';
+
+        // Detectar navegador
+        if (userAgent.match(/Chrome/i)) browserInfo = 'Chrome';
+        else if (userAgent.match(/Firefox/i)) browserInfo = 'Firefox';
+        else if (userAgent.match(/Safari/i)) browserInfo = 'Safari';
+        else if (userAgent.match(/Edge/i)) browserInfo = 'Edge';
 
         const safeUserId = (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) 
             ? parseInt(user_id) : null;
         
+        // 5. MONTAR OBJETO COMPLETO DE METADATA
+        const enrichedMeta = {
+            ...meta,
+            geo: {
+                country: cfCountry,
+                city: cfCity,
+                region: cfRegion,
+                timezone: cfTimezone,
+                lat: cfLatitude,
+                lon: cfLongitude,
+                asn: cfASN
+            },
+            browser: {
+                name: browserInfo,
+                language: acceptLanguage,
+                referer: referer
+            },
+            timestamp_iso: new Date().toISOString()
+        };
+        
         await queryDB(
-            "INSERT INTO audit_logs (user_id, action, ip, user_agent, details, device_type) VALUES ($1, $2, $3, $4, $5, $6)",
-            [safeUserId, action, ip, userAgent, JSON.stringify(meta), deviceType],
+            "INSERT INTO audit_logs (user_id, action, ip, user_agent, details, device_type, country, city, region) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            [safeUserId, action, realIP, userAgent, JSON.stringify(enrichedMeta), deviceType, cfCountry, cfCity, cfRegion],
             c.env
         );
     } catch (err) {
         console.error("FALHA AO GRAVAR LOG:", err.message);
     }
 }
+
+// Buscar logs por IP específico (ADMIN)
+app.get("/api/admin/logs/ip/:ip", async (c) => {
+    const adminPasswordFromQuery = c.req.query('admin_password');
+    const targetIP = c.req.param('ip');
+    const env = c.env;
+
+    if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
+        return c.json({ error: "Acesso Negado" }, 403);
+    }
+
+    try {
+        const { rows } = await queryDB(`
+            SELECT a.*, u.username, a.device_type, a.country, a.city, a.region
+            FROM audit_logs a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.ip = $1
+            ORDER BY a.created_at DESC LIMIT 500
+        `, [targetIP], env);
+        return c.json(rows);
+    } catch (err) {
+        console.error("Erro ao buscar logs por IP:", err);
+        return c.json({ error: "Erro ao buscar logs" }, 500);
+    }
+});
+
+// Buscar TODOS os IPs únicos (para investigação)
+app.get("/api/admin/logs/ips", async (c) => {
+    const adminPasswordFromQuery = c.req.query('admin_password');
+    const env = c.env;
+
+    if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
+        return c.json({ error: "Acesso Negado" }, 403);
+    }
+
+    try {
+        const { rows } = await queryDB(`
+            SELECT 
+                ip, 
+                country,
+                city,
+                COUNT(*) as total_actions,
+                COUNT(DISTINCT user_id) as unique_users,
+                MAX(created_at) as last_seen
+            FROM audit_logs
+            WHERE ip != 'unknown'
+            GROUP BY ip, country, city
+            ORDER BY total_actions DESC
+            LIMIT 100
+        `, [], env);
+        return c.json(rows);
+    } catch (err) {
+        console.error("Erro ao buscar IPs:", err);
+        return c.json({ error: "Erro ao buscar IPs" }, 500);
+    }
+});
+
 
 // UTILITY: Criar Notificação
 async function createNotification(userId, type, message, relatedId, env) {
