@@ -101,7 +101,7 @@ async function checkUploadLimit(userId, env) {
         return parseInt(rows[0].count) < 5;
     } catch (err) {
         console.error("Erro ao verificar limite de upload:", err);
-        return true; // Em caso de erro, permite o upload
+        return true;
     }
 }
 
@@ -119,14 +119,6 @@ async function checkCommentLimit(userId, env) {
         console.error("Erro ao verificar limite de comentário:", err);
         return true;
     }
-}
-
-// UTILITY: Upload de Thumbnail para Cloudflare R2 ou Image CDN
-async function uploadThumbnail(file, env) {
-    // Esta função pode ser expandida para fazer upload real
-    // Por enquanto, retorna null (thumbnail será opcional)
-    // Você pode integrar com Cloudflare R2 ou outro serviço aqui
-    return null;
 }
 
 const app = new Hono();
@@ -403,7 +395,7 @@ app.post('/api/upload', async (c) => {
     }
 
     // PROTEÇÃO 3: Validar tamanho do arquivo (500MB)
-    const maxSize = 500 * 1024 * 1024; // 500MB
+    const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
         await logAudit(user_id, "UPLOAD_FAILED_SIZE", { size: file.size }, c);
         return c.json({ error: "Arquivo muito grande! Máximo: 500MB" }, 413);
@@ -431,13 +423,8 @@ app.post('/api/upload', async (c) => {
             { headers: { AccessKey: API_KEY, "Content-Type": "application/octet-stream" } }
         );
 
-        // Processar thumbnail (se fornecida)
+        // Thumbnail será null por enquanto (pode ser expandido)
         let thumbnailUrl = null;
-        if (thumbnailFile && thumbnailFile.type.startsWith('image/')) {
-            // Aqui você pode fazer upload da thumbnail para um CDN
-            // Por enquanto, apenas validamos que existe
-            thumbnailUrl = null; // Implementar upload real se necessário
-        }
 
         // Salvar no banco
         await queryDB(
@@ -803,7 +790,6 @@ app.delete("/api/comments/:id", async (c) => {
     const env = c.env;
 
     try {
-        // Verificar se é admin ou dono do comentário
         let deleteQuery;
         if (admin_password === env.ADMIN_PASSWORD) {
             deleteQuery = "DELETE FROM comments WHERE id = $1 RETURNING id";
@@ -841,4 +827,3 @@ export default {
         return app.fetch(request, env, ctx);
     },
 };
-// =====================================================================
