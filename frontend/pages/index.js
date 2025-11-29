@@ -997,30 +997,43 @@ export default function Home() {
                   <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
-                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14, minWidth: '800px'}}>
-                    <thead>
-                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-                        <th style={{padding:10}}>Data/Hora</th>
-                        <th style={{padding:10}}>Usuário</th>
-                        <th style={{padding:10}}>Dispositivo</th>
-                        <th style={{padding:10}}>IP</th>
-                        <th style={{padding:10}}>Ação</th>
-                        <th style={{padding:10}}>Detalhes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logs.map(log => (
-                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-                          <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
-                          <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
-                          <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td>
-                          <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
-                          <td style={{padding:10}}>{log.action}</td>
-                          <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14, minWidth: '1000px'}}>
+  <thead>
+    <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+      <th style={{padding:10}}>Data/Hora</th>
+      <th style={{padding:10}}>Usuário</th>
+      <th style={{padding:10}}>Dispositivo</th>
+      <th style={{padding:10}}>IP Real</th>
+      <th style={{padding:10}}>País/Cidade</th>
+      <th style={{padding:10}}>Ação</th>
+      <th style={{padding:10}}>Detalhes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {logs.map(log => (
+      <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+        <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
+        <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
+          {log.username || 'Anônimo'} (ID: {log.user_id || 'N/A'})
+        </td>
+        <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td>
+        <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace', fontSize: 13}}>
+          {log.ip}
+        </td>
+        <td style={{padding:10, color:'#10b981', fontSize: 12}}>
+          {log.country || 'N/A'} - {log.city || 'N/A'}
+        </td>
+        <td style={{padding:10, fontWeight: 'bold', color: log.action.includes('FAILED') || log.action.includes('BLOCKED') ? '#ef4444' : '#fff'}}>
+          {log.action}
+        </td>
+        <td style={{padding:10, maxWidth: 200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+          {log.details}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
                 </div>
               </div>
             </div>
