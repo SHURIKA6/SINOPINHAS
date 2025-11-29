@@ -1,4 +1,4 @@
-import Inbox from '../components/inbox.js';
+import Inbox from '../components/inbox';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
@@ -452,7 +452,6 @@ export default function Home() {
                         }}>
                           💬 Ver Comentários
                         </button>
-
                       </div>
                     </div>
                   ))}
@@ -579,10 +578,8 @@ export default function Home() {
           )}
 
           {activeTab === 'inbox' && (
-  <div>
-    <Inbox user={user} usersList={usersList} />
-  </div>
-)}
+            <Inbox user={user} usersList={usersList} />
+          )}
 
           {activeTab === 'secret' && showSecretTab && (
             <div>

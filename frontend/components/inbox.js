@@ -59,14 +59,29 @@ export default function Inbox({ user, usersList }) {
 
   if (!user) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', fontSize: '18px', color: '#666' }}>
+      <div style={{ 
+        padding: '40px', 
+        textAlign: 'center', 
+        fontSize: '18px',
+        color: '#aaa',
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
         Faça login para acessar suas mensagens.
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ 
+      padding: '20px', 
+      maxWidth: '800px', 
+      margin: '0 auto', 
+      minHeight: '80vh', 
+      color: '#fff' 
+    }}>
       {toast && (
         <div style={{
           position: 'fixed',
@@ -74,7 +89,7 @@ export default function Inbox({ user, usersList }) {
           right: '20px',
           padding: '15px 20px',
           borderRadius: '8px',
-          backgroundColor: toast.type === 'success' ? '#4CAF50' : '#f44336',
+          backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444',
           color: 'white',
           zIndex: 1000,
           boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
@@ -83,12 +98,37 @@ export default function Inbox({ user, usersList }) {
         </div>
       )}
 
-      <h2 style={{ marginBottom: '30px' }}>📬 Mensagens Privadas</h2>
+      <h2 style={{ marginBottom: '30px', color: '#fff' }}>📬 Mensagens Privadas</h2>
 
-      <form onSubmit={sendMessage} style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+      <form onSubmit={sendMessage} style={{ 
+        backgroundColor: '#1a1a1a', 
+        padding: '20px', 
+        borderRadius: '8px', 
+        marginBottom: '30px',
+        border: '1px solid #333'
+      }}>
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Para:</label>
-          <select value={recipientId} onChange={(e) => setRecipientId(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px' }}>
+          <label style={{ 
+            display: 'block', 
+            marginBottom: '8px', 
+            fontWeight: 'bold',
+            color: '#fff'
+          }}>
+            Para:
+          </label>
+          <select
+            value={recipientId}
+            onChange={(e) => setRecipientId(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #333',
+              fontSize: '16px',
+              backgroundColor: '#0f0f0f',
+              color: '#fff'
+            }}
+          >
             <option value="">Selecione um usuário...</option>
             {usersList && usersList.filter(u => u.id !== user.id).map(u => (
               <option key={u.id} value={u.id}>{u.username}</option>
@@ -97,28 +137,92 @@ export default function Inbox({ user, usersList }) {
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Mensagem:</label>
-          <textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Digite sua mensagem..." rows="4" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '16px', resize: 'vertical' }} />
+          <label style={{ 
+            display: 'block', 
+            marginBottom: '8px', 
+            fontWeight: 'bold',
+            color: '#fff'
+          }}>
+            Mensagem:
+          </label>
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Digite sua mensagem..."
+            rows="4"
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #333',
+              fontSize: '16px',
+              resize: 'vertical',
+              backgroundColor: '#0f0f0f',
+              color: '#fff'
+            }}
+          />
         </div>
 
-        <button type="submit" style={{ backgroundColor: '#2196F3', color: 'white', padding: '12px 24px', border: 'none', borderRadius: '6px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' }}>✉️ Enviar Mensagem</button>
+        <button
+          type="submit"
+          style={{
+            backgroundColor: '#8d6aff',
+            color: 'white',
+            padding: '12px 24px',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          ✉️ Enviar Mensagem
+        </button>
       </form>
 
       <div>
-        <h3 style={{ marginBottom: '20px' }}>Caixa de Entrada</h3>
+        <h3 style={{ marginBottom: '20px', color: '#fff' }}>Caixa de Entrada</h3>
         {loading ? (
-          <p>Carregando mensagens...</p>
+          <p style={{ color: '#aaa' }}>Carregando mensagens...</p>
         ) : messages.length === 0 ? (
-          <p style={{ color: '#999', textAlign: 'center', padding: '20px' }}>Você não tem mensagens. Use o formulário acima para enviar uma.</p>
+          <p style={{ 
+            color: '#999', 
+            textAlign: 'center', 
+            padding: '20px',
+            backgroundColor: '#1a1a1a',
+            borderRadius: '8px'
+          }}>
+            Você não tem mensagens. Use o formulário acima para enviar uma.
+          </p>
         ) : (
           <div>
             {messages.map((m, index) => (
-              <div key={index} style={{ backgroundColor: m.from_id === user.id ? '#e3f2fd' : '#fff', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #ddd', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#666' }}>
-                  <strong>{m.from_id === user.id ? `Para: ${m.to_username || 'Usuário'}` : `De: ${m.from_username || 'Usuário'}`}</strong>
+              <div
+                key={index}
+                style={{
+                  backgroundColor: m.from_id === user.id ? '#20153e' : '#1a1a1a',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginBottom: '15px',
+                  border: m.from_id === user.id ? '1px solid #8d6aff' : '1px solid #333',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
+              >
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  marginBottom: '10px',
+                  fontSize: '14px',
+                  color: '#aaa'
+                }}>
+                  <strong style={{ color: '#8d6aff' }}>
+                    {m.from_id === user.id 
+                      ? `Para: ${m.to_username || 'Usuário'}` 
+                      : `De: ${m.from_username || 'Usuário'}`}
+                  </strong>
                   <span>{new Date(m.created_at).toLocaleString()}</span>
                 </div>
-                <p style={{ margin: 0, fontSize: '16px' }}>{m.msg}</p>
+                <p style={{ margin: 0, fontSize: '16px', color: '#fff' }}>{m.msg}</p>
               </div>
             ))}
           </div>
