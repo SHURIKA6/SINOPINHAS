@@ -553,142 +553,154 @@ export default function Home() {
         )}
 
         <header style={{
-          background: '#212121', 
-          padding: '16px 24px', 
-          display: 'flex',
+  background: '#212121', 
+  padding: '16px 24px', 
+  display: 'flex',
+  alignItems: 'center', 
+  justifyContent: 'space-between', 
+  borderBottom: '2px solid #303030',
+  flexWrap: 'wrap',
+  gap: '12px',
+  position: 'relative'
+}}>
+  <h1 style={{
+    margin: 0, 
+    fontSize: 28, 
+    fontWeight: 700,
+    letterSpacing: "2px", 
+    background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
+    WebkitBackgroundClip: "text", 
+    WebkitTextFillColor: "transparent",
+    minWidth: '180px',
+    flexShrink: 0
+  }}>SINOPINHAS</h1>
+  
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: 10, 
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    flex: 1
+  }}>
+    <button onClick={() => setShowSecretAuth(true)} style={{
+      padding: '7px 12px', 
+      background: '#e53e3e', 
+      color: '#fff',
+      border: 'none', 
+      borderRadius: 8, 
+      fontSize: 13, 
+      fontWeight: 600, 
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      flexShrink: 0
+    }}>
+      🔒 Restrito
+    </button>
+    
+    {isAdmin && (
+      <span style={{ 
+        padding: '5px 10px', 
+        background: '#10b981', 
+        borderRadius: 8, 
+        fontSize: 11, 
+        fontWeight: 600, 
+        color: "#fff",
+        flexShrink: 0
+      }}>
+        ADMIN
+      </span>
+    )}
+    
+    {user ? (
+      <>
+        <button onClick={() => setShowProfile(true)} style={{
+          display: 'flex', 
           alignItems: 'center', 
-          justifyContent: 'space-between', 
-          borderBottom: '2px solid #303030',
-          flexWrap: 'wrap',
-          gap: '12px'
+          gap: 6,
+          padding: '6px 10px', 
+          background: '#303030', 
+          border: 'none',
+          borderRadius: 8, 
+          cursor: 'pointer', 
+          color: '#fff',
+          whiteSpace: 'nowrap',
+          maxWidth: '120px',
+          flexShrink: 0
         }}>
-          <h1 style={{
-            margin: 0, 
-            fontSize: 28, 
-            fontWeight: 700,
-            letterSpacing: "2px", 
-            background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
-            WebkitBackgroundClip: "text", 
-            WebkitTextFillColor: "transparent",
-            minWidth: '180px'
-          }}>SINOPINHAS</h1>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 10, 
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end',
-            flex: 1
-          }}>
-            <button onClick={() => setShowSecretAuth(true)} style={{
-              padding: '7px 14px', 
-              background: '#e53e3e', 
-              color: '#fff',
-              border: 'none', 
-              borderRadius: 8, 
-              fontSize: 14, 
-              fontWeight: 600, 
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}>
-              🔒 Restrito
-            </button>
-            
-            {isAdmin && (
-              <span style={{ 
-                padding: '6px 12px', 
-                background: '#10b981', 
-                borderRadius: 8, 
-                fontSize: 12, 
-                fontWeight: 600, 
-                color: "#fff" 
-              }}>
-                ADMIN
-              </span>
-            )}
-            
-            {user ? (
-              <>
-                <button onClick={() => setShowProfile(true)} style={{
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 8,
-                  padding: '7px 14px', 
-                  background: '#303030', 
-                  border: 'none',
-                  borderRadius: 8, 
-                  cursor: 'pointer', 
-                  color: '#fff',
-                  whiteSpace: 'nowrap',
-                  maxWidth: '150px'
-                }}>
-                  {user.avatar && (
-                    <img 
-                      src={user.avatar} 
-                      style={{ 
-                        width: 24, 
-                        height: 24, 
-                        borderRadius: '50%',
-                        objectFit: 'cover'
-                      }} 
-                      alt={user.username}
-                    />
-                  )}
-                  <strong style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>{user.username}</strong>
-                </button>
-                
-                <button onClick={logout} style={{ 
-                  padding: '7px 14px', 
-                  background: '#303030', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: 8, 
-                  cursor: 'pointer',
-                  fontSize: 14
-                }}>Sair</button>
-              </>
-            ) : (
-              <button onClick={() => setShowAuth(true)} style={{ 
-                padding: '7px 16px', 
-                background: '#8d6aff', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 8, 
-                fontWeight: 600, 
-                cursor: 'pointer',
-                fontSize: 14
-              }}>Login</button>
-            )}
-            
-            {!isAdmin ? (
-              <button onClick={() => setShowAdminAuth(true)} style={{ 
-                padding: '7px 14px', 
-                background: '#10b981', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 8, 
-                fontWeight: 600, 
-                cursor: 'pointer',
-                fontSize: 14
-              }}>Admin</button>
-            ) : (
-              <button onClick={logoutAdmin} style={{ 
-                padding: '7px 14px', 
-                background: '#ef4444', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 8, 
-                cursor: 'pointer',
-                fontSize: 14
-              }}>Sair Admin</button>
-            )}
-          </div>
-        </header>
+          {user.avatar && (
+            <img 
+              src={user.avatar} 
+              style={{ 
+                width: 20, 
+                height: 20, 
+                borderRadius: '50%',
+                objectFit: 'cover',
+                flexShrink: 0
+              }} 
+              alt={user.username}
+            />
+          )}
+          <strong style={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: 13
+          }}>{user.username}</strong>
+        </button>
+        
+        <button onClick={logout} style={{ 
+          padding: '7px 12px', 
+          background: '#303030', 
+          color: '#fff', 
+          border: 'none', 
+          borderRadius: 8, 
+          cursor: 'pointer',
+          fontSize: 13,
+          flexShrink: 0
+        }}>Sair</button>
+      </>
+    ) : (
+      <button onClick={() => setShowAuth(true)} style={{ 
+        padding: '7px 14px', 
+        background: '#8d6aff', 
+        color: '#fff', 
+        border: 'none', 
+        borderRadius: 8, 
+        fontWeight: 600, 
+        cursor: 'pointer',
+        fontSize: 13,
+        flexShrink: 0
+      }}>Login</button>
+    )}
+    
+    {!isAdmin ? (
+      <button onClick={() => setShowAdminAuth(true)} style={{ 
+        padding: '7px 12px', 
+        background: '#10b981', 
+        color: '#fff', 
+        border: 'none', 
+        borderRadius: 8, 
+        fontWeight: 600, 
+        cursor: 'pointer',
+        fontSize: 13,
+        flexShrink: 0
+      }}>Admin</button>
+    ) : (
+      <button onClick={logoutAdmin} style={{ 
+        padding: '7px 12px', 
+        background: '#ef4444', 
+        color: '#fff', 
+        border: 'none', 
+        borderRadius: 8, 
+        cursor: 'pointer',
+        fontSize: 13,
+        flexShrink: 0
+      }}>Sair Admin</button>
+    )}
+  </div>
+</header>
+
 
         <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030', overflowX: 'auto' }}>
           {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
@@ -1166,60 +1178,267 @@ export default function Home() {
         )}
       </div>
 
-      <style jsx>{`
+            <style jsx>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+
         * {
           box-sizing: border-box;
         }
+
         html {
           scroll-behavior: smooth;
         }
+
         body {
           overflow-x: hidden;
+          margin: 0;
+          padding: 0;
         }
+
+        /* ============================================ */
+        /* MOBILE LAYOUT - RESPONSIVO PROFISSIONAL */
+        /* ============================================ */
+
         @media (max-width: 768px) {
-          div[style*="padding: 38"] {
-            padding: 20px 16px !important;
+          /* HEADER MOBILE */
+          header {
+            padding: 12px 16px !important;
+            gap: 10px !important;
           }
-          div[style*="display: grid"][style*="gridTemplateColumns"] {
-            grid-template-columns: 1fr !important;
-            gap: 20px !important;
-          }
-          h1 {
-            font-size: 22px !important;
-          }
-          h2 {
+
+          header h1 {
             font-size: 20px !important;
+            letter-spacing: 1px !important;
+            min-width: auto !important;
           }
-          h3 {
-            font-size: 18px !important;
+
+          header > div {
+            width: 100% !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
           }
-          div[style*="maxWidth: 620"] {
-            max-width: 100% !important;
+
+          header button,
+          header span {
+            font-size: 11px !important;
+            padding: 6px 10px !important;
+            white-space: nowrap !important;
           }
-        }
-        @media (max-width: 480px) {
+
+          header button[style*="maxWidth: 150px"] {
+            max-width: 100px !important;
+          }
+
+          header button strong {
+            max-width: 60px !important;
+          }
+
+          /* TABS MOBILE */
+          div[style*="gap: 24"] {
+            padding: 0 12px !important;
+            gap: 8px !important;
+          }
+
+          div[style*="gap: 24"] button {
+            padding: 12px 10px !important;
+            font-size: 13px !important;
+            min-width: auto !important;
+          }
+
+          /* CONTAINER PRINCIPAL */
           div[style*="padding: 38"] {
             padding: 16px 12px !important;
           }
+
+          /* BUSCA E FILTROS */
+          div[style*="marginBottom: 20"][style*="flexWrap: wrap"] {
+            gap: 10px !important;
+          }
+
+          div[style*="marginBottom: 20"] input[type="text"] {
+            min-width: 100% !important;
+            font-size: 14px !important;
+            padding: 10px 16px !important;
+          }
+
+          div[style*="marginBottom: 20"] select {
+            width: 100% !important;
+            min-width: 100% !important;
+            font-size: 14px !important;
+          }
+
+          /* GRID DE VÍDEOS */
+          div[style*="gridTemplateColumns"] {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+
+          /* TÍTULOS */
           h1 {
             font-size: 20px !important;
-            letter-spacing: 1px !important;
+          }
+
+          h2 {
+            font-size: 18px !important;
+          }
+
+          h3 {
+            font-size: 16px !important;
+          }
+
+          /* UPLOAD AREA */
+          div[style*="maxWidth: 620"] {
+            max-width: 100% !important;
+          }
+
+          /* MODAIS */
+          div[style*="position: fixed"][style*="padding: '20px'"] > div {
+            width: 95% !important;
+            max-width: 95% !important;
+            padding: 24px 16px !important;
+          }
+
+          /* MODAL COMENTÁRIOS */
+          div[style*="maxWidth: 600"] {
+            width: 95% !important;
+            max-width: 95% !important;
+          }
+
+          /* TABELAS ADMIN */
+          div[style*="overflowX: auto"] table {
+            font-size: 11px !important;
+            min-width: 600px !important;
+          }
+
+          div[style*="overflowX: auto"] table th,
+          div[style*="overflowX: auto"] table td {
+            padding: 6px !important;
+          }
+
+          /* INBOX MOBILE */
+          div[style*="height: 70vh"] {
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: 70vh !important;
+          }
+
+          div[style*="flex: 0 0 300px"] {
+            flex: 1 1 auto !important;
+            width: 100% !important;
+            max-height: 40vh !important;
+          }
+
+          /* BOTÕES TOUCH FRIENDLY */
+          button {
+            min-height: 44px !important;
+            font-size: 14px !important;
+          }
+
+          /* TOAST MOBILE */
+          div[style*="position: fixed"][style*="top: 24"] {
+            top: 16px !important;
+            right: 16px !important;
+            left: 16px !important;
+            width: auto !important;
           }
         }
+
+        /* ============================================ */
+        /* MOBILE PEQUENO (até 480px) */
+        /* ============================================ */
+
+        @media (max-width: 480px) {
+          header {
+            padding: 10px 12px !important;
+          }
+
+          header h1 {
+            font-size: 18px !important;
+          }
+
+          header button,
+          header span {
+            font-size: 10px !important;
+            padding: 5px 8px !important;
+          }
+
+          div[style*="padding: 38"] {
+            padding: 12px 8px !important;
+          }
+
+          h2 {
+            font-size: 16px !important;
+          }
+
+          /* Tabs ainda menores */
+          div[style*="gap: 24"] button {
+            padding: 10px 8px !important;
+            font-size: 12px !important;
+          }
+        }
+
+        /* ============================================ */
+        /* LANDSCAPE MOBILE */
+        /* ============================================ */
+
+        @media (max-width: 900px) and (orientation: landscape) {
+          header {
+            padding: 8px 12px !important;
+          }
+
+          div[style*="padding: 38"] {
+            padding: 12px !important;
+          }
+
+          div[style*="height: 70vh"] {
+            height: 85vh !important;
+          }
+        }
+
+        /* ============================================ */
+        /* TOUCH DEVICES */
+        /* ============================================ */
+
         @media (hover: none) and (pointer: coarse) {
           button {
             min-height: 44px !important;
+            min-width: 44px !important;
+          }
+
+          input,
+          textarea,
+          select {
+            font-size: 16px !important; /* Evita zoom no iOS */
           }
         }
+
+        /* ============================================ */
+        /* iOS SAFE AREA */
+        /* ============================================ */
+
         @supports (padding: env(safe-area-inset-top)) {
           header {
             padding-top: max(16px, env(safe-area-inset-top)) !important;
           }
+
+          div[style*="padding: 38"] {
+            padding-bottom: max(38px, env(safe-area-inset-bottom)) !important;
+          }
+        }
+
+        /* ============================================ */
+        /* SCROLL SUAVE EM MOBILE */
+        /* ============================================ */
+
+        @media (max-width: 768px) {
+          * {
+            -webkit-overflow-scrolling: touch;
+          }
         }
       `}</style>
+
     </>
   );
 }
