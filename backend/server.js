@@ -33,16 +33,13 @@ async function comparePassword(password, storedHashJSON) {
         return false;
     }
 }
+
 // 3. UTILITY: Função de Consulta ao Banco (Usa Pool do Neon)
-// server.js (Trecho da função queryDB)
 async function queryDB(sql, params, env) {
-    
     if (!env.DATABASE_URL) throw new Error("DATABASE_URL não configurada.");
     
     const pool = new Pool({
         connectionString: env.DATABASE_URL,
-        // REMOVA esta linha ou comente-a:
-        // ssl: { rejectUnauthorized: false } 
     });
     try {
         const result = await pool.query(sql, params);
@@ -58,7 +55,6 @@ async function logAudit(user_id, action, meta, c) {
         const ip = c.req.header('CF-Connecting-IP') || 'unknown';
         const userAgent = c.req.header('User-Agent') || 'unknown';
 
-        // Lógica de identificação do dispositivo (mantida)
         let deviceType = 'PC';
         if (userAgent.match(/Mobi|Android|iPhone|iPad|Tablet|Nexus|Silk/i)) {
             deviceType = 'Mobile';
@@ -96,7 +92,6 @@ app.use('*', async (c, next) => {
     await next();
 });
 
-
 // =====================================================================
 // [ROTAS DE AUTENTICAÇÃO]
 // =====================================================================
@@ -116,15 +111,12 @@ app.post('/api/register', async (c) => {
         await logAudit(result.rows[0].id, "REGISTER", { username }, c);
         return c.json({ user: result.rows[0] });
     } catch (err) { 
-    // Mude a resposta 400 para expor o erro real para fins de depuração
-    // A string 'duplicate key' é o erro real do DB
-    const errorMsg = err.message || "Erro desconhecido ao registrar.";
-    if (errorMsg.includes('duplicate key')) {
-        return c.json({ error: "Username já existe" }, 409); // 409 Conflict
+        const errorMsg = err.message || "Erro desconhecido ao registrar.";
+        if (errorMsg.includes('duplicate key')) {
+            return c.json({ error: "Username já existe" }, 409);
+        }
+        return c.json({ error: "Falha de DB: " + errorMsg }, 500);
     }
-    // Para todos os outros erros, mostre o erro real do DB (Ex: falha de permissão)
-    return c.json({ error: "Falha de DB: " + errorMsg }, 500); // Mude para 500
-  }
 });
 
 app.post('/api/login', async (c) => {
@@ -143,30 +135,24 @@ app.post('/api/login', async (c) => {
     return c.json({ user: { id: user.id, username: user.username, avatar: user.avatar, bio: user.bio } });
 });
 
-// server.js (Substitua todo o bloco de rotas de admin pelo código abaixo)
-
 // --- ROTA 1: ADMIN LOGIN (POST) ---
 app.post('/api/admin/login', async (c) => {
-    // CORREÇÃO: Lê o corpo JSON antes de acessar a propriedade
     const body = await c.req.json(); 
     
-    // Agora verifica a propriedade do objeto 'body' com o segredo do Worker
     if (body.password === c.env.ADMIN_PASSWORD) {
         return c.json({ success: true });
     }
     
-    // Se a senha estiver errada, retorna 401
     return c.json({ error: "Senha incorreta" }, 401);
 });
 
 // --- ROTA 2: GERENCIAR USUÁRIOS (GET) ---
 app.get("/api/admin/users", async (c) => {
-    // O Hono lê a senha da query string (admin_password=...)
     const adminPasswordFromQuery = c.req.query('admin_password');
     const env = c.env;
 
     if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
-        return c.json({ error: "Senha de admin incorreta" }, 403); // 403 Forbidden
+        return c.json({ error: "Senha de admin incorreta" }, 403);
     }
     try {
         const { rows } = await queryDB("SELECT id, username, bio, created_at, avatar FROM users ORDER BY id DESC LIMIT 50", [], env);
@@ -179,16 +165,14 @@ app.get("/api/admin/users", async (c) => {
 
 // --- ROTA 3: RASTREAMENTO/LOGS (GET) ---
 app.get("/api/admin/logs", async (c) => {
-    // O Hono lê a senha da query string (admin_password=...)
     const adminPasswordFromQuery = c.req.query('admin_password');
     const env = c.env;
 
     if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
-        return c.json({ error: "Acesso Negado: Credenciais Inválidas" }, 403); // 403 Forbidden
+        return c.json({ error: "Acesso Negado: Credenciais Inválidas" }, 403);
     }
     try {
         const { rows } = await queryDB(`
-            -- Seleciona todas as colunas de 'a' e o username, INCLUINDO device_type
             SELECT a.*, u.username, a.device_type
             FROM audit_logs a
             LEFT JOIN users u ON a.user_id = u.id
@@ -201,10 +185,6 @@ app.get("/api/admin/logs", async (c) => {
     }
 });
 
-// server.js (Adicionar ao bloco de rotas de administração)
-
-// server.js (Apenas a rota DELETE /api/admin/users/:id)
-
 app.delete("/api/admin/users/:id", async (c) => {
     const id = parseInt(c.req.param('id')); 
     const { admin_password } = await c.req.json();
@@ -213,14 +193,11 @@ app.delete("/api/admin/users/:id", async (c) => {
     if (admin_password !== env.ADMIN_PASSWORD) return c.json({ error: "Acesso Negado" }, 403);
     
     try { 
-        // 1. Limpar TODAS as referências
         await queryDB("DELETE FROM comments WHERE user_id = $1", [id], env);
         await queryDB("DELETE FROM video_reactions WHERE user_id = $1", [id], env);
         await queryDB("DELETE FROM videos WHERE user_id = $1", [id], env);
-        // NOVO: Limpar Audit Logs associados ao usuário
-        await queryDB("DELETE FROM audit_logs WHERE user_id = $1", [id], env); // <-- ADICIONE ESTA LINHA
+        await queryDB("DELETE FROM audit_logs WHERE user_id = $1", [id], env);
 
-        // 2. Apagar o usuário principal
         const result = await queryDB("DELETE FROM users WHERE id = $1", [id], env);
         
         if (result.rowCount === 0) {
@@ -234,7 +211,6 @@ app.delete("/api/admin/users/:id", async (c) => {
     }
 });
 
-// --- ROTA POST: RESETAR SENHA ---
 app.post("/api/admin/reset-password", async (c) => {
     const { user_id, admin_password } = await c.req.json();
     const env = c.env;
@@ -242,7 +218,6 @@ app.post("/api/admin/reset-password", async (c) => {
     if (admin_password !== env.ADMIN_PASSWORD) return c.json({ error: "Acesso Negado" }, 403);
     
     try {
-        // Hashing da senha padrão "123456" com Web Crypto (substitui bcrypt)
         const hash = await hashPassword("123456"); 
         
         const result = await queryDB("UPDATE users SET password = $1 WHERE id = $2 RETURNING id", [hash, user_id], env);
@@ -262,9 +237,7 @@ app.post("/api/admin/reset-password", async (c) => {
 // [ROTAS DE VÍDEO E UPLOAD]
 // =====================================================================
 
-// --- UPLOAD VÍDEO COM BUNNYCDN (Substitui multer) ---
 app.post('/api/upload', async (c) => {
-    // c.req.formData() substitui multer para lidar com arquivos no Workers
     const formData = await c.req.formData();
     const file = formData.get("file");
     const title = formData.get("title");
@@ -276,7 +249,6 @@ app.post('/api/upload', async (c) => {
     
     if (!user_id || !file || typeof file === 'string') return c.json({ error: "Arquivo obrigatório" }, 400);
 
-    // 1. Verificar se o usuário existe (Segurança)
     const userCheck = await queryDB("SELECT id FROM users WHERE id = $1", [parseInt(user_id)], c.env);
     if (userCheck.rows.length === 0) {
         await logAudit(user_id, "UPLOAD_FAILED_UNAUTH", { reason: "User ID not found" }, c);
@@ -284,7 +256,6 @@ app.post('/api/upload', async (c) => {
     }
 
     try {
-        // 2. Criar o vídeo no BunnyCDN
         const createRes = await axios.post(
             `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos`,
             { title: title },
@@ -292,18 +263,15 @@ app.post('/api/upload', async (c) => {
         );
         const videoGuid = createRes.data.guid;
 
-        // 3. Enviar o conteúdo do arquivo (Upload)
-        // file.stream() é a forma Workers-friendly de obter o corpo do arquivo
         await axios.put(
             `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos/${videoGuid}`,
-            file, // Passa o objeto File/Blob diretamente (ou use await file.arrayBuffer())
+            file,
             { headers: { AccessKey: API_KEY, "Content-Type": "application/octet-stream" } }
         );
 
-        // 4. Salvar no Banco com a nova coluna is_restricted
         await queryDB(
             "INSERT INTO videos (title, user_id, bunny_id, is_restricted) VALUES ($1, $2, $3, $4)",
-            [title, parseInt(user_id), videoGuid, is_restricted === 'true' || false], c.env
+            [title, parseInt(user_id), videoGuid, is_restricted === 'true'], c.env
         );
 
         await logAudit(user_id, "UPLOAD_VIDEO", { title, service: "BunnyCDN", restricted: is_restricted === 'true' }, c);
@@ -315,8 +283,24 @@ app.post('/api/upload', async (c) => {
     }
 });
 
-// --- Listar Conteúdo Restrito ---
-app.get("/api/secret/videos", async (c) => {
+// --- Listar Vídeos (Página Principal - Filtrado) ---
+app.get("/api/videos", async (c) => {
+    try {
+        const { rows } = await queryDB(`
+            SELECT v.*, u.username, u.avatar FROM videos v
+            LEFT JOIN users u ON v.user_id = u.id
+            WHERE v.is_restricted = FALSE
+            ORDER BY v.created_at DESC LIMIT 50
+        `, [], c.env);
+        return c.json(rows);
+    } catch (err) {
+        console.error("Erro ao buscar vídeos:", err);
+        return c.json({ error: "Erro ao buscar vídeos" }, 500);
+    }
+});
+
+// --- Listar Conteúdo Restrito (ROTA CORRIGIDA) ---
+app.get("/api/secret-videos", async (c) => {
     try {
         const { rows } = await queryDB(`
             SELECT v.*, u.username, u.avatar FROM videos v
@@ -326,22 +310,10 @@ app.get("/api/secret/videos", async (c) => {
         `, [], c.env);
         return c.json(rows);
     } catch (err) {
+        console.error("Erro ao buscar conteúdo restrito:", err);
         return c.json({ error: "Erro ao buscar conteúdo restrito" }, 500);
     }
 });
-
-// --- Listar Vídeos (Página Principal - Filtrado) ---
-app.get("/api/videos", async (c) => {
-    const { rows } = await queryDB(`
-        SELECT v.*, u.username, u.avatar FROM videos v
-        LEFT JOIN users u ON v.user_id = u.id
-        WHERE v.is_restricted = FALSE
-        ORDER BY v.created_at DESC LIMIT 50
-    `, [], c.env);
-    return c.json(rows);
-});
-
-// server.js (Apenas a rota DELETE /api/videos/:id)
 
 app.delete("/api/videos/:id", async (c) => {
     const videoId = parseInt(c.req.param('id'));
@@ -355,17 +327,12 @@ app.delete("/api/videos/:id", async (c) => {
     }
 
     try {
-        // 1. Limpar TODAS as referências dependentes do VÍDEO (CRÍTICO)
-        // Isso resolve a violação da Chave Estrangeira.
-        await queryDB("DELETE FROM comments WHERE video_id = $1", [videoId], env); // <-- CRÍTICO: Excluir comentários
-        await queryDB("DELETE FROM video_reactions WHERE video_id = $1", [videoId], env); // <-- CRÍTICO: Excluir reações
-
+        await queryDB("DELETE FROM comments WHERE video_id = $1", [videoId], env);
+        await queryDB("DELETE FROM video_reactions WHERE video_id = $1", [videoId], env);
         
-        // 2. Obter GUID do BunnyCDN antes de excluir o registro local (MANTENHA)
         const videoResult = await queryDB("SELECT bunny_id FROM videos WHERE id = $1", [videoId], env);
         const bunnyId = videoResult.rows[0]?.bunny_id;
 
-        // Tentar deletar no BunnyCDN (se a chave e ID estiverem no Worker)
         if (bunnyId && env.BUNNY_API_KEY && env.BUNNY_LIBRARY_ID) {
             await axios.delete(
                 `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos/${bunnyId}`,
@@ -373,13 +340,10 @@ app.delete("/api/videos/:id", async (c) => {
             );
         }
 
-        // 3. Excluir o registro do banco de dados (Neon)
         let deleteQuery;
         if (adminPassword === env.ADMIN_PASSWORD) {
-            // Admin pode excluir qualquer vídeo
             deleteQuery = "DELETE FROM videos WHERE id = $1 RETURNING id";
         } else {
-            // Usuário comum só pode excluir o próprio vídeo
             deleteQuery = "DELETE FROM videos WHERE id = $1 AND user_id = $2 RETURNING id";
         }
         
@@ -389,12 +353,10 @@ app.delete("/api/videos/:id", async (c) => {
             return c.json({ error: "Vídeo não encontrado ou acesso negado." }, 404);
         }
         
-        // Se a exclusão no Neon for bem-sucedida, retorna 200/sucesso.
         return c.json({ success: true });
 
     } catch (error) {
         console.error("Erro no DELETE de Vídeo (Final):", error); 
-        // Retorna 500 informando que a falha foi no backend
         return c.json({ error: "Erro interno ao deletar o vídeo." }, 500);
     }
 });
@@ -403,27 +365,19 @@ app.delete("/api/videos/:id", async (c) => {
 // [ROTAS SOCIAIS E FEEDBACK]
 // =====================================================================
 
-// (Demais rotas sociais e de admin traduzidas para a sintaxe Hono e queryDB...)
-
-// server.js (Apenas a rota POST /api/mural)
-
 app.post("/api/mural", async (c) => {
     const { user_id, msg } = await c.req.json();
     const env = c.env;
 
     try {
-        // 1. Pega o mural atual
         let mural = await env.MURAL_STORE.get('mural_messages', { type: 'json' }) || [];
         
-        // --- ADIÇÃO CRÍTICA: Buscar o username no Neon DB ---
         const userQuery = await queryDB("SELECT username FROM users WHERE id = $1", [user_id], env);
         const username = userQuery.rows[0]?.username || "Anônimo";
-        // --- FIM DA ADIÇÃO ---
 
         const newPost = { user_id, username, msg, created_at: new Date().toISOString() };
         mural.push(newPost);
         
-        // 2. Limita e salva no KV
         if (mural.length > 40) mural = mural.slice(mural.length - 40);
         await env.MURAL_STORE.put('mural_messages', JSON.stringify(mural));
 
@@ -431,16 +385,12 @@ app.post("/api/mural", async (c) => {
         return c.json({ ok: true });
 
     } catch (e) {
-        // Mude para 500 se for um erro de DB real, mas mantenha a resposta 
         console.error("Erro ao postar no mural:", e);
         return c.json({ error: "Erro ao postar no mural" }, 500);
     }
 });
 
-// A rota GET /api/mural está correta para ler os dados.
-
 app.get("/api/mural", async (c) => {
-    // Lê o mural do KV Store
     try {
         const mural = await c.env.MURAL_STORE.get('mural_messages', { type: 'json' }) || [];
         return c.json({ mural });
@@ -449,9 +399,6 @@ app.get("/api/mural", async (c) => {
     }
 });
 
-// server.js (Adicionar ao bloco de rotas sociais/de feedback)
-
-// --- ROTA DE ENVIAR MENSAGEM (POST) ---
 app.post("/api/send-message", async (c) => {
     const { from_id, to_id, msg } = await c.req.json();
     const env = c.env;
@@ -468,27 +415,29 @@ app.post("/api/send-message", async (c) => {
     }
 });
 
-// --- ROTA DE INBOX (GET) ---
 app.get("/api/inbox/:user_id", async (c) => {
-    const { user_id } = c.req.param();
+    const user_id = c.req.param('user_id');
     const env = c.env;
 
     try {
         const { rows } = await queryDB(
-            "SELECT * FROM inbox WHERE to_id = $1 OR from_id = $1 ORDER BY created_at DESC LIMIT 40",
+            `SELECT i.*, u1.username as from_username, u2.username as to_username
+             FROM inbox i
+             LEFT JOIN users u1 ON i.from_id = u1.id
+             LEFT JOIN users u2 ON i.to_id = u2.id
+             WHERE i.to_id = $1 OR i.from_id = $1
+             ORDER BY i.created_at DESC LIMIT 40`,
             [parseInt(user_id)], env
         );
         return c.json(rows);
     } catch (err) {
+        console.error("Erro ao buscar inbox:", err);
         return c.json({ error: "Erro ao buscar caixa de mensagens." }, 500);
     }
 });
 
-// server.js (Adicionar ao bloco de rotas sociais/de feedback)
-
-// --- ROTA DE BUSCA DE COMENTÁRIOS (GET) ---
 app.get("/api/comments/:video_id", async (c) => {
-    const { video_id } = c.req.param();
+    const video_id = c.req.param('video_id');
     const env = c.env;
 
     if (!video_id || isNaN(parseInt(video_id))) {
@@ -510,7 +459,6 @@ app.get("/api/comments/:video_id", async (c) => {
     }
 });
 
-// --- ROTA DE ENVIO DE COMENTÁRIOS (POST) ---
 app.post("/api/comment", async (c) => {
     const { video_id, user_id, comment } = await c.req.json();
     const env = c.env;
@@ -521,7 +469,6 @@ app.post("/api/comment", async (c) => {
             [parseInt(video_id), parseInt(user_id), comment], 
             env
         );
-        // Não temos o 'req' no worker, usando 'c' para logAudit
         await logAudit(user_id, "COMMENT", { video_id, comment }, c); 
         return c.json({ ok: true });
     } catch (err) {
@@ -529,8 +476,6 @@ app.post("/api/comment", async (c) => {
         return c.json({ error: "Erro ao enviar comentário" }, 500);
     }
 });
-
-// ... Outras rotas de admin (como logs, users, etc.) seguiriam a mesma conversão ...
 
 // =====================================================================
 // [STARTUP E HANDLERS FINAIS]
@@ -541,11 +486,6 @@ app.all("*", (c) => c.json({ error: "not found" }, 404));
 
 // 6. EXPORT DEFAULT HANDLER PARA CLOUDFLARE WORKERS
 export default {
-    /**
-     * @param {Request} request
-     * @param {Env} env O objeto de ambiente (contém vars, secrets e bindings KV).
-     * @param {ExecutionContext} ctx
-     */
     async fetch(request, env, ctx) {
         return app.fetch(request, env, ctx);
     },
