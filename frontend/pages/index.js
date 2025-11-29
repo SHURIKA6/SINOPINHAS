@@ -415,8 +415,10 @@ await axios.post(`${API}/api/log-terms`, fingerprintData);
     
     try {
       const fingerprintData = await sendFingerprint(isLogin ? 'USER_LOGIN' : 'USER_REGISTER', {
-        username: username
-      });
+  username,
+  auth_type: isLogin ? 'login' : 'register',
+});
+
       
       const endpoint = isLogin ? '/api/login' : '/api/register';
       const res = await axios.post(`${API}${endpoint}`, { 
