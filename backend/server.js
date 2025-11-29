@@ -10,10 +10,10 @@ app.use("/*", cors());
 // ==========================================
 async function hash(password) {
   const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'SINOPINHAS_SALT_2025');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const data = encoder.encode(password + "SINOPINHAS_SALT_2025");
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 async function compare(password, hashedPassword) {
@@ -26,71 +26,76 @@ async function compare(password, hashedPassword) {
 // ==========================================
 async function isVPN(ip, c) {
   try {
-    // MÉTODO 1: Verificar headers de proxy conhecidos
+
     const proxyHeaders = [
-      'X-Forwarded-For',
-      'X-ProxyUser-Ip', 
-      'X-Proxy-ID',
-      'Via',
-      'Forwarded',
-      'X-Forwarded',
-      'X-Forwarded-Host',
-      'Client-IP',
-      'WL-Proxy-Client-IP',
-      'Proxy-Client-IP'
+      "X-Forwarded-For",
+      "X-ProxyUser-Ip",
+      "X-Proxy-ID",
+      "Via",
+      "Forwarded",
+      "X-Forwarded",
+      "X-Forwarded-Host",
+      "Client-IP",
+      "WL-Proxy-Client-IP",
+      "Proxy-Client-IP",
     ];
-    
+
     for (const header of proxyHeaders) {
-      if (c.req.header(header)) {
-        // Se tem múltiplos IPs na cadeia, é provável proxy/VPN
-        const value = c.req.header(header);
-        if (value && value.includes(',')) {
-          console.log(`🚫 VPN detectada via header ${header}`);
-          return true;
-        }
+      const value = c.req.header(header);
+      if (value && value.includes(",")) {
+        console.log(`🚫 VPN detectada via header ${header}`);
+        return true;
       }
     }
 
-    // MÉTODO 2: Cloudflare Threat Score (0-100, >10 é suspeito)
-    const cfThreatScore = c.req.header('CF-Threat-Score');
+    const cfThreatScore = c.req.header("CF-Threat-Score");
     if (cfThreatScore && parseInt(cfThreatScore) > 10) {
       console.log(`🚫 VPN detectada via CF Threat Score: ${cfThreatScore}`);
       return true;
     }
 
-    // MÉTODO 3: Verificar se é Tor Exit Node (Cloudflare detecta)
-    const cfIsTor = c.req.header('CF-Is-Tor');
-    if (cfIsTor === '1') {
-      console.log('🚫 Conexão TOR detectada');
+    const cfIsTor = c.req.header("CF-Is-Tor");
+    if (cfIsTor === "1") {
+      console.log("🚫 Conexão TOR detectada");
       return true;
     }
 
-    // MÉTODO 4: API de detecção de VPN (usando Shodan InternetDB - grátis)
+
     try {
-      const response = await fetch(`https://internetdb.shodan.io/${ip}`, {
-        timeout: 2000 // 2 segundos
-      });
-      
+      const response = await fetch(`https://internetdb.shodan.io/${ip}`);
       if (response.ok) {
         const data = await response.json();
-        if (data.tags && (data.tags.includes('vpn') || data.tags.includes('proxy'))) {
+        if (data.tags && (data.tags.includes("vpn") || data.tags.includes("proxy"))) {
           console.log(`🚫 VPN/Proxy detectada via Shodan para IP ${ip}`);
           return true;
         }
       }
     } catch (apiErr) {
-      console.log('⚠️ API Shodan não disponível, continuando...');
+      console.log("⚠️ API Shodan não disponível, continuando...");
     }
 
-    // MÉTODO 5: Verificar se IP está em ranges conhecidos de VPN
-    // Lista simplificada - você pode expandir
-    const vpnRanges = [
-      '10.', '172.16.', '172.17.', '172.18.', '172.19.', 
-      '172.20.', '172.21.', '172.22.', '172.23.', '172.24.',
-      '172.25.', '172.26.', '172.27.', '172.28.', '172.29.',
-      '172.30.', '172.31.', '192.168.'
-    ];
     
+    const vpnRanges = [
+      "10.",
+      "172.16.",
+      "172.17.",
+      "172.18.",
+      "172.19.",
+      "172.20.",
+      "172.21.",
+      "172.22.",
+      "172.23.",
+      "172.24.",
+      "172.25.",
+      "172.26.",
+      "172.27.",
+      "172.28.",
+      "172.29.",
+      "172.30.",
+      "172.31.",
+      "192.168.",
+    ];
+
     for (const range of vpnRanges) {
       if (ip.startsWith(range)) {
         console.log(`🚫 IP privado/VPN detectado: ${ip}`);
@@ -100,70 +105,42 @@ async function isVPN(ip, c) {
 
     return false;
   } catch (err) {
-    console.error('⚠️ Erro ao verificar VPN:', err.message);
-    return false; // Em caso de erro, permitir (ou você pode bloquear)
+    console.error("⚠️ Erro ao verificar VPN:", err.message);
+    return false;
   }
 }
 
 // MIDDLEWARE DE BLOQUEIO DE VPN
 async function blockVPN(c, next) {
-  const cfConnectingIP = c.req.header('CF-Connecting-IP');
-  const xForwardedFor = c.req.header('X-Forwarded-For');
-  const xRealIP = c.req.header('X-Real-IP');
-  let realIP = cfConnectingIP || xRealIP || 'unknown';
-  
+  const cfConnectingIP = c.req.header("CF-Connecting-IP");
+  const xForwardedFor = c.req.header("X-Forwarded-For");
+  const xRealIP = c.req.header("X-Real-IP");
+  let realIP = cfConnectingIP || xRealIP || "unknown";
+
   if (xForwardedFor && !cfConnectingIP) {
-    realIP = xForwardedFor.split(',')[0].trim();
+    realIP = xForwardedFor.split(",")[0].trim();
   }
 
   const vpnDetected = await isVPN(realIP, c);
-  
+
   if (vpnDetected) {
-    await logAudit(null, 'VPN_BLOCKED', { ip: realIP }, c);
-    return c.json({ 
-      error: "VPN/Proxy detectado. Desative sua VPN para acessar o SINOPINHAS.",
-      blocked: true 
-    }, 403);
+    await logAudit(null, "VPN_BLOCKED", { ip: realIP }, c);
+    return c.json(
+      {
+        error: "VPN/Proxy detectado. Desative sua VPN para acessar o SINOPINHAS.",
+        blocked: true,
+      },
+      403
+    );
   }
-  
-  await next();
+
+  return await next();
 }
 
-// APLICAR MIDDLEWARE EM ROTAS CRÍTICAS
-app.post("/api/register", blockVPN, async (c) => {
-  // ... código existente de registro
-});
-
-// No endpoint de login, adicione validação de fingerprint
-app.post("/api/login", blockVPN, async (c) => {
-  const env = c.env;
-  try {
-    const body = await c.req.json();
-    const username = body.username;
-    const password = body.password;
-    const fingerprint = body.fingerprint; // Capturado do frontend
-
-    // ... validações existentes ...
-
-    // VALIDAR FINGERPRINT
-    if (fingerprint && fingerprint !== 'error') {
-      const fingerprintValidation = await validateFingerprint(fingerprint, user.id, c);
-      
-      if (fingerprintValidation.isNewDevice) {
-        console.log(`⚠️ Novo dispositivo detectado para user ${user.id}`);
-        // Você pode enviar notificação por email ou exigir 2FA aqui
-      }
-    }
-
-    // ... resto do código de login ...
-  } catch (err) {
-    // ... tratamento de erro ...
-  }
-});
-
-app.post("/api/upload", blockVPN, async (c) => {
-  // ... código existente de upload
-});
+// aplicar VPN só nas rotas sensíveis
+app.use("/api/register", blockVPN);
+app.use("/api/login", blockVPN);
+app.use("/api/upload", blockVPN);
 
 // ==========================================
 // UTILITY: Consulta ao Banco de Dados
@@ -185,143 +162,133 @@ async function queryDB(sql, params = [], env) {
 // UTILITY: Log de Auditoria FORENSE COMPLETO
 // ==========================================
 async function logAudit(user_id, action, meta = {}, c) {
-    try {
-        // CAPTURAR IP REAL
-        const cfConnectingIP = c.req.header('CF-Connecting-IP');
-        const xForwardedFor = c.req.header('X-Forwarded-For');
-        const xRealIP = c.req.header('X-Real-IP');
-        
-        let realIP = cfConnectingIP || xRealIP || 'unknown';
-        if (xForwardedFor && !cfConnectingIP) {
-            realIP = xForwardedFor.split(',')[0].trim();
-        }
+  try {
+    const cfConnectingIP = c.req.header("CF-Connecting-IP");
+    const xForwardedFor = c.req.header("X-Forwarded-For");
+    const xRealIP = c.req.header("X-Real-IP");
 
-        // GEOLOCALIZAÇÃO
-        const cfCountry = c.req.header('CF-IPCountry') || null;
-        const cfCity = c.req.header('CF-IPCity') || null;
-        const cfRegion = c.req.header('CF-Region') || null;
-        const cfTimezone = c.req.header('CF-Timezone') || null;
-        const cfLatitude = c.req.header('CF-IPLatitude') || null;
-        const cfLongitude = c.req.header('CF-IPLongitude') || null;
-        const cfASN = c.req.header('CF-Connecting-ASN') || null;
-
-        // USER AGENT
-        const userAgent = c.req.header('User-Agent') || 'unknown';
-        const acceptLanguage = c.req.header('Accept-Language') || null;
-
-        // DETECTAR SISTEMA OPERACIONAL
-        let os = 'Unknown';
-        if (userAgent.match(/Windows NT 10\.0/i)) os = 'Windows 10';
-        else if (userAgent.match(/Windows NT 11\.0/i)) os = 'Windows 11';
-        else if (userAgent.match(/Windows/i)) os = 'Windows';
-        else if (userAgent.match(/Mac OS X/i)) os = 'macOS';
-        else if (userAgent.match(/iPhone/i)) os = 'iOS (iPhone)';
-        else if (userAgent.match(/iPad/i)) os = 'iOS (iPad)';
-        else if (userAgent.match(/Android/i)) os = 'Android';
-        else if (userAgent.match(/Linux/i)) os = 'Linux';
-
-        // DETECTAR NAVEGADOR
-        let browser = 'Unknown';
-        if (userAgent.match(/Edg\//i)) browser = 'Edge';
-        else if (userAgent.match(/Chrome/i) && !userAgent.match(/Edg/i)) browser = 'Chrome';
-        else if (userAgent.match(/Firefox/i)) browser = 'Firefox';
-        else if (userAgent.match(/Safari/i) && !userAgent.match(/Chrome/i)) browser = 'Safari';
-        else if (userAgent.match(/Opera|OPR/i)) browser = 'Opera';
-
-        // DETECTAR TIPO DE DISPOSITIVO
-        let deviceType = 'Desktop';
-        if (userAgent.match(/iPhone/i)) deviceType = 'iPhone';
-        else if (userAgent.match(/iPad/i)) deviceType = 'iPad';
-        else if (userAgent.match(/Android.*Mobile/i)) deviceType = 'Android Mobile';
-        else if (userAgent.match(/Android/i)) deviceType = 'Android Tablet';
-        else if (userAgent.match(/Mobile|Tablet/i)) deviceType = 'Mobile';
-
-        // EXTRAIR FINGERPRINT
-        const fingerprint = meta?.fingerprint || null;
-        const screenResolution = meta?.screen || null;
-        const browserLanguage = meta?.language || acceptLanguage;
-        const clientTimezone = meta?.timezone || cfTimezone;
-
-        let isp = null;
-        if (cfASN) {
-            isp = `ASN ${cfASN}`;
-        }
-
-        const safeUserId = user_id ? parseInt(user_id) : null;
-
-        // SALVAR NO BANCO (VERSÃO COMPLETA)
-        try {
-            await queryDB(
-                `INSERT INTO audit_logs (
-                    user_id, action, ip, user_agent, details, device_type,
-                    country, city, region, latitude, longitude, asn, isp,
-                    browser, os, screen_resolution, language, timezone, fingerprint
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
-                [
-                    safeUserId, 
-                    action, 
-                    realIP, 
-                    userAgent, 
-                    JSON.stringify(meta), 
-                    deviceType,
-                    cfCountry,
-                    cfCity,
-                    cfRegion,
-                    cfLatitude ? parseFloat(cfLatitude) : null,
-                    cfLongitude ? parseFloat(cfLongitude) : null,
-                    cfASN,
-                    isp,
-                    browser,
-                    os,
-                    screenResolution,
-                    browserLanguage,
-                    clientTimezone,
-                    fingerprint
-                ],
-                c.env
-            );
-
-            console.log(`✅ LOG COMPLETO: ${action} | User: ${safeUserId || 'N/A'} | IP: ${realIP} | Browser: ${browser} | OS: ${os} | Fingerprint: ${fingerprint ? fingerprint.substring(0, 8) : 'N/A'}`);
-        } catch (dbError) {
-            console.error("⚠️ Erro ao salvar log no banco:", dbError.message);
-            
-            // FALLBACK: Tentar salvar apenas básico
-            try {
-                await queryDB(
-                    `INSERT INTO audit_logs (
-                        user_id, action, ip, user_agent, details, device_type
-                    ) VALUES ($1, $2, $3, $4, $5, $6)`,
-                    [
-                        safeUserId, 
-                        action, 
-                        realIP, 
-                        userAgent, 
-                        JSON.stringify(meta), 
-                        deviceType
-                    ],
-                    c.env
-                );
-                console.log(`⚠️ LOG BÁSICO salvo: ${action}`);
-            } catch (fallbackError) {
-                console.error("❌ Falha total ao salvar log:", fallbackError.message);
-            }
-        }
-    } catch (err) {
-        console.error("⚠️ Falha ao gravar log (não crítico):", err.message);
+    let realIP = cfConnectingIP || xRealIP || "unknown";
+    if (xForwardedFor && !cfConnectingIP) {
+      realIP = xForwardedFor.split(",")[0].trim();
     }
+
+    const cfCountry = c.req.header("CF-IPCountry") || null;
+    const cfCity = c.req.header("CF-IPCity") || null;
+    const cfRegion = c.req.header("CF-Region") || null;
+    const cfTimezone = c.req.header("CF-Timezone") || null;
+    const cfLatitude = c.req.header("CF-IPLatitude") || null;
+    const cfLongitude = c.req.header("CF-IPLongitude") || null;
+    const cfASN = c.req.header("CF-Connecting-ASN") || null;
+
+    const userAgent = c.req.header("User-Agent") || "unknown";
+    const acceptLanguage = c.req.header("Accept-Language") || null;
+
+    let os = "Unknown";
+    if (userAgent.match(/Windows NT 10\.0/i)) os = "Windows 10";
+    else if (userAgent.match(/Windows NT 11\.0/i)) os = "Windows 11";
+    else if (userAgent.match(/Windows/i)) os = "Windows";
+    else if (userAgent.match(/Mac OS X/i)) os = "macOS";
+    else if (userAgent.match(/iPhone/i)) os = "iOS (iPhone)";
+    else if (userAgent.match(/iPad/i)) os = "iOS (iPad)";
+    else if (userAgent.match(/Android/i)) os = "Android";
+    else if (userAgent.match(/Linux/i)) os = "Linux";
+
+    let browser = "Unknown";
+    if (userAgent.match(/Edg\//i)) browser = "Edge";
+    else if (userAgent.match(/Chrome/i) && !userAgent.match(/Edg/i)) browser = "Chrome";
+    else if (userAgent.match(/Firefox/i)) browser = "Firefox";
+    else if (userAgent.match(/Safari/i) && !userAgent.match(/Chrome/i)) browser = "Safari";
+    else if (userAgent.match(/Opera|OPR/i)) browser = "Opera";
+
+    let deviceType = "Desktop";
+    if (userAgent.match(/iPhone/i)) deviceType = "iPhone";
+    else if (userAgent.match(/iPad/i)) deviceType = "iPad";
+    else if (userAgent.match(/Android.*Mobile/i)) deviceType = "Android Mobile";
+    else if (userAgent.match(/Android/i)) deviceType = "Android Tablet";
+    else if (userAgent.match(/Mobile|Tablet/i)) deviceType = "Mobile";
+
+    const fingerprint = meta?.fingerprint || null;
+    const screenResolution = meta?.screen || null;
+    const browserLanguage = meta?.language || acceptLanguage;
+    const clientTimezone = meta?.timezone || cfTimezone;
+
+    let isp = null;
+    if (cfASN) {
+      isp = `ASN ${cfASN}`;
+    }
+
+    const safeUserId = user_id ? parseInt(user_id) : null;
+
+    try {
+      await queryDB(
+        `INSERT INTO audit_logs (
+          user_id, action, ip, user_agent, details, device_type,
+          country, city, region, latitude, longitude, asn, isp,
+          browser, os, screen_resolution, language, timezone, fingerprint
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+        [
+          safeUserId,
+          action,
+          realIP,
+          userAgent,
+          JSON.stringify(meta),
+          deviceType,
+          cfCountry,
+          cfCity,
+          cfRegion,
+          cfLatitude ? parseFloat(cfLatitude) : null,
+          cfLongitude ? parseFloat(cfLongitude) : null,
+          cfASN,
+          isp,
+          browser,
+          os,
+          screenResolution,
+          browserLanguage,
+          clientTimezone,
+          fingerprint,
+        ],
+        c.env
+      );
+
+      console.log(
+        `✅ LOG COMPLETO: ${action} | User: ${
+          safeUserId || "N/A"
+        } | IP: ${realIP} | Browser: ${browser} | OS: ${os} | Fingerprint: ${
+          fingerprint ? fingerprint.substring(0, 8) : "N/A"
+        }`
+      );
+    } catch (dbError) {
+      console.error("⚠️ Erro ao salvar log no banco:", dbError.message);
+
+      try {
+        await queryDB(
+          `INSERT INTO audit_logs (
+            user_id, action, ip, user_agent, details, device_type
+          ) VALUES ($1, $2, $3, $4, $5, $6)`,
+          [safeUserId, action, realIP, userAgent, JSON.stringify(meta), deviceType],
+          c.env
+        );
+        console.log(`⚠️ LOG BÁSICO salvo: ${action}`);
+      } catch (fallbackError) {
+        console.error("❌ Falha total ao salvar log:", fallbackError.message);
+      }
+    }
+  } catch (err) {
+    console.error("⚠️ Falha ao gravar log (não crítico):", err.message);
+  }
 }
 
 // ==========================================
 // ROTA: Registrar aceitação dos termos
 // ==========================================
-app.post('/api/log-terms', async (c) => {
+app.post("/api/log-terms", async (c) => {
   try {
     const body = await c.req.json();
-    await logAudit(null, 'TERMS_ACCEPTED', body, c);
+    await logAudit(null, "TERMS_ACCEPTED", body, c);
     return c.json({ success: true });
   } catch (err) {
-    console.error('❌ Erro ao registrar termos:', err);
-    return c.json({ error: 'Erro ao registrar' }, 500);
+    console.error("❌ Erro ao registrar termos:", err);
+    return c.json({ error: "Erro ao registrar" }, 500);
   }
 });
 
@@ -332,14 +299,15 @@ app.post("/api/register", async (c) => {
   const env = c.env;
   try {
     const body = await c.req.json();
-    console.log('📦 Body recebido no registro:', JSON.stringify(body, null, 2));
-    
+    console.log("📦 Body recebido no registro:", JSON.stringify(body, null, 2));
+
     const username = body.username;
     const password = body.password;
-    
-    if (!username || !password) {
-      console.log('❌ Campos vazios');
-      await logAudit(null, 'REGISTER_FAILED_MISSING_FIELDS', body, c);
+
+    if (!username || !password)
+ {
+      console.log("❌ Campos vazios");
+      await logAudit(null, "REGISTER_FAILED_MISSING_FIELDS", body, c);
       return c.json({ error: "Preencha todos os campos" }, 400);
     }
 
@@ -352,14 +320,14 @@ app.post("/api/register", async (c) => {
 
     if (existing.length > 0) {
       console.log(`❌ Usuário "${username}" já existe`);
-      await logAudit(null, 'REGISTER_FAILED_USERNAME_EXISTS', { username, ...body }, c);
+      await logAudit(null, "REGISTER_FAILED_USERNAME_EXISTS", { username, ...body }, c);
       return c.json({ error: "Usuário já existe" }, 400);
     }
 
-    console.log('🔐 Gerando hash da senha...');
+    console.log("🔐 Gerando hash da senha...");
     const hashedPassword = await hash(password);
-    
-    console.log('💾 Inserindo usuário no banco...');
+
+    console.log("💾 Inserindo usuário no banco...");
     const { rows } = await queryDB(
       "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, avatar, bio",
       [username, hashedPassword],
@@ -368,13 +336,13 @@ app.post("/api/register", async (c) => {
 
     const user = rows[0];
     console.log(`✅ Usuário criado com sucesso: ${username} (ID: ${user.id})`);
-    
+
     try {
-      await logAudit(user.id, 'USER_REGISTERED', body, c);
+      await logAudit(user.id, "USER_REGISTERED", body, c);
     } catch (logErr) {
-      console.error('⚠️ Erro ao salvar log (não crítico):', logErr.message);
+      console.error("⚠️ Erro ao salvar log (não crítico):", logErr.message);
     }
-    
+
     return c.json({ user });
   } catch (err) {
     console.error("❌ ERRO CRÍTICO AO REGISTRAR:", err);
@@ -390,14 +358,14 @@ app.post("/api/login", async (c) => {
   const env = c.env;
   try {
     const body = await c.req.json();
-    console.log('📦 Body recebido no login:', JSON.stringify(body, null, 2));
-    
+    console.log("📦 Body recebido no login:", JSON.stringify(body, null, 2));
+
     const username = body.username;
     const password = body.password;
-    
+
     if (!username || !password) {
-      console.log('❌ Campos vazios no login');
-      await logAudit(null, 'LOGIN_FAILED_MISSING_FIELDS', body, c);
+      console.log("❌ Campos vazios no login");
+      await logAudit(null, "LOGIN_FAILED_MISSING_FIELDS", body, c);
       return c.json({ error: "Preencha todos os campos" }, 400);
     }
 
@@ -410,7 +378,7 @@ app.post("/api/login", async (c) => {
 
     if (rows.length === 0) {
       console.log(`❌ Usuário "${username}" não encontrado`);
-      await logAudit(null, 'LOGIN_FAILED_USER_NOT_FOUND', { username, ...body }, c);
+      await logAudit(null, "LOGIN_FAILED_USER_NOT_FOUND", { username, ...body }, c);
       return c.json({ error: "Usuário ou senha incorretos" }, 401);
     }
 
@@ -420,25 +388,25 @@ app.post("/api/login", async (c) => {
 
     if (!validPassword) {
       console.log(`❌ Senha incorreta para usuário: ${username}`);
-      await logAudit(user.id, 'LOGIN_FAILED_WRONG_PASSWORD', { username, ...body }, c);
+      await logAudit(user.id, "LOGIN_FAILED_WRONG_PASSWORD", { username, ...body }, c);
       return c.json({ error: "Usuário ou senha incorretos" }, 401);
     }
 
     console.log(`✅ Login bem-sucedido: ${username} (ID: ${user.id})`);
-    
+
     try {
-      await logAudit(user.id, 'USER_LOGIN_SUCCESS', body, c);
+      await logAudit(user.id, "USER_LOGIN_SUCCESS", body, c);
     } catch (logErr) {
-      console.error('⚠️ Erro ao salvar log (não crítico):', logErr.message);
+      console.error("⚠️ Erro ao salvar log (não crítico):", logErr.message);
     }
-    
+
     return c.json({
       user: {
         id: user.id,
         username: user.username,
         avatar: user.avatar,
-        bio: user.bio
-      }
+        bio: user.bio,
+      },
     });
   } catch (err) {
     console.error("❌ ERRO CRÍTICO AO FAZER LOGIN:", err);
@@ -484,7 +452,7 @@ app.put("/api/users/:id", async (c) => {
       env
     );
 
-    await logAudit(userId, 'USER_PROFILE_UPDATED', { updates: updates.join(', ') }, c);
+    await logAudit(userId, "USER_PROFILE_UPDATED", { updates: updates.join(", ") }, c);
     console.log(`✅ Perfil atualizado: User ID ${userId}`);
 
     return c.json(rows[0]);
@@ -495,13 +463,13 @@ app.put("/api/users/:id", async (c) => {
 });
 
 // ==========================================
-// ROTA: Upload de vídeo PARA BUNNY CDN (CORRIGIDO v2)
+// ROTA: Upload de vídeo PARA BUNNY CDN
 // ==========================================
 app.post("/api/upload", async (c) => {
   const env = c.env;
   try {
-    console.log('📤 Iniciando upload para Bunny CDN...');
-    
+    console.log("📤 Iniciando upload para Bunny CDN...");
+
     const formData = await c.req.formData();
     const file = formData.get("file");
     const title = formData.get("title");
@@ -509,29 +477,29 @@ app.post("/api/upload", async (c) => {
     const isRestricted = formData.get("is_restricted") === "true";
 
     if (!file || !title || !userId) {
-      console.log('❌ Faltam dados obrigatórios');
+      console.log("❌ Faltam dados obrigatórios");
       return c.json({ error: "Faltam dados obrigatórios" }, 400);
     }
 
     console.log(`📤 Upload: "${title}" (${file.size} bytes)`);
-    console.log(`🔑 API Key (8 primeiros): ${env.BUNNY_API_KEY?.substring(0, 8)}`); 
+    console.log(`🔑 API Key (8 primeiros): ${env.BUNNY_API_KEY?.substring(0, 8)}`);
     console.log(`🔑 BUNNY_API_KEY existe: ${!!env.BUNNY_API_KEY}`);
     console.log(`📚 BUNNY_LIBRARY_ID: ${env.BUNNY_LIBRARY_ID}`);
 
-    // ✅ CRIAR VÍDEO NO BUNNY (TESTANDO AMBOS FORMATOS DE AUTH)
+
     const createVideoRes = await fetch(
       `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos`,
       {
         method: "POST",
         headers: {
-          "AccessKey": env.BUNNY_API_KEY,  // ← Formato 1
-          "Authorization": `Bearer ${env.BUNNY_API_KEY}`,  // ← Formato 2 (backup)
-          "accept": "application/json",
-          "content-type": "application/json"
+          AccessKey: env.BUNNY_API_KEY,
+          Authorization: `Bearer ${env.BUNNY_API_KEY}`,
+          accept: "application/json",
+          "content-type": "application/json",
         },
-        body: JSON.stringify({ 
-          title: title
-        })
+        body: JSON.stringify({
+          title: title,
+        }),
       }
     );
 
@@ -546,16 +514,16 @@ app.post("/api/upload", async (c) => {
     const videoGuid = videoData.guid;
     console.log(`✅ Vídeo criado: ${videoGuid}`);
 
-    // ✅ UPLOAD DO ARQUIVO
+
     const buffer = await file.arrayBuffer();
     const uploadRes = await fetch(
       `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos/${videoGuid}`,
       {
         method: "PUT",
         headers: {
-          "AccessKey": env.BUNNY_API_KEY
+          AccessKey: env.BUNNY_API_KEY,
         },
-        body: buffer
+        body: buffer,
       }
     );
 
@@ -566,28 +534,30 @@ app.post("/api/upload", async (c) => {
       throw new Error(`Falha no upload: ${errorText}`);
     }
 
-    // ✅ SALVAR NO BANCO
+
     await queryDB(
       "INSERT INTO videos (title, bunny_id, user_id, is_restricted) VALUES ($1, $2, $3, $4)",
       [title, videoGuid, userId, isRestricted],
       env
     );
 
-    await logAudit(userId, 'VIDEO_UPLOADED', { title, is_restricted: isRestricted }, c);
+    await logAudit(userId, "VIDEO_UPLOADED", { title, is_restricted: isRestricted }, c);
     console.log(`✅ SUCESSO TOTAL!`);
 
     return c.json({ success: true, bunny_id: videoGuid });
   } catch (err) {
     console.error("❌ ERRO:", err.message);
     console.error("Stack:", err.stack);
-    return c.json({ 
-      error: "Erro ao fazer upload",
-      details: err.message
-    }, 500);
+    return c.json(
+      {
+        error: "Erro ao fazer upload",
+        details: err.message,
+      },
+      500
+    );
   }
-});
-
-
+}
+);
 
 // ==========================================
 // ROTA: Listar vídeos públicos
@@ -601,11 +571,11 @@ app.get("/api/videos", async (c) => {
       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
       (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
     `;
-    
+
     if (userId) {
       query += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $1) as user_liked`;
     }
-    
+
     query += `
       FROM videos v
       LEFT JOIN users u ON v.user_id = u.id
@@ -613,12 +583,8 @@ app.get("/api/videos", async (c) => {
       ORDER BY v.created_at DESC
     `;
 
-    const { rows } = await queryDB(
-      query,
-      userId ? [userId] : [],
-      env
-    );
-    
+    const { rows } = await queryDB(query, userId ? [userId] : [], env);
+
     console.log(`✅ Listados ${rows.length} vídeos públicos`);
     return c.json(rows);
   } catch (err) {
@@ -639,11 +605,11 @@ app.get("/api/secret-videos", async (c) => {
       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
       (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
     `;
-    
+
     if (userId) {
       query += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $1) as user_liked`;
     }
-    
+
     query += `
       FROM videos v
       LEFT JOIN users u ON v.user_id = u.id
@@ -651,12 +617,8 @@ app.get("/api/secret-videos", async (c) => {
       ORDER BY v.created_at DESC
     `;
 
-    const { rows } = await queryDB(
-      query,
-      userId ? [userId] : [],
-      env
-    );
-    
+    const { rows } = await queryDB(query, userId ? [userId] : [], env);
+
     console.log(`✅ Listados ${rows.length} vídeos restritos`);
     return c.json(rows);
   } catch (err) {
@@ -680,11 +642,7 @@ app.delete("/api/videos/:id", async (c) => {
     }
 
     if (!isAdmin) {
-      const { rows } = await queryDB(
-        "SELECT user_id FROM videos WHERE id = $1",
-        [videoId],
-        env
-      );
+      const { rows } = await queryDB("SELECT user_id FROM videos WHERE id = $1", [videoId], env);
 
       if (rows.length === 0) {
         return c.json({ error: "Vídeo não encontrado" }, 404);
@@ -696,9 +654,9 @@ app.delete("/api/videos/:id", async (c) => {
     }
 
     await queryDB("DELETE FROM videos WHERE id = $1", [videoId], env);
-    await logAudit(userId || null, 'VIDEO_DELETED', { video_id: videoId, is_admin: isAdmin }, c);
+    await logAudit(userId || null, "VIDEO_DELETED", { video_id: videoId, is_admin: isAdmin }, c);
     console.log(`✅ Vídeo deletado: ID ${videoId}`);
-    
+
     return c.json({ success: true });
   } catch (err) {
     console.error("❌ Erro ao deletar vídeo:", err);
@@ -722,18 +680,10 @@ app.post("/api/videos/:id/like", async (c) => {
     );
 
     if (existing.length > 0) {
-      await queryDB(
-        "DELETE FROM likes WHERE video_id = $1 AND user_id = $2",
-        [videoId, user_id],
-        env
-      );
+      await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, user_id], env);
       console.log(`💔 Like removido: Vídeo ${videoId} por User ${user_id}`);
     } else {
-      await queryDB(
-        "INSERT INTO likes (video_id, user_id) VALUES ($1, $2)",
-        [videoId, user_id],
-        env
-      );
+      await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
       console.log(`❤️ Like adicionado: Vídeo ${videoId} por User ${user_id}`);
     }
 
@@ -753,11 +703,7 @@ app.post("/api/videos/:id/view", async (c) => {
   try {
     const { user_id } = await c.req.json();
 
-    await queryDB(
-      "INSERT INTO views (video_id, user_id) VALUES ($1, $2)",
-      [videoId, user_id],
-      env
-    );
+    await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
 
     console.log(`👁️ View registrada: Vídeo ${videoId} por User ${user_id}`);
     return c.json({ success: true });
@@ -785,11 +731,7 @@ app.post("/api/comment", async (c) => {
       env
     );
 
-    const { rows: video } = await queryDB(
-      "SELECT user_id FROM videos WHERE id = $1",
-      [video_id],
-      env
-    );
+    const { rows: video } = await queryDB("SELECT user_id FROM videos WHERE id = $1", [video_id], env);
 
     if (video.length > 0 && video[0].user_id !== user_id) {
       await queryDB(
@@ -823,7 +765,7 @@ app.get("/api/comments/:videoId", async (c) => {
       [videoId],
       env
     );
-    
+
     console.log(`✅ Listados ${rows.length} comentários do vídeo ${videoId}`);
     return c.json(rows);
   } catch (err) {
@@ -843,11 +785,7 @@ app.delete("/api/comments/:id", async (c) => {
     const isAdmin = admin_password === env.ADMIN_PASSWORD;
 
     if (!isAdmin) {
-      const { rows } = await queryDB(
-        "SELECT user_id FROM comments WHERE id = $1",
-        [commentId],
-        env
-      );
+      const { rows } = await queryDB("SELECT user_id FROM comments WHERE id = $1", [commentId], env);
 
       if (rows.length === 0 || rows[0].user_id !== user_id) {
         return c.json({ error: "Não autorizado" }, 403);
@@ -856,7 +794,7 @@ app.delete("/api/comments/:id", async (c) => {
 
     await queryDB("DELETE FROM comments WHERE id = $1", [commentId], env);
     console.log(`✅ Comentário deletado: ID ${commentId}`);
-    
+
     return c.json({ success: true });
   } catch (err) {
     console.error("❌ Erro ao deletar comentário:", err);
@@ -876,7 +814,7 @@ app.get("/api/notifications/:userId", async (c) => {
       [userId],
       env
     );
-    
+
     console.log(`✅ Listadas ${rows.length} notificações do User ${userId}`);
     return c.json(rows);
   } catch (err) {
@@ -889,20 +827,20 @@ app.get("/api/notifications/:userId", async (c) => {
 // ROTA: Buscar todos os usuários (para inbox)
 // ==========================================
 app.get("/api/users/all", async (c) => {
-    const env = c.env;
-    try {
-        const { rows } = await queryDB(
-            "SELECT id, username, avatar, bio FROM users ORDER BY username ASC",
-            [],
-            env
-        );
-        
-        console.log(`✅ Listados ${rows.length} usuários`);
-        return c.json(rows);
-    } catch (err) {
-        console.error("❌ Erro ao listar usuários:", err);
-        return c.json({ error: "Erro ao listar usuários" }, 500);
-    }
+  const env = c.env;
+  try {
+    const { rows } = await queryDB(
+      "SELECT id, username, avatar, bio FROM users ORDER BY username ASC",
+      [],
+      env
+    );
+
+    console.log(`✅ Listados ${rows.length} usuários`);
+    return c.json(rows);
+  } catch (err) {
+    console.error("❌ Erro ao listar usuários:", err);
+    return c.json({ error: "Erro ao listar usuários" }, 500);
+  }
 });
 
 // ==========================================
@@ -946,7 +884,7 @@ app.get("/api/inbox/:userId", async (c) => {
       [userId],
       env
     );
-    
+
     console.log(`✅ Listadas ${rows.length} mensagens do User ${userId}`);
     return c.json(rows);
   } catch (err) {
@@ -962,15 +900,15 @@ app.post("/api/admin/login", async (c) => {
   const env = c.env;
   try {
     const { password } = await c.req.json();
-    
+
     if (password === env.ADMIN_PASSWORD) {
-      await logAudit(null, 'ADMIN_LOGIN_SUCCESS', {}, c);
-      console.log('✅ Admin login bem-sucedido');
+      await logAudit(null, "ADMIN_LOGIN_SUCCESS", {}, c);
+      console.log("✅ Admin login bem-sucedido");
       return c.json({ success: true });
     }
-    
-    await logAudit(null, 'ADMIN_LOGIN_FAILED', {}, c);
-    console.log('❌ Admin login falhou - senha incorreta');
+
+    await logAudit(null, "ADMIN_LOGIN_FAILED", {}, c);
+    console.log("❌ Admin login falhou - senha incorreta");
     return c.json({ error: "Senha incorreta" }, 401);
   } catch (err) {
     console.error("❌ Erro no login admin:", err);
@@ -986,7 +924,7 @@ app.get("/api/admin/users", async (c) => {
   const adminPassword = c.req.query("admin_password");
 
   if (adminPassword !== env.ADMIN_PASSWORD) {
-    console.log('❌ Tentativa de acesso admin não autorizado');
+    console.log("❌ Tentativa de acesso admin não autorizado");
     return c.json({ error: "Não autorizado" }, 403);
   }
 
@@ -996,7 +934,7 @@ app.get("/api/admin/users", async (c) => {
       [],
       env
     );
-    
+
     console.log(`✅ Admin listou ${rows.length} usuários`);
     return c.json(rows);
   } catch (err) {
@@ -1018,13 +956,9 @@ app.post("/api/admin/reset-password", async (c) => {
     }
 
     const hashedPassword = await hash("123456");
-    await queryDB(
-      "UPDATE users SET password = $1 WHERE id = $2",
-      [hashedPassword, user_id],
-      env
-    );
+    await queryDB("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, user_id], env);
 
-    await logAudit(null, 'ADMIN_PASSWORD_RESET', { target_user_id: user_id }, c);
+    await logAudit(null, "ADMIN_PASSWORD_RESET", { target_user_id: user_id }, c);
     console.log(`✅ Admin resetou senha do User ${user_id}`);
 
     return c.json({ success: true });
@@ -1053,7 +987,7 @@ app.delete("/api/admin/users/:userId", async (c) => {
     await queryDB("DELETE FROM messages WHERE from_id = $1 OR to_id = $1", [userId], env);
     await queryDB("DELETE FROM users WHERE id = $1", [userId], env);
 
-    await logAudit(null, 'ADMIN_USER_BANNED', { target_user_id: userId }, c);
+    await logAudit(null, "ADMIN_USER_BANNED", { target_user_id: userId }, c);
     console.log(`✅ Admin baniu User ${userId}`);
 
     return c.json({ success: true });
@@ -1071,7 +1005,7 @@ app.get("/api/admin/logs", async (c) => {
   const adminPassword = c.req.query("admin_password");
 
   if (adminPassword !== env.ADMIN_PASSWORD) {
-    console.log('❌ Tentativa de acesso aos logs não autorizada');
+    console.log("❌ Tentativa de acesso aos logs não autorizada");
     return c.json({ error: "Não autorizado" }, 403);
   }
 
@@ -1085,7 +1019,7 @@ app.get("/api/admin/logs", async (c) => {
       [],
       env
     );
-    
+
     console.log(`✅ Admin acessou ${rows.length} logs`);
     return c.json(rows);
   } catch (err) {
@@ -1098,11 +1032,11 @@ app.get("/api/admin/logs", async (c) => {
 // ROTA: Health Check
 // ==========================================
 app.get("/", (c) => {
-  return c.json({ 
-    status: "online", 
+  return c.json({
+    status: "online",
     service: "SINOPINHAS Backend API",
     version: "2.0",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
