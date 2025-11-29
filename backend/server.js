@@ -1,12 +1,12 @@
 // =====================================================================
-// [server.js] - CÓDIGO COMPLETO COM MELHORIAS
+// [server.js] - CÓDIGO COMPLETO COM PROTEÇÃO E MELHORIAS
 // =====================================================================
 
 import { Hono } from 'hono';
 import { Pool } from '@neondatabase/serverless';
 import axios from 'axios';
 
-// 2. UTILITY: Hashing de Senha
+// UTILITY: Hashing de Senha
 async function hashPassword(password) {
     const saltKey = await crypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, true, ['sign', 'verify']);
     const passwordBuffer = new TextEncoder().encode(password);
@@ -33,7 +33,7 @@ async function comparePassword(password, storedHashJSON) {
     }
 }
 
-// 3. UTILITY: Função de Consulta ao Banco
+// UTILITY: Função de Consulta ao Banco
 async function queryDB(sql, params, env) {
     if (!env.DATABASE_URL) throw new Error("DATABASE_URL não configurada.");
     
@@ -48,7 +48,7 @@ async function queryDB(sql, params, env) {
     }
 }
 
-// 4. UTILITY: Log de Auditoria
+// UTILITY: Log de Auditoria
 async function logAudit(user_id, action, meta, c) {
     try {
         const ip = c.req.header('CF-Connecting-IP') || 'unknown';
@@ -76,7 +76,7 @@ async function logAudit(user_id, action, meta, c) {
     }
 }
 
-// 5. UTILITY: Criar Notificação
+// UTILITY: Criar Notificação
 async function createNotification(userId, type, message, relatedId, env) {
     try {
         await queryDB(
@@ -87,6 +87,46 @@ async function createNotification(userId, type, message, relatedId, env) {
     } catch (err) {
         console.error("Erro ao criar notificação:", err);
     }
+}
+
+// UTILITY: Rate Limiting para Upload (5 vídeos por dia)
+async function checkUploadLimit(userId, env) {
+    try {
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { rows } = await queryDB(
+            "SELECT COUNT(*) as count FROM upload_history WHERE user_id = $1 AND uploaded_at > $2",
+            [userId, oneDayAgo],
+            env
+        );
+        return parseInt(rows[0].count) < 5;
+    } catch (err) {
+        console.error("Erro ao verificar limite de upload:", err);
+        return true; // Em caso de erro, permite o upload
+    }
+}
+
+// UTILITY: Rate Limiting para Comentários (1 comentário a cada 10 segundos)
+async function checkCommentLimit(userId, env) {
+    try {
+        const tenSecondsAgo = new Date(Date.now() - 10 * 1000).toISOString();
+        const { rows } = await queryDB(
+            "SELECT COUNT(*) as count FROM comment_history WHERE user_id = $1 AND commented_at > $2",
+            [userId, tenSecondsAgo],
+            env
+        );
+        return parseInt(rows[0].count) === 0;
+    } catch (err) {
+        console.error("Erro ao verificar limite de comentário:", err);
+        return true;
+    }
+}
+
+// UTILITY: Upload de Thumbnail para Cloudflare R2 ou Image CDN
+async function uploadThumbnail(file, env) {
+    // Esta função pode ser expandida para fazer upload real
+    // Por enquanto, retorna null (thumbnail será opcional)
+    // Você pode integrar com Cloudflare R2 ou outro serviço aqui
+    return null;
 }
 
 const app = new Hono();
@@ -146,7 +186,7 @@ app.post('/api/login', async (c) => {
     return c.json({ user: { id: user.id, username: user.username, avatar: user.avatar, bio: user.bio } });
 });
 
-// --- ATUALIZAR PERFIL ---
+// ATUALIZAR PERFIL
 app.put('/api/users/:id', async (c) => {
     const userId = parseInt(c.req.param('id'));
     const { password, avatar, bio } = await c.req.json();
@@ -194,7 +234,7 @@ app.put('/api/users/:id', async (c) => {
     }
 });
 
-// --- NOTIFICAÇÕES ---
+// NOTIFICAÇÕES
 app.get('/api/notifications/:user_id', async (c) => {
     const userId = parseInt(c.req.param('user_id'));
     const env = c.env;
@@ -293,6 +333,8 @@ app.delete("/api/admin/users/:id", async (c) => {
         await queryDB("DELETE FROM audit_logs WHERE user_id = $1", [id], env);
         await queryDB("DELETE FROM video_likes WHERE user_id = $1", [id], env);
         await queryDB("DELETE FROM notifications WHERE user_id = $1", [id], env);
+        await queryDB("DELETE FROM upload_history WHERE user_id = $1", [id], env);
+        await queryDB("DELETE FROM comment_history WHERE user_id = $1", [id], env);
 
         const result = await queryDB("DELETE FROM users WHERE id = $1", [id], env);
         
@@ -330,12 +372,13 @@ app.post("/api/admin/reset-password", async (c) => {
 });
 
 // =====================================================================
-// [ROTAS DE VÍDEO]
+// [ROTAS DE VÍDEO COM PROTEÇÕES]
 // =====================================================================
 
 app.post('/api/upload', async (c) => {
     const formData = await c.req.formData();
     const file = formData.get("file");
+    const thumbnailFile = formData.get("thumbnail");
     const title = formData.get("title");
     const user_id = formData.get("user_id");
     const is_restricted = formData.get("is_restricted");
@@ -345,13 +388,36 @@ app.post('/api/upload', async (c) => {
     
     if (!user_id || !file || typeof file === 'string') return c.json({ error: "Arquivo obrigatório" }, 400);
 
+    // PROTEÇÃO 1: Verificar se usuário existe
     const userCheck = await queryDB("SELECT id FROM users WHERE id = $1", [parseInt(user_id)], c.env);
     if (userCheck.rows.length === 0) {
         await logAudit(user_id, "UPLOAD_FAILED_UNAUTH", { reason: "User ID not found" }, c);
         return c.json({ error: "Acesso negado. Faça login para continuar." }, 401);
     }
 
+    // PROTEÇÃO 2: Rate Limiting (5 vídeos por dia)
+    const canUpload = await checkUploadLimit(parseInt(user_id), c.env);
+    if (!canUpload) {
+        await logAudit(user_id, "UPLOAD_BLOCKED_RATE_LIMIT", { reason: "Exceeded daily limit" }, c);
+        return c.json({ error: "Limite de 5 uploads por dia atingido. Tente amanhã!" }, 429);
+    }
+
+    // PROTEÇÃO 3: Validar tamanho do arquivo (500MB)
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    if (file.size > maxSize) {
+        await logAudit(user_id, "UPLOAD_FAILED_SIZE", { size: file.size }, c);
+        return c.json({ error: "Arquivo muito grande! Máximo: 500MB" }, 413);
+    }
+
+    // PROTEÇÃO 4: Validar tipo de arquivo
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/mpeg'];
+    if (!allowedTypes.includes(file.type)) {
+        await logAudit(user_id, "UPLOAD_FAILED_TYPE", { type: file.type }, c);
+        return c.json({ error: "Formato inválido! Use MP4, WebM, OGG, MOV ou AVI" }, 415);
+    }
+
     try {
+        // Upload para BunnyCDN
         const createRes = await axios.post(
             `https://video.bunnycdn.com/library/${LIBRARY_ID}/videos`,
             { title: title },
@@ -365,9 +431,26 @@ app.post('/api/upload', async (c) => {
             { headers: { AccessKey: API_KEY, "Content-Type": "application/octet-stream" } }
         );
 
+        // Processar thumbnail (se fornecida)
+        let thumbnailUrl = null;
+        if (thumbnailFile && thumbnailFile.type.startsWith('image/')) {
+            // Aqui você pode fazer upload da thumbnail para um CDN
+            // Por enquanto, apenas validamos que existe
+            thumbnailUrl = null; // Implementar upload real se necessário
+        }
+
+        // Salvar no banco
         await queryDB(
-            "INSERT INTO videos (title, user_id, bunny_id, is_restricted) VALUES ($1, $2, $3, $4)",
-            [title, parseInt(user_id), videoGuid, is_restricted === 'true'], c.env
+            "INSERT INTO videos (title, user_id, bunny_id, is_restricted, thumbnail_url) VALUES ($1, $2, $3, $4, $5)",
+            [title, parseInt(user_id), videoGuid, is_restricted === 'true', thumbnailUrl],
+            c.env
+        );
+
+        // Registrar no histórico de uploads
+        await queryDB(
+            "INSERT INTO upload_history (user_id) VALUES ($1)",
+            [parseInt(user_id)],
+            c.env
         );
 
         await logAudit(user_id, "UPLOAD_VIDEO", { title, service: "BunnyCDN", restricted: is_restricted === 'true' }, c);
@@ -379,7 +462,7 @@ app.post('/api/upload', async (c) => {
     }
 });
 
-// --- Listar Vídeos Públicos (com likes do usuário) ---
+// Listar Vídeos Públicos
 app.get("/api/videos", async (c) => {
     const userId = c.req.query('user_id');
     const env = c.env;
@@ -414,7 +497,7 @@ app.get("/api/videos", async (c) => {
     }
 });
 
-// --- Listar Vídeos Secretos (com likes do usuário) ---
+// Listar Vídeos Secretos
 app.get("/api/secret-videos", async (c) => {
     const userId = c.req.query('user_id');
     const env = c.env;
@@ -449,7 +532,7 @@ app.get("/api/secret-videos", async (c) => {
     }
 });
 
-// --- Like/Unlike Vídeo ---
+// Like/Unlike Vídeo
 app.post("/api/videos/:id/like", async (c) => {
     const videoId = parseInt(c.req.param('id'));
     const { user_id } = await c.req.json();
@@ -494,7 +577,7 @@ app.post("/api/videos/:id/like", async (c) => {
     }
 });
 
-// --- Incrementar Views ---
+// Incrementar Views
 app.post("/api/videos/:id/view", async (c) => {
     const videoId = parseInt(c.req.param('id'));
     const env = c.env;
@@ -512,6 +595,7 @@ app.post("/api/videos/:id/view", async (c) => {
     }
 });
 
+// Deletar Vídeo
 app.delete("/api/videos/:id", async (c) => {
     const videoId = parseInt(c.req.param('id'));
     const { adminPassword, userId } = await c.req.json();
@@ -643,6 +727,7 @@ app.get("/api/inbox/:user_id", async (c) => {
     }
 });
 
+// Buscar Comentários
 app.get("/api/comments/:video_id", async (c) => {
     const video_id = c.req.param('video_id');
     const env = c.env;
@@ -666,14 +751,29 @@ app.get("/api/comments/:video_id", async (c) => {
     }
 });
 
+// Enviar Comentário (COM PROTEÇÃO)
 app.post("/api/comment", async (c) => {
     const { video_id, user_id, comment } = await c.req.json();
     const env = c.env;
+
+    // PROTEÇÃO: Rate Limiting (1 comentário a cada 10 segundos)
+    const canComment = await checkCommentLimit(parseInt(user_id), env);
+    if (!canComment) {
+        await logAudit(user_id, "COMMENT_BLOCKED_RATE_LIMIT", { video_id }, c);
+        return c.json({ error: "Aguarde 10 segundos antes de comentar novamente!" }, 429);
+    }
 
     try {
         await queryDB(
             "INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
             [parseInt(video_id), parseInt(user_id), comment], 
+            env
+        );
+
+        // Registrar no histórico de comentários
+        await queryDB(
+            "INSERT INTO comment_history (user_id) VALUES ($1)",
+            [parseInt(user_id)],
             env
         );
 
@@ -696,6 +796,39 @@ app.post("/api/comment", async (c) => {
     }
 });
 
+// Deletar Comentário
+app.delete("/api/comments/:id", async (c) => {
+    const commentId = parseInt(c.req.param('id'));
+    const { user_id, admin_password } = await c.req.json();
+    const env = c.env;
+
+    try {
+        // Verificar se é admin ou dono do comentário
+        let deleteQuery;
+        if (admin_password === env.ADMIN_PASSWORD) {
+            deleteQuery = "DELETE FROM comments WHERE id = $1 RETURNING id";
+        } else {
+            deleteQuery = "DELETE FROM comments WHERE id = $1 AND user_id = $2 RETURNING id";
+        }
+
+        const result = await queryDB(
+            deleteQuery,
+            admin_password === env.ADMIN_PASSWORD ? [commentId] : [commentId, parseInt(user_id)],
+            env
+        );
+
+        if (result.rowCount === 0) {
+            return c.json({ error: "Comentário não encontrado ou sem permissão" }, 404);
+        }
+
+        await logAudit(user_id, "DELETE_COMMENT", { comment_id: commentId }, c);
+        return c.json({ success: true });
+    } catch (err) {
+        console.error("Erro ao deletar comentário:", err);
+        return c.json({ error: "Erro ao deletar comentário" }, 500);
+    }
+});
+
 // =====================================================================
 // [HANDLERS FINAIS]
 // =====================================================================
@@ -708,3 +841,4 @@ export default {
         return app.fetch(request, env, ctx);
     },
 };
+// =====================================================================
