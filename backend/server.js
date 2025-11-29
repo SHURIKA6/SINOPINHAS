@@ -370,6 +370,7 @@ app.post("/api/upload", async (c) => {
     }
 
     console.log(`📤 Upload: "${title}" (${file.size} bytes)`);
+    console.log(`🔑 API Key (8 primeiros): ${env.BUNNY_API_KEY?.substring(0, 8)}`);
     console.log(`🔑 BUNNY_API_KEY existe: ${!!env.BUNNY_API_KEY}`);
     console.log(`📚 BUNNY_LIBRARY_ID: ${env.BUNNY_LIBRARY_ID}`);
 
