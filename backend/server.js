@@ -351,7 +351,7 @@ app.put("/api/users/:id", async (c) => {
 });
 
 // ==========================================
-// ROTA: Upload de vídeo PARA BUNNY CDN
+// ROTA: Upload de vídeo PARA BUNNY CDN (CORRIGIDO v2)
 // ==========================================
 app.post("/api/upload", async (c) => {
   const env = c.env;
@@ -363,7 +363,6 @@ app.post("/api/upload", async (c) => {
     const title = formData.get("title");
     const userId = formData.get("user_id");
     const isRestricted = formData.get("is_restricted") === "true";
-    const thumbnail = formData.get("thumbnail");
 
     if (!file || !title || !userId) {
       console.log('❌ Faltam dados obrigatórios');
@@ -373,54 +372,56 @@ app.post("/api/upload", async (c) => {
     console.log(`📤 Upload: "${title}" (${file.size} bytes)`);
     console.log(`🔑 BUNNY_API_KEY existe: ${!!env.BUNNY_API_KEY}`);
     console.log(`📚 BUNNY_LIBRARY_ID: ${env.BUNNY_LIBRARY_ID}`);
-    console.log(`🔑 Primeiros 8 caracteres da key: ${env.BUNNY_API_KEY ? env.BUNNY_API_KEY.substring(0, 8) : 'UNDEFINED'}`);
 
-    // Criar vídeo no Bunny
+    // ✅ CRIAR VÍDEO NO BUNNY (TESTANDO AMBOS FORMATOS DE AUTH)
     const createVideoRes = await fetch(
       `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos`,
       {
         method: "POST",
         headers: {
-          "AccessKey": env.BUNNY_API_KEY,
-          "Content-Type": "application/json"
+          "AccessKey": env.BUNNY_API_KEY,  // ← Formato 1
+          "Authorization": `Bearer ${env.BUNNY_API_KEY}`,  // ← Formato 2 (backup)
+          "accept": "application/json",
+          "content-type": "application/json"
         },
-        body: JSON.stringify({ title })
+        body: JSON.stringify({ 
+          title: title
+        })
       }
     );
 
+    const responseText = await createVideoRes.text();
+    console.log(`📡 Resposta Bunny (${createVideoRes.status}):`, responseText.substring(0, 200));
+
     if (!createVideoRes.ok) {
-      const errorText = await createVideoRes.text();
-      console.error('❌ Erro ao criar vídeo no Bunny:', errorText);
-      throw new Error("Falha ao criar vídeo no Bunny: " + errorText);
+      throw new Error(`Bunny retornou ${createVideoRes.status}: ${responseText}`);
     }
 
-    const videoData = await createVideoRes.json();
+    const videoData = JSON.parse(responseText);
     const videoGuid = videoData.guid;
-    console.log(`✅ Vídeo criado no Bunny: ${videoGuid}`);
+    console.log(`✅ Vídeo criado: ${videoGuid}`);
 
-    // Upload do arquivo
+    // ✅ UPLOAD DO ARQUIVO
     const buffer = await file.arrayBuffer();
     const uploadRes = await fetch(
       `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos/${videoGuid}`,
       {
         method: "PUT",
         headers: {
-          "AccessKey": env.BUNNY_API_KEY,
-          "Content-Type": "application/octet-stream"
+          "AccessKey": env.BUNNY_API_KEY
         },
         body: buffer
       }
     );
 
+    console.log(`📡 Upload status: ${uploadRes.status}`);
+
     if (!uploadRes.ok) {
       const errorText = await uploadRes.text();
-      console.error('❌ Erro ao fazer upload do vídeo:', errorText);
-      throw new Error("Falha no upload: " + errorText);
+      throw new Error(`Falha no upload: ${errorText}`);
     }
 
-    console.log(`✅ Upload concluído para o Bunny`);
-
-    // Salvar no banco
+    // ✅ SALVAR NO BANCO
     await queryDB(
       "INSERT INTO videos (title, bunny_id, user_id, is_restricted) VALUES ($1, $2, $3, $4)",
       [title, videoGuid, userId, isRestricted],
@@ -428,11 +429,11 @@ app.post("/api/upload", async (c) => {
     );
 
     await logAudit(userId, 'VIDEO_UPLOADED', { title, is_restricted: isRestricted }, c);
-    console.log(`✅ Vídeo salvo no banco: "${title}"`);
+    console.log(`✅ SUCESSO TOTAL!`);
 
     return c.json({ success: true, bunny_id: videoGuid });
   } catch (err) {
-    console.error("❌ ERRO NO UPLOAD:", err);
+    console.error("❌ ERRO:", err.message);
     console.error("Stack:", err.stack);
     return c.json({ 
       error: "Erro ao fazer upload",
@@ -440,6 +441,7 @@ app.post("/api/upload", async (c) => {
     }, 500);
   }
 });
+
 
 
 // ==========================================
