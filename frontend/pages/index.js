@@ -1,5 +1,5 @@
 import Inbox from './inbox';
-import styles from '../Home.module.css'; // Mantenha este caminho ou ajuste se o CSS estiver em './Home.module.css'
+import styles from '../styles/Home.module.css';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
