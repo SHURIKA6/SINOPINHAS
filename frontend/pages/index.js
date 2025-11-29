@@ -569,16 +569,31 @@ export default function Home() {
           {activeTab === 'inbox' && user && (
             <Inbox user={user} usersList={usersList} />
           )}
-          {activeTab === 'secret' && showSecretTab && (
-            <div>
-              <h2 className={styles.sectionTitle}>🔥 SAFADEZA (Conteúdo Restrito)</h2>
-              <div className={styles.emptyState}>
-                <p className={styles.emptyText}>Aqui você pode adicionar vídeos restritos.</p>
-                <p className={styles.emptyText}>Use o mesmo layout da aba "Vídeos" para exibir conteúdo específico desta seção.</p>
-              </div>
-            </div>
-          )}
-        </div>
+// ...existing code...
+{activeTab === 'secret' && showSecretTab && (
+    <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
+      <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
+        Conteúdo Restrito (Secret Videos)
+      </h2>
+      <div
+        style={{
+          textAlign: 'center',
+          padding: 64,
+          background: '#303030',
+          borderRadius: 16,
+          color: '#fff'
+        }}
+      >
+        <p style={{ fontSize: 20 }}>
+          Coloque aqui o seu código de vídeos secretos.
+        </p>
+        <p style={{ fontSize: 14, color: '#aaa' }}>
+          Você pode usar o mesmo layout da aba "Vídeos" para listar os vídeos específicos desta aba.
+        </p>
+      </div>
+    </div>
+)}
+// ...existing code...
         
         {showCommentsModal && currentVideo && (
           <div style={{
@@ -631,6 +646,6 @@ export default function Home() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
