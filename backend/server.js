@@ -22,6 +22,150 @@ async function compare(password, hashedPassword) {
 }
 
 // ==========================================
+// DETECÇÃO E BLOQUEIO DE VPN/PROXY
+// ==========================================
+async function isVPN(ip, c) {
+  try {
+    // MÉTODO 1: Verificar headers de proxy conhecidos
+    const proxyHeaders = [
+      'X-Forwarded-For',
+      'X-ProxyUser-Ip', 
+      'X-Proxy-ID',
+      'Via',
+      'Forwarded',
+      'X-Forwarded',
+      'X-Forwarded-Host',
+      'Client-IP',
+      'WL-Proxy-Client-IP',
+      'Proxy-Client-IP'
+    ];
+    
+    for (const header of proxyHeaders) {
+      if (c.req.header(header)) {
+        // Se tem múltiplos IPs na cadeia, é provável proxy/VPN
+        const value = c.req.header(header);
+        if (value && value.includes(',')) {
+          console.log(`🚫 VPN detectada via header ${header}`);
+          return true;
+        }
+      }
+    }
+
+    // MÉTODO 2: Cloudflare Threat Score (0-100, >10 é suspeito)
+    const cfThreatScore = c.req.header('CF-Threat-Score');
+    if (cfThreatScore && parseInt(cfThreatScore) > 10) {
+      console.log(`🚫 VPN detectada via CF Threat Score: ${cfThreatScore}`);
+      return true;
+    }
+
+    // MÉTODO 3: Verificar se é Tor Exit Node (Cloudflare detecta)
+    const cfIsTor = c.req.header('CF-Is-Tor');
+    if (cfIsTor === '1') {
+      console.log('🚫 Conexão TOR detectada');
+      return true;
+    }
+
+    // MÉTODO 4: API de detecção de VPN (usando Shodan InternetDB - grátis)
+    try {
+      const response = await fetch(`https://internetdb.shodan.io/${ip}`, {
+        timeout: 2000 // 2 segundos
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.tags && (data.tags.includes('vpn') || data.tags.includes('proxy'))) {
+          console.log(`🚫 VPN/Proxy detectada via Shodan para IP ${ip}`);
+          return true;
+        }
+      }
+    } catch (apiErr) {
+      console.log('⚠️ API Shodan não disponível, continuando...');
+    }
+
+    // MÉTODO 5: Verificar se IP está em ranges conhecidos de VPN
+    // Lista simplificada - você pode expandir
+    const vpnRanges = [
+      '10.', '172.16.', '172.17.', '172.18.', '172.19.', 
+      '172.20.', '172.21.', '172.22.', '172.23.', '172.24.',
+      '172.25.', '172.26.', '172.27.', '172.28.', '172.29.',
+      '172.30.', '172.31.', '192.168.'
+    ];
+    
+    for (const range of vpnRanges) {
+      if (ip.startsWith(range)) {
+        console.log(`🚫 IP privado/VPN detectado: ${ip}`);
+        return true;
+      }
+    }
+
+    return false;
+  } catch (err) {
+    console.error('⚠️ Erro ao verificar VPN:', err.message);
+    return false; // Em caso de erro, permitir (ou você pode bloquear)
+  }
+}
+
+// MIDDLEWARE DE BLOQUEIO DE VPN
+async function blockVPN(c, next) {
+  const cfConnectingIP = c.req.header('CF-Connecting-IP');
+  const xForwardedFor = c.req.header('X-Forwarded-For');
+  const xRealIP = c.req.header('X-Real-IP');
+  let realIP = cfConnectingIP || xRealIP || 'unknown';
+  
+  if (xForwardedFor && !cfConnectingIP) {
+    realIP = xForwardedFor.split(',')[0].trim();
+  }
+
+  const vpnDetected = await isVPN(realIP, c);
+  
+  if (vpnDetected) {
+    await logAudit(null, 'VPN_BLOCKED', { ip: realIP }, c);
+    return c.json({ 
+      error: "VPN/Proxy detectado. Desative sua VPN para acessar o SINOPINHAS.",
+      blocked: true 
+    }, 403);
+  }
+  
+  await next();
+}
+
+// APLICAR MIDDLEWARE EM ROTAS CRÍTICAS
+app.post("/api/register", blockVPN, async (c) => {
+  // ... código existente de registro
+});
+
+// No endpoint de login, adicione validação de fingerprint
+app.post("/api/login", blockVPN, async (c) => {
+  const env = c.env;
+  try {
+    const body = await c.req.json();
+    const username = body.username;
+    const password = body.password;
+    const fingerprint = body.fingerprint; // Capturado do frontend
+
+    // ... validações existentes ...
+
+    // VALIDAR FINGERPRINT
+    if (fingerprint && fingerprint !== 'error') {
+      const fingerprintValidation = await validateFingerprint(fingerprint, user.id, c);
+      
+      if (fingerprintValidation.isNewDevice) {
+        console.log(`⚠️ Novo dispositivo detectado para user ${user.id}`);
+        // Você pode enviar notificação por email ou exigir 2FA aqui
+      }
+    }
+
+    // ... resto do código de login ...
+  } catch (err) {
+    // ... tratamento de erro ...
+  }
+});
+
+app.post("/api/upload", blockVPN, async (c) => {
+  // ... código existente de upload
+});
+
+// ==========================================
 // UTILITY: Consulta ao Banco de Dados
 // ==========================================
 async function queryDB(sql, params = [], env) {
@@ -370,7 +514,7 @@ app.post("/api/upload", async (c) => {
     }
 
     console.log(`📤 Upload: "${title}" (${file.size} bytes)`);
-    console.log(`🔑 API Key (8 primeiros): ${env.BUNNY_API_KEY?.substring(0, 8)}`);
+    console.log(`🔑 API Key (8 primeiros): ${env.BUNNY_API_KEY?.substring(0, 8)}`); 
     console.log(`🔑 BUNNY_API_KEY existe: ${!!env.BUNNY_API_KEY}`);
     console.log(`📚 BUNNY_LIBRARY_ID: ${env.BUNNY_LIBRARY_ID}`);
 
