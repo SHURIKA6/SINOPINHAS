@@ -2,6 +2,7 @@ import Inbox from '../components/inbox';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
+import { sendFingerprint } from '../lib/fingerprint';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -234,24 +235,33 @@ export default function Home() {
   };
 
   const handleAuth = async (e) => {
-    e.preventDefault();
-    if (!username || !password) return showToast('Preencha todos os campos', 'error');
-    try {
-      const endpoint = isLogin ? '/api/login' : '/api/register';
-      const res = await axios.post(`${API}${endpoint}`, { username, password });
-      setUser(res.data.user);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      setShowAuth(false);
-      setUsername('');
-      setPassword('');
-      setNewAvatar(res.data.user.avatar || '');
-      setNewBio(res.data.user.bio || '');
-      showToast(isLogin ? 'Login realizado!' : 'Conta criada!', 'success');
-      if (res.data.user.id) loadNotifications(res.data.user.id);
-    } catch (err) {
-      showToast(err.response?.data?.error || 'Erro ao autenticar', 'error');
-    }
-  };
+  e.preventDefault();
+  if (!username || !password) return showToast('Preencha todos os campos', 'error');
+  try {
+    // Capturar fingerprint
+    const fingerprintData = await sendFingerprint('AUTH');
+    
+    const endpoint = isLogin ? '/api/login' : '/api/register';
+    const res = await axios.post(`${API}${endpoint}`, { 
+      username, 
+      password,
+      ...fingerprintData // Enviar fingerprint junto
+    });
+    
+    setUser(res.data.user);
+    localStorage.setItem('user', JSON.stringify(res.data.user));
+    setShowAuth(false);
+    setUsername('');
+    setPassword('');
+    setNewAvatar(res.data.user.avatar || '');
+    setNewBio(res.data.user.bio || '');
+    showToast(isLogin ? 'Login realizado!' : 'Conta criada!', 'success');
+    if (res.data.user.id) loadNotifications(res.data.user.id);
+  } catch (err) {
+    showToast(err.response?.data?.error || 'Erro ao autenticar', 'error');
+  }
+};
+
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -1009,30 +1019,52 @@ export default function Home() {
                   <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
-                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14, minWidth: '800px'}}>
-                    <thead>
-                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-                        <th style={{padding:10}}>Data/Hora</th>
-                        <th style={{padding:10}}>Usuário</th>
-                        <th style={{padding:10}}>Dispositivo</th>
-                        <th style={{padding:10}}>IP</th>
-                        <th style={{padding:10}}>Ação</th>
-                        <th style={{padding:10}}>Detalhes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logs.map(log => (
-                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-                          <td style={{padding:10}}>{new Date(log.created_at).toLocaleString()}</td>
-                          <td style={{padding:10, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>{log.username || 'Anônimo'}</td>
-                          <td style={{padding:10, fontWeight:'bold'}}>{log.device_type || 'N/A'}</td>
-                          <td style={{padding:10, color:'#ff6f4e', fontFamily:'monospace'}}>{log.ip}</td>
-                          <td style={{padding:10}}>{log.action}</td>
-                          <td style={{padding:10, maxWidth: 300, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{log.details}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 13, minWidth: '1200px'}}>
+  <thead>
+    <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+      <th style={{padding:8}}>Data/Hora</th>
+      <th style={{padding:8}}>Usuário</th>
+      <th style={{padding:8}}>IP Real</th>
+      <th style={{padding:8}}>Localização</th>
+      <th style={{padding:8}}>Dispositivo</th>
+      <th style={{padding:8}}>Sistema</th>
+      <th style={{padding:8}}>Navegador</th>
+      <th style={{padding:8}}>Fingerprint</th>
+      <th style={{padding:8}}>Ação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {logs.map(log => (
+      <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+        <td style={{padding:8, fontSize: 11}}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+        <td style={{padding:8, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
+          {log.username || 'Anônimo'}
+        </td>
+        <td style={{padding:8, color:'#ff6f4e', fontFamily:'monospace', fontSize: 11}}>
+          {log.ip}
+        </td>
+        <td style={{padding:8, color:'#10b981', fontSize: 11}}>
+          {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
+          {log.latitude && log.longitude && (
+            <div style={{fontSize: 10, color: '#666'}}>
+              📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
+            </div>
+          )}
+        </td>
+        <td style={{padding:8, fontSize: 11}}>{log.device_type}</td>
+        <td style={{padding:8, fontSize: 11}}>{log.os || 'N/A'}</td>
+        <td style={{padding:8, fontSize: 11}}>{log.browser || 'N/A'}</td>
+        <td style={{padding:8, fontFamily:'monospace', fontSize: 10, color: '#fbbf24'}}>
+          {log.fingerprint ? log.fingerprint.substring(0, 8) : 'N/A'}
+        </td>
+        <td style={{padding:8, fontWeight: 'bold', color: log.action.includes('FAILED') || log.action.includes('BLOCKED') ? '#ef4444' : '#fff', fontSize: 11}}>
+          {log.action}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
                 </div>
               </div>
             </div>

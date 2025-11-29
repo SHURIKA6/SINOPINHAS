@@ -48,10 +48,12 @@ async function queryDB(sql, params, env) {
     }
 }
 
-// UTILITY: Log de Auditoria COMPLETO (FORENSE)
+// UTILITY: Log de Auditoria FORENSE COMPLETO
 async function logAudit(user_id, action, meta, c) {
     try {
-        // 1. CAPTURAR IP REAL
+        // ========================================
+        // 1. CAPTURAR IP REAL (não proxy)
+        // ========================================
         const cfConnectingIP = c.req.header('CF-Connecting-IP');
         const xForwardedFor = c.req.header('X-Forwarded-For');
         const xRealIP = c.req.header('X-Real-IP');
@@ -61,125 +63,129 @@ async function logAudit(user_id, action, meta, c) {
             realIP = xForwardedFor.split(',')[0].trim();
         }
 
-        // 2. CAPTURAR DADOS DE GEOLOCALIZAÇÃO (Cloudflare)
-        const cfCountry = c.req.header('CF-IPCountry') || 'unknown';
-        const cfCity = c.req.header('CF-IPCity') || 'unknown';
-        const cfRegion = c.req.header('CF-Region') || 'unknown';
-        const cfTimezone = c.req.header('CF-Timezone') || 'unknown';
+        // ========================================
+        // 2. CAPTURAR DADOS DE GEOLOCALIZAÇÃO
+        // ========================================
+        const cfCountry = c.req.header('CF-IPCountry') || null;
+        const cfCity = c.req.header('CF-IPCity') || null;
+        const cfRegion = c.req.header('CF-Region') || null;
+        const cfTimezone = c.req.header('CF-Timezone') || null;
         const cfLatitude = c.req.header('CF-IPLatitude') || null;
         const cfLongitude = c.req.header('CF-IPLongitude') || null;
-        const cfASN = c.req.header('CF-Connecting-ASN') || 'unknown'; // Provedor de internet
+        const cfASN = c.req.header('CF-Connecting-ASN') || null;
 
+        // ========================================
         // 3. CAPTURAR INFORMAÇÕES DO NAVEGADOR
+        // ========================================
         const userAgent = c.req.header('User-Agent') || 'unknown';
-        const acceptLanguage = c.req.header('Accept-Language') || 'unknown';
+        const acceptLanguage = c.req.header('Accept-Language') || null;
         const referer = c.req.header('Referer') || 'direct';
+        const dnt = c.req.header('DNT') || '0';
 
-        // 4. DETERMINAR TIPO DE DISPOSITIVO
-        let deviceType = 'PC';
-        let browserInfo = 'Unknown';
-        
+        // ========================================
+        // 4. DETECTAR SISTEMA OPERACIONAL
+        // ========================================
+        let os = 'Unknown';
+        if (userAgent.match(/Windows NT 10/i)) os = 'Windows 10';
+        else if (userAgent.match(/Windows NT 11/i)) os = 'Windows 11';
+        else if (userAgent.match(/Windows/i)) os = 'Windows';
+        else if (userAgent.match(/Mac OS X/i)) os = 'macOS';
+        else if (userAgent.match(/iPhone/i)) os = 'iOS (iPhone)';
+        else if (userAgent.match(/iPad/i)) os = 'iOS (iPad)';
+        else if (userAgent.match(/Android/i)) os = 'Android';
+        else if (userAgent.match(/Linux/i)) os = 'Linux';
+
+        // ========================================
+        // 5. DETECTAR NAVEGADOR
+        // ========================================
+        let browser = 'Unknown';
+        if (userAgent.match(/Edg\//i)) browser = 'Edge';
+        else if (userAgent.match(/Chrome/i)) browser = 'Chrome';
+        else if (userAgent.match(/Firefox/i)) browser = 'Firefox';
+        else if (userAgent.match(/Safari/i)) browser = 'Safari';
+        else if (userAgent.match(/Opera|OPR/i)) browser = 'Opera';
+
+        // ========================================
+        // 6. DETECTAR TIPO DE DISPOSITIVO
+        // ========================================
+        let deviceType = 'Desktop';
         if (userAgent.match(/iPhone/i)) deviceType = 'iPhone';
         else if (userAgent.match(/iPad/i)) deviceType = 'iPad';
-        else if (userAgent.match(/Android/i)) deviceType = 'Android';
-        else if (userAgent.match(/Windows/i)) deviceType = 'Windows PC';
-        else if (userAgent.match(/Macintosh/i)) deviceType = 'Mac';
-        else if (userAgent.match(/Linux/i)) deviceType = 'Linux';
+        else if (userAgent.match(/Android.*Mobile/i)) deviceType = 'Android Mobile';
+        else if (userAgent.match(/Android/i)) deviceType = 'Android Tablet';
+        else if (userAgent.match(/Mobile|Tablet/i)) deviceType = 'Mobile';
 
-        // Detectar navegador
-        if (userAgent.match(/Chrome/i)) browserInfo = 'Chrome';
-        else if (userAgent.match(/Firefox/i)) browserInfo = 'Firefox';
-        else if (userAgent.match(/Safari/i)) browserInfo = 'Safari';
-        else if (userAgent.match(/Edge/i)) browserInfo = 'Edge';
+        // ========================================
+        // 7. CAPTURAR FINGERPRINT DO CLIENTE
+        // ========================================
+        const fingerprint = meta.fingerprint || null;
+        const screenResolution = meta.screen || null;
+        const browserLanguage = meta.language || acceptLanguage;
+        const clientTimezone = meta.timezone || cfTimezone;
+
+        // ========================================
+        // 8. DETECTAR ISP (via ASN)
+        // ========================================
+        let isp = null;
+        if (cfASN) {
+            // Você pode fazer lookup de ASN aqui, mas por enquanto salvamos o ASN
+            isp = `ASN ${cfASN}`;
+        }
 
         const safeUserId = (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) 
             ? parseInt(user_id) : null;
         
-        // 5. MONTAR OBJETO COMPLETO DE METADATA
+        // ========================================
+        // 9. MONTAR OBJETO COMPLETO DE METADATA
+        // ========================================
         const enrichedMeta = {
             ...meta,
-            geo: {
-                country: cfCountry,
-                city: cfCity,
-                region: cfRegion,
-                timezone: cfTimezone,
-                lat: cfLatitude,
-                lon: cfLongitude,
-                asn: cfASN
-            },
-            browser: {
-                name: browserInfo,
-                language: acceptLanguage,
-                referer: referer
-            },
-            timestamp_iso: new Date().toISOString()
+            tracking: {
+                dnt: dnt,
+                referer: referer,
+                language: browserLanguage,
+                screen: screenResolution,
+                timezone: clientTimezone
+            }
         };
-        
+
+        // ========================================
+        // 10. SALVAR NO BANCO COM TODOS OS DADOS
+        // ========================================
         await queryDB(
-            "INSERT INTO audit_logs (user_id, action, ip, user_agent, details, device_type, country, city, region) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-            [safeUserId, action, realIP, userAgent, JSON.stringify(enrichedMeta), deviceType, cfCountry, cfCity, cfRegion],
+            `INSERT INTO audit_logs (
+                user_id, action, ip, user_agent, details, device_type,
+                country, city, region, latitude, longitude, asn, isp,
+                browser, os, screen_resolution, language, timezone, fingerprint
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+            [
+                safeUserId, 
+                action, 
+                realIP, 
+                userAgent, 
+                JSON.stringify(enrichedMeta), 
+                deviceType,
+                cfCountry,
+                cfCity,
+                cfRegion,
+                cfLatitude ? parseFloat(cfLatitude) : null,
+                cfLongitude ? parseFloat(cfLongitude) : null,
+                cfASN,
+                isp,
+                browser,
+                os,
+                screenResolution,
+                browserLanguage,
+                clientTimezone,
+                fingerprint
+            ],
             c.env
         );
     } catch (err) {
         console.error("FALHA AO GRAVAR LOG:", err.message);
     }
 }
-
-// Buscar logs por IP específico (ADMIN)
-app.get("/api/admin/logs/ip/:ip", async (c) => {
-    const adminPasswordFromQuery = c.req.query('admin_password');
-    const targetIP = c.req.param('ip');
-    const env = c.env;
-
-    if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
-        return c.json({ error: "Acesso Negado" }, 403);
-    }
-
-    try {
-        const { rows } = await queryDB(`
-            SELECT a.*, u.username, a.device_type, a.country, a.city, a.region
-            FROM audit_logs a
-            LEFT JOIN users u ON a.user_id = u.id
-            WHERE a.ip = $1
-            ORDER BY a.created_at DESC LIMIT 500
-        `, [targetIP], env);
-        return c.json(rows);
-    } catch (err) {
-        console.error("Erro ao buscar logs por IP:", err);
-        return c.json({ error: "Erro ao buscar logs" }, 500);
-    }
-});
-
-// Buscar TODOS os IPs únicos (para investigação)
-app.get("/api/admin/logs/ips", async (c) => {
-    const adminPasswordFromQuery = c.req.query('admin_password');
-    const env = c.env;
-
-    if (adminPasswordFromQuery !== env.ADMIN_PASSWORD) {
-        return c.json({ error: "Acesso Negado" }, 403);
-    }
-
-    try {
-        const { rows } = await queryDB(`
-            SELECT 
-                ip, 
-                country,
-                city,
-                COUNT(*) as total_actions,
-                COUNT(DISTINCT user_id) as unique_users,
-                MAX(created_at) as last_seen
-            FROM audit_logs
-            WHERE ip != 'unknown'
-            GROUP BY ip, country, city
-            ORDER BY total_actions DESC
-            LIMIT 100
-        `, [], env);
-        return c.json(rows);
-    } catch (err) {
-        console.error("Erro ao buscar IPs:", err);
-        return c.json({ error: "Erro ao buscar IPs" }, 500);
-    }
-});
+// =====================================================================
 
 // Buscar todos os usuários (para inbox)
 app.get("/api/users/all", async (c) => {
