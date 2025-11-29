@@ -24,12 +24,13 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState('');
   
   const [videos, setVideos] = useState([]);
-  const [videoTitle, setVideoTitle] = useState('');
   const [secretVideos, setSecretVideos] = useState([]);
   const [usersList, setUsersList] = useState([]); 
   const [logs, setLogs] = useState([]); 
   
   const [file, setFile] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [videoTitle, setVideoTitle] = useState('');
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isRestricted, setIsRestricted] = useState(false);
@@ -40,6 +41,7 @@ export default function Home() {
   const [newComment, setNewComment] = useState("");
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('recent');
   const [unreadCount, setUnreadCount] = useState(0);
   const [showProfile, setShowProfile] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -94,7 +96,7 @@ export default function Home() {
   const loadVideos = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/api/videos`);
+      const res = await axios.get(`${API}/api/videos${user ? `?user_id=${user.id}` : ''}`);
       setVideos(res.data);
     } catch (err) {
       showToast('Erro ao carregar vídeos', 'error');
@@ -106,7 +108,7 @@ export default function Home() {
   const loadSecretVideos = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/api/secret-videos`);
+      const res = await axios.get(`${API}/api/secret-videos${user ? `?user_id=${user.id}` : ''}`);
       setSecretVideos(res.data);
     } catch (err) {
       showToast('Erro ao carregar vídeos restritos', 'error');
@@ -181,7 +183,21 @@ export default function Home() {
       setVideoComments(res.data);
       showToast('Comentário enviado!', 'success');
     } catch (err) {
-      showToast('Erro ao comentar', 'error');
+      showToast(err.response?.data?.error || 'Erro ao comentar', 'error');
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    if (!confirm('Deletar este comentário?')) return;
+    try {
+      await axios.delete(`${API}/api/comments/${commentId}`, { 
+        data: { user_id: user.id, admin_password: isAdmin ? adminPassword : null } 
+      });
+      const res = await axios.get(`${API}/api/comments/${currentVideo.id}`);
+      setVideoComments(res.data);
+      showToast('Comentário deletado!', 'success');
+    } catch (err) {
+      showToast('Erro ao deletar comentário', 'error');
     }
   };
 
@@ -281,47 +297,63 @@ export default function Home() {
     showToast('Saiu do modo admin', 'success');
   };
 
-const upload = async () => {
-  if (!user) {
-    setShowAuth(true);
-    return showToast('Faça login para enviar vídeos', 'error');
-  }
-  if (!file) return showToast('Escolha um vídeo!', 'error');
-  
-  // Usa o título personalizado ou o nome do arquivo como fallback
-  const finalTitle = videoTitle.trim() || file.name;
-  
-  setProgress(0);
-  const form = new FormData();
-  form.append('file', file);
-  form.append('title', finalTitle);
-  form.append('user_id', user.id.toString());
-  form.append('is_restricted', isRestricted.toString());
-  try {
-    await axios.post(`${API}/api/upload`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: (e) => {
-        const percent = Math.round((e.loaded * 100) / e.total);
-        setProgress(percent);
-      }
-    });
-    showToast('Vídeo enviado! 🎉', 'success');
-    setProgress(0);
-    setFile(null);
-    setVideoTitle(''); // Limpa o título também
-    setIsRestricted(false);
-    await loadVideos();
-    if (isRestricted) {
-      setActiveTab('secret');
-    } else {
-      setActiveTab('videos');
+  const upload = async () => {
+    if (!user) {
+      setShowAuth(true);
+      return showToast('Faça login para enviar vídeos', 'error');
     }
-  } catch (err) {
-    showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
-    setProgress(0);
-  }
-};
+    if (!file) return showToast('Escolha um vídeo!', 'error');
+    
+    // Validação de tamanho (500MB)
+    const maxSize = 500 * 1024 * 1024; // 500MB em bytes
+    if (file.size > maxSize) {
+      return showToast('Vídeo muito grande! Máximo: 500MB', 'error');
+    }
 
+    // Validação de tipo
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+    if (!allowedTypes.includes(file.type)) {
+      return showToast('Formato inválido! Use MP4, WebM, OGG, MOV ou AVI', 'error');
+    }
+
+    const finalTitle = videoTitle.trim() || file.name;
+    
+    setProgress(0);
+    const form = new FormData();
+    form.append('file', file);
+    form.append('title', finalTitle);
+    form.append('user_id', user.id.toString());
+    form.append('is_restricted', isRestricted.toString());
+    
+    if (thumbnailFile) {
+      form.append('thumbnail', thumbnailFile);
+    }
+
+    try {
+      await axios.post(`${API}/api/upload`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (e) => {
+          const percent = Math.round((e.loaded * 100) / e.total);
+          setProgress(percent);
+        }
+      });
+      showToast('Vídeo enviado! 🎉', 'success');
+      setProgress(0);
+      setFile(null);
+      setThumbnailFile(null);
+      setVideoTitle('');
+      setIsRestricted(false);
+      await loadVideos();
+      if (isRestricted) {
+        setActiveTab('secret');
+      } else {
+        setActiveTab('videos');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
+      setProgress(0);
+    }
+  };
 
   const deleteVideo = async (videoId, ownerId) => {
     if (!user && !isAdmin) return showToast('Faça login para deletar', 'error');
@@ -348,6 +380,23 @@ const upload = async () => {
     v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const sortVideos = (videoList) => {
+    const sorted = [...videoList];
+    switch(sortBy) {
+      case 'recent':
+        return sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      case 'popular':
+        return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+      case 'liked':
+        return sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+      default:
+        return sorted;
+    }
+  };
+
+  const sortedVideos = sortVideos(filteredVideos);
+  const sortedSecretVideos = sortVideos(filteredSecretVideos);
 
   return (
     <>
@@ -578,14 +627,14 @@ const upload = async () => {
         <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
           
           {(activeTab === 'videos' || activeTab === 'secret') && (
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, display: 'flex', gap: 15 }}>
               <input
                 type="text"
                 placeholder="🔍 Buscar vídeos por título ou autor..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  width: '100%',
+                  flex: 1,
                   padding: '12px 20px',
                   background: '#1a1a1a',
                   border: '1px solid #303030',
@@ -594,19 +643,36 @@ const upload = async () => {
                   fontSize: 16
                 }}
               />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{
+                  padding: '12px 20px',
+                  background: '#1a1a1a',
+                  border: '1px solid #303030',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 16,
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="recent">📅 Mais Recentes</option>
+                <option value="popular">🔥 Mais Visualizados</option>
+                <option value="liked">❤️ Mais Curtidos</option>
+              </select>
             </div>
           )}
 
           {activeTab === 'videos' && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-                {loading ? 'Carregando...' : `${filteredVideos.length} vídeo${filteredVideos.length !== 1 ? 's' : ''}`}
+                {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 80 }}>
                   <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                 </div>
-              ) : filteredVideos.length === 0 ? (
+              ) : sortedVideos.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
                   <div style={{ fontSize: 41, marginBottom: 18 }}>📹</div>
                   <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo encontrado</p>
@@ -616,15 +682,29 @@ const upload = async () => {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                  {filteredVideos.map((v) => (
+                  {sortedVideos.map((v) => (
                     <div key={v.id} style={{ background: "#20153e", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #18142355", paddingBottom: 6 }}>
                       {canDelete(v.user_id?.toString()) && (
                         <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
                       )}
-                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#130c23" }}>
+                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#130c23", position: 'relative' }}>
+                        {v.thumbnail_url && (
+                          <img 
+                            src={v.thumbnail_url} 
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0
+                            }} 
+                            alt={v.title}
+                          />
+                        )}
                         <iframe
                           src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
-                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7 }}
+                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
                           allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
                       </div>
                       <div style={{ padding: 14 }}>
@@ -651,111 +731,136 @@ const upload = async () => {
             </div>
           )}
 
-            {activeTab === 'upload' && (
-  <div style={{ maxWidth: 620, margin: '0 auto' }}>
-    <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
-    <div
-      onDrop={e => {
-        e.preventDefault(); setIsDragging(false);
-        const droppedFile = e.dataTransfer.files[0];
-        if (droppedFile && droppedFile.type.startsWith('video/')) {
-          setFile(droppedFile); showToast('Arquivo carregado!', 'success');
-        }
-      }}
-      onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-      onDragLeave={() => setIsDragging(false)}
-      style={{
-        background: isDragging ? '#28225b' : '#181733', borderRadius: 14, padding: 36,
-        textAlign: 'center', border: isDragging ? '2.2px dashed #8d6aff' : '2.2px dashed #333',
-        transition: 'all 0.3s'
-      }}>
-      <div style={{ fontSize: 58, marginBottom: 24 }}>{isDragging ? '📥' : '☁️'}</div>
-      <p style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}</p>
-      <input type="file" accept="video/*" onChange={e => { const f = e.target.files[0]; if (f) { setFile(f); showToast('Arquivo selecionado!', 'success'); } }} style={{ display: 'none' }} id="file-input" />
-      <label htmlFor="file-input" style={{ display: 'inline-block', padding: '12px 32px', background: '#8d6aff', color: '#fff', borderRadius: 20, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Selecionar arquivo</label>
-      {file && (
-        <div style={{ marginTop: 30, padding: 16, background: '#211640', borderRadius: 9, textAlign: 'left' }}>
-          <p style={{ margin: 0, fontSize: 15, color: '#aaa' }}>Arquivo selecionado:</p>
-          <p style={{ margin: '5px 0 0', fontSize: 16, fontWeight: 600 }}>{file.name}</p>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-        </div>
-      )}
+          {activeTab === 'upload' && (
+            <div style={{ maxWidth: 620, margin: '0 auto' }}>
+              <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
+              <div
+                onDrop={e => {
+                  e.preventDefault(); setIsDragging(false);
+                  const droppedFile = e.dataTransfer.files[0];
+                  if (droppedFile && droppedFile.type.startsWith('video/')) {
+                    setFile(droppedFile); showToast('Arquivo carregado!', 'success');
+                  }
+                }}
+                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                style={{
+                  background: isDragging ? '#28225b' : '#181733', borderRadius: 14, padding: 36,
+                  textAlign: 'center', border: isDragging ? '2.2px dashed #8d6aff' : '2.2px dashed #333',
+                  transition: 'all 0.3s'
+                }}>
+                <div style={{ fontSize: 58, marginBottom: 24 }}>{isDragging ? '📥' : '☁️'}</div>
+                <p style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}</p>
+                <input type="file" accept="video/*" onChange={e => { const f = e.target.files[0]; if (f) { setFile(f); showToast('Arquivo selecionado!', 'success'); } }} style={{ display: 'none' }} id="file-input" />
+                <label htmlFor="file-input" style={{ display: 'inline-block', padding: '12px 32px', background: '#8d6aff', color: '#fff', borderRadius: 20, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Selecionar arquivo</label>
+                
+                {file && (
+                  <>
+                    <div style={{ marginTop: 30, padding: 16, background: '#211640', borderRadius: 9, textAlign: 'left' }}>
+                      <p style={{ margin: 0, fontSize: 15, color: '#aaa' }}>Arquivo selecionado:</p>
+                      <p style={{ margin: '5px 0 0', fontSize: 16, fontWeight: 600 }}>{file.name}</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
 
-      {file && (
-        <div style={{ marginTop: 20 }}>
-          <input
-            type="text"
-            placeholder="Digite o título do vídeo..."
-            value={videoTitle}
-            onChange={(e) => setVideoTitle(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '14px 18px',
-              background: '#211640',
-              border: '2px solid #8d6aff',
-              borderRadius: 10,
-              color: '#fff',
-              fontSize: 16,
-              fontWeight: 500,
-              outline: 'none',
-              transition: 'all 0.3s'
-            }}
-          />
-          <p style={{ 
-            margin: '8px 0 0', 
-            fontSize: 13, 
-            color: '#aaa', 
-            textAlign: 'left',
-            paddingLeft: 4
-          }}>
-            📁 Nome do arquivo: <span style={{ color: '#8d6aff' }}>{file.name}</span>
-          </p>
-        </div>
-      )}
+                    <div style={{ marginTop: 20 }}>
+                      <input
+                        type="text"
+                        placeholder="Digite o título do vídeo..."
+                        value={videoTitle}
+                        onChange={(e) => setVideoTitle(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '14px 18px',
+                          background: '#211640',
+                          border: '2px solid #8d6aff',
+                          borderRadius: 10,
+                          color: '#fff',
+                          fontSize: 16,
+                          fontWeight: 500,
+                          outline: 'none',
+                          transition: 'all 0.3s'
+                        }}
+                      />
+                      <p style={{ 
+                        margin: '8px 0 0', 
+                        fontSize: 13, 
+                        color: '#aaa', 
+                        textAlign: 'left',
+                        paddingLeft: 4
+                      }}>
+                        📁 Nome do arquivo: <span style={{ color: '#8d6aff' }}>{file.name}</span>
+                      </p>
+                    </div>
 
-      <div style={{ 
-        marginTop: 20, 
-        padding: '15px 20px', 
-        background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
-        borderRadius: 10,
-        border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        cursor: 'pointer',
-        transition: 'all 0.3s'
-      }} onClick={() => setIsRestricted(!isRestricted)}>
-        <input 
-          type="checkbox" 
-          checked={isRestricted}
-          onChange={(e) => setIsRestricted(e.target.checked)}
-          style={{ width: 18, height: 18, cursor: 'pointer' }}
-        />
-        <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
-          🔒 Tornar vídeo privado
-        </label>
-      </div>
+                    <div style={{ marginTop: 20 }}>
+                      <p style={{ fontSize: 15, color: '#aaa', marginBottom: 10, textAlign: 'left' }}>🖼️ Thumbnail personalizada (opcional):</p>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => { 
+                          const thumb = e.target.files[0]; 
+                          if (thumb) { 
+                            setThumbnailFile(thumb); 
+                            showToast('Thumbnail selecionada!', 'success'); 
+                          } 
+                        }} 
+                        style={{ display: 'none' }} 
+                        id="thumbnail-input" 
+                      />
+                      <label htmlFor="thumbnail-input" style={{ display: 'inline-block', padding: '10px 24px', background: '#352f5b', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                        Selecionar Imagem
+                      </label>
+                      {thumbnailFile && (
+                        <p style={{ margin: '8px 0 0', fontSize: 13, color: '#8d6aff', textAlign: 'left' }}>
+                          ✓ {thumbnailFile.name}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
-      <button onClick={upload} disabled={!file || progress > 0} style={{
-        marginTop: 32, padding: '12px 48px',
-        background: !file || progress > 0 ? '#55535c' : '#8d6aff',
-        color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
-        cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
-      }}>
-        {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
-      </button>
-      {progress > 0 && progress < 100 && (
-        <div style={{ marginTop: 19 }}>
-          <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
-            <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+                <div style={{ 
+                  marginTop: 20, 
+                  padding: '15px 20px', 
+                  background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
+                  borderRadius: 10,
+                  border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }} onClick={() => setIsRestricted(!isRestricted)}>
+                  <input 
+                    type="checkbox" 
+                    checked={isRestricted}
+                    onChange={(e) => setIsRestricted(e.target.checked)}
+                    style={{ width: 18, height: 18, cursor: 'pointer' }}
+                  />
+                  <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
+                    🔒 Tornar vídeo privado
+                  </label>
+                </div>
 
+                <button onClick={upload} disabled={!file || progress > 0} style={{
+                  marginTop: 32, padding: '12px 48px',
+                  background: !file || progress > 0 ? '#55535c' : '#8d6aff',
+                  color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
+                  cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
+                }}>
+                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
+                </button>
+                {progress > 0 && progress < 100 && (
+                  <div style={{ marginTop: 19 }}>
+                    <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
+                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {activeTab === 'admin' && isAdmin && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -833,13 +938,13 @@ const upload = async () => {
           {activeTab === 'secret' && showSecretTab && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#e53e3e' }}>
-                🔥 SAFADEZA ({loading ? 'Carregando...' : `${filteredSecretVideos.length} vídeo${filteredSecretVideos.length !== 1 ? 's' : ''}`})
+                🔥 SAFADEZA ({loading ? 'Carregando...' : `${sortedSecretVideos.length} vídeo${sortedSecretVideos.length !== 1 ? 's' : ''}`})
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 80 }}>
                   <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                 </div>
-              ) : filteredSecretVideos.length === 0 ? (
+              ) : sortedSecretVideos.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa', border: '2px dashed #e53e3e' }}>
                   <div style={{ fontSize: 41, marginBottom: 18 }}>🔥</div>
                   <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito encontrado</p>
@@ -847,15 +952,29 @@ const upload = async () => {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                  {filteredSecretVideos.map((v) => (
+                  {sortedSecretVideos.map((v) => (
                     <div key={v.id} style={{ background: "#3d1a1a", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #e53e3e55", paddingBottom: 6, border: '2px solid #e53e3e' }}>
                       {canDelete(v.user_id?.toString()) && (
                         <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
                       )}
-                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#1a0c0c" }}>
+                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#1a0c0c", position: 'relative' }}>
+                        {v.thumbnail_url && (
+                          <img 
+                            src={v.thumbnail_url} 
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0
+                            }} 
+                            alt={v.title}
+                          />
+                        )}
                         <iframe
                           src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
-                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7 }}
+                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
                           allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
                       </div>
                       <div style={{ padding: 14 }}>
@@ -909,9 +1028,26 @@ const upload = async () => {
                 ) : (
                   videoComments.map((c, i) => (
                     <div key={i} style={{ marginBottom: 16, borderBottom: '1px solid #333', paddingBottom: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                        <span style={{ fontWeight: 'bold', color: '#8d6aff' }}>{c.username || 'Anônimo'}</span>
-                        <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontWeight: 'bold', color: '#8d6aff' }}>{c.username || 'Anônimo'}</span>
+                          <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                        {(user && (c.user_id === user.id || isAdmin)) && (
+                          <button 
+                            onClick={() => deleteComment(c.id)} 
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: '#ef4444', 
+                              cursor: 'pointer', 
+                              fontSize: 14,
+                              padding: '4px 8px'
+                            }}
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                       <p style={{ margin: 0, color: '#ddd' }}>{c.comment}</p>
                     </div>
