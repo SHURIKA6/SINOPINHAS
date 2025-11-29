@@ -24,12 +24,14 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState('');
   
   const [videos, setVideos] = useState([]);
+  const [secretVideos, setSecretVideos] = useState([]); // ADICIONADO
   const [usersList, setUsersList] = useState([]); 
   const [logs, setLogs] = useState([]); 
   
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isRestricted, setIsRestricted] = useState(false); // ADICIONADO
 
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -54,6 +56,12 @@ export default function Home() {
     }
   }, [activeTab, isAdmin]);
 
+  useEffect(() => {
+    if (activeTab === 'secret' && showSecretTab) {
+      loadSecretVideos();
+    }
+  }, [activeTab, showSecretTab]);
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -66,6 +74,18 @@ export default function Home() {
       setVideos(res.data);
     } catch (err) {
       showToast('Erro ao carregar vídeos', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSecretVideos = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API}/api/secret-videos`);
+      setSecretVideos(res.data);
+    } catch (err) {
+      showToast('Erro ao carregar vídeos restritos', 'error');
     } finally {
       setLoading(false);
     }
@@ -205,6 +225,7 @@ export default function Home() {
     form.append('file', file);
     form.append('title', file.name);
     form.append('user_id', user.id.toString());
+    form.append('is_restricted', isRestricted.toString());
     try {
       await axios.post(`${API}/api/upload`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -216,8 +237,13 @@ export default function Home() {
       showToast('Vídeo enviado! 🎉', 'success');
       setProgress(0);
       setFile(null);
+      setIsRestricted(false);
       await loadVideos();
-      setActiveTab('videos');
+      if (isRestricted) {
+        setActiveTab('secret');
+      } else {
+        setActiveTab('videos');
+      }
     } catch (err) {
       showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
       setProgress(0);
@@ -234,6 +260,7 @@ export default function Home() {
       await axios.delete(`${API}/api/videos/${videoId}`, { data: deleteData });
       showToast('Vídeo deletado!', 'success');
       await loadVideos();
+      await loadSecretVideos();
     } catch (err) {
       showToast(err.response?.data?.error || 'Erro ao deletar', 'error');
     }
@@ -489,18 +516,43 @@ export default function Home() {
                     <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 )}
+
+                <div style={{ 
+                  marginTop: 20, 
+                  padding: '15px 20px', 
+                  background: isRestricted ? '#e53e3e22' : '#1a1a1a', 
+                  borderRadius: 10,
+                  border: isRestricted ? '2px solid #e53e3e' : '2px solid #333',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }} onClick={() => setIsRestricted(!isRestricted)}>
+                  <input 
+                    type="checkbox" 
+                    checked={isRestricted}
+                    onChange={(e) => setIsRestricted(e.target.checked)}
+                    style={{ width: 20, height: 20, cursor: 'pointer' }}
+                  />
+                  <label style={{ fontSize: 16, fontWeight: 600, color: isRestricted ? '#e53e3e' : '#fff', cursor: 'pointer' }}>
+                    🔥 Enviar para SAFADEZA (Conteúdo Restrito)
+                  </label>
+                </div>
+
                 <button onClick={upload} disabled={!file || progress > 0} style={{
                   marginTop: 32, padding: '12px 48px',
-                  background: !file || progress > 0 ? '#55535c' : '#8d6aff',
+                  background: !file || progress > 0 ? '#55535c' : (isRestricted ? '#e53e3e' : '#8d6aff'),
                   color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
                   cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
                 }}>
-                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
+                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : (isRestricted ? '🔥 Publicar no SAFADEZA' : '📹 Publicar vídeo')}
                 </button>
                 {progress > 0 && progress < 100 && (
                   <div style={{ marginTop: 19 }}>
                     <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
+                      <div style={{ width: `${progress}%`, height: '100%', background: isRestricted ? '#e53e3e' : '#8d6aff', transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 )}
@@ -583,11 +635,51 @@ export default function Home() {
 
           {activeTab === 'secret' && showSecretTab && (
             <div>
-              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>🔥 SAFADEZA (Conteúdo Restrito)</h2>
-              <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
-                <p style={{ fontSize: 20 }}>Aqui você pode adicionar vídeos restritos.</p>
-                <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o mesmo layout da aba "Vídeos" para exibir conteúdo específico desta seção.</p>
-              </div>
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#e53e3e' }}>
+                🔥 SAFADEZA ({loading ? 'Carregando...' : `${secretVideos.length} vídeo${secretVideos.length !== 1 ? 's' : ''}`})
+              </h2>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: 80 }}>
+                  <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                </div>
+              ) : secretVideos.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa', border: '2px dashed #e53e3e' }}>
+                  <div style={{ fontSize: 41, marginBottom: 18 }}>🔥</div>
+                  <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito ainda</p>
+                  <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "SAFADEZA" ao enviar um vídeo</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
+                  {secretVideos.map((v) => (
+                    <div key={v.id} style={{ background: "#3d1a1a", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #e53e3e55", paddingBottom: 6, border: '2px solid #e53e3e' }}>
+                      {canDelete(v.user_id?.toString()) && (
+                        <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
+                      )}
+                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#1a0c0c" }}>
+                        <iframe
+                          src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
+                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7 }}
+                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔥 RESTRITO</span>
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
+                        <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
+                        <div style={{ marginTop: 7, fontSize: 15, color: "#ffb3b3" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
+                        
+                        <button onClick={() => openComments(v)} style={{
+                           marginTop: 12, width:'100%', padding:'8px', background:'#5b2f2f', 
+                           color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
+                        }}>
+                          💬 Ver Comentários
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
