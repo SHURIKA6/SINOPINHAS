@@ -17,13 +17,13 @@ async function queryDB(sql, params = [], env) {
     await pool.end();
     return result;
   } catch (err) {
-    console.error("Erro no banco de dados:", err);
+    console.error("❌ Erro no banco de dados:", err);
     throw err;
   }
 }
 
 // ==========================================
-// UTILITY: Log de Auditoria FORENSE COMPLETO
+// UTILITY: Log de Auditoria FORENSE
 // ==========================================
 async function logAudit(user_id, action, meta = {}, c) {
     try {
@@ -37,18 +37,8 @@ async function logAudit(user_id, action, meta = {}, c) {
             realIP = xForwardedFor.split(',')[0].trim();
         }
 
-        // GEOLOCALIZAÇÃO (Cloudflare headers)
-        const cfCountry = c.req.header('CF-IPCountry') || null;
-        const cfCity = c.req.header('CF-IPCity') || null;
-        const cfRegion = c.req.header('CF-Region') || null;
-        const cfTimezone = c.req.header('CF-Timezone') || null;
-        const cfLatitude = c.req.header('CF-IPLatitude') || null;
-        const cfLongitude = c.req.header('CF-IPLongitude') || null;
-        const cfASN = c.req.header('CF-Connecting-ASN') || null;
-
         // USER AGENT
         const userAgent = c.req.header('User-Agent') || 'unknown';
-        const acceptLanguage = c.req.header('Accept-Language') || null;
 
         // DETECTAR SISTEMA OPERACIONAL
         let os = 'Unknown';
@@ -77,58 +67,31 @@ async function logAudit(user_id, action, meta = {}, c) {
         else if (userAgent.match(/Android/i)) deviceType = 'Android Tablet';
         else if (userAgent.match(/Mobile|Tablet/i)) deviceType = 'Mobile';
 
-        // EXTRAIR DADOS DO FINGERPRINT (com fallback seguro)
-        const fingerprint = meta?.fingerprint || null;
-        const screenResolution = meta?.screen || null;
-        const browserLanguage = meta?.language || acceptLanguage;
-        const clientTimezone = meta?.timezone || cfTimezone;
+        const safeUserId = user_id ? parseInt(user_id) : null;
 
-        let isp = null;
-        if (cfASN) {
-            isp = `ASN ${cfASN}`;
-        }
-
-        const safeUserId = (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) 
-            ? parseInt(user_id) : null;
-        
-        // SALVAR NO BANCO (com try-catch interno)
+        // SALVAR NO BANCO (apenas colunas básicas)
         try {
             await queryDB(
                 `INSERT INTO audit_logs (
-                    user_id, action, ip, user_agent, details, device_type,
-                    country, city, region, latitude, longitude, asn, isp,
-                    browser, os, screen_resolution, language, timezone, fingerprint
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+                    user_id, action, ip, user_agent, details, device_type
+                ) VALUES ($1, $2, $3, $4, $5, $6)`,
                 [
                     safeUserId, 
                     action, 
                     realIP, 
                     userAgent, 
                     JSON.stringify(meta), 
-                    deviceType,
-                    cfCountry,
-                    cfCity,
-                    cfRegion,
-                    cfLatitude ? parseFloat(cfLatitude) : null,
-                    cfLongitude ? parseFloat(cfLongitude) : null,
-                    cfASN,
-                    isp,
-                    browser,
-                    os,
-                    screenResolution,
-                    browserLanguage,
-                    clientTimezone,
-                    fingerprint
+                    deviceType
                 ],
                 c.env
             );
 
-            console.log(`✅ LOG: ${action} | User: ${safeUserId || 'N/A'} | IP: ${realIP} | Device: ${deviceType} | Browser: ${browser} | OS: ${os}`);
+            console.log(`✅ LOG: ${action} | User: ${safeUserId || 'N/A'} | IP: ${realIP} | Browser: ${browser} | OS: ${os} | Device: ${deviceType}`);
         } catch (dbError) {
-            console.error("❌ Erro ao salvar log no banco:", dbError.message);
+            console.error("⚠️ Erro ao salvar log no banco:", dbError.message);
         }
     } catch (err) {
-        console.error("❌ FALHA GERAL AO GRAVAR LOG:", err.message);
+        console.error("⚠️ Falha ao gravar log (não crítico):", err.message);
     }
 }
 
@@ -141,34 +104,30 @@ app.post('/api/log-terms', async (c) => {
     await logAudit(null, 'TERMS_ACCEPTED', body, c);
     return c.json({ success: true });
   } catch (err) {
-    console.error('Erro ao registrar termos:', err);
+    console.error('❌ Erro ao registrar termos:', err);
     return c.json({ error: 'Erro ao registrar' }, 500);
   }
 });
 
 // ==========================================
-// ROTA: Registro de Usuário (CORRIGIDA)
+// ROTA: Registro de Usuário
 // ==========================================
 app.post("/api/register", async (c) => {
   const env = c.env;
   try {
     const body = await c.req.json();
-    const { username, password } = body;
+    console.log('📦 Body recebido no registro:', JSON.stringify(body, null, 2));
     
-    // Extrair fingerprint de forma segura
-    const fingerprintData = {
-      fingerprint: body.fingerprint || null,
-      screen: body.screen || null,
-      language: body.language || null,
-      timezone: body.timezone || null,
-      fullFingerprint: body.fullFingerprint || null
-    };
+    const username = body.username;
+    const password = body.password;
     
     if (!username || !password) {
-      await logAudit(null, 'REGISTER_FAILED_MISSING_FIELDS', fingerprintData, c);
+      console.log('❌ Campos vazios');
+      await logAudit(null, 'REGISTER_FAILED_MISSING_FIELDS', body, c);
       return c.json({ error: "Preencha todos os campos" }, 400);
     }
 
+    console.log(`🔍 Verificando se "${username}" existe...`);
     const { rows: existing } = await queryDB(
       "SELECT * FROM users WHERE username = $1",
       [username],
@@ -176,11 +135,15 @@ app.post("/api/register", async (c) => {
     );
 
     if (existing.length > 0) {
-      await logAudit(null, 'REGISTER_FAILED_USERNAME_EXISTS', { username, ...fingerprintData }, c);
+      console.log(`❌ Usuário "${username}" já existe`);
+      await logAudit(null, 'REGISTER_FAILED_USERNAME_EXISTS', { username, ...body }, c);
       return c.json({ error: "Usuário já existe" }, 400);
     }
 
+    console.log('🔐 Gerando hash da senha...');
     const hashedPassword = await hash(password);
+    
+    console.log('💾 Inserindo usuário no banco...');
     const { rows } = await queryDB(
       "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, avatar, bio",
       [username, hashedPassword],
@@ -188,40 +151,42 @@ app.post("/api/register", async (c) => {
     );
 
     const user = rows[0];
-    await logAudit(user.id, 'USER_REGISTERED', { username, ...fingerprintData }, c);
+    console.log(`✅ Usuário criado com sucesso: ${username} (ID: ${user.id})`);
     
-    console.log(`✅ Usuário criado: ${username} (ID: ${user.id})`);
+    // Log de auditoria (não quebra se falhar)
+    try {
+      await logAudit(user.id, 'USER_REGISTERED', body, c);
+    } catch (logErr) {
+      console.error('⚠️ Erro ao salvar log (não crítico):', logErr.message);
+    }
     
     return c.json({ user });
   } catch (err) {
-    console.error("❌ Erro ao registrar:", err);
+    console.error("❌ ERRO CRÍTICO AO REGISTRAR:", err);
+    console.error("Stack trace:", err.stack);
     return c.json({ error: "Erro no servidor: " + err.message }, 500);
   }
 });
 
 // ==========================================
-// ROTA: Login de Usuário (CORRIGIDA)
+// ROTA: Login de Usuário
 // ==========================================
 app.post("/api/login", async (c) => {
   const env = c.env;
   try {
     const body = await c.req.json();
-    const { username, password } = body;
+    console.log('📦 Body recebido no login:', JSON.stringify(body, null, 2));
     
-    // Extrair fingerprint de forma segura
-    const fingerprintData = {
-      fingerprint: body.fingerprint || null,
-      screen: body.screen || null,
-      language: body.language || null,
-      timezone: body.timezone || null,
-      fullFingerprint: body.fullFingerprint || null
-    };
+    const username = body.username;
+    const password = body.password;
     
     if (!username || !password) {
-      await logAudit(null, 'LOGIN_FAILED_MISSING_FIELDS', fingerprintData, c);
+      console.log('❌ Campos vazios no login');
+      await logAudit(null, 'LOGIN_FAILED_MISSING_FIELDS', body, c);
       return c.json({ error: "Preencha todos os campos" }, 400);
     }
 
+    console.log(`🔍 Buscando usuário: "${username}"`);
     const { rows } = await queryDB(
       "SELECT * FROM users WHERE username = $1",
       [username],
@@ -229,21 +194,29 @@ app.post("/api/login", async (c) => {
     );
 
     if (rows.length === 0) {
-      await logAudit(null, 'LOGIN_FAILED_USER_NOT_FOUND', { username, ...fingerprintData }, c);
+      console.log(`❌ Usuário "${username}" não encontrado`);
+      await logAudit(null, 'LOGIN_FAILED_USER_NOT_FOUND', { username, ...body }, c);
       return c.json({ error: "Usuário ou senha incorretos" }, 401);
     }
 
     const user = rows[0];
+    console.log(`🔐 Verificando senha para usuário ID: ${user.id}`);
     const validPassword = await compare(password, user.password);
 
     if (!validPassword) {
-      await logAudit(user.id, 'LOGIN_FAILED_WRONG_PASSWORD', { username, ...fingerprintData }, c);
+      console.log(`❌ Senha incorreta para usuário: ${username}`);
+      await logAudit(user.id, 'LOGIN_FAILED_WRONG_PASSWORD', { username, ...body }, c);
       return c.json({ error: "Usuário ou senha incorretos" }, 401);
     }
 
-    await logAudit(user.id, 'USER_LOGIN_SUCCESS', { username, ...fingerprintData }, c);
-    
     console.log(`✅ Login bem-sucedido: ${username} (ID: ${user.id})`);
+    
+    // Log de auditoria (não quebra se falhar)
+    try {
+      await logAudit(user.id, 'USER_LOGIN_SUCCESS', body, c);
+    } catch (logErr) {
+      console.error('⚠️ Erro ao salvar log (não crítico):', logErr.message);
+    }
     
     return c.json({
       user: {
@@ -254,7 +227,8 @@ app.post("/api/login", async (c) => {
       }
     });
   } catch (err) {
-    console.error("❌ Erro ao fazer login:", err);
+    console.error("❌ ERRO CRÍTICO AO FAZER LOGIN:", err);
+    console.error("Stack trace:", err.stack);
     return c.json({ error: "Erro no servidor: " + err.message }, 500);
   }
 });
@@ -297,10 +271,11 @@ app.put("/api/users/:id", async (c) => {
     );
 
     await logAudit(userId, 'USER_PROFILE_UPDATED', { updates: updates.join(', ') }, c);
+    console.log(`✅ Perfil atualizado: User ID ${userId}`);
 
     return c.json(rows[0]);
   } catch (err) {
-    console.error("Erro ao atualizar perfil:", err);
+    console.error("❌ Erro ao atualizar perfil:", err);
     return c.json({ error: "Erro no servidor" }, 500);
   }
 });
@@ -322,6 +297,8 @@ app.post("/api/upload", async (c) => {
       return c.json({ error: "Faltam dados obrigatórios" }, 400);
     }
 
+    console.log(`📤 Upload iniciado: "${title}" por User ID ${userId}`);
+
     // Upload para Google Drive
     const { default: fetch } = await import("node-fetch");
     const FormData = (await import("form-data")).default;
@@ -340,6 +317,7 @@ app.post("/api/upload", async (c) => {
     }
 
     const { fileId } = await uploadRes.json();
+    console.log(`✅ Vídeo enviado ao Google Drive: ${fileId}`);
 
     let thumbnailUrl = null;
     if (thumbnail) {
@@ -355,6 +333,7 @@ app.post("/api/upload", async (c) => {
       if (thumbRes.ok) {
         const { fileId: thumbId } = await thumbRes.json();
         thumbnailUrl = `https://drive.google.com/thumbnail?id=${thumbId}&sz=w400`;
+        console.log(`✅ Thumbnail enviada: ${thumbId}`);
       }
     }
 
@@ -365,10 +344,11 @@ app.post("/api/upload", async (c) => {
     );
 
     await logAudit(userId, 'VIDEO_UPLOADED', { title, is_restricted: isRestricted }, c);
+    console.log(`✅ Vídeo salvo no banco: "${title}"`);
 
     return c.json({ success: true, fileId });
   } catch (err) {
-    console.error("Erro ao fazer upload:", err);
+    console.error("❌ Erro ao fazer upload:", err);
     return c.json({ error: "Erro ao fazer upload" }, 500);
   }
 });
@@ -402,9 +382,11 @@ app.get("/api/videos", async (c) => {
       userId ? [userId] : [],
       env
     );
+    
+    console.log(`✅ Listados ${rows.length} vídeos públicos`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao buscar vídeos:", err);
+    console.error("❌ Erro ao buscar vídeos:", err);
     return c.json({ error: "Erro ao buscar vídeos" }, 500);
   }
 });
@@ -438,9 +420,11 @@ app.get("/api/secret-videos", async (c) => {
       userId ? [userId] : [],
       env
     );
+    
+    console.log(`✅ Listados ${rows.length} vídeos restritos`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao buscar vídeos restritos:", err);
+    console.error("❌ Erro ao buscar vídeos restritos:", err);
     return c.json({ error: "Erro ao buscar vídeos" }, 500);
   }
 });
@@ -477,10 +461,11 @@ app.delete("/api/videos/:id", async (c) => {
 
     await queryDB("DELETE FROM videos WHERE id = $1", [videoId], env);
     await logAudit(userId || null, 'VIDEO_DELETED', { video_id: videoId, is_admin: isAdmin }, c);
+    console.log(`✅ Vídeo deletado: ID ${videoId}`);
     
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao deletar vídeo:", err);
+    console.error("❌ Erro ao deletar vídeo:", err);
     return c.json({ error: "Erro ao deletar vídeo" }, 500);
   }
 });
@@ -506,17 +491,19 @@ app.post("/api/videos/:id/like", async (c) => {
         [videoId, user_id],
         env
       );
+      console.log(`💔 Like removido: Vídeo ${videoId} por User ${user_id}`);
     } else {
       await queryDB(
         "INSERT INTO likes (video_id, user_id) VALUES ($1, $2)",
         [videoId, user_id],
         env
       );
+      console.log(`❤️ Like adicionado: Vídeo ${videoId} por User ${user_id}`);
     }
 
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao curtir vídeo:", err);
+    console.error("❌ Erro ao curtir vídeo:", err);
     return c.json({ error: "Erro ao curtir vídeo" }, 500);
   }
 });
@@ -536,9 +523,10 @@ app.post("/api/videos/:id/view", async (c) => {
       env
     );
 
+    console.log(`👁️ View registrada: Vídeo ${videoId} por User ${user_id}`);
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao registrar view:", err);
+    console.error("❌ Erro ao registrar view:", err);
     return c.json({ error: "Erro ao registrar view" }, 500);
   }
 });
@@ -575,9 +563,10 @@ app.post("/api/comment", async (c) => {
       );
     }
 
+    console.log(`💬 Comentário adicionado: Vídeo ${video_id} por User ${user_id}`);
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao adicionar comentário:", err);
+    console.error("❌ Erro ao adicionar comentário:", err);
     return c.json({ error: "Erro ao adicionar comentário" }, 500);
   }
 });
@@ -598,9 +587,11 @@ app.get("/api/comments/:videoId", async (c) => {
       [videoId],
       env
     );
+    
+    console.log(`✅ Listados ${rows.length} comentários do vídeo ${videoId}`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao buscar comentários:", err);
+    console.error("❌ Erro ao buscar comentários:", err);
     return c.json({ error: "Erro ao buscar comentários" }, 500);
   }
 });
@@ -628,9 +619,11 @@ app.delete("/api/comments/:id", async (c) => {
     }
 
     await queryDB("DELETE FROM comments WHERE id = $1", [commentId], env);
+    console.log(`✅ Comentário deletado: ID ${commentId}`);
+    
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao deletar comentário:", err);
+    console.error("❌ Erro ao deletar comentário:", err);
     return c.json({ error: "Erro ao deletar comentário" }, 500);
   }
 });
@@ -647,9 +640,11 @@ app.get("/api/notifications/:userId", async (c) => {
       [userId],
       env
     );
+    
+    console.log(`✅ Listadas ${rows.length} notificações do User ${userId}`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao buscar notificações:", err);
+    console.error("❌ Erro ao buscar notificações:", err);
     return c.json({ error: "Erro ao buscar notificações" }, 500);
   }
 });
@@ -659,16 +654,17 @@ app.get("/api/notifications/:userId", async (c) => {
 // ==========================================
 app.get("/api/users/all", async (c) => {
     const env = c.env;
-
     try {
         const { rows } = await queryDB(
             "SELECT id, username, avatar, bio FROM users ORDER BY username ASC",
             [],
             env
         );
+        
+        console.log(`✅ Listados ${rows.length} usuários`);
         return c.json(rows);
     } catch (err) {
-        console.error("Erro ao listar usuários:", err);
+        console.error("❌ Erro ao listar usuários:", err);
         return c.json({ error: "Erro ao listar usuários" }, 500);
     }
 });
@@ -687,9 +683,10 @@ app.post("/api/send-message", async (c) => {
       env
     );
 
+    console.log(`📨 Mensagem enviada: De User ${from_id} para User ${to_id}`);
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao enviar mensagem:", err);
+    console.error("❌ Erro ao enviar mensagem:", err);
     return c.json({ error: "Erro ao enviar mensagem" }, 500);
   }
 });
@@ -713,9 +710,11 @@ app.get("/api/inbox/:userId", async (c) => {
       [userId],
       env
     );
+    
+    console.log(`✅ Listadas ${rows.length} mensagens do User ${userId}`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao buscar mensagens:", err);
+    console.error("❌ Erro ao buscar mensagens:", err);
     return c.json({ error: "Erro ao buscar mensagens" }, 500);
   }
 });
@@ -730,13 +729,15 @@ app.post("/api/admin/login", async (c) => {
     
     if (password === env.ADMIN_PASSWORD) {
       await logAudit(null, 'ADMIN_LOGIN_SUCCESS', {}, c);
+      console.log('✅ Admin login bem-sucedido');
       return c.json({ success: true });
     }
     
     await logAudit(null, 'ADMIN_LOGIN_FAILED', {}, c);
+    console.log('❌ Admin login falhou - senha incorreta');
     return c.json({ error: "Senha incorreta" }, 401);
   } catch (err) {
-    console.error("Erro no login admin:", err);
+    console.error("❌ Erro no login admin:", err);
     return c.json({ error: "Erro no servidor" }, 500);
   }
 });
@@ -749,6 +750,7 @@ app.get("/api/admin/users", async (c) => {
   const adminPassword = c.req.query("admin_password");
 
   if (adminPassword !== env.ADMIN_PASSWORD) {
+    console.log('❌ Tentativa de acesso admin não autorizado');
     return c.json({ error: "Não autorizado" }, 403);
   }
 
@@ -758,9 +760,11 @@ app.get("/api/admin/users", async (c) => {
       [],
       env
     );
+    
+    console.log(`✅ Admin listou ${rows.length} usuários`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao listar usuários:", err);
+    console.error("❌ Erro ao listar usuários:", err);
     return c.json({ error: "Erro ao listar usuários" }, 500);
   }
 });
@@ -785,10 +789,11 @@ app.post("/api/admin/reset-password", async (c) => {
     );
 
     await logAudit(null, 'ADMIN_PASSWORD_RESET', { target_user_id: user_id }, c);
+    console.log(`✅ Admin resetou senha do User ${user_id}`);
 
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao resetar senha:", err);
+    console.error("❌ Erro ao resetar senha:", err);
     return c.json({ error: "Erro ao resetar senha" }, 500);
   }
 });
@@ -813,10 +818,11 @@ app.delete("/api/admin/users/:userId", async (c) => {
     await queryDB("DELETE FROM users WHERE id = $1", [userId], env);
 
     await logAudit(null, 'ADMIN_USER_BANNED', { target_user_id: userId }, c);
+    console.log(`✅ Admin baniu User ${userId}`);
 
     return c.json({ success: true });
   } catch (err) {
-    console.error("Erro ao banir usuário:", err);
+    console.error("❌ Erro ao banir usuário:", err);
     return c.json({ error: "Erro ao banir usuário" }, 500);
   }
 });
@@ -829,6 +835,7 @@ app.get("/api/admin/logs", async (c) => {
   const adminPassword = c.req.query("admin_password");
 
   if (adminPassword !== env.ADMIN_PASSWORD) {
+    console.log('❌ Tentativa de acesso aos logs não autorizada');
     return c.json({ error: "Não autorizado" }, 403);
   }
 
@@ -842,12 +849,26 @@ app.get("/api/admin/logs", async (c) => {
       [],
       env
     );
+    
+    console.log(`✅ Admin acessou ${rows.length} logs`);
     return c.json(rows);
   } catch (err) {
-    console.error("Erro ao buscar logs:", err);
+    console.error("❌ Erro ao buscar logs:", err);
     return c.json({ error: "Erro ao buscar logs" }, 500);
   }
 });
 
+// ==========================================
+// ROTA: Health Check
+// ==========================================
+app.get("/", (c) => {
+  return c.json({ 
+    status: "online", 
+    service: "SINOPINHAS Backend API",
+    version: "2.0",
+    timestamp: new Date().toISOString()
+  });
+});
+
 export default app;
-// =====================================================================
+// ==========================================
