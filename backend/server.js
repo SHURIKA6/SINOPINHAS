@@ -5,7 +5,9 @@ const app = new Hono();
 
 app.use("/*", cors());
 
-// ✅ HASH NATIVO (SEM BCRYPTJS)
+// ==========================================
+// UTILITY: Hash e Compare (SEM BCRYPTJS)
+// ==========================================
 async function hash(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + 'SINOPINHAS_SALT_2025');
@@ -36,11 +38,11 @@ async function queryDB(sql, params = [], env) {
 }
 
 // ==========================================
-// UTILITY: Log de Auditoria FORENSE COM FINGERPRINT COMPLETO
+// UTILITY: Log de Auditoria FORENSE COMPLETO
 // ==========================================
 async function logAudit(user_id, action, meta = {}, c) {
     try {
-        // CAPTURAR IP REAL (não proxy)
+        // CAPTURAR IP REAL
         const cfConnectingIP = c.req.header('CF-Connecting-IP');
         const xForwardedFor = c.req.header('X-Forwarded-For');
         const xRealIP = c.req.header('X-Real-IP');
@@ -50,7 +52,7 @@ async function logAudit(user_id, action, meta = {}, c) {
             realIP = xForwardedFor.split(',')[0].trim();
         }
 
-        // GEOLOCALIZAÇÃO (Cloudflare headers)
+        // GEOLOCALIZAÇÃO
         const cfCountry = c.req.header('CF-IPCountry') || null;
         const cfCity = c.req.header('CF-IPCity') || null;
         const cfRegion = c.req.header('CF-Region') || null;
@@ -90,12 +92,11 @@ async function logAudit(user_id, action, meta = {}, c) {
         else if (userAgent.match(/Android/i)) deviceType = 'Android Tablet';
         else if (userAgent.match(/Mobile|Tablet/i)) deviceType = 'Mobile';
 
-        // EXTRAIR FINGERPRINT DO FRONTEND
+        // EXTRAIR FINGERPRINT
         const fingerprint = meta?.fingerprint || null;
         const screenResolution = meta?.screen || null;
         const browserLanguage = meta?.language || acceptLanguage;
         const clientTimezone = meta?.timezone || cfTimezone;
-        const platform = meta?.platform || null;
 
         let isp = null;
         if (cfASN) {
@@ -166,7 +167,6 @@ async function logAudit(user_id, action, meta = {}, c) {
     }
 }
 
-
 // ==========================================
 // ROTA: Registrar aceitação dos termos
 // ==========================================
@@ -225,7 +225,6 @@ app.post("/api/register", async (c) => {
     const user = rows[0];
     console.log(`✅ Usuário criado com sucesso: ${username} (ID: ${user.id})`);
     
-    // Log de auditoria (não quebra se falhar)
     try {
       await logAudit(user.id, 'USER_REGISTERED', body, c);
     } catch (logErr) {
@@ -283,7 +282,6 @@ app.post("/api/login", async (c) => {
 
     console.log(`✅ Login bem-sucedido: ${username} (ID: ${user.id})`);
     
-    // Log de auditoria (não quebra se falhar)
     try {
       await logAudit(user.id, 'USER_LOGIN_SUCCESS', body, c);
     } catch (logErr) {
@@ -353,11 +351,13 @@ app.put("/api/users/:id", async (c) => {
 });
 
 // ==========================================
-// ROTA: Upload de vídeo
+// ROTA: Upload de vídeo PARA BUNNY CDN
 // ==========================================
 app.post("/api/upload", async (c) => {
   const env = c.env;
   try {
+    console.log('📤 Iniciando upload para Bunny CDN...');
+    
     const formData = await c.req.formData();
     const file = formData.get("file");
     const title = formData.get("title");
@@ -366,64 +366,81 @@ app.post("/api/upload", async (c) => {
     const thumbnail = formData.get("thumbnail");
 
     if (!file || !title || !userId) {
+      console.log('❌ Faltam dados obrigatórios');
       return c.json({ error: "Faltam dados obrigatórios" }, 400);
     }
 
-    console.log(`📤 Upload iniciado: "${title}" por User ID ${userId}`);
+    console.log(`📤 Upload: "${title}" (${file.size} bytes)`);
+    console.log(`🔑 BUNNY_API_KEY existe: ${!!env.BUNNY_API_KEY}`);
+    console.log(`📚 BUNNY_LIBRARY_ID: ${env.BUNNY_LIBRARY_ID}`);
+    console.log(`🔑 Primeiros 8 caracteres da key: ${env.BUNNY_API_KEY ? env.BUNNY_API_KEY.substring(0, 8) : 'UNDEFINED'}`);
 
-    // Upload para Google Drive
-    const { default: fetch } = await import("node-fetch");
-    const FormData = (await import("form-data")).default;
+    // Criar vídeo no Bunny
+    const createVideoRes = await fetch(
+      `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos`,
+      {
+        method: "POST",
+        headers: {
+          "AccessKey": env.BUNNY_API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title })
+      }
+    );
 
-    const form = new FormData();
+    if (!createVideoRes.ok) {
+      const errorText = await createVideoRes.text();
+      console.error('❌ Erro ao criar vídeo no Bunny:', errorText);
+      throw new Error("Falha ao criar vídeo no Bunny: " + errorText);
+    }
+
+    const videoData = await createVideoRes.json();
+    const videoGuid = videoData.guid;
+    console.log(`✅ Vídeo criado no Bunny: ${videoGuid}`);
+
+    // Upload do arquivo
     const buffer = await file.arrayBuffer();
-    form.append("file", Buffer.from(buffer), file.name);
-
     const uploadRes = await fetch(
-      `https://sinopinhas-gdrive-upload.fernandoriga.workers.dev/upload`,
-      { method: "POST", body: form }
+      `https://video.bunnycdn.com/library/${env.BUNNY_LIBRARY_ID}/videos/${videoGuid}`,
+      {
+        method: "PUT",
+        headers: {
+          "AccessKey": env.BUNNY_API_KEY,
+          "Content-Type": "application/octet-stream"
+        },
+        body: buffer
+      }
     );
 
     if (!uploadRes.ok) {
-      throw new Error("Falha no upload para o Google Drive");
+      const errorText = await uploadRes.text();
+      console.error('❌ Erro ao fazer upload do vídeo:', errorText);
+      throw new Error("Falha no upload: " + errorText);
     }
 
-    const { fileId } = await uploadRes.json();
-    console.log(`✅ Vídeo enviado ao Google Drive: ${fileId}`);
+    console.log(`✅ Upload concluído para o Bunny`);
 
-    let thumbnailUrl = null;
-    if (thumbnail) {
-      const thumbBuffer = await thumbnail.arrayBuffer();
-      const thumbForm = new FormData();
-      thumbForm.append("file", Buffer.from(thumbBuffer), thumbnail.name);
-
-      const thumbRes = await fetch(
-        `https://sinopinhas-gdrive-upload.fernandoriga.workers.dev/upload`,
-        { method: "POST", body: thumbForm }
-      );
-
-      if (thumbRes.ok) {
-        const { fileId: thumbId } = await thumbRes.json();
-        thumbnailUrl = `https://drive.google.com/thumbnail?id=${thumbId}&sz=w400`;
-        console.log(`✅ Thumbnail enviada: ${thumbId}`);
-      }
-    }
-
+    // Salvar no banco
     await queryDB(
-      "INSERT INTO videos (title, gdrive_id, user_id, is_restricted, thumbnail_url) VALUES ($1, $2, $3, $4, $5)",
-      [title, fileId, userId, isRestricted, thumbnailUrl],
+      "INSERT INTO videos (title, bunny_id, user_id, is_restricted) VALUES ($1, $2, $3, $4)",
+      [title, videoGuid, userId, isRestricted],
       env
     );
 
     await logAudit(userId, 'VIDEO_UPLOADED', { title, is_restricted: isRestricted }, c);
     console.log(`✅ Vídeo salvo no banco: "${title}"`);
 
-    return c.json({ success: true, fileId });
+    return c.json({ success: true, bunny_id: videoGuid });
   } catch (err) {
-    console.error("❌ Erro ao fazer upload:", err);
-    return c.json({ error: "Erro ao fazer upload" }, 500);
+    console.error("❌ ERRO NO UPLOAD:", err);
+    console.error("Stack:", err.stack);
+    return c.json({ 
+      error: "Erro ao fazer upload",
+      details: err.message
+    }, 500);
   }
 });
+
 
 // ==========================================
 // ROTA: Listar vídeos públicos
@@ -943,4 +960,3 @@ app.get("/", (c) => {
 });
 
 export default app;
-// ==========================================
