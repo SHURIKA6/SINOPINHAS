@@ -48,12 +48,9 @@ async function queryDB(sql, params, env) {
     }
 }
 
-// UTILITY: Log de Auditoria FORENSE COMPLETO
 async function logAudit(user_id, action, meta, c) {
     try {
-        // ========================================
-        // 1. CAPTURAR IP REAL (não proxy)
-        // ========================================
+        // CAPTURAR IP REAL
         const cfConnectingIP = c.req.header('CF-Connecting-IP');
         const xForwardedFor = c.req.header('X-Forwarded-For');
         const xRealIP = c.req.header('X-Real-IP');
@@ -63,9 +60,7 @@ async function logAudit(user_id, action, meta, c) {
             realIP = xForwardedFor.split(',')[0].trim();
         }
 
-        // ========================================
-        // 2. CAPTURAR DADOS DE GEOLOCALIZAÇÃO
-        // ========================================
+        // GEOLOCALIZAÇÃO
         const cfCountry = c.req.header('CF-IPCountry') || null;
         const cfCity = c.req.header('CF-IPCity') || null;
         const cfRegion = c.req.header('CF-Region') || null;
@@ -74,17 +69,11 @@ async function logAudit(user_id, action, meta, c) {
         const cfLongitude = c.req.header('CF-IPLongitude') || null;
         const cfASN = c.req.header('CF-Connecting-ASN') || null;
 
-        // ========================================
-        // 3. CAPTURAR INFORMAÇÕES DO NAVEGADOR
-        // ========================================
+        // USER AGENT
         const userAgent = c.req.header('User-Agent') || 'unknown';
         const acceptLanguage = c.req.header('Accept-Language') || null;
-        const referer = c.req.header('Referer') || 'direct';
-        const dnt = c.req.header('DNT') || '0';
 
-        // ========================================
-        // 4. DETECTAR SISTEMA OPERACIONAL
-        // ========================================
+        // DETECTAR SO
         let os = 'Unknown';
         if (userAgent.match(/Windows NT 10/i)) os = 'Windows 10';
         else if (userAgent.match(/Windows NT 11/i)) os = 'Windows 11';
@@ -95,9 +84,7 @@ async function logAudit(user_id, action, meta, c) {
         else if (userAgent.match(/Android/i)) os = 'Android';
         else if (userAgent.match(/Linux/i)) os = 'Linux';
 
-        // ========================================
-        // 5. DETECTAR NAVEGADOR
-        // ========================================
+        // DETECTAR NAVEGADOR
         let browser = 'Unknown';
         if (userAgent.match(/Edg\//i)) browser = 'Edge';
         else if (userAgent.match(/Chrome/i)) browser = 'Chrome';
@@ -105,9 +92,7 @@ async function logAudit(user_id, action, meta, c) {
         else if (userAgent.match(/Safari/i)) browser = 'Safari';
         else if (userAgent.match(/Opera|OPR/i)) browser = 'Opera';
 
-        // ========================================
-        // 6. DETECTAR TIPO DE DISPOSITIVO
-        // ========================================
+        // DETECTAR TIPO DE DISPOSITIVO
         let deviceType = 'Desktop';
         if (userAgent.match(/iPhone/i)) deviceType = 'iPhone';
         else if (userAgent.match(/iPad/i)) deviceType = 'iPad';
@@ -115,43 +100,21 @@ async function logAudit(user_id, action, meta, c) {
         else if (userAgent.match(/Android/i)) deviceType = 'Android Tablet';
         else if (userAgent.match(/Mobile|Tablet/i)) deviceType = 'Mobile';
 
-        // ========================================
-        // 7. CAPTURAR FINGERPRINT DO CLIENTE
-        // ========================================
+        // EXTRAIR DADOS DO FINGERPRINT
         const fingerprint = meta.fingerprint || null;
         const screenResolution = meta.screen || null;
         const browserLanguage = meta.language || acceptLanguage;
         const clientTimezone = meta.timezone || cfTimezone;
 
-        // ========================================
-        // 8. DETECTAR ISP (via ASN)
-        // ========================================
         let isp = null;
         if (cfASN) {
-            // Você pode fazer lookup de ASN aqui, mas por enquanto salvamos o ASN
             isp = `ASN ${cfASN}`;
         }
 
         const safeUserId = (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) 
             ? parseInt(user_id) : null;
         
-        // ========================================
-        // 9. MONTAR OBJETO COMPLETO DE METADATA
-        // ========================================
-        const enrichedMeta = {
-            ...meta,
-            tracking: {
-                dnt: dnt,
-                referer: referer,
-                language: browserLanguage,
-                screen: screenResolution,
-                timezone: clientTimezone
-            }
-        };
-
-        // ========================================
-        // 10. SALVAR NO BANCO COM TODOS OS DADOS
-        // ========================================
+        // SALVAR NO BANCO
         await queryDB(
             `INSERT INTO audit_logs (
                 user_id, action, ip, user_agent, details, device_type,
@@ -163,7 +126,7 @@ async function logAudit(user_id, action, meta, c) {
                 action, 
                 realIP, 
                 userAgent, 
-                JSON.stringify(enrichedMeta), 
+                JSON.stringify(meta), 
                 deviceType,
                 cfCountry,
                 cfCity,
@@ -181,28 +144,13 @@ async function logAudit(user_id, action, meta, c) {
             ],
             c.env
         );
+
+        console.log(`✅ LOG: ${action} | User: ${safeUserId} | IP: ${realIP} | Device: ${deviceType} | Browser: ${browser} | OS: ${os}`);
     } catch (err) {
-        console.error("FALHA AO GRAVAR LOG:", err.message);
+        console.error("❌ FALHA AO GRAVAR LOG:", err.message);
     }
 }
-// =====================================================================
 
-// Buscar todos os usuários (para inbox)
-app.get("/api/users/all", async (c) => {
-    const env = c.env;
-
-    try {
-        const { rows } = await queryDB(
-            "SELECT id, username, avatar, bio FROM users ORDER BY username ASC",
-            [],
-            env
-        );
-        return c.json(rows);
-    } catch (err) {
-        console.error("Erro ao listar usuários:", err);
-        return c.json({ error: "Erro ao listar usuários" }, 500);
-    }
-});
 
 
 // UTILITY: Criar Notificação
@@ -275,33 +223,95 @@ app.post('/api/log-terms', async (c) => {
     await logAudit(null, 'TERMS_ACCEPTED', body, c);
     return c.json({ success: true });
   } catch (err) {
+    console.error('Erro ao registrar termos:', err);
     return c.json({ error: 'Erro ao registrar' }, 500);
   }
 });
 
-app.post('/api/register', async (c) => {
-    const { username, password, avatar, bio } = await c.req.json();
-    const env = c.env;
-
-    if (!username || !password) return c.json({ error: "Usuário e senha obrigatórios" }, 400);
+// REGISTRO
+app.post("/api/register", async (c) => {
+  const env = c.env;
+  try {
+    const { username, password, ...fingerprintData } = await c.req.json();
     
-    try {
-        const hash = await hashPassword(password);
-        const result = await queryDB(
-            "INSERT INTO users (username, password, avatar, bio) VALUES ($1, $2, $3, $4) RETURNING id, username, avatar, bio;",
-            [username.toLowerCase(), hash, avatar || "", bio || ""], env
-        );
-        await logAudit(result.rows[0].id, "REGISTER", { username }, c);
-        return c.json({ user: result.rows[0] });
-    } catch (err) { 
-        const errorMsg = err.message || "Erro desconhecido ao registrar.";
-        if (errorMsg.includes('duplicate key')) {
-            return c.json({ error: "Username já existe" }, 409);
-        }
-        return c.json({ error: "Falha de DB: " + errorMsg }, 500);
+    if (!username || !password) {
+      return c.json({ error: "Preencha todos os campos" }, 400);
     }
+
+    const { rows: existing } = await queryDB(
+      "SELECT * FROM users WHERE username = $1",
+      [username],
+      env
+    );
+
+    if (existing.length > 0) {
+      await logAudit(null, 'REGISTER_FAILED_USERNAME_EXISTS', { username, ...fingerprintData }, c);
+      return c.json({ error: "Usuário já existe" }, 400);
+    }
+
+    const hashedPassword = await hash(password);
+    const { rows } = await queryDB(
+      "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, avatar, bio",
+      [username, hashedPassword],
+      env
+    );
+
+    const user = rows[0];
+    await logAudit(user.id, 'USER_REGISTERED', { username, ...fingerprintData }, c);
+    
+    return c.json({ user });
+  } catch (err) {
+    console.error("Erro ao registrar:", err);
+    return c.json({ error: "Erro no servidor" }, 500);
+  }
 });
 
+// LOGIN
+app.post("/api/login", async (c) => {
+  const env = c.env;
+  try {
+    const { username, password, ...fingerprintData } = await c.req.json();
+    
+    if (!username || !password) {
+      return c.json({ error: "Preencha todos os campos" }, 400);
+    }
+
+    const { rows } = await queryDB(
+      "SELECT * FROM users WHERE username = $1",
+      [username],
+      env
+    );
+
+    if (rows.length === 0) {
+      await logAudit(null, 'LOGIN_FAILED_USER_NOT_FOUND', { username, ...fingerprintData }, c);
+      return c.json({ error: "Usuário ou senha incorretos" }, 401);
+    }
+
+    const user = rows[0];
+    const validPassword = await compare(password, user.password);
+
+    if (!validPassword) {
+      await logAudit(user.id, 'LOGIN_FAILED_WRONG_PASSWORD', { username, ...fingerprintData }, c);
+      return c.json({ error: "Usuário ou senha incorretos" }, 401);
+    }
+
+    await logAudit(user.id, 'USER_LOGIN_SUCCESS', { username, ...fingerprintData }, c);
+    
+    return c.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        avatar: user.avatar,
+        bio: user.bio
+      }
+    });
+  } catch (err) {
+    console.error("Erro ao fazer login:", err);
+    return c.json({ error: "Erro no servidor" }, 500);
+  }
+});
+
+// LOGIN SIMPLES (SEM FINGERPRINT)
 app.post('/api/login', async (c) => {
     const { username, password } = await c.req.json();
     const env = c.env;

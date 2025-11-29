@@ -1,13 +1,9 @@
-// lib/fingerprint.js - FINGERPRINT AVANÇADO (substitui MAC)
+// lib/fingerprint.js - FINGERPRINT AVANÇADO
 
 export function getDeviceFingerprint() {
   try {
     const fingerprint = {
-      // ==========================================
-      // IDENTIFICADORES DE HARDWARE (substituem MAC)
-      // ==========================================
-      
-      // GPU Fingerprint (único por placa de vídeo)
+      // IDENTIFICADORES DE HARDWARE
       canvas: getCanvasFingerprint(),
       webgl: getWebGLFingerprint(),
       webglVendor: getWebGLVendor(),
@@ -17,38 +13,32 @@ export function getDeviceFingerprint() {
       deviceMemory: navigator.deviceMemory || 'unknown',
       cpuClass: navigator.cpuClass || 'unknown',
       
-      // Tela (único por monitor)
+      // Tela
       screen: `${screen.width}x${screen.height}`,
       availScreen: `${screen.availWidth}x${screen.availHeight}`,
       colorDepth: screen.colorDepth,
       pixelRatio: window.devicePixelRatio,
       
-      // Audio Fingerprint (único por hardware de áudio)
+      // Audio Fingerprint
       audioFingerprint: getAudioFingerprint(),
       
-      // Font Fingerprint (fontes instaladas)
+      // Font Fingerprint
       fonts: getFontFingerprint(),
       
-      // ==========================================
       // IDENTIFICADORES DE SOFTWARE
-      // ==========================================
-      
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       language: navigator.language,
       languages: navigator.languages?.join(',') || navigator.language,
       
-      // Timezone (mais preciso que IP)
+      // Timezone
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       timezoneOffset: new Date().getTimezoneOffset(),
       
       // Storage disponível
-      storageQuota: null, // Preenchido async
+      storageQuota: null,
       
-      // ==========================================
       // IDENTIFICADORES DE REDE
-      // ==========================================
-      
       connection: navigator.connection ? {
         effectiveType: navigator.connection.effectiveType,
         downlink: navigator.connection.downlink,
@@ -56,54 +46,34 @@ export function getDeviceFingerprint() {
         saveData: navigator.connection.saveData
       } : null,
       
-      // ==========================================
       // IDENTIFICADORES DE DISPOSITIVO
-      // ==========================================
-      
       touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
       maxTouchPoints: navigator.maxTouchPoints || 0,
       
-      // Bluetooth (se disponível)
       bluetooth: 'bluetooth' in navigator,
-      
-      // USB (se disponível)
       usb: 'usb' in navigator,
       
-      // Sensors (mobile)
       accelerometer: 'Accelerometer' in window,
       gyroscope: 'Gyroscope' in window,
       
-      // Media Devices (câmera/mic)
       mediaDevices: 'mediaDevices' in navigator,
       
-      // Plugins
       plugins: getPluginFingerprint(),
-      
-      // ==========================================
-      // IDENTIFICADORES EXTRAS
-      // ==========================================
       
       doNotTrack: navigator.doNotTrack || 'unknown',
       cookieEnabled: navigator.cookieEnabled,
-      javaEnabled: false, // Java tá morto, mas verificamos
       
-      // Viewport
       viewport: `${window.innerWidth}x${window.innerHeight}`,
       
-      // Timestamp
       timestamp: Date.now(),
       
-      // Session info
       sessionStorage: typeof sessionStorage !== 'undefined',
       localStorage: typeof localStorage !== 'undefined',
       indexedDB: typeof indexedDB !== 'undefined',
     };
 
-    // Gerar hash único composto
     const fpString = JSON.stringify(fingerprint);
     fingerprint.hash = generateStrongHash(fpString);
-    
-    // Hash secundário (backup)
     fingerprint.secondaryHash = simpleHash(
       `${fingerprint.canvas}|${fingerprint.webgl}|${fingerprint.audioFingerprint}`
     );
@@ -115,7 +85,6 @@ export function getDeviceFingerprint() {
   }
 }
 
-// Canvas Fingerprint (GPU)
 function getCanvasFingerprint() {
   try {
     const canvas = document.createElement('canvas');
@@ -135,7 +104,6 @@ function getCanvasFingerprint() {
     ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
     ctx.fillText(text, 4, 17);
     
-    // Adicionar formas geométricas para aumentar unicidade
     ctx.beginPath();
     ctx.arc(50, 50, 20, 0, Math.PI * 2, true);
     ctx.closePath();
@@ -147,7 +115,6 @@ function getCanvasFingerprint() {
   }
 }
 
-// WebGL Fingerprint (GPU completo)
 function getWebGLFingerprint() {
   try {
     const canvas = document.createElement('canvas');
@@ -165,7 +132,6 @@ function getWebGLFingerprint() {
   }
 }
 
-// WebGL Vendor Info
 function getWebGLVendor() {
   try {
     const canvas = document.createElement('canvas');
@@ -183,7 +149,6 @@ function getWebGLVendor() {
   }
 }
 
-// Audio Fingerprint (hardware de áudio)
 function getAudioFingerprint() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -221,7 +186,6 @@ function getAudioFingerprint() {
   }
 }
 
-// Font Fingerprint (fontes instaladas)
 function getFontFingerprint() {
   const baseFonts = ['monospace', 'sans-serif', 'serif'];
   const testFonts = [
@@ -245,7 +209,6 @@ function getFontFingerprint() {
   return detectedFonts.join(',');
 }
 
-// Plugin Fingerprint
 function getPluginFingerprint() {
   if (!navigator.plugins || navigator.plugins.length === 0) {
     return 'no-plugins';
@@ -257,7 +220,6 @@ function getPluginFingerprint() {
     .join('|');
 }
 
-// Hash forte (melhor que MD5)
 function generateStrongHash(str) {
   let hash = 5381;
   let i = str.length;
@@ -269,7 +231,6 @@ function generateStrongHash(str) {
   return (hash >>> 0).toString(36);
 }
 
-// Hash simples (backup)
 function simpleHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -280,12 +241,10 @@ function simpleHash(str) {
   return Math.abs(hash).toString(36);
 }
 
-// Função principal para enviar
 export async function sendFingerprint(action, metadata = {}) {
   try {
     const fingerprint = getDeviceFingerprint();
     
-    // Adicionar storage quota
     if (navigator.storage && navigator.storage.estimate) {
       const estimate = await navigator.storage.estimate();
       fingerprint.storageQuota = {
@@ -294,7 +253,6 @@ export async function sendFingerprint(action, metadata = {}) {
       };
     }
     
-    // Adicionar battery info
     if (navigator.getBattery) {
       const battery = await navigator.getBattery();
       fingerprint.battery = {
