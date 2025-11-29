@@ -268,6 +268,17 @@ app.use('*', async (c, next) => {
 // [ROTAS DE AUTENTICAÇÃO]
 // =====================================================================
 
+// Registrar aceitação dos termos
+app.post('/api/log-terms', async (c) => {
+  try {
+    const body = await c.req.json();
+    await logAudit(null, 'TERMS_ACCEPTED', body, c);
+    return c.json({ success: true });
+  } catch (err) {
+    return c.json({ error: 'Erro ao registrar' }, 500);
+  }
+});
+
 app.post('/api/register', async (c) => {
     const { username, password, avatar, bio } = await c.req.json();
     const env = c.env;
