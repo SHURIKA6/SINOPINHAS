@@ -1,4 +1,4 @@
-import Inbox from '../components/inbox';
+import inbox from '../components/inbox';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
