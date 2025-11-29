@@ -2,13 +2,18 @@ import { useState } from 'react';
 
 export default function TermsModal({ onAccept, onDecline }) {
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [agreedToAll, setAgreedToAll] = useState(false);
 
   const handleScroll = (e) => {
-    const bottom = e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+    const element = e.target;
+    const bottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 5;
     if (bottom) {
       setHasScrolled(true);
     }
   };
+
+  const canAccept = hasScrolled && confirmText.toLowerCase() === 'aceito' && agreedToAll;
 
   return (
     <div style={{
@@ -22,13 +27,14 @@ export default function TermsModal({ onAccept, onDecline }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '20px',
+      overflow: 'auto'
     }}>
       <div style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #2d1a40 100%)',
         borderRadius: 16,
         padding: 32,
-        maxWidth: 700,
+        maxWidth: 750,
         width: '100%',
         maxHeight: '90vh',
         display: 'flex',
@@ -49,8 +55,11 @@ export default function TermsModal({ onAccept, onDecline }) {
             SINOPINHAS
           </h1>
           <h2 style={{ margin: 0, fontSize: 18, color: '#aaa' }}>
-            Termos de Uso e Política de Privacidade
+            Termos de Uso, Responsabilidade e Política de Privacidade
           </h2>
+          <p style={{ margin: '8px 0 0', fontSize: 12, color: '#666' }}>
+            Data de última atualização: {new Date().toLocaleDateString('pt-BR')}
+          </p>
         </div>
 
         <div
@@ -61,177 +70,319 @@ export default function TermsModal({ onAccept, onDecline }) {
             padding: '0 20px',
             color: '#ccc',
             lineHeight: 1.8,
-            fontSize: 14
+            fontSize: 14,
+            marginBottom: 20
           }}
         >
-          <div style={{ marginBottom: 24 }}>
-            <h3 style={{ color: '#8d6aff', fontSize: 16, marginBottom: 12 }}>
-              ⚠️ ATENÇÃO - LEIA COM ATENÇÃO ANTES DE USAR
+          <div style={{ marginBottom: 24, background: 'rgba(239, 68, 68, 0.15)', padding: 16, borderRadius: 8, border: '2px solid #ef4444' }}>
+            <h3 style={{ color: '#ff6b6b', fontSize: 18, marginBottom: 12, marginTop: 0 }}>
+              🚨 AVISO LEGAL IMPORTANTE
             </h3>
-            <p style={{ color: '#fff', fontWeight: 600 }}>
-              Ao aceitar estes termos, você confirma que leu, compreendeu e concorda integralmente com todas as disposições abaixo.
+            <p style={{ color: '#fff', fontWeight: 700, margin: 0 }}>
+              AO ACEITAR ESTES TERMOS, VOCÊ ESTÁ CELEBRANDO UM CONTRATO JURIDICAMENTE VINCULANTE COM O SINOPINHAS. 
+              VOCÊ SERÁ LEGALMENTE RESPONSÁVEL POR TODAS AS AÇÕES REALIZADAS ATRAVÉS DA SUA CONTA. 
+              LEIA ATENTAMENTE CADA SEÇÃO ANTES DE CONTINUAR.
             </p>
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              1. ACEITAÇÃO DOS TERMOS
+              1. ACEITAÇÃO E CONCORDÂNCIA TOTAL
             </h3>
             <p>
-              Este site é operado por <strong>SINOPINHAS</strong>. Ao acessar e usar esta plataforma, você concorda em cumprir e estar vinculado aos seguintes termos e condições. Se você não concordar com qualquer parte destes termos, <strong>NÃO USE ESTE SITE</strong>.
+              Este documento constitui um <strong>ACORDO LEGAL VINCULANTE</strong> entre você (doravante "Usuário") e a plataforma SINOPINHAS (doravante "Plataforma" ou "Nós").
             </p>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              2. USO PERMITIDO E PROIBIDO
-            </h3>
-            <p><strong>É ESTRITAMENTE PROIBIDO:</strong></p>
-            <ul style={{ paddingLeft: 20, color: '#ff6b6b' }}>
-              <li>Fazer upload de conteúdo <strong>pornográfico infantil</strong></li>
-              <li>Compartilhar conteúdo que incite <strong>violência, ódio, racismo ou discriminação</strong></li>
-              <li>Publicar material protegido por <strong>direitos autorais</strong> sem autorização</li>
-              <li>Divulgar conteúdo <strong>ilegal, difamatório ou que viole leis brasileiras</strong></li>
-              <li>Fazer upload de vírus, malware ou qualquer código malicioso</li>
-              <li>Praticar <strong>cyberbullying, assédio ou intimidação</strong></li>
-              <li>Usar a plataforma para <strong>golpes, fraudes ou spam</strong></li>
-              <li>Tentar hackear, invadir ou comprometer a segurança do sistema</li>
-            </ul>
-            <p style={{ color: '#ff6b6b', fontWeight: 600, marginTop: 12 }}>
-              ⚠️ QUALQUER VIOLAÇÃO DESTES TERMOS RESULTARÁ EM BANIMENTO IMEDIATO E COMUNICAÇÃO ÀS AUTORIDADES COMPETENTES.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              3. DIREITOS AUTORAIS E PROPRIEDADE INTELECTUAL
-            </h3>
             <p>
-              Você <strong>declara e garante</strong> que possui todos os direitos, licenças e permissões necessárias sobre o conteúdo que envia. Ao fazer upload de vídeos, você concede ao SINOPINHAS uma licença não exclusiva, mundial e gratuita para hospedar, armazenar e exibir seu conteúdo na plataforma.
-            </p>
-            <p style={{ color: '#fbbf24', fontWeight: 600 }}>
-              📢 Se você acredita que seu conteúdo foi usado sem autorização, entre em contato conosco imediatamente para remoção.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              4. RASTREAMENTO E COLETA DE DADOS
-            </h3>
-            <p>
-              Para garantir a segurança da plataforma e cumprir com a legislação brasileira, coletamos e armazenamos as seguintes informações:
+              Ao clicar em "Aceito", você declara sob as penas da lei que:
             </p>
             <ul style={{ paddingLeft: 20 }}>
-              <li><strong>Endereço IP real</strong> (não mascarado por VPN/proxy)</li>
-              <li><strong>Geolocalização</strong> (cidade, estado, país, coordenadas GPS)</li>
-              <li><strong>Fingerprint digital único</strong> do dispositivo (GPU, CPU, resolução, fontes, hardware)</li>
-              <li><strong>Histórico completo de ações</strong> (uploads, comentários, visualizações)</li>
-              <li><strong>Informações do navegador</strong> (User-Agent, idioma, timezone)</li>
-              <li><strong>Provedor de internet (ISP)</strong> e ASN</li>
-              <li><strong>Tipo de dispositivo</strong> (sistema operacional, modelo, resolução)</li>
+              <li>É <strong>maior de 18 anos</strong> ou tem autorização legal de responsável</li>
+              <li>Leu, compreendeu e concorda com <strong>TODOS</strong> os termos aqui apresentados</li>
+              <li>Está em <strong>pleno gozo de suas faculdades mentais</strong> para celebrar este contrato</li>
+              <li>Não está sob coação, influência ou impedimento legal para aceitar estes termos</li>
+              <li>Assume <strong>total responsabilidade civil e criminal</strong> por suas ações na plataforma</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
+              2. PROIBIÇÕES ABSOLUTAS E CONSEQUÊNCIAS LEGAIS
+            </h3>
+            <p style={{ color: '#ff6b6b', fontWeight: 700 }}>
+              São TERMINANTEMENTE PROIBIDOS os seguintes atos, sob pena de responsabilização CIVIL e CRIMINAL:
+            </p>
+            <ul style={{ paddingLeft: 20, color: '#ff6b6b' }}>
+              <li><strong>PORNOGRAFIA INFANTIL</strong> - Crime previsto no Art. 241-A do ECA (pena de 3 a 6 anos de reclusão)</li>
+              <li><strong>APOLOGIA AO CRIME</strong> - Art. 287 do Código Penal (pena de 3 a 6 meses ou multa)</li>
+              <li><strong>RACISMO E DISCRIMINAÇÃO</strong> - Lei 7.716/89 (pena de 2 a 5 anos de reclusão)</li>
+              <li><strong>DIFAMAÇÃO E CALÚNIA</strong> - Arts. 138-140 do Código Penal</li>
+              <li><strong>AMEAÇA E EXTORSÃO</strong> - Arts. 147 e 158 do Código Penal</li>
+              <li><strong>VIOLAÇÃO DE DIREITOS AUTORAIS</strong> - Lei 9.610/98 (pena de 3 meses a 4 anos)</li>
+              <li><strong>INVASÃO DE DISPOSITIVO</strong> - Art. 154-A do Código Penal (pena de 3 meses a 1 ano)</li>
+              <li><strong>FRAUDE E ESTELIONATO</strong> - Art. 171 do Código Penal (pena de 1 a 5 anos)</li>
+              <li><strong>DIVULGAÇÃO DE FAKE NEWS</strong> - Conforme Lei 14.155/2021</li>
+            </ul>
+            <p style={{ color: '#fff', fontWeight: 700, background: 'rgba(239, 68, 68, 0.2)', padding: 12, borderRadius: 8, marginTop: 12 }}>
+              ⚠️ VOCÊ SERÁ BANIDO IMEDIATAMENTE E TODOS OS SEUS DADOS SERÃO ENTREGUES ÀS AUTORIDADES COMPETENTES (POLÍCIA FEDERAL, POLÍCIA CIVIL, MINISTÉRIO PÚBLICO).
+            </p>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
+              3. PROPRIEDADE INTELECTUAL E DIREITOS AUTORAIS
+            </h3>
+            <p>
+              Você <strong>DECLARA SOB AS PENAS DA LEI</strong> que:
+            </p>
+            <ul style={{ paddingLeft: 20 }}>
+              <li>Possui <strong>TODOS os direitos autorais</strong> sobre o conteúdo que envia</li>
+              <li><strong>NÃO está violando</strong> direitos de terceiros (imagem, voz, criação intelectual)</li>
+              <li>Obteve <strong>autorização expressa</strong> de todas as pessoas que aparecem em seus vídeos</li>
+              <li>Concede à Plataforma licença não-exclusiva, mundial e gratuita para hospedar e exibir seu conteúdo</li>
+            </ul>
+            <p style={{ color: '#fbbf24', fontWeight: 600, marginTop: 12 }}>
+              📢 <strong>AVISO DE DMCA:</strong> Respeitamos a Lei de Direitos Autorais. Se você acredita que seu conteúdo foi usado indevidamente, envie notificação formal com identificação clara do material.
+            </p>
+            <p style={{ color: '#ff6b6b', fontWeight: 600 }}>
+              ⚠️ <strong>FALSA DECLARAÇÃO DE AUTORIA:</strong> Constitui crime de falsidade ideológica (Art. 299 do Código Penal).
+            </p>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
+              4. RASTREAMENTO FORENSE E COLETA DE DADOS (LGPD)
+            </h3>
+            <p>
+              Em conformidade com a <strong>Lei nº 13.709/2018 (LGPD)</strong> e o <strong>Marco Civil da Internet (Lei 12.965/2014)</strong>, informamos que coletamos e armazenamos:
+            </p>
+            <ul style={{ paddingLeft: 20 }}>
+              <li><strong>Endereço IP real</strong> (IPv4/IPv6, não mascarado por VPN/Proxy/Tor)</li>
+              <li><strong>Geolocalização precisa</strong> (latitude/longitude, cidade, estado, país)</li>
+              <li><strong>Fingerprint digital único</strong> (GPU, CPU, RAM, resolução, fontes instaladas, Canvas, WebGL)</li>
+              <li><strong>Provedor de Internet (ISP)</strong> e número ASN</li>
+              <li><strong>Informações de hardware</strong> (modelo do dispositivo, sistema operacional, navegador)</li>
+              <li><strong>Histórico completo de atividades</strong> (uploads, downloads, comentários, mensagens, visualizações)</li>
+              <li><strong>Metadados de arquivos</strong> (EXIF, data de criação, geolocalização de fotos/vídeos)</li>
+              <li><strong>Logs de acesso</strong> com timestamps precisos em UTC</li>
+              <li><strong>Dados biométricos do dispositivo</strong> (resolução de tela, densidade de pixels, idioma, timezone)</li>
             </ul>
             <p style={{ color: '#10b981', fontWeight: 600, marginTop: 12 }}>
-              ✅ Estes dados são usados exclusivamente para segurança, prevenção de fraudes e cumprimento legal.
+              ✅ <strong>FINALIDADE:</strong> Segurança, prevenção de fraudes, cumprimento legal, investigação de crimes.
+            </p>
+            <p style={{ color: '#8d6aff', fontWeight: 600 }}>
+              🔒 <strong>RETENÇÃO:</strong> Os dados são armazenados por até 6 meses após exclusão da conta (conforme Marco Civil Art. 15).
             </p>
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              5. COOPERAÇÃO COM AUTORIDADES
+              5. COOPERAÇÃO TOTAL COM AUTORIDADES
             </h3>
-            <p style={{ color: '#fff', fontWeight: 600 }}>
-              O SINOPINHAS <strong>COLABORA INTEGRALMENTE</strong> com autoridades policiais e judiciais brasileiras.
-            </p>
-            <p>
-              Em caso de requisição legal (mandado judicial, intimação, investigação policial), forneceremos <strong>TODOS OS DADOS</strong> coletados, incluindo:
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>
+              O SINOPINHAS <strong>COLABORA INTEGRALMENTE E IMEDIATAMENTE</strong> com:
             </p>
             <ul style={{ paddingLeft: 20 }}>
-              <li>Logs completos de acesso e atividade</li>
-              <li>Endereço IP, localização geográfica e provedor de internet</li>
-              <li>Fingerprint digital do dispositivo</li>
-              <li>Histórico de uploads, comentários e mensagens</li>
-              <li>Metadados de arquivos enviados</li>
+              <li><strong>Polícia Federal</strong></li>
+              <li><strong>Polícia Civil</strong></li>
+              <li><strong>Ministério Público</strong></li>
+              <li><strong>Poder Judiciário</strong></li>
+              <li><strong>Safernet Brasil</strong></li>
+              <li><strong>Interpol</strong> (em casos internacionais)</li>
+            </ul>
+            <p style={{ marginTop: 12 }}>
+              <strong>FORNECEREMOS TODOS OS DADOS COLETADOS</strong> mediante:
+            </p>
+            <ul style={{ paddingLeft: 20 }}>
+              <li>Ordem judicial</li>
+              <li>Requisição do Ministério Público</li>
+              <li>Investigação policial formal</li>
+              <li>Denúncia de crime previsto na legislação brasileira</li>
+            </ul>
+            <p style={{ color: '#ff6b6b', fontWeight: 700, background: 'rgba(239, 68, 68, 0.2)', padding: 12, borderRadius: 8, marginTop: 12 }}>
+              🚨 <strong>IMPORTANTE:</strong> NÃO há "anonimato" ou "privacidade absoluta" quando se trata de crimes. 
+              VOCÊ SERÁ IDENTIFICADO, LOCALIZADO E RESPONSABILIZADO.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
+              6. LIMITAÇÃO DE RESPONSABILIDADE E ISENÇÕES
+            </h3>
+            <p>
+              A Plataforma <strong>NÃO SE RESPONSABILIZA</strong> por:
+            </p>
+            <ul style={{ paddingLeft: 20 }}>
+              <li>Conteúdo gerado por usuários (artigo 19 do Marco Civil da Internet)</li>
+              <li>Danos diretos, indiretos, lucros cessantes ou danos morais</li>
+              <li>Interrupções de serviço por manutenção, falhas técnicas ou ataques DDoS</li>
+              <li>Perda de dados por problemas técnicos ou exclusão voluntária</li>
+              <li>Uso indevido da plataforma por terceiros</li>
+              <li>Vírus, malware ou ataques cibernéticos originados de conteúdo de usuários</li>
+            </ul>
+            <p style={{ fontWeight: 600, marginTop: 12 }}>
+              A plataforma é fornecida <strong>"NO ESTADO EM QUE SE ENCONTRA"</strong> (AS IS), sem garantias expressas ou implícitas.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
+              7. DIREITOS DA PLATAFORMA
+            </h3>
+            <p>
+              Reservamo-nos o direito de, <strong>A QUALQUER MOMENTO E SEM AVISO PRÉVIO:</strong>
+            </p>
+            <ul style={{ paddingLeft: 20 }}>
+              <li>Remover, editar ou moderar qualquer conteúdo</li>
+              <li>Suspender ou banir permanentemente qualquer usuário</li>
+              <li>Encerrar contas que violem estes termos</li>
+              <li>Modificar ou descontinuar funcionalidades do serviço</li>
+              <li>Compartilhar informações com autoridades mesmo sem ordem judicial (em casos urgentes)</li>
+              <li>Bloquear acesso de determinados países ou regiões</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
+              8. RESPONSABILIDADE CIVIL E CRIMINAL DO USUÁRIO
+            </h3>
+            <p style={{ fontWeight: 700, color: '#fff' }}>
+              Você é INTEGRALMENTE RESPONSÁVEL por:
+            </p>
+            <ul style={{ paddingLeft: 20 }}>
+              <li>Todo conteúdo que enviar, publicar ou compartilhar</li>
+              <li>Comentários, mensagens e interações com outros usuários</li>
+              <li>Uso da sua conta (mesmo que terceiros tenham acesso)</li>
+              <li>Danos causados a terceiros através da plataforma</li>
+              <li>Violações de leis brasileiras ou internacionais</li>
             </ul>
             <p style={{ color: '#ff6b6b', fontWeight: 700, marginTop: 12 }}>
-              🚨 NÃO TOLERAMOS CRIMES. SE VOCÊ COMETER ILEGALIDADES, SERÁ RASTREADO E RESPONSABILIZADO.
+              ⚖️ Você concorda em <strong>INDENIZAR E ISENTAR</strong> a Plataforma de qualquer reclamação, ação judicial ou prejuízo decorrente do seu uso inadequado do serviço.
             </p>
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              6. LIMITAÇÃO DE RESPONSABILIDADE
+              9. DENÚNCIAS E CANAL DE COMUNICAÇÃO
             </h3>
             <p>
-              O SINOPINHAS <strong>NÃO SE RESPONSABILIZA</strong> por:
+              Para denunciar conteúdo ilegal, abusivo ou que viole direitos:
             </p>
             <ul style={{ paddingLeft: 20 }}>
-              <li>Conteúdo publicado por usuários</li>
-              <li>Danos diretos ou indiretos causados pelo uso da plataforma</li>
-              <li>Perda de dados, lucros ou qualquer prejuízo consequente</li>
-              <li>Disponibilidade contínua do serviço (podemos ter manutenções e interrupções)</li>
+              <li>Use o sistema de denúncia interno da plataforma</li>
+              <li>Entre em contato através dos canais oficiais</li>
+              <li>Em casos graves, reporte diretamente à Safernet: <strong>www.safernet.org.br</strong></li>
             </ul>
-            <p>
-              A plataforma é fornecida <strong>"NO ESTADO EM QUE SE ENCONTRA"</strong>, sem garantias de qualquer tipo.
+            <p style={{ fontWeight: 600, marginTop: 12 }}>
+              ⚡ Respondemos a denúncias em até <strong>48 horas úteis</strong>. Conteúdo ilegal é removido imediatamente.
             </p>
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              7. MODERAÇÃO E REMOÇÃO DE CONTEÚDO
+              10. ALTERAÇÕES NOS TERMOS
             </h3>
             <p>
-              Reservamos o direito de <strong>remover qualquer conteúdo</strong> e <strong>banir qualquer usuário</strong> que viole estes termos, a nosso exclusivo critério, sem aviso prévio.
+              Podemos modificar estes termos a qualquer momento. Alterações substanciais serão notificadas através da plataforma.
+            </p>
+            <p style={{ fontWeight: 600 }}>
+              O uso continuado após modificações constitui <strong>ACEITAÇÃO TÁCITA</strong> dos novos termos.
             </p>
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              8. ALTERAÇÕES NOS TERMOS
+              11. LEGISLAÇÃO APLICÁVEL E FORO
             </h3>
             <p>
-              Podemos atualizar estes termos a qualquer momento. O uso continuado da plataforma após alterações constitui aceitação dos novos termos.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              9. LEI APLICÁVEL
-            </h3>
-            <p>
-              Estes termos são regidos pelas <strong>leis brasileiras</strong>, especialmente:
+              Estes termos são regidos pelas <strong>leis da República Federativa do Brasil</strong>, especialmente:
             </p>
             <ul style={{ paddingLeft: 20 }}>
-              <li><strong>Lei nº 12.965/2014</strong> (Marco Civil da Internet)</li>
-              <li><strong>Lei nº 13.709/2018</strong> (LGPD - Lei Geral de Proteção de Dados)</li>
-              <li><strong>Código Penal Brasileiro</strong> (crimes cibernéticos)</li>
-              <li><strong>Estatuto da Criança e do Adolescente (ECA)</strong></li>
+              <li><strong>Constituição Federal de 1988</strong></li>
+              <li><strong>Código Civil Brasileiro (Lei 10.406/2002)</strong></li>
+              <li><strong>Código Penal Brasileiro (Decreto-Lei 2.848/1940)</strong></li>
+              <li><strong>Lei nº 12.965/2014</strong> - Marco Civil da Internet</li>
+              <li><strong>Lei nº 13.709/2018</strong> - LGPD (Lei Geral de Proteção de Dados)</li>
+              <li><strong>Lei nº 8.069/1990</strong> - Estatuto da Criança e do Adolescente (ECA)</li>
+              <li><strong>Lei nº 9.610/1998</strong> - Lei de Direitos Autorais</li>
+              <li><strong>Lei nº 12.737/2012</strong> - Lei Carolina Dieckmann (crimes cibernéticos)</li>
             </ul>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ color: '#fe7d45', fontSize: 16, marginBottom: 10 }}>
-              10. CONTATO
-            </h3>
-            <p>
-              Para dúvidas, denúncias ou solicitações relacionadas a estes termos, entre em contato através do email da plataforma.
+            <p style={{ fontWeight: 600, marginTop: 12 }}>
+              <strong>FORO:</strong> Fica eleito o foro da Comarca de [SUA CIDADE], Estado de [SEU ESTADO], para dirimir quaisquer controvérsias oriundas deste contrato.
             </p>
           </div>
 
           <div style={{
             background: 'rgba(239, 68, 68, 0.1)',
-            border: '2px solid #ef4444',
-            borderRadius: 8,
-            padding: 16,
-            marginTop: 24
+            border: '3px solid #ef4444',
+            borderRadius: 12,
+            padding: 20,
+            marginTop: 30
           }}>
-            <p style={{ color: '#fff', fontWeight: 700, textAlign: 'center', margin: 0 }}>
-              ⚠️ AO ACEITAR, VOCÊ DECLARA TER LIDO E COMPREENDIDO TODOS OS TERMOS ACIMA
+            <h3 style={{ color: '#ff6b6b', margin: '0 0 12px', textAlign: 'center' }}>
+              ⚠️ DECLARAÇÃO FINAL DE RESPONSABILIDADE
+            </h3>
+            <p style={{ color: '#fff', fontWeight: 700, textAlign: 'center', margin: 0, fontSize: 15 }}>
+              AO ACEITAR ESTES TERMOS, VOCÊ DECLARA EXPRESSAMENTE QUE:
             </p>
+            <ul style={{ paddingLeft: 20, marginTop: 12, color: '#fff' }}>
+              <li>Leu INTEGRALMENTE todos os 11 itens acima</li>
+              <li>Compreendeu COMPLETAMENTE todas as cláusulas e suas implicações legais</li>
+              <li>Concorda VOLUNTARIAMENTE e sem ressalvas com todos os termos</li>
+              <li>Assume TOTAL responsabilidade civil e criminal por suas ações</li>
+              <li>Está ciente de que PODE SER RASTREADO e responsabilizado legalmente</li>
+              <li>Autoriza a coleta e uso dos dados conforme descrito</li>
+            </ul>
           </div>
+
+          <div style={{ height: 50 }}></div>
         </div>
 
         <div style={{
-          marginTop: 24,
+          background: 'rgba(141, 106, 255, 0.1)',
+          border: '1px solid #8d6aff',
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 16
+        }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={agreedToAll}
+              onChange={(e) => setAgreedToAll(e.target.checked)}
+              style={{ marginTop: 4, width: 18, height: 18, cursor: 'pointer' }}
+            />
+            <span style={{ color: '#fff', fontSize: 14, lineHeight: 1.6 }}>
+              <strong>CONFIRMO</strong> que li e compreendi TODOS os 11 itens dos Termos de Uso acima, 
+              e concordo integralmente com todas as cláusulas apresentadas, assumindo total responsabilidade 
+              por minhas ações na plataforma.
+            </span>
+          </label>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ color: '#fff', fontSize: 14, marginBottom: 8, display: 'block' }}>
+            <strong>Para confirmar, digite exatamente:</strong> <span style={{ color: '#8d6aff' }}>ACEITO</span>
+          </label>
+          <input
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="Digite: ACEITO"
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background: '#0f0f0f',
+              border: confirmText.toLowerCase() === 'aceito' ? '2px solid #10b981' : '2px solid #444',
+              borderRadius: 8,
+              color: '#fff',
+              fontSize: 16,
+              outline: 'none',
+              transition: 'all 0.3s'
+            }}
+          />
+        </div>
+
+        <div style={{
           display: 'flex',
           gap: 12,
           flexWrap: 'wrap'
@@ -251,28 +402,36 @@ export default function TermsModal({ onAccept, onDecline }) {
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
+            onMouseEnter={(e) => e.target.style.background = '#dc2626'}
+            onMouseLeave={(e) => e.target.style.background = '#ef4444'}
           >
             ❌ Recusar e Sair
           </button>
           <button
             onClick={onAccept}
-            disabled={!hasScrolled}
+            disabled={!canAccept}
             style={{
               flex: 1,
               minWidth: '150px',
               padding: '14px 24px',
-              background: hasScrolled ? '#10b981' : '#444',
+              background: canAccept ? '#10b981' : '#444',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
               fontSize: 16,
               fontWeight: 600,
-              cursor: hasScrolled ? 'pointer' : 'not-allowed',
+              cursor: canAccept ? 'pointer' : 'not-allowed',
               transition: 'all 0.2s',
-              opacity: hasScrolled ? 1 : 0.5
+              opacity: canAccept ? 1 : 0.5
+            }}
+            onMouseEnter={(e) => {
+              if (canAccept) e.target.style.background = '#059669';
+            }}
+            onMouseLeave={(e) => {
+              if (canAccept) e.target.style.background = '#10b981';
             }}
           >
-            ✅ Li e Aceito os Termos
+            ✅ Concordo e Aceito os Termos
           </button>
         </div>
         
@@ -282,12 +441,64 @@ export default function TermsModal({ onAccept, onDecline }) {
             color: '#fbbf24',
             fontSize: 13,
             marginTop: 12,
+            marginBottom: 0,
+            animation: 'pulse 2s infinite'
+          }}>
+            ⬇️ Role até o final do documento
+          </p>
+        )}
+        
+        {hasScrolled && !agreedToAll && (
+          <p style={{
+            textAlign: 'center',
+            color: '#fbbf24',
+            fontSize: 13,
+            marginTop: 12,
             marginBottom: 0
           }}>
-            ⬆️ Role até o final para aceitar
+            ☑️ Marque a caixa de confirmação acima
+          </p>
+        )}
+        
+        {hasScrolled && agreedToAll && confirmText.toLowerCase() !== 'aceito' && (
+          <p style={{
+            textAlign: 'center',
+            color: '#fbbf24',
+            fontSize: 13,
+            marginTop: 12,
+            marginBottom: 0
+          }}>
+            ✍️ Digite "ACEITO" no campo acima
           </p>
         )}
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 768px) {
+          div[style*="maxWidth: 750"] {
+            padding: 20px !important;
+            max-height: 95vh !important;
+          }
+          
+          h1 {
+            font-size: 24px !important;
+          }
+          
+          h2 {
+            font-size: 16px !important;
+          }
+          
+          button {
+            min-width: 100% !important;
+            flex: 1 1 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
