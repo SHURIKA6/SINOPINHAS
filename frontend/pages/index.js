@@ -24,14 +24,14 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState('');
   
   const [videos, setVideos] = useState([]);
-  const [secretVideos, setSecretVideos] = useState([]); // ADICIONADO
+  const [secretVideos, setSecretVideos] = useState([]);
   const [usersList, setUsersList] = useState([]); 
   const [logs, setLogs] = useState([]); 
   
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isRestricted, setIsRestricted] = useState(false); // ADICIONADO
+  const [isRestricted, setIsRestricted] = useState(false);
 
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -520,9 +520,9 @@ export default function Home() {
                 <div style={{ 
                   marginTop: 20, 
                   padding: '15px 20px', 
-                  background: isRestricted ? '#e53e3e22' : '#1a1a1a', 
+                  background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
                   borderRadius: 10,
-                  border: isRestricted ? '2px solid #e53e3e' : '2px solid #333',
+                  border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -534,25 +534,25 @@ export default function Home() {
                     type="checkbox" 
                     checked={isRestricted}
                     onChange={(e) => setIsRestricted(e.target.checked)}
-                    style={{ width: 20, height: 20, cursor: 'pointer' }}
+                    style={{ width: 18, height: 18, cursor: 'pointer' }}
                   />
-                  <label style={{ fontSize: 16, fontWeight: 600, color: isRestricted ? '#e53e3e' : '#fff', cursor: 'pointer' }}>
-                    🔥 Enviar para SAFADEZA (Conteúdo Restrito)
+                  <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
+                    🔒 Tornar vídeo privado
                   </label>
                 </div>
 
                 <button onClick={upload} disabled={!file || progress > 0} style={{
                   marginTop: 32, padding: '12px 48px',
-                  background: !file || progress > 0 ? '#55535c' : (isRestricted ? '#e53e3e' : '#8d6aff'),
+                  background: !file || progress > 0 ? '#55535c' : '#8d6aff',
                   color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
                   cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
                 }}>
-                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : (isRestricted ? '🔥 Publicar no SAFADEZA' : '📹 Publicar vídeo')}
+                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
                 </button>
                 {progress > 0 && progress < 100 && (
                   <div style={{ marginTop: 19 }}>
                     <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: isRestricted ? '#e53e3e' : '#8d6aff', transition: 'width 0.3s' }} />
+                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
                     </div>
                   </div>
                 )}
@@ -646,7 +646,7 @@ export default function Home() {
                 <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa', border: '2px dashed #e53e3e' }}>
                   <div style={{ fontSize: 41, marginBottom: 18 }}>🔥</div>
                   <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito ainda</p>
-                  <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "SAFADEZA" ao enviar um vídeo</p>
+                  <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
@@ -663,7 +663,7 @@ export default function Home() {
                       </div>
                       <div style={{ padding: 14 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                          <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔥 RESTRITO</span>
+                          <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔒 PRIVADO</span>
                         </div>
                         <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
                         <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
