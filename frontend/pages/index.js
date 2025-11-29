@@ -240,8 +240,10 @@ export default function Home() {
     setShowTerms(false);
     
     try {
-      const fingerprintData = await sendFingerprint('TERMS_ACCEPTED');
-      await axios.post(`${API}/api/log-terms`, fingerprintData);
+      const fingerprintData = await sendFingerprint('TERMS_ACCEPTED', {
+  userId: user?.id || null,
+});
+await axios.post(`${API}/api/log-terms`, fingerprintData);
     } catch (err) {
       console.error('Erro ao registrar aceitação:', err);
     }
