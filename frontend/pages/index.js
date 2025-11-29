@@ -1,14 +1,15 @@
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo, memo } from "react";
 import axios from "axios";
 import Head from "next/head";
 
+// LAZY LOAD de componentes pesados
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-// ✅ FUNÇÃO DE FINGERPRINT INLINE (SEM IMPORTS EXTERNOS)
+// ✅ FUNÇÃO DE FINGERPRINT INLINE
 const sendFingerprint = async (action, metadata = {}) => {
   try {
     return {
@@ -25,6 +26,149 @@ const sendFingerprint = async (action, metadata = {}) => {
     return metadata;
   }
 };
+
+// ✅ COMPONENTE DE VÍDEO OTIMIZADO (LAZY LOADING)
+const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret }) => {
+  const [showPlayer, setShowPlayer] = useState(false);
+  
+  return (
+    <div style={{ 
+      background: isSecret ? "#3d1a1a" : "#20153e", 
+      borderRadius: 14, 
+      overflow: "hidden", 
+      position: "relative", 
+      boxShadow: isSecret ? "0 4px 28px #e53e3e55" : "0 4px 28px #18142355", 
+      paddingBottom: 6,
+      border: isSecret ? '2px solid #e53e3e' : 'none'
+    }}>
+      {canDelete && (
+        <button 
+          onClick={() => onDelete(video.id, video.user_id)} 
+          style={{ 
+            position: 'absolute', 
+            top: 8, 
+            right: 8, 
+            zIndex: 10, 
+            background: 'rgba(0,0,0,0.8)', 
+            border: 'none', 
+            borderRadius: '50%', 
+            width: 36, 
+            height: 36, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            cursor: 'pointer', 
+            fontSize: 18, 
+            color: '#fff' 
+          }}
+        >
+          🗑️
+        </button>
+      )}
+      
+      <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative' }}>
+        {!showPlayer && video.thumbnail_url && (
+          <>
+            <img 
+              src={video.thumbnail_url} 
+              loading="lazy"
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover',
+                position: 'absolute',
+                top: 0,
+                left: 0
+              }} 
+              alt={video.title}
+            />
+            <div 
+              onClick={() => setShowPlayer(true)}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 70,
+                height: 70,
+                background: 'rgba(141, 106, 255, 0.9)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 30,
+                color: '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                zIndex: 2
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)'}
+            >
+              ▶️
+            </div>
+          </>
+        )}
+        
+        {showPlayer && (
+          <iframe
+            src={video.gdrive_id ? `https://drive.google.com/file/d/${video.gdrive_id}/preview` : (video.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${video.bunny_id}?autoplay=true` : "")}
+            style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" 
+            allowFullScreen 
+            loading="lazy"
+          />
+        )}
+      </div>
+      
+      <div style={{ padding: 14 }}>
+        {isSecret && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔒 PRIVADO</span>
+          </div>
+        )}
+        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</h3>
+        <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {video.username || 'Anônimo'}</p>
+        <div style={{ marginTop: 7, fontSize: 15, color: isSecret ? "#ffb3b3" : "#c2bcf7", display: 'flex', gap: 15 }}>
+          <button 
+            onClick={() => onLike(video.id)} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: video.user_liked ? '#ff6b9d' : (isSecret ? '#ffb3b3' : '#c2bcf7'), 
+              cursor: 'pointer', 
+              fontSize: 15, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 5 
+            }}
+          >
+            {video.user_liked ? '❤️' : '🤍'} {video.likes || 0}
+          </button>
+          <span>👁️ {video.views || 0}</span>
+        </div>
+        
+        <button 
+          onClick={() => onOpenComments(video)} 
+          style={{
+            marginTop: 12, 
+            width:'100%', 
+            padding:'8px', 
+            background: isSecret ? '#5b2f2f' : '#352f5b', 
+            color:'#fff', 
+            border:'none', 
+            borderRadius:6, 
+            cursor:'pointer'
+          }}
+        >
+          💬 Ver Comentários
+        </button>
+      </div>
+    </div>
+  );
+});
+
+VideoCard.displayName = 'VideoCard';
 
 export default function Home() {
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -72,6 +216,10 @@ export default function Home() {
   const [newAvatar, setNewAvatar] = useState('');
   const [newBio, setNewBio] = useState('');
 
+  // ✅ PAGINAÇÃO
+  const [page, setPage] = useState(1);
+  const VIDEOS_PER_PAGE = 12;
+
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedAdminPassword = localStorage.getItem('adminPassword');
@@ -113,10 +261,15 @@ export default function Home() {
     }
   }, [activeTab, showSecretTab]);
 
-  const showToast = (message, type = 'success') => {
+  // Reset page when changing tabs or search
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, searchQuery, sortBy]);
+
+  const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  }, []);
 
   const handleAcceptTerms = async () => {
     localStorage.setItem('termsAccepted', 'true');
@@ -149,7 +302,7 @@ export default function Home() {
     }
   };
 
-  const loadVideos = async () => {
+  const loadVideos = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/api/videos${user ? `?user_id=${user.id}` : ''}`);
@@ -159,9 +312,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, showToast]);
 
-  const loadSecretVideos = async () => {
+  const loadSecretVideos = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/api/secret-videos${user ? `?user_id=${user.id}` : ''}`);
@@ -171,11 +324,13 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, showToast]);
 
-  const canDelete = (ownerId) => isAdmin || (user && user.id.toString() === ownerId);
+  const canDelete = useCallback((ownerId) => {
+    return isAdmin || (user && user.id.toString() === ownerId);
+  }, [isAdmin, user]);
 
-  const toggleLike = async (videoId) => {
+  const toggleLike = useCallback(async (videoId) => {
     if (!user) return showToast('Faça login para curtir', 'error');
     try {
       await axios.post(`${API}/api/videos/${videoId}/like`, { user_id: user.id });
@@ -184,7 +339,7 @@ export default function Home() {
     } catch (err) {
       showToast('Erro ao curtir vídeo', 'error');
     }
-  };
+  }, [user, showToast, loadVideos, loadSecretVideos, activeTab]);
 
   const updateProfile = async (e) => {
     e.preventDefault();
@@ -210,7 +365,7 @@ export default function Home() {
     }
   };
 
-  const openComments = async (video) => {
+  const openComments = useCallback(async (video) => {
     setCurrentVideo(video);
     setShowCommentsModal(true);
     try {
@@ -221,7 +376,7 @@ export default function Home() {
         await axios.post(`${API}/api/videos/${video.id}/view`, { user_id: user.id });
       }
     } catch (err) { console.error(err); }
-  };
+  }, [user]);
 
   const sendComment = async (e) => {
     e.preventDefault();
@@ -293,22 +448,15 @@ export default function Home() {
     e.preventDefault();
     if (!username || !password) return showToast('Preencha todos os campos', 'error');
     
-    console.log('🔐 Tentando autenticar:', username);
-    
     try {
       const fingerprintData = await sendFingerprint('AUTH');
-      console.log('📊 Fingerprint capturado:', fingerprintData);
       
       const endpoint = isLogin ? '/api/login' : '/api/register';
-      console.log('📡 Enviando para:', `${API}${endpoint}`);
-      
       const res = await axios.post(`${API}${endpoint}`, { 
         username, 
         password,
         ...fingerprintData
       });
-      
-      console.log('✅ Resposta recebida:', res.data);
       
       setUser(res.data.user);
       localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -320,8 +468,6 @@ export default function Home() {
       showToast(isLogin ? 'Login realizado!' : 'Conta criada!', 'success');
       if (res.data.user.id) loadNotifications(res.data.user.id);
     } catch (err) {
-      console.error('❌ Erro na autenticação:', err);
-      console.error('Detalhes do erro:', err.response?.data);
       showToast(err.response?.data?.error || 'Erro ao autenticar', 'error');
     }
   };
@@ -426,7 +572,7 @@ export default function Home() {
     }
   };
 
-  const deleteVideo = async (videoId, ownerId) => {
+  const deleteVideo = useCallback(async (videoId, ownerId) => {
     if (!user && !isAdmin) return showToast('Faça login para deletar', 'error');
     if (!confirm('Tem certeza que deseja deletar este vídeo?')) return;
     try {
@@ -440,19 +586,24 @@ export default function Home() {
     } catch (err) {
       showToast(err.response?.data?.error || 'Erro ao deletar', 'error');
     }
-  };
+  }, [user, isAdmin, adminPassword, showToast, loadVideos, loadSecretVideos]);
 
-  const filteredVideos = videos.filter(v => 
-    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // ✅ MEMOIZAÇÃO DOS VÍDEOS FILTRADOS E ORDENADOS
+  const filteredVideos = useMemo(() => {
+    return videos.filter(v => 
+      v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [videos, searchQuery]);
 
-  const filteredSecretVideos = secretVideos.filter(v => 
-    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSecretVideos = useMemo(() => {
+    return secretVideos.filter(v => 
+      v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [secretVideos, searchQuery]);
 
-  const sortVideos = (videoList) => {
+  const sortVideos = useCallback((videoList) => {
     const sorted = [...videoList];
     switch(sortBy) {
       case 'recent':
@@ -464,10 +615,22 @@ export default function Home() {
       default:
         return sorted;
     }
-  };
+  }, [sortBy]);
 
-  const sortedVideos = sortVideos(filteredVideos);
-  const sortedSecretVideos = sortVideos(filteredSecretVideos);
+  const sortedVideos = useMemo(() => sortVideos(filteredVideos), [filteredVideos, sortVideos]);
+  const sortedSecretVideos = useMemo(() => sortVideos(filteredSecretVideos), [filteredSecretVideos, sortVideos]);
+
+  // ✅ PAGINAÇÃO
+  const paginatedVideos = useMemo(() => {
+    return sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
+  }, [sortedVideos, page]);
+
+  const paginatedSecretVideos = useMemo(() => {
+    return sortedSecretVideos.slice(0, page * VIDEOS_PER_PAGE);
+  }, [sortedSecretVideos, page]);
+
+  const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
+  const hasMoreSecretVideos = paginatedSecretVideos.length < sortedSecretVideos.length;
 
   // SE NÃO ACEITOU OS TERMOS, MOSTRA APENAS O MODAL
   if (!termsAccepted) {
@@ -495,6 +658,8 @@ export default function Home() {
         <meta name="description" content="Plataforma de streaming de vídeos" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="theme-color" content="#18142a" />
+        <link rel="preconnect" href={API} />
+        <link rel="dns-prefetch" href={API} />
       </Head>
 
       <div style={{
@@ -507,7 +672,9 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
             background: toast.type === 'success' ? '#10b981' : '#ef4444',
-            color: '#fff', padding: '16px 24px', borderRadius: 12
+            color: '#fff', padding: '16px 24px', borderRadius: 12,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            animation: 'slideIn 0.3s ease-out'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20 }}>{toast.type === 'success' ? '✓' : '✕'}</span>
@@ -880,53 +1047,44 @@ export default function Home() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                  {sortedVideos.map((v) => (
-                    <div key={v.id} style={{ background: "#20153e", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #18142355", paddingBottom: 6 }}>
-                      {canDelete(v.user_id?.toString()) && (
-                        <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
-                      )}
-                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#130c23", position: 'relative' }}>
-                        {v.thumbnail_url && (
-                          <img 
-                            src={v.thumbnail_url} 
-                            loading="lazy"
-                            style={{ 
-                              width: '100%', 
-                              height: '100%', 
-                              objectFit: 'cover',
-                              position: 'absolute',
-                              top: 0,
-                              left: 0
-                            }} 
-                            alt={v.title}
-                          />
-                        )}
-                        <iframe
-                          src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
-                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
-                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
-                      </div>
-                      <div style={{ padding: 14 }}>
-                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
-                        <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
-                        <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7", display: 'flex', gap: 15 }}>
-                          <button onClick={() => toggleLike(v.id)} style={{ background: 'none', border: 'none', color: v.user_liked ? '#ff6b9d' : '#c2bcf7', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 5 }}>
-                            {v.user_liked ? '❤️' : '🤍'} {v.likes || 0}
-                          </button>
-                          <span>👁️ {v.views || 0}</span>
-                        </div>
-                        
-                        <button onClick={() => openComments(v)} style={{
-                           marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
-                           color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
-                        }}>
-                          💬 Ver Comentários
-                        </button>
-                      </div>
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
+                    {paginatedVideos.map((v) => (
+                      <VideoCard
+                        key={v.id}
+                        video={v}
+                        onDelete={deleteVideo}
+                        onLike={toggleLike}
+                        onOpenComments={openComments}
+                        canDelete={canDelete(v.user_id?.toString())}
+                        isSecret={false}
+                      />
+                    ))}
+                  </div>
+                  
+                  {hasMoreVideos && (
+                    <div style={{ textAlign: 'center', marginTop: 30 }}>
+                      <button 
+                        onClick={() => setPage(p => p + 1)}
+                        style={{ 
+                          padding: '12px 32px',
+                          background: '#8d6aff',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          fontSize: 16,
+                          fontWeight: 600,
+                          transition: 'all 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#7a5ae6'}
+                        onMouseLeave={(e) => e.target.style.background = '#8d6aff'}
+                      >
+                        Carregar mais vídeos ({sortedVideos.length - paginatedVideos.length} restantes)
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1054,7 +1212,7 @@ export default function Home() {
                 {progress > 0 && progress < 100 && (
                   <div style={{ marginTop: 19 }}>
                     <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
+                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s', borderRadius: 3 }} />
                     </div>
                   </div>
                 )}
@@ -1069,7 +1227,7 @@ export default function Home() {
               <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15, flexWrap: 'wrap', gap: '10px' }}>
                   <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
-                  <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
+                  <button onClick={loadUsers} style={{ cursor:'pointer', padding:'8px 16px', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}>Atualizar</button>
                 </div>
                 <div style={{maxHeight: 300, overflowY: 'auto', overflowX: 'auto'}}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: '500px' }}>
@@ -1086,8 +1244,8 @@ export default function Home() {
                           <td style={{padding:10, color:'#666'}}>#{u.id}</td>
                           <td style={{fontWeight:'bold'}}>{u.username}</td>
                           <td>
-                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#000', fontSize: 12 }}>🔑 Resetar</button>
-                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#fff', fontSize: 12 }}>🚫 Banir</button>
+                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'6px 12px', borderRadius:4, cursor:'pointer', color:'#000', fontSize: 12, fontWeight: 600 }}>🔑 Resetar</button>
+                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'6px 12px', borderRadius:4, cursor:'pointer', color:'#fff', fontSize: 12, fontWeight: 600 }}>🚫 Banir</button>
                           </td>
                         </tr>
                       ))}
@@ -1099,56 +1257,56 @@ export default function Home() {
               <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20, flexWrap: 'wrap', gap: '10px'}}>
                   <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (Logs)</h3>
-                  <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
+                  <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
                   <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 13, minWidth: '1400px'}}>
-  <thead>
-    <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-      <th style={{padding:8}}>Data/Hora</th>
-      <th style={{padding:8}}>Usuário</th>
-      <th style={{padding:8}}>IP Real</th>
-      <th style={{padding:8}}>Localização</th>
-      <th style={{padding:8}}>Dispositivo</th>
-      <th style={{padding:8}}>Sistema</th>
-      <th style={{padding:8}}>Navegador</th>
-      <th style={{padding:8}}>Resolução</th>
-      <th style={{padding:8}}>Fingerprint</th>
-      <th style={{padding:8}}>Ação</th>
-    </tr>
-  </thead>
-  <tbody>
-    {logs.map(log => (
-      <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-        <td style={{padding:8, fontSize: 11}}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-        <td style={{padding:8, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
-          {log.username || 'Anônimo'}
-        </td>
-        <td style={{padding:8, color:'#ff6f4e', fontFamily:'monospace', fontSize: 11}}>
-          {log.ip}
-        </td>
-        <td style={{padding:8, color:'#10b981', fontSize: 11}}>
-          {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
-          {log.latitude && log.longitude && (
-            <div style={{fontSize: 10, color: '#666'}}>
-              📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
-            </div>
-          )}
-        </td>
-        <td style={{padding:8, fontSize: 11}}>{log.device_type}</td>
-        <td style={{padding:8, fontSize: 11}}>{log.os || 'N/A'}</td>
-        <td style={{padding:8, fontSize: 11}}>{log.browser || 'N/A'}</td>
-        <td style={{padding:8, fontSize: 10, color: '#8d6aff'}}>{log.screen_resolution || 'N/A'}</td>
-        <td style={{padding:8, fontFamily:'monospace', fontSize: 10, color: '#fbbf24'}}>
-          {log.fingerprint ? log.fingerprint.substring(0, 12) + '...' : 'N/A'}
-        </td>
-        <td style={{padding:8, fontWeight: 'bold', color: log.action.includes('FAILED') ? '#ef4444' : '#fff', fontSize: 11}}>
-          {log.action}
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+                    <thead>
+                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+                        <th style={{padding:8}}>Data/Hora</th>
+                        <th style={{padding:8}}>Usuário</th>
+                        <th style={{padding:8}}>IP Real</th>
+                        <th style={{padding:8}}>Localização</th>
+                        <th style={{padding:8}}>Dispositivo</th>
+                        <th style={{padding:8}}>Sistema</th>
+                        <th style={{padding:8}}>Navegador</th>
+                        <th style={{padding:8}}>Resolução</th>
+                        <th style={{padding:8}}>Fingerprint</th>
+                        <th style={{padding:8}}>Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logs.map(log => (
+                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+                          <td style={{padding:8, fontSize: 11}}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                          <td style={{padding:8, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
+                            {log.username || 'Anônimo'}
+                          </td>
+                          <td style={{padding:8, color:'#ff6f4e', fontFamily:'monospace', fontSize: 11}}>
+                            {log.ip}
+                          </td>
+                          <td style={{padding:8, color:'#10b981', fontSize: 11}}>
+                            {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
+                            {log.latitude && log.longitude && (
+                              <div style={{fontSize: 10, color: '#666'}}>
+                                📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{padding:8, fontSize: 11}}>{log.device_type}</td>
+                          <td style={{padding:8, fontSize: 11}}>{log.os || 'N/A'}</td>
+                          <td style={{padding:8, fontSize: 11}}>{log.browser || 'N/A'}</td>
+                          <td style={{padding:8, fontSize: 10, color: '#8d6aff'}}>{log.screen_resolution || 'N/A'}</td>
+                          <td style={{padding:8, fontFamily:'monospace', fontSize: 10, color: '#fbbf24'}}>
+                            {log.fingerprint ? log.fingerprint.substring(0, 12) + '...' : 'N/A'}
+                          </td>
+                          <td style={{padding:8, fontWeight: 'bold', color: log.action.includes('FAILED') || log.action.includes('BLOCKED') ? '#ef4444' : '#fff', fontSize: 11}}>
+                            {log.action}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -1174,56 +1332,44 @@ export default function Home() {
                   <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                  {sortedSecretVideos.map((v) => (
-                    <div key={v.id} style={{ background: "#3d1a1a", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #e53e3e55", paddingBottom: 6, border: '2px solid #e53e3e' }}>
-                      {canDelete(v.user_id?.toString()) && (
-                        <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
-                      )}
-                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#1a0c0c", position: 'relative' }}>
-                        {v.thumbnail_url && (
-                          <img 
-                            src={v.thumbnail_url} 
-                            loading="lazy"
-                            style={{ 
-                              width: '100%', 
-                              height: '100%', 
-                              objectFit: 'cover',
-                              position: 'absolute',
-                              top: 0,
-                              left: 0
-                            }} 
-                            alt={v.title}
-                          />
-                        )}
-                        <iframe
-                          src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
-                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
-                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
-                      </div>
-                      <div style={{ padding: 14 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                          <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔒 PRIVADO</span>
-                        </div>
-                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
-                        <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
-                        <div style={{ marginTop: 7, fontSize: 15, color: "#ffb3b3", display: 'flex', gap: 15 }}>
-                          <button onClick={() => toggleLike(v.id)} style={{ background: 'none', border: 'none', color: v.user_liked ? '#ff6b9d' : '#ffb3b3', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 5 }}>
-                            {v.user_liked ? '❤️' : '🤍'} {v.likes || 0}
-                          </button>
-                          <span>👁️ {v.views || 0}</span>
-                        </div>
-                        
-                        <button onClick={() => openComments(v)} style={{
-                           marginTop: 12, width:'100%', padding:'8px', background:'#5b2f2f', 
-                           color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
-                        }}>
-                          💬 Ver Comentários
-                        </button>
-                      </div>
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
+                    {paginatedSecretVideos.map((v) => (
+                      <VideoCard
+                        key={v.id}
+                        video={v}
+                        onDelete={deleteVideo}
+                        onLike={toggleLike}
+                        onOpenComments={openComments}
+                        canDelete={canDelete(v.user_id?.toString())}
+                        isSecret={true}
+                      />
+                    ))}
+                  </div>
+                  
+                  {hasMoreSecretVideos && (
+                    <div style={{ textAlign: 'center', marginTop: 30 }}>
+                      <button 
+                        onClick={() => setPage(p => p + 1)}
+                        style={{ 
+                          padding: '12px 32px',
+                          background: '#e53e3e',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          fontSize: 16,
+                          fontWeight: 600,
+                          transition: 'all 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#dc2626'}
+                        onMouseLeave={(e) => e.target.style.background = '#e53e3e'}
+                      >
+                        Carregar mais vídeos ({sortedSecretVideos.length - paginatedSecretVideos.length} restantes)
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1298,6 +1444,10 @@ export default function Home() {
       <style jsx>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
         * {
           box-sizing: border-box;
