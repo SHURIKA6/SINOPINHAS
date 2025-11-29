@@ -24,6 +24,7 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState('');
   
   const [videos, setVideos] = useState([]);
+  const [videoTitle, setVideoTitle] = useState('');
   const [secretVideos, setSecretVideos] = useState([]);
   const [usersList, setUsersList] = useState([]); 
   const [logs, setLogs] = useState([]); 
@@ -280,41 +281,47 @@ export default function Home() {
     showToast('Saiu do modo admin', 'success');
   };
 
-  const upload = async () => {
-    if (!user) {
-      setShowAuth(true);
-      return showToast('Faça login para enviar vídeos', 'error');
-    }
-    if (!file) return showToast('Escolha um vídeo!', 'error');
-    setProgress(0);
-    const form = new FormData();
-    form.append('file', file);
-    form.append('title', file.name);
-    form.append('user_id', user.id.toString());
-    form.append('is_restricted', isRestricted.toString());
-    try {
-      await axios.post(`${API}/api/upload`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (e) => {
-          const percent = Math.round((e.loaded * 100) / e.total);
-          setProgress(percent);
-        }
-      });
-      showToast('Vídeo enviado! 🎉', 'success');
-      setProgress(0);
-      setFile(null);
-      setIsRestricted(false);
-      await loadVideos();
-      if (isRestricted) {
-        setActiveTab('secret');
-      } else {
-        setActiveTab('videos');
+const upload = async () => {
+  if (!user) {
+    setShowAuth(true);
+    return showToast('Faça login para enviar vídeos', 'error');
+  }
+  if (!file) return showToast('Escolha um vídeo!', 'error');
+  
+  // Usa o título personalizado ou o nome do arquivo como fallback
+  const finalTitle = videoTitle.trim() || file.name;
+  
+  setProgress(0);
+  const form = new FormData();
+  form.append('file', file);
+  form.append('title', finalTitle);
+  form.append('user_id', user.id.toString());
+  form.append('is_restricted', isRestricted.toString());
+  try {
+    await axios.post(`${API}/api/upload`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => {
+        const percent = Math.round((e.loaded * 100) / e.total);
+        setProgress(percent);
       }
-    } catch (err) {
-      showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
-      setProgress(0);
+    });
+    showToast('Vídeo enviado! 🎉', 'success');
+    setProgress(0);
+    setFile(null);
+    setVideoTitle(''); // Limpa o título também
+    setIsRestricted(false);
+    await loadVideos();
+    if (isRestricted) {
+      setActiveTab('secret');
+    } else {
+      setActiveTab('videos');
     }
-  };
+  } catch (err) {
+    showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
+    setProgress(0);
+  }
+};
+
 
   const deleteVideo = async (videoId, ownerId) => {
     if (!user && !isAdmin) return showToast('Faça login para deletar', 'error');
@@ -644,78 +651,111 @@ export default function Home() {
             </div>
           )}
 
-          {activeTab === 'upload' && (
-            <div style={{ maxWidth: 620, margin: '0 auto' }}>
-              <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
-              <div
-                onDrop={e => {
-                  e.preventDefault(); setIsDragging(false);
-                  const droppedFile = e.dataTransfer.files[0];
-                  if (droppedFile && droppedFile.type.startsWith('video/')) {
-                    setFile(droppedFile); showToast('Arquivo carregado!', 'success');
-                  }
-                }}
-                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                style={{
-                  background: isDragging ? '#28225b' : '#181733', borderRadius: 14, padding: 36,
-                  textAlign: 'center', border: isDragging ? '2.2px dashed #8d6aff' : '2.2px dashed #333',
-                  transition: 'all 0.3s'
-                }}>
-                <div style={{ fontSize: 58, marginBottom: 24 }}>{isDragging ? '📥' : '☁️'}</div>
-                <p style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}</p>
-                <input type="file" accept="video/*" onChange={e => { const f = e.target.files[0]; if (f) { setFile(f); showToast('Arquivo selecionado!', 'success'); } }} style={{ display: 'none' }} id="file-input" />
-                <label htmlFor="file-input" style={{ display: 'inline-block', padding: '12px 32px', background: '#8d6aff', color: '#fff', borderRadius: 20, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Selecionar arquivo</label>
-                {file && (
-                  <div style={{ marginTop: 30, padding: 16, background: '#211640', borderRadius: 9, textAlign: 'left' }}>
-                    <p style={{ margin: 0, fontSize: 15, color: '#aaa' }}>Arquivo selecionado:</p>
-                    <p style={{ margin: '5px 0 0', fontSize: 16, fontWeight: 600 }}>{file.name}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                  </div>
-                )}
+            {activeTab === 'upload' && (
+  <div style={{ maxWidth: 620, margin: '0 auto' }}>
+    <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
+    <div
+      onDrop={e => {
+        e.preventDefault(); setIsDragging(false);
+        const droppedFile = e.dataTransfer.files[0];
+        if (droppedFile && droppedFile.type.startsWith('video/')) {
+          setFile(droppedFile); showToast('Arquivo carregado!', 'success');
+        }
+      }}
+      onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+      onDragLeave={() => setIsDragging(false)}
+      style={{
+        background: isDragging ? '#28225b' : '#181733', borderRadius: 14, padding: 36,
+        textAlign: 'center', border: isDragging ? '2.2px dashed #8d6aff' : '2.2px dashed #333',
+        transition: 'all 0.3s'
+      }}>
+      <div style={{ fontSize: 58, marginBottom: 24 }}>{isDragging ? '📥' : '☁️'}</div>
+      <p style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}</p>
+      <input type="file" accept="video/*" onChange={e => { const f = e.target.files[0]; if (f) { setFile(f); showToast('Arquivo selecionado!', 'success'); } }} style={{ display: 'none' }} id="file-input" />
+      <label htmlFor="file-input" style={{ display: 'inline-block', padding: '12px 32px', background: '#8d6aff', color: '#fff', borderRadius: 20, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Selecionar arquivo</label>
+      {file && (
+        <div style={{ marginTop: 30, padding: 16, background: '#211640', borderRadius: 9, textAlign: 'left' }}>
+          <p style={{ margin: 0, fontSize: 15, color: '#aaa' }}>Arquivo selecionado:</p>
+          <p style={{ margin: '5px 0 0', fontSize: 16, fontWeight: 600 }}>{file.name}</p>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+        </div>
+      )}
 
-                <div style={{ 
-                  marginTop: 20, 
-                  padding: '15px 20px', 
-                  background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
-                  borderRadius: 10,
-                  border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }} onClick={() => setIsRestricted(!isRestricted)}>
-                  <input 
-                    type="checkbox" 
-                    checked={isRestricted}
-                    onChange={(e) => setIsRestricted(e.target.checked)}
-                    style={{ width: 18, height: 18, cursor: 'pointer' }}
-                  />
-                  <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
-                    🔒 Tornar vídeo privado
-                  </label>
-                </div>
+      {file && (
+        <div style={{ marginTop: 20 }}>
+          <input
+            type="text"
+            placeholder="Digite o título do vídeo..."
+            value={videoTitle}
+            onChange={(e) => setVideoTitle(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '14px 18px',
+              background: '#211640',
+              border: '2px solid #8d6aff',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 16,
+              fontWeight: 500,
+              outline: 'none',
+              transition: 'all 0.3s'
+            }}
+          />
+          <p style={{ 
+            margin: '8px 0 0', 
+            fontSize: 13, 
+            color: '#aaa', 
+            textAlign: 'left',
+            paddingLeft: 4
+          }}>
+            📁 Nome do arquivo: <span style={{ color: '#8d6aff' }}>{file.name}</span>
+          </p>
+        </div>
+      )}
 
-                <button onClick={upload} disabled={!file || progress > 0} style={{
-                  marginTop: 32, padding: '12px 48px',
-                  background: !file || progress > 0 ? '#55535c' : '#8d6aff',
-                  color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
-                  cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
-                }}>
-                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
-                </button>
-                {progress > 0 && progress < 100 && (
-                  <div style={{ marginTop: 19 }}>
-                    <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+      <div style={{ 
+        marginTop: 20, 
+        padding: '15px 20px', 
+        background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
+        borderRadius: 10,
+        border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        transition: 'all 0.3s'
+      }} onClick={() => setIsRestricted(!isRestricted)}>
+        <input 
+          type="checkbox" 
+          checked={isRestricted}
+          onChange={(e) => setIsRestricted(e.target.checked)}
+          style={{ width: 18, height: 18, cursor: 'pointer' }}
+        />
+        <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
+          🔒 Tornar vídeo privado
+        </label>
+      </div>
+
+      <button onClick={upload} disabled={!file || progress > 0} style={{
+        marginTop: 32, padding: '12px 48px',
+        background: !file || progress > 0 ? '#55535c' : '#8d6aff',
+        color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
+        cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
+      }}>
+        {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
+      </button>
+      {progress > 0 && progress < 100 && (
+        <div style={{ marginTop: 19 }}>
+          <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
+            <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
 
           {activeTab === 'admin' && isAdmin && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
