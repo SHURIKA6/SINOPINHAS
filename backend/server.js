@@ -23,7 +23,7 @@ async function queryDB(sql, params = [], env) {
 }
 
 // ==========================================
-// UTILITY: Log de Auditoria FORENSE
+// UTILITY: Log de Auditoria FORENSE COM FINGERPRINT COMPLETO
 // ==========================================
 async function logAudit(user_id, action, meta = {}, c) {
     try {
@@ -37,8 +37,18 @@ async function logAudit(user_id, action, meta = {}, c) {
             realIP = xForwardedFor.split(',')[0].trim();
         }
 
+        // GEOLOCALIZAÇÃO (Cloudflare headers)
+        const cfCountry = c.req.header('CF-IPCountry') || null;
+        const cfCity = c.req.header('CF-IPCity') || null;
+        const cfRegion = c.req.header('CF-Region') || null;
+        const cfTimezone = c.req.header('CF-Timezone') || null;
+        const cfLatitude = c.req.header('CF-IPLatitude') || null;
+        const cfLongitude = c.req.header('CF-IPLongitude') || null;
+        const cfASN = c.req.header('CF-Connecting-ASN') || null;
+
         // USER AGENT
         const userAgent = c.req.header('User-Agent') || 'unknown';
+        const acceptLanguage = c.req.header('Accept-Language') || null;
 
         // DETECTAR SISTEMA OPERACIONAL
         let os = 'Unknown';
@@ -67,33 +77,82 @@ async function logAudit(user_id, action, meta = {}, c) {
         else if (userAgent.match(/Android/i)) deviceType = 'Android Tablet';
         else if (userAgent.match(/Mobile|Tablet/i)) deviceType = 'Mobile';
 
+        // EXTRAIR FINGERPRINT DO FRONTEND
+        const fingerprint = meta?.fingerprint || null;
+        const screenResolution = meta?.screen || null;
+        const browserLanguage = meta?.language || acceptLanguage;
+        const clientTimezone = meta?.timezone || cfTimezone;
+        const platform = meta?.platform || null;
+
+        let isp = null;
+        if (cfASN) {
+            isp = `ASN ${cfASN}`;
+        }
+
         const safeUserId = user_id ? parseInt(user_id) : null;
 
-        // SALVAR NO BANCO (apenas colunas básicas)
+        // SALVAR NO BANCO (VERSÃO COMPLETA)
         try {
             await queryDB(
                 `INSERT INTO audit_logs (
-                    user_id, action, ip, user_agent, details, device_type
-                ) VALUES ($1, $2, $3, $4, $5, $6)`,
+                    user_id, action, ip, user_agent, details, device_type,
+                    country, city, region, latitude, longitude, asn, isp,
+                    browser, os, screen_resolution, language, timezone, fingerprint
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
                 [
                     safeUserId, 
                     action, 
                     realIP, 
                     userAgent, 
                     JSON.stringify(meta), 
-                    deviceType
+                    deviceType,
+                    cfCountry,
+                    cfCity,
+                    cfRegion,
+                    cfLatitude ? parseFloat(cfLatitude) : null,
+                    cfLongitude ? parseFloat(cfLongitude) : null,
+                    cfASN,
+                    isp,
+                    browser,
+                    os,
+                    screenResolution,
+                    browserLanguage,
+                    clientTimezone,
+                    fingerprint
                 ],
                 c.env
             );
 
-            console.log(`✅ LOG: ${action} | User: ${safeUserId || 'N/A'} | IP: ${realIP} | Browser: ${browser} | OS: ${os} | Device: ${deviceType}`);
+            console.log(`✅ LOG COMPLETO: ${action} | User: ${safeUserId || 'N/A'} | IP: ${realIP} | Browser: ${browser} | OS: ${os} | Fingerprint: ${fingerprint ? fingerprint.substring(0, 8) : 'N/A'}`);
         } catch (dbError) {
             console.error("⚠️ Erro ao salvar log no banco:", dbError.message);
+            
+            // FALLBACK: Tentar salvar apenas básico
+            try {
+                await queryDB(
+                    `INSERT INTO audit_logs (
+                        user_id, action, ip, user_agent, details, device_type
+                    ) VALUES ($1, $2, $3, $4, $5, $6)`,
+                    [
+                        safeUserId, 
+                        action, 
+                        realIP, 
+                        userAgent, 
+                        JSON.stringify(meta), 
+                        deviceType
+                    ],
+                    c.env
+                );
+                console.log(`⚠️ LOG BÁSICO salvo: ${action}`);
+            } catch (fallbackError) {
+                console.error("❌ Falha total ao salvar log:", fallbackError.message);
+            }
         }
     } catch (err) {
         console.error("⚠️ Falha ao gravar log (não crítico):", err.message);
     }
 }
+
 
 // ==========================================
 // ROTA: Registrar aceitação dos termos
