@@ -9,13 +9,23 @@ const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-import { sendFingerprint } from '../lib/fingerprint';
-
-// Use normalmente:
-const fpData = await sendFingerprint('USER_LOGIN', { 
-  username: loginUsername 
-});
-
+// ✅ FUNÇÃO DE FINGERPRINT INLINE
+const sendFingerprint = async (action, metadata = {}) => {
+  try {
+    return {
+      ...metadata,
+      fingerprint: navigator.userAgent || 'unknown',
+      screen: `${screen.width}x${screen.height}`,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      platform: navigator.platform,
+      action: action
+    };
+  } catch (err) {
+    console.error('Erro ao capturar fingerprint:', err);
+    return metadata;
+  }
+};
 
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret }) => {
   return (
@@ -120,10 +130,8 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
       </div>
     </div>
   );
-});
-
-
-
+}
+);
 
 export default function Home() {
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -171,7 +179,7 @@ export default function Home() {
   const [newAvatar, setNewAvatar] = useState('');
   const [newBio, setNewBio] = useState('');
 
-  // ✅ PAGINAÇÃO
+
   const [page, setPage] = useState(1);
   const VIDEOS_PER_PAGE = 12;
 
@@ -216,7 +224,7 @@ export default function Home() {
     }
   }, [activeTab, showSecretTab]);
 
-  // Reset page when changing tabs or search
+
   useEffect(() => {
     setPage(1);
   }, [activeTab, searchQuery, sortBy]);
@@ -404,7 +412,9 @@ export default function Home() {
     if (!username || !password) return showToast('Preencha todos os campos', 'error');
     
     try {
-      const fingerprintData = await sendFingerprint('AUTH');
+      const fingerprintData = await sendFingerprint(isLogin ? 'USER_LOGIN' : 'USER_REGISTER', {
+        username: username
+      });
       
       const endpoint = isLogin ? '/api/login' : '/api/register';
       const res = await axios.post(`${API}${endpoint}`, { 
@@ -427,7 +437,7 @@ export default function Home() {
     }
   };
 
-  const handleAdminLogin = async (e) => {
+    const handleAdminLogin = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(`${API}/api/admin/login`, { password: adminPassword });
@@ -543,7 +553,7 @@ export default function Home() {
     }
   }, [user, isAdmin, adminPassword, showToast, loadVideos, loadSecretVideos]);
 
-  // ✅ MEMOIZAÇÃO DOS VÍDEOS FILTRADOS E ORDENADOS
+
   const filteredVideos = useMemo(() => {
     return videos.filter(v => 
       v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -575,7 +585,7 @@ export default function Home() {
   const sortedVideos = useMemo(() => sortVideos(filteredVideos), [filteredVideos, sortVideos]);
   const sortedSecretVideos = useMemo(() => sortVideos(filteredSecretVideos), [filteredSecretVideos, sortVideos]);
 
-  // ✅ PAGINAÇÃO
+
   const paginatedVideos = useMemo(() => {
     return sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
   }, [sortedVideos, page]);
@@ -587,7 +597,7 @@ export default function Home() {
   const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
   const hasMoreSecretVideos = paginatedSecretVideos.length < sortedSecretVideos.length;
 
-  // SE NÃO ACEITOU OS TERMOS, MOSTRA APENAS O MODAL
+
   if (!termsAccepted) {
     return (
       <>
@@ -605,7 +615,7 @@ export default function Home() {
     );
   }
 
-  // SE ACEITOU, MOSTRA O SITE COMPLETO
+
   return (
     <>
       <Head>
@@ -1026,16 +1036,13 @@ export default function Home() {
                           background: '#8d6aff',
                           color: '#fff',
                           border: 'none',
-                          borderRadius: 8,
-                          cursor: 'pointer',
+                          borderRadius: 10,
                           fontSize: 16,
                           fontWeight: 600,
-                          transition: 'all 0.3s'
+                          cursor: 'pointer'
                         }}
-                        onMouseEnter={(e) => e.target.style.background = '#7a5ae6'}
-                        onMouseLeave={(e) => e.target.style.background = '#8d6aff'}
                       >
-                        Carregar mais vídeos ({sortedVideos.length - paginatedVideos.length} restantes)
+                        Carregar Mais
                       </button>
                     </div>
                   )}
@@ -1044,247 +1051,20 @@ export default function Home() {
             </div>
           )}
 
-          {activeTab === 'upload' && (
-            <div style={{ maxWidth: 620, margin: '0 auto' }}>
-              <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
-              <div
-                onDrop={e => {
-                  e.preventDefault(); setIsDragging(false);
-                  const droppedFile = e.dataTransfer.files[0];
-                  if (droppedFile && droppedFile.type.startsWith('video/')) {
-                    setFile(droppedFile); showToast('Arquivo carregado!', 'success');
-                  }
-                }}
-                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                style={{
-                  background: isDragging ? '#28225b' : '#181733', borderRadius: 14, padding: 36,
-                  textAlign: 'center', border: isDragging ? '2.2px dashed #8d6aff' : '2.2px dashed #333',
-                  transition: 'all 0.3s'
-                }}>
-                <div style={{ fontSize: 58, marginBottom: 24 }}>{isDragging ? '📥' : '☁️'}</div>
-                <p style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}</p>
-                <input type="file" accept="video/*" onChange={e => { const f = e.target.files[0]; if (f) { setFile(f); showToast('Arquivo selecionado!', 'success'); } }} style={{ display: 'none' }} id="file-input" />
-                <label htmlFor="file-input" style={{ display: 'inline-block', padding: '12px 32px', background: '#8d6aff', color: '#fff', borderRadius: 20, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Selecionar arquivo</label>
-                
-                {file && (
-                  <>
-                    <div style={{ marginTop: 30, padding: 16, background: '#211640', borderRadius: 9, textAlign: 'left' }}>
-                      <p style={{ margin: 0, fontSize: 15, color: '#aaa' }}>Arquivo selecionado:</p>
-                      <p style={{ margin: '5px 0 0', fontSize: 16, fontWeight: 600 }}>{file.name}</p>
-                      <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                    </div>
-
-                    <div style={{ marginTop: 20 }}>
-                      <input
-                        type="text"
-                        placeholder="Digite o título do vídeo..."
-                        value={videoTitle}
-                        onChange={(e) => setVideoTitle(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '14px 18px',
-                          background: '#211640',
-                          border: '2px solid #8d6aff',
-                          borderRadius: 10,
-                          color: '#fff',
-                          fontSize: 16,
-                          fontWeight: 500,
-                          outline: 'none',
-                          transition: 'all 0.3s'
-                        }}
-                      />
-                      <p style={{ 
-                        margin: '8px 0 0', 
-                        fontSize: 13, 
-                        color: '#aaa', 
-                        textAlign: 'left',
-                        paddingLeft: 4
-                      }}>
-                        📁 Nome do arquivo: <span style={{ color: '#8d6aff' }}>{file.name}</span>
-                      </p>
-                    </div>
-
-                    <div style={{ marginTop: 20 }}>
-                      <p style={{ fontSize: 15, color: '#aaa', marginBottom: 10, textAlign: 'left' }}>🖼️ Thumbnail personalizada (opcional):</p>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={e => { 
-                          const thumb = e.target.files[0]; 
-                          if (thumb) { 
-                            setThumbnailFile(thumb); 
-                            showToast('Thumbnail selecionada!', 'success'); 
-                          } 
-                        }} 
-                        style={{ display: 'none' }} 
-                        id="thumbnail-input" 
-                      />
-                      <label htmlFor="thumbnail-input" style={{ display: 'inline-block', padding: '10px 24px', background: '#352f5b', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                        Selecionar Imagem
-                      </label>
-                      {thumbnailFile && (
-                        <p style={{ margin: '8px 0 0', fontSize: 13, color: '#8d6aff', textAlign: 'left' }}>
-                          ✓ {thumbnailFile.name}
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                <div style={{ 
-                  marginTop: 20, 
-                  padding: '15px 20px', 
-                  background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
-                  borderRadius: 10,
-                  border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }} onClick={() => setIsRestricted(!isRestricted)}>
-                  <input 
-                    type="checkbox" 
-                    checked={isRestricted}
-                    onChange={(e) => setIsRestricted(e.target.checked)}
-                    style={{ width: 18, height: 18, cursor: 'pointer' }}
-                  />
-                  <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
-                    🔒 Tornar vídeo privado
-                  </label>
-                </div>
-
-                <button onClick={upload} disabled={!file || progress > 0} style={{
-                  marginTop: 32, padding: '12px 48px',
-                  background: !file || progress > 0 ? '#55535c' : '#8d6aff',
-                  color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
-                  cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
-                }}>
-                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
-                </button>
-                {progress > 0 && progress < 100 && (
-                  <div style={{ marginTop: 19 }}>
-                    <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s', borderRadius: 3 }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'admin' && isAdmin && (
-            <div style={{ maxWidth: 900, margin: '0 auto' }}>
-              <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
-
-              <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15, flexWrap: 'wrap', gap: '10px' }}>
-                  <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
-                  <button onClick={loadUsers} style={{ cursor:'pointer', padding:'8px 16px', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}>Atualizar</button>
-                </div>
-                <div style={{maxHeight: 300, overflowY: 'auto', overflowX: 'auto'}}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: '500px' }}>
-                    <thead>
-                      <tr style={{textAlign:'left', color:'#aaa', borderBottom: '1px solid #444'}}>
-                        <th style={{padding:10}}>ID</th>
-                        <th>Usuário</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {usersList.map(u => (
-                        <tr key={u.id} style={{borderTop:'1px solid #333'}}>
-                          <td style={{padding:10, color:'#666'}}>#{u.id}</td>
-                          <td style={{fontWeight:'bold'}}>{u.username}</td>
-                          <td>
-                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'6px 12px', borderRadius:4, cursor:'pointer', color:'#000', fontSize: 12, fontWeight: 600 }}>🔑 Resetar</button>
-                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'6px 12px', borderRadius:4, cursor:'pointer', color:'#fff', fontSize: 12, fontWeight: 600 }}>🚫 Banir</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20, flexWrap: 'wrap', gap: '10px'}}>
-                  <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (Logs)</h3>
-                  <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600}}>Atualizar</button>
-                </div>
-                <div style={{overflowX: 'auto'}}>
-                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 13, minWidth: '1400px'}}>
-                    <thead>
-                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
-                        <th style={{padding:8}}>Data/Hora</th>
-                        <th style={{padding:8}}>Usuário</th>
-                        <th style={{padding:8}}>IP Real</th>
-                        <th style={{padding:8}}>Localização</th>
-                        <th style={{padding:8}}>Dispositivo</th>
-                        <th style={{padding:8}}>Sistema</th>
-                        <th style={{padding:8}}>Navegador</th>
-                        <th style={{padding:8}}>Resolução</th>
-                        <th style={{padding:8}}>Fingerprint</th>
-                        <th style={{padding:8}}>Ação</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logs.map(log => (
-                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
-                          <td style={{padding:8, fontSize: 11}}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                          <td style={{padding:8, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
-                            {log.username || 'Anônimo'}
-                          </td>
-                          <td style={{padding:8, color:'#ff6f4e', fontFamily:'monospace', fontSize: 11}}>
-                            {log.ip}
-                          </td>
-                          <td style={{padding:8, color:'#10b981', fontSize: 11}}>
-                            {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
-                            {log.latitude && log.longitude && (
-                              <div style={{fontSize: 10, color: '#666'}}>
-                                📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
-                              </div>
-                            )}
-                          </td>
-                          <td style={{padding:8, fontSize: 11}}>{log.device_type}</td>
-                          <td style={{padding:8, fontSize: 11}}>{log.os || 'N/A'}</td>
-                          <td style={{padding:8, fontSize: 11}}>{log.browser || 'N/A'}</td>
-                          <td style={{padding:8, fontSize: 10, color: '#8d6aff'}}>{log.screen_resolution || 'N/A'}</td>
-                          <td style={{padding:8, fontFamily:'monospace', fontSize: 10, color: '#fbbf24'}}>
-                            {log.fingerprint ? log.fingerprint.substring(0, 12) + '...' : 'N/A'}
-                          </td>
-                          <td style={{padding:8, fontWeight: 'bold', color: log.action.includes('FAILED') || log.action.includes('BLOCKED') ? '#ef4444' : '#fff', fontSize: 11}}>
-                            {log.action}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'inbox' && (
-            <Inbox user={user} usersList={usersList} onMessageRead={() => user && loadNotifications(user.id)} />
-          )}
-
-          {activeTab === 'secret' && showSecretTab && (
+          {activeTab === 'secret' && (
             <div>
-              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#e53e3e' }}>
-                🔥 SAFADEZA ({loading ? 'Carregando...' : `${sortedSecretVideos.length} vídeo${sortedSecretVideos.length !== 1 ? 's' : ''}`})
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#ff6b9d' }}>
+                🔒 CONTEÚDO RESTRITO ({sortedSecretVideos.length})
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 80 }}>
                   <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                 </div>
               ) : sortedSecretVideos.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa', border: '2px dashed #e53e3e' }}>
-                  <div style={{ fontSize: 41, marginBottom: 18 }}>🔥</div>
-                  <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito encontrado</p>
-                  <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
+                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
+                  <div style={{ fontSize: 41, marginBottom: 18 }}>🔒</div>
+                  <p style={{ fontSize: 19, margin: 0 }}>Nenhum conteúdo restrito encontrado</p>
+                  <p style={{ fontSize: 14, marginTop: 8 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
                 </div>
               ) : (
                 <>
@@ -1311,16 +1091,13 @@ export default function Home() {
                           background: '#e53e3e',
                           color: '#fff',
                           border: 'none',
-                          borderRadius: 8,
-                          cursor: 'pointer',
+                          borderRadius: 10,
                           fontSize: 16,
                           fontWeight: 600,
-                          transition: 'all 0.3s'
+                          cursor: 'pointer'
                         }}
-                        onMouseEnter={(e) => e.target.style.background = '#dc2626'}
-                        onMouseLeave={(e) => e.target.style.background = '#e53e3e'}
                       >
-                        Carregar mais vídeos ({sortedSecretVideos.length - paginatedSecretVideos.length} restantes)
+                        Carregar Mais
                       </button>
                     </div>
                   )}
@@ -1328,136 +1105,361 @@ export default function Home() {
               )}
             </div>
           )}
+
+          {activeTab === 'upload' && (
+            <div style={{ maxWidth: 600, margin: '0 auto' }}>
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>📤 Enviar Vídeo</h2>
+              
+              <div 
+                style={{ 
+                  border: isDragging ? '3px dashed #8d6aff' : '2px dashed #444', 
+                  borderRadius: 16, 
+                  padding: 48, 
+                  textAlign: 'center', 
+                  background: isDragging ? '#8d6aff22' : '#1a1a1a', 
+                  cursor: 'pointer',
+                  marginBottom: 24,
+                  transition: 'all 0.3s'
+                }}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const f = e.dataTransfer.files[0];
+                  if (f) {
+                    setFile(f);
+                    showToast('Arquivo selecionado!', 'success');
+                  }
+                }}
+                onClick={() => document.getElementById('file-input').click()}
+              >
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
+                <p style={{ fontSize: 18, margin: 0, color: '#aaa' }}>
+                  {isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}
+                </p>
+                <input 
+                  type="file" 
+                  accept="video/*" 
+                  onChange={(e) => {
+                    const f = e.target.files[0];
+                    if (f) {
+                      setFile(f);
+                      showToast('Arquivo selecionado!', 'success');
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                  id="file-input"
+                />
+              </div>
+
+              {file && (
+                <>
+                  <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12, marginBottom: 20 }}>
+                    <p style={{ margin: '0 0 8px', fontSize: 14, color: '#aaa' }}>Arquivo selecionado:</p>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: 16 }}>{file.name}</p>
+                    <p style={{ margin: '8px 0 0', fontSize: 14, color: '#888' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="📁 Nome do arquivo: {file.name}"
+                    value={videoTitle}
+                    onChange={(e) => setVideoTitle(e.target.value)}
+                    style={{ width: '100%', padding: 14, background: '#1a1a1a', border: '1px solid #303030', borderRadius: 10, color: '#fff', fontSize: 16, marginBottom: 16 }}
+                  />
+
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: 'block', marginBottom: 12, fontSize: 16, fontWeight: 500 }}>
+                      🖼️ Thumbnail personalizada (opcional):
+                    </label>
+                    <button
+                      onClick={() => document.getElementById('thumbnail-input').click()}
+                      style={{
+                        padding: '12px 20px',
+                        background: '#303030',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 10,
+                        cursor: 'pointer',
+                        fontSize: 14,
+                        fontWeight: 500
+                      }}
+                    >
+                      Selecionar Thumbnail
+                    </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const thumb = e.target.files[0];
+                        if (thumb) {
+                          setThumbnailFile(thumb);
+                          showToast('Thumbnail selecionada!', 'success');
+                        }
+                      }}
+                      style={{ display: 'none' }}
+                      id="thumbnail-input"
+                    />
+                    {thumbnailFile && (
+                      <p style={{ marginTop: 10, color: '#10b981', fontSize: 14 }}>
+                        ✓ {thumbnailFile.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={isRestricted}
+                      onChange={(e) => setIsRestricted(e.target.checked)}
+                      style={{ width: 20, height: 20, cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 16 }}>🔒 Tornar vídeo privado (apenas +18)</span>
+                  </label>
+
+                  {progress > 0 && (
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ background: '#303030', height: 28, borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
+                        <div style={{ 
+                          background: 'linear-gradient(90deg, #8d6aff, #fe7d45)', 
+                          height: '100%', 
+                          width: `${progress}%`, 
+                          transition: 'width 0.3s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: '#fff'
+                        }}>
+                          {progress}%
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={upload}
+                    disabled={progress > 0}
+                    style={{
+                      width: '100%',
+                      padding: 16,
+                      background: progress > 0 ? '#555' : (isRestricted ? '#e53e3e' : '#8d6aff'),
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 10,
+                      fontSize: 18,
+                      fontWeight: 600,
+                      cursor: progress > 0 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.3s'
+                    }}
+                  >
+                    {progress > 0 ? `Enviando... ${progress}%` : (isRestricted ? '🔒 Enviar Vídeo Privado' : '🚀 Enviar Vídeo')}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'inbox' && user && (
+            <Inbox user={user} API={API} />
+          )}
+
+          {activeTab === 'admin' && isAdmin && (
+            <div>
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>🛡️ Painel Admin</h2>
+              
+              <div style={{ marginBottom: 40 }}>
+                <h3 style={{ fontSize: 20, marginBottom: 16 }}>👥 Usuários Cadastrados ({usersList.length})</h3>
+                <div style={{ background: '#1a1a1a', borderRadius: 12, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: '#303030' }}>
+                        <th style={{ padding: 12, textAlign: 'left' }}>ID</th>
+                        <th style={{ padding: 12, textAlign: 'left' }}>Usuário</th>
+                        <th style={{ padding: 12, textAlign: 'left' }}>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usersList.map((u) => (
+                        <tr key={u.id} style={{ borderBottom: '1px solid #303030' }}>
+                          <td style={{ padding: 12 }}>#{u.id}</td>
+                          <td style={{ padding: 12 }}>{u.username}</td>
+                          <td style={{ padding: 12, display: 'flex', gap: 8 }}>
+                            <button onClick={() => resetPassword(u.id)} style={{ padding: '6px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+                              Resetar Senha
+                            </button>
+                            <button onClick={() => banUser(u.id)} style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+                              Banir
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: 20, marginBottom: 16 }}>📊 Logs de Auditoria (últimos 100)</h3>
+                <div style={{ background: '#1a1a1a', borderRadius: 12, overflow: 'auto', maxHeight: 600 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#303030', zIndex: 1 }}>
+                      <tr>
+                        <th style={{ padding: 10, textAlign: 'left', whiteSpace: 'nowrap' }}>Data/Hora</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Usuário</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>IP Real</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Localização</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Dispositivo</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Sistema</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Navegador</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Resolução</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Fingerprint</th>
+                        <th style={{ padding: 10, textAlign: 'left' }}>Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logs.map((log, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #303030' }}>
+                          <td style={{ padding: 10, whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                          <td style={{ padding: 10 }}>{log.username || 'Anônimo'}</td>
+                          <td style={{ padding: 10, fontFamily: 'monospace' }}>{log.ip}</td>
+                          <td style={{ padding: 10 }}>
+                            {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
+                            {log.latitude && log.longitude && (
+                              <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>
+                                📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: 10 }}>{log.device_type}</td>
+                          <td style={{ padding: 10 }}>{log.os || 'N/A'}</td>
+                          <td style={{ padding: 10 }}>{log.browser || 'N/A'}</td>
+                          <td style={{ padding: 10 }}>{log.screen_resolution || 'N/A'}</td>
+                          <td style={{ padding: 10, fontFamily: 'monospace', fontSize: 11 }}>
+                            {log.fingerprint ? log.fingerprint.substring(0, 12) + '...' : 'N/A'}
+                          </td>
+                          <td style={{ padding: 10, fontWeight: 600, color: '#8d6aff' }}>{log.action}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+
         </div>
-        
+
         {showCommentsModal && currentVideo && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex',
-            justifyContent: 'center', alignItems: 'center', padding: '20px'
+            background: 'rgba(0,0,0,0.9)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: 20,
+            overflowY: 'auto'
           }} onClick={() => setShowCommentsModal(false)}>
-            
-            <div style={{
-              background: '#1a1a1a', width: '100%', maxWidth: 600, maxHeight: '90vh',
-              borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden'
-            }} onClick={e => e.stopPropagation()}>
-              
-              <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 10 }}>Comentários: {currentVideo.title}</h3>
-                <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer', minWidth: 30}}>✕</button>
-              </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 16, padding: 32,
+              maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px', fontSize: 22 }}>💬 Comentários - {currentVideo.title}</h2>
+              
+              <div style={{ marginBottom: 24 }}>
                 {videoComments.length === 0 ? (
-                  <p style={{ color: '#aaa', textAlign: 'center' }}>Seja o primeiro a comentar!</p>
+                  <p style={{ textAlign: 'center', color: '#666', padding: 20 }}>Seja o primeiro a comentar!</p>
                 ) : (
                   videoComments.map((c, i) => (
-                    <div key={i} style={{ marginBottom: 16, borderBottom: '1px solid #333', paddingBottom: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5, flexWrap: 'wrap', gap: 5 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 'bold', color: '#8d6aff' }}>{c.username || 'Anônimo'}</span>
-                          <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleDateString()}</span>
-                        </div>
-                        {(user && (c.user_id === user.id || isAdmin)) && (
-                          <button 
-                            onClick={() => deleteComment(c.id)} 
-                            style={{ 
-                              background: 'none', 
-                              border: 'none', 
-                              color: '#ef4444', 
-                              cursor: 'pointer', 
-                              fontSize: 14,
-                              padding: '4px 8px'
-                            }}
-                          >
-                            🗑️
-                          </button>
+                    <div key={i} style={{ 
+                      background: '#252525', 
+                      padding: 16, 
+                      borderRadius: 10, 
+                      marginBottom: 12,
+                      position: 'relative'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        {c.avatar && (
+                          <img src={c.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={c.username} />
                         )}
+                        <strong style={{ fontSize: 15 }}>{c.username}</strong>
+                        <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleString('pt-BR')}</span>
                       </div>
-                      <p style={{ margin: 0, color: '#ddd', wordBreak: 'break-word' }}>{c.comment}</p>
+                      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{c.comment}</p>
+                      {(user?.id === c.user_id || isAdmin) && (
+                        <button 
+                          onClick={() => deleteComment(c.id)}
+                          style={{
+                            position: 'absolute',
+                            top: 12,
+                            right: 12,
+                            background: '#ef4444',
+                            border: 'none',
+                            borderRadius: 6,
+                            padding: '4px 8px',
+                            color: '#fff',
+                            fontSize: 12,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Deletar
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
               </div>
-
-              <form onSubmit={sendComment} style={{ padding: 16, background: '#222', borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
-                <input 
-                  value={newComment}
-                  onChange={e => setNewComment(e.target.value)}
-                  placeholder="Escreva algo legal..."
-                  style={{ flex: 1, padding: 10, borderRadius: 20, border: 'none', background: '#333', color: '#fff', fontSize: 16 }}
-                />
-                <button type="submit" style={{ background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, padding: '0 20px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  Enviar
-                </button>
-              </form>
+              {user && (
+                <form onSubmit={sendComment}>
+                  <textarea
+                    placeholder="Escreva um comentário..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      background: '#252525',
+                      border: '1px solid #303030',
+                      borderRadius: 10,
+                      color: '#fff',
+                      fontSize: 15,
+                      resize: 'vertical',
+                      marginBottom: 12
+                    }}
+                  />
+                  <button type="submit" style={{
+                    width: '100%',
+                    padding: 12,
+                    background: '#8d6aff',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}>
+                    Enviar Comentário
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes spin {
+          from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
         @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
+          from { transform: translateX(400px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
-        * {
-          box-sizing: border-box;
-        }
-        html {
-          scroll-behavior: smooth;
-        }
-        body {
-          overflow-x: hidden;
-          margin: 0;
-          padding: 0;
-        }
-        @media (max-width: 768px) {
-          header {
-            padding: 12px 16px !important;
-            gap: 10px !important;
-          }
-          header h1 {
-            font-size: 20px !important;
-            letter-spacing: 1px !important;
-            min-width: auto !important;
-          }
-          header > div {
-            width: 100% !important;
-            justify-content: space-between !important;
-            gap: 6px !important;
-          }
-          header button,
-          header span {
-            font-size: 11px !important;
-            padding: 6px 10px !important;
-            white-space: nowrap !important;
-          }
-          div[style*="padding: 38"] {
-            padding: 16px 12px !important;
-          }
-          div[style*="gridTemplateColumns"] {
-            grid-template-columns: 1fr !important;
-            gap: 20px !important;
-          }
-          h2 {
-            font-size: 18px !important;
-          }
-          button {
-            min-height: 44px !important;
-          }
-        }
-        @media (hover: none) and (pointer: coarse) {
-          input,
-          textarea,
-          select {
-            font-size: 16px !important;
-          }
-        }
-      `}</style>
+      `}
+      </style>
     </>
   );
 }
