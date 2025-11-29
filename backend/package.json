@@ -1,17 +1,19 @@
 {
-  "name": "backend",
+  "name": "sinopinhas-backend",
   "version": "1.0.0",
-  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "deploy": "npx wrangler deploy"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
   },
   "dependencies": {
-    "axios": "^1.6.0",
-    "hono": "^4.3.11",
-    "@neondatabase/serverless": "^0.9.1"
+    "hono": "^4.0.0",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.11.3",
+    "node-fetch": "^3.3.2",
+    "form-data": "^4.0.0"
   },
   "devDependencies": {
-    "wrangler": "^4.50.0"
+    "wrangler": "^3.78.12"
   }
 }

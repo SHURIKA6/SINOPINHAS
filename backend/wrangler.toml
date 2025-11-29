@@ -1,11 +1,11 @@
 name = "backend"
 main = "server.js"
-compatibility_date = "2025-11-25" 
+compatibility_date = "2025-11-25"
 
-# ESTA LINHA É ESSENCIAL PARA O PACOTE 'pg' FUNCIONAR
+# COMPATIBILIDADE NODE.JS (VERSÃO ATUALIZADA)
 compatibility_flags = ["nodejs_compat"]
 
-# Configuração do KV Store (Use o seu ID)
+# Configuração do KV Store
 [[kv_namespaces]]
 binding = "MURAL_STORE"
 id = "c03f688aa2f74835a143172205b316d7"
@@ -16,9 +16,11 @@ BUNNY_LIBRARY_ID = "548459"
 BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
 ADMIN_PASSWORD = "admin123"
 
+# Observability (logs do Cloudflare)
 [observability]
+enabled = true
+
 [observability.logs]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 invocation_logs = true
-persist = true
