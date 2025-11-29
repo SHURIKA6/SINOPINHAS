@@ -1,14 +1,15 @@
-import TermsModal from '../components/TermsModal';
-import Inbox from '../components/inbox';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
 import { sendFingerprint } from '../lib/fingerprint';
 
+const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
+const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
-  // ESTADOS DE TERMOS (FALTAVA ISSO!)
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   
@@ -59,7 +60,7 @@ export default function Home() {
     const savedAdminPassword = localStorage.getItem('adminPassword');
     const acceptedTerms = localStorage.getItem('termsAccepted');
 
-    if (acceptedTerms) {
+    if (acceptedTerms === 'true') {
       setTermsAccepted(true);
     } else {
       setShowTerms(true);
@@ -76,7 +77,10 @@ export default function Home() {
       setAdminPassword(savedAdminPassword);
       setIsAdmin(true);
     }
-    loadVideos();
+    
+    if (acceptedTerms === 'true') {
+      loadVideos();
+    }
   }, []);
 
   useEffect(() => {
@@ -110,6 +114,7 @@ export default function Home() {
     }
     
     showToast('Termos aceitos! Bem-vindo ao SINOPINHAS 🎉', 'success');
+    loadVideos();
   };
 
   const handleDeclineTerms = () => {
@@ -437,6 +442,25 @@ export default function Home() {
   const sortedVideos = sortVideos(filteredVideos);
   const sortedSecretVideos = sortVideos(filteredSecretVideos);
 
+  // SE NÃO ACEITOU OS TERMOS, MOSTRA APENAS O MODAL
+  if (!termsAccepted) {
+    return (
+      <>
+        <Head>
+          <title>SINOPINHAS - Termos de Uso</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        </Head>
+        {showTerms && (
+          <TermsModal 
+            onAccept={handleAcceptTerms}
+            onDecline={handleDeclineTerms}
+          />
+        )}
+      </>
+    );
+  }
+
+  // SE ACEITOU, MOSTRA O SITE COMPLETO
   return (
     <>
       <Head>
@@ -446,38 +470,801 @@ export default function Home() {
         <meta name="theme-color" content="#18142a" />
       </Head>
 
-      {showTerms && (
-        <TermsModal 
-          onAccept={handleAcceptTerms}
-          onDecline={handleDeclineTerms}
-        />
-      )}
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(120deg, #18142a 80%, #8d6aff 100%)',
+        color: '#fff',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        {toast && (
+          <div style={{
+            position: 'fixed', top: 24, right: 24, zIndex: 9999,
+            background: toast.type === 'success' ? '#10b981' : '#ef4444',
+            color: '#fff', padding: '16px 24px', borderRadius: 12
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20 }}>{toast.type === 'success' ? '✓' : '✕'}</span>
+              <span style={{ fontWeight: 500 }}>{toast.message}</span>
+            </div>
+          </div>
+        )}
 
-      {termsAccepted && (
-        <div style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(120deg, #18142a 80%, #8d6aff 100%)',
-          color: '#fff',
-          fontFamily: 'Arial, sans-serif'
-        }}>
-          {toast && (
+        {showAuth && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
+          }} onClick={() => setShowAuth(false)}>
             <div style={{
-              position: 'fixed', top: 24, right: 24, zIndex: 9999,
-              background: toast.type === 'success' ? '#10b981' : '#ef4444',
-              color: '#fff', padding: '16px 24px', borderRadius: 12
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '100%'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px' }}>{isLogin ? 'Login' : 'Criar Conta'}</h2>
+              <form onSubmit={handleAuth}>
+                <input
+                  type="text" placeholder="Username"
+                  value={username} onChange={e => setUsername(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
+                />
+                <input
+                  type="password" placeholder="Senha"
+                  value={password} onChange={e => setPassword(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
+                />
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, marginBottom: 16, cursor:'pointer', fontWeight:600, fontSize: 16 }}>
+                  {isLogin ? 'Entrar' : 'Criar Conta'}
+                </button>
+                <button type="button" onClick={() => setIsLogin(!isLogin)} style={{ width: '100%', padding: 12, background: 'none', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: 14 }}>
+                  {isLogin ? 'Criar conta' : 'Fazer login'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showProfile && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
+          }} onClick={() => setShowProfile(false)}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '100%'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px' }}>✏️ Editar Perfil</h2>
+              <form onSubmit={updateProfile}>
+                <input
+                  type="text" placeholder="URL do Avatar"
+                  value={newAvatar} onChange={e => setNewAvatar(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
+                />
+                <textarea
+                  placeholder="Bio"
+                  value={newBio} onChange={e => setNewBio(e.target.value)}
+                  rows="3"
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', resize: 'vertical', fontSize: 16 }}
+                />
+                <input
+                  type="password" placeholder="Nova Senha (deixe vazio para não alterar)"
+                  value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
+                />
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, cursor:'pointer', fontWeight:600, fontSize: 16 }}>
+                  Salvar Alterações
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showAdminAuth && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
+          }} onClick={() => setShowAdminAuth(false)}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '100%'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px' }}>🔒 Acesso Admin</h2>
+              <form onSubmit={handleAdminLogin}>
+                <input
+                  type="password" placeholder="Senha de admin"
+                  value={adminPassword} onChange={e => setAdminPassword(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
+                />
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight:600, fontSize: 16 }}>
+                  Entrar como Admin
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showSecretAuth && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
+          }} onClick={() => setShowSecretAuth(false)}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '100%'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
+              <form onSubmit={handleSecretAuth}>
+                <input
+                  type="password" placeholder="MESMA SENHA DA SKY"
+                  value={secretPassword}
+                  onChange={e => setSecretPassword(e.target.value)}
+                  style={{
+                    width: '100%', padding: 12, marginBottom: 16,
+                    background: '#0f0f0f', border: '1px solid #303030',
+                    borderRadius: 8, color: '#fff', fontSize: 16
+                  }}
+                />
+                <button type="submit" style={{
+                  width: '100%', padding: 12, background: '#e53e3e',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  fontSize: 16, fontWeight: 600, cursor: 'pointer'
+                }}>
+                  Liberar Acesso
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <header style={{
+          background: '#212121', 
+          padding: '16px 24px', 
+          display: 'flex',
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          borderBottom: '2px solid #303030',
+          flexWrap: 'wrap',
+          gap: '12px',
+          position: 'relative'
+        }}>
+          <h1 style={{
+            margin: 0, 
+            fontSize: 28, 
+            fontWeight: 700,
+            letterSpacing: "2px", 
+            background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
+            WebkitBackgroundClip: "text", 
+            WebkitTextFillColor: "transparent",
+            minWidth: '180px',
+            flexShrink: 0
+          }}>SINOPINHAS</h1>
+          
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 10, 
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            flex: 1
+          }}>
+            <button onClick={() => setShowSecretAuth(true)} style={{
+              padding: '7px 12px', 
+              background: '#e53e3e', 
+              color: '#fff',
+              border: 'none', 
+              borderRadius: 8, 
+              fontSize: 13, 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 20 }}>{toast.type === 'success' ? '✓' : '✕'}</span>
-                <span style={{ fontWeight: 500 }}>{toast.message}</span>
+              🔒 Restrito
+            </button>
+            
+            {isAdmin && (
+              <span style={{ 
+                padding: '5px 10px', 
+                background: '#10b981', 
+                borderRadius: 8, 
+                fontSize: 11, 
+                fontWeight: 600, 
+                color: "#fff",
+                flexShrink: 0
+              }}>
+                ADMIN
+              </span>
+            )}
+            
+            {user ? (
+              <>
+                <button onClick={() => setShowProfile(true)} style={{
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 6,
+                  padding: '6px 10px', 
+                  background: '#303030', 
+                  border: 'none',
+                  borderRadius: 8, 
+                  cursor: 'pointer', 
+                  color: '#fff',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '120px',
+                  flexShrink: 0
+                }}>
+                  {user.avatar && (
+                    <img 
+                      src={user.avatar} 
+                      loading="lazy"
+                      style={{ 
+                        width: 20, 
+                        height: 20, 
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        flexShrink: 0
+                      }} 
+                      alt={user.username}
+                    />
+                  )}
+                  <strong style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontSize: 13
+                  }}>{user.username}</strong>
+                </button>
+                
+                <button onClick={logout} style={{ 
+                  padding: '7px 12px', 
+                  background: '#303030', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  flexShrink: 0
+                }}>Sair</button>
+              </>
+            ) : (
+              <button onClick={() => setShowAuth(true)} style={{ 
+                padding: '7px 14px', 
+                background: '#8d6aff', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 8, 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                fontSize: 13,
+                flexShrink: 0
+              }}>Login</button>
+            )}
+            
+            {!isAdmin ? (
+              <button onClick={() => setShowAdminAuth(true)} style={{ 
+                padding: '7px 12px', 
+                background: '#10b981', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 8, 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                fontSize: 13,
+                flexShrink: 0
+              }}>Admin</button>
+            ) : (
+              <button onClick={logoutAdmin} style={{ 
+                padding: '7px 12px', 
+                background: '#ef4444', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 8, 
+                cursor: 'pointer',
+                fontSize: 13,
+                flexShrink: 0
+              }}>Sair Admin</button>
+            )}
+          </div>
+        </header>
+
+        <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030', overflowX: 'auto' }}>
+          {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} style={{
+              padding: '14px 20px', background: 'none', border: 'none',
+              borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
+              color: activeTab === tab ? '#fff' : '#aaa', fontSize: 16,
+              fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
+              transition: 'all 0.3s', position: 'relative', whiteSpace: 'nowrap'
+            }}>
+              {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? (
+                <>
+                  Mensagens
+                  {unreadCount > 0 && (
+                    <span style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: '#ef4444', borderRadius: '50%',
+                      width: 20, height: 20, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 'bold'
+                    }}>{unreadCount}</span>
+                  )}
+                </>
+              ) : 'SAFADEZA'}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
+          
+          {(activeTab === 'videos' || activeTab === 'secret') && (
+            <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                placeholder="🔍 Buscar vídeos por título ou autor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  minWidth: '200px',
+                  padding: '12px 20px',
+                  background: '#1a1a1a',
+                  border: '1px solid #303030',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 16
+                }}
+              />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{
+                  padding: '12px 20px',
+                  background: '#1a1a1a',
+                  border: '1px solid #303030',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 16,
+                  cursor: 'pointer',
+                  minWidth: '150px'
+                }}
+              >
+                <option value="recent">📅 Mais Recentes</option>
+                <option value="popular">🔥 Mais Visualizados</option>
+                <option value="liked">❤️ Mais Curtidos</option>
+              </select>
+            </div>
+          )}
+
+          {activeTab === 'videos' && (
+            <div>
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
+                {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
+              </h2>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: 80 }}>
+                  <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                </div>
+              ) : sortedVideos.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
+                  <div style={{ fontSize: 41, marginBottom: 18 }}>📹</div>
+                  <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo encontrado</p>
+                  <button onClick={() => setActiveTab('upload')} style={{ marginTop: 18, padding: '10px 24px', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, fontWeight: 600, cursor: 'pointer' }}>
+                    Fazer primeiro upload
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
+                  {sortedVideos.map((v) => (
+                    <div key={v.id} style={{ background: "#20153e", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #18142355", paddingBottom: 6 }}>
+                      {canDelete(v.user_id?.toString()) && (
+                        <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
+                      )}
+                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#130c23", position: 'relative' }}>
+                        {v.thumbnail_url && (
+                          <img 
+                            src={v.thumbnail_url} 
+                            loading="lazy"
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0
+                            }} 
+                            alt={v.title}
+                          />
+                        )}
+                        <iframe
+                          src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
+                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
+                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
+                        <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
+                        <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7", display: 'flex', gap: 15 }}>
+                          <button onClick={() => toggleLike(v.id)} style={{ background: 'none', border: 'none', color: v.user_liked ? '#ff6b9d' : '#c2bcf7', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            {v.user_liked ? '❤️' : '🤍'} {v.likes || 0}
+                          </button>
+                          <span>👁️ {v.views || 0}</span>
+                        </div>
+                        
+                        <button onClick={() => openComments(v)} style={{
+                           marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
+                           color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
+                        }}>
+                          💬 Ver Comentários
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'upload' && (
+            <div style={{ maxWidth: 620, margin: '0 auto' }}>
+              <h2 style={{ fontSize: 25, fontWeight: 600, marginBottom: 24 }}>Enviar vídeo</h2>
+              <div
+                onDrop={e => {
+                  e.preventDefault(); setIsDragging(false);
+                  const droppedFile = e.dataTransfer.files[0];
+                  if (droppedFile && droppedFile.type.startsWith('video/')) {
+                    setFile(droppedFile); showToast('Arquivo carregado!', 'success');
+                  }
+                }}
+                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                style={{
+                  background: isDragging ? '#28225b' : '#181733', borderRadius: 14, padding: 36,
+                  textAlign: 'center', border: isDragging ? '2.2px dashed #8d6aff' : '2.2px dashed #333',
+                  transition: 'all 0.3s'
+                }}>
+                <div style={{ fontSize: 58, marginBottom: 24 }}>{isDragging ? '📥' : '☁️'}</div>
+                <p style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}</p>
+                <input type="file" accept="video/*" onChange={e => { const f = e.target.files[0]; if (f) { setFile(f); showToast('Arquivo selecionado!', 'success'); } }} style={{ display: 'none' }} id="file-input" />
+                <label htmlFor="file-input" style={{ display: 'inline-block', padding: '12px 32px', background: '#8d6aff', color: '#fff', borderRadius: 20, fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Selecionar arquivo</label>
+                
+                {file && (
+                  <>
+                    <div style={{ marginTop: 30, padding: 16, background: '#211640', borderRadius: 9, textAlign: 'left' }}>
+                      <p style={{ margin: 0, fontSize: 15, color: '#aaa' }}>Arquivo selecionado:</p>
+                      <p style={{ margin: '5px 0 0', fontSize: 16, fontWeight: 600 }}>{file.name}</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 14, color: '#ac98f8' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+
+                    <div style={{ marginTop: 20 }}>
+                      <input
+                        type="text"
+                        placeholder="Digite o título do vídeo..."
+                        value={videoTitle}
+                        onChange={(e) => setVideoTitle(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '14px 18px',
+                          background: '#211640',
+                          border: '2px solid #8d6aff',
+                          borderRadius: 10,
+                          color: '#fff',
+                          fontSize: 16,
+                          fontWeight: 500,
+                          outline: 'none',
+                          transition: 'all 0.3s'
+                        }}
+                      />
+                      <p style={{ 
+                        margin: '8px 0 0', 
+                        fontSize: 13, 
+                        color: '#aaa', 
+                        textAlign: 'left',
+                        paddingLeft: 4
+                      }}>
+                        📁 Nome do arquivo: <span style={{ color: '#8d6aff' }}>{file.name}</span>
+                      </p>
+                    </div>
+
+                    <div style={{ marginTop: 20 }}>
+                      <p style={{ fontSize: 15, color: '#aaa', marginBottom: 10, textAlign: 'left' }}>🖼️ Thumbnail personalizada (opcional):</p>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => { 
+                          const thumb = e.target.files[0]; 
+                          if (thumb) { 
+                            setThumbnailFile(thumb); 
+                            showToast('Thumbnail selecionada!', 'success'); 
+                          } 
+                        }} 
+                        style={{ display: 'none' }} 
+                        id="thumbnail-input" 
+                      />
+                      <label htmlFor="thumbnail-input" style={{ display: 'inline-block', padding: '10px 24px', background: '#352f5b', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                        Selecionar Imagem
+                      </label>
+                      {thumbnailFile && (
+                        <p style={{ margin: '8px 0 0', fontSize: 13, color: '#8d6aff', textAlign: 'left' }}>
+                          ✓ {thumbnailFile.name}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <div style={{ 
+                  marginTop: 20, 
+                  padding: '15px 20px', 
+                  background: isRestricted ? '#2d1a1a' : '#1a1a1a', 
+                  borderRadius: 10,
+                  border: isRestricted ? '1px solid #e53e3e' : '1px solid #333',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }} onClick={() => setIsRestricted(!isRestricted)}>
+                  <input 
+                    type="checkbox" 
+                    checked={isRestricted}
+                    onChange={(e) => setIsRestricted(e.target.checked)}
+                    style={{ width: 18, height: 18, cursor: 'pointer' }}
+                  />
+                  <label style={{ fontSize: 15, fontWeight: 500, color: isRestricted ? '#ff6b6b' : '#ccc', cursor: 'pointer' }}>
+                    🔒 Tornar vídeo privado
+                  </label>
+                </div>
+
+                <button onClick={upload} disabled={!file || progress > 0} style={{
+                  marginTop: 32, padding: '12px 48px',
+                  background: !file || progress > 0 ? '#55535c' : '#8d6aff',
+                  color: '#fff', border: 'none', borderRadius: 20, fontSize: 17, fontWeight: 600,
+                  cursor: !file || progress > 0 ? 'not-allowed' : 'pointer', display: 'block', width: '100%'
+                }}>
+                  {progress > 0 && progress < 100 ? `Enviando... ${progress}%` : 'Publicar vídeo'}
+                </button>
+                {progress > 0 && progress < 100 && (
+                  <div style={{ marginTop: 19 }}>
+                    <div style={{ width: '100%', height: 8, background: '#303030', borderRadius: 3 }}>
+                      <div style={{ width: `${progress}%`, height: '100%', background: '#8d6aff', transition: 'width 0.3s' }} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* RESTO DO CÓDIGO CONTINUA IGUAL... mantenha todo o JSX que você já tem */}
-          {/* (mantive só até aqui para economizar espaço, mas o resto permanece igual ao seu arquivo) */}
+          {activeTab === 'admin' && isAdmin && (
+            <div style={{ maxWidth: 900, margin: '0 auto' }}>
+              <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
 
+              <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15, flexWrap: 'wrap', gap: '10px' }}>
+                  <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
+                  <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
+                </div>
+                <div style={{maxHeight: 300, overflowY: 'auto', overflowX: 'auto'}}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: '500px' }}>
+                    <thead>
+                      <tr style={{textAlign:'left', color:'#aaa', borderBottom: '1px solid #444'}}>
+                        <th style={{padding:10}}>ID</th>
+                        <th>Usuário</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usersList.map(u => (
+                        <tr key={u.id} style={{borderTop:'1px solid #333'}}>
+                          <td style={{padding:10, color:'#666'}}>#{u.id}</td>
+                          <td style={{fontWeight:'bold'}}>{u.username}</td>
+                          <td>
+                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#000', fontSize: 12 }}>🔑 Resetar</button>
+                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#fff', fontSize: 12 }}>🚫 Banir</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20, flexWrap: 'wrap', gap: '10px'}}>
+                  <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (Logs)</h3>
+                  <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
+                </div>
+                <div style={{overflowX: 'auto'}}>
+                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 13, minWidth: '1200px'}}>
+                    <thead>
+                      <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
+                        <th style={{padding:8}}>Data/Hora</th>
+                        <th style={{padding:8}}>Usuário</th>
+                        <th style={{padding:8}}>IP Real</th>
+                        <th style={{padding:8}}>Localização</th>
+                        <th style={{padding:8}}>Dispositivo</th>
+                        <th style={{padding:8}}>Sistema</th>
+                        <th style={{padding:8}}>Navegador</th>
+                        <th style={{padding:8}}>Fingerprint</th>
+                        <th style={{padding:8}}>Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logs.map(log => (
+                        <tr key={log.id} style={{borderBottom:'1px solid #444'}}>
+                          <td style={{padding:8, fontSize: 11}}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                          <td style={{padding:8, fontWeight:'bold', color: log.username ? '#8d6aff' : '#aaa'}}>
+                            {log.username || 'Anônimo'}
+                          </td>
+                          <td style={{padding:8, color:'#ff6f4e', fontFamily:'monospace', fontSize: 11}}>
+                            {log.ip}
+                          </td>
+                          <td style={{padding:8, color:'#10b981', fontSize: 11}}>
+                            {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
+                            {log.latitude && log.longitude && (
+                              <div style={{fontSize: 10, color: '#666'}}>
+                                📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{padding:8, fontSize: 11}}>{log.device_type}</td>
+                          <td style={{padding:8, fontSize: 11}}>{log.os || 'N/A'}</td>
+                          <td style={{padding:8, fontSize: 11}}>{log.browser || 'N/A'}</td>
+                          <td style={{padding:8, fontFamily:'monospace', fontSize: 10, color: '#fbbf24'}}>
+                            {log.fingerprint ? log.fingerprint.substring(0, 8) : 'N/A'}
+                          </td>
+                          <td style={{padding:8, fontWeight: 'bold', color: log.action.includes('FAILED') || log.action.includes('BLOCKED') ? '#ef4444' : '#fff', fontSize: 11}}>
+                            {log.action}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'inbox' && (
+            <Inbox user={user} usersList={usersList} onMessageRead={() => user && loadNotifications(user.id)} />
+          )}
+
+          {activeTab === 'secret' && showSecretTab && (
+            <div>
+              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#e53e3e' }}>
+                🔥 SAFADEZA ({loading ? 'Carregando...' : `${sortedSecretVideos.length} vídeo${sortedSecretVideos.length !== 1 ? 's' : ''}`})
+              </h2>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: 80 }}>
+                  <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                </div>
+              ) : sortedSecretVideos.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa', border: '2px dashed #e53e3e' }}>
+                  <div style={{ fontSize: 41, marginBottom: 18 }}>🔥</div>
+                  <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito encontrado</p>
+                  <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
+                  {sortedSecretVideos.map((v) => (
+                    <div key={v.id} style={{ background: "#3d1a1a", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #e53e3e55", paddingBottom: 6, border: '2px solid #e53e3e' }}>
+                      {canDelete(v.user_id?.toString()) && (
+                        <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
+                      )}
+                      <div style={{ width: "100%", aspectRatio: "16/9", background: "#1a0c0c", position: 'relative' }}>
+                        {v.thumbnail_url && (
+                          <img 
+                            src={v.thumbnail_url} 
+                            loading="lazy"
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0
+                            }} 
+                            alt={v.title}
+                          />
+                        )}
+                        <iframe
+                          src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
+                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7, position: 'relative', zIndex: 1 }}
+                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
+                      </div>
+                      <div style={{ padding: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔒 PRIVADO</span>
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
+                        <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
+                        <div style={{ marginTop: 7, fontSize: 15, color: "#ffb3b3", display: 'flex', gap: 15 }}>
+                          <button onClick={() => toggleLike(v.id)} style={{ background: 'none', border: 'none', color: v.user_liked ? '#ff6b9d' : '#ffb3b3', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            {v.user_liked ? '❤️' : '🤍'} {v.likes || 0}
+                          </button>
+                          <span>👁️ {v.views || 0}</span>
+                        </div>
+                        
+                        <button onClick={() => openComments(v)} style={{
+                           marginTop: 12, width:'100%', padding:'8px', background:'#5b2f2f', 
+                           color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
+                        }}>
+                          💬 Ver Comentários
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+        
+        {showCommentsModal && currentVideo && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex',
+            justifyContent: 'center', alignItems: 'center', padding: '20px'
+          }} onClick={() => setShowCommentsModal(false)}>
+            
+            <div style={{
+              background: '#1a1a1a', width: '100%', maxWidth: 600, maxHeight: '90vh',
+              borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden'
+            }} onClick={e => e.stopPropagation()}>
+              
+              <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 10 }}>Comentários: {currentVideo.title}</h3>
+                <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer', minWidth: 30}}>✕</button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+                {videoComments.length === 0 ? (
+                  <p style={{ color: '#aaa', textAlign: 'center' }}>Seja o primeiro a comentar!</p>
+                ) : (
+                  videoComments.map((c, i) => (
+                    <div key={i} style={{ marginBottom: 16, borderBottom: '1px solid #333', paddingBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5, flexWrap: 'wrap', gap: 5 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 'bold', color: '#8d6aff' }}>{c.username || 'Anônimo'}</span>
+                          <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                        {(user && (c.user_id === user.id || isAdmin)) && (
+                          <button 
+                            onClick={() => deleteComment(c.id)} 
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: '#ef4444', 
+                              cursor: 'pointer', 
+                              fontSize: 14,
+                              padding: '4px 8px'
+                            }}
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                      <p style={{ margin: 0, color: '#ddd', wordBreak: 'break-word' }}>{c.comment}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <form onSubmit={sendComment} style={{ padding: 16, background: '#222', borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
+                <input 
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                  placeholder="Escreva algo legal..."
+                  style={{ flex: 1, padding: 10, borderRadius: 20, border: 'none', background: '#333', color: '#fff', fontSize: 16 }}
+                />
+                <button type="submit" style={{ background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, padding: '0 20px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  Enviar
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
 
       <style jsx>{`
         @keyframes spin {
@@ -515,9 +1302,15 @@ export default function Home() {
             padding: 6px 10px !important;
             white-space: nowrap !important;
           }
+          div[style*="padding: 38"] {
+            padding: 16px 12px !important;
+          }
           div[style*="gridTemplateColumns"] {
             grid-template-columns: 1fr !important;
             gap: 20px !important;
+          }
+          h2 {
+            font-size: 18px !important;
           }
           button {
             min-height: 44px !important;
@@ -534,4 +1327,3 @@ export default function Home() {
     </>
   );
 }
-// =====================================================================
