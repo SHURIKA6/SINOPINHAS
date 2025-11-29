@@ -1,10 +1,23 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { hash, compare } from "bcryptjs";
 
 const app = new Hono();
 
 app.use("/*", cors());
+
+// ✅ HASH NATIVO (SEM BCRYPTJS)
+async function hash(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'SINOPINHAS_SALT_2025');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function compare(password, hashedPassword) {
+  const computedHash = await hash(password);
+  return computedHash === hashedPassword;
+}
 
 // ==========================================
 // UTILITY: Consulta ao Banco de Dados
