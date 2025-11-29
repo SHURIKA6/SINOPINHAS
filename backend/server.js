@@ -1,13 +1,12 @@
 // =====================================================================
-// [server.js] - CÓDIGO CORRIGIDO PARA CLOUDFLARE WORKERS (Hono)
+// [server.js] - CÓDIGO COMPLETO COM MELHORIAS
 // =====================================================================
 
-// 1. IMPORTS E CONFIGURAÇÃO (Usando ES Modules)
 import { Hono } from 'hono';
 import { Pool } from '@neondatabase/serverless';
 import axios from 'axios';
 
-// 2. UTILITY: Hashing de Senha (Substitui bcrypt com Web Crypto API)
+// 2. UTILITY: Hashing de Senha
 async function hashPassword(password) {
     const saltKey = await crypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, true, ['sign', 'verify']);
     const passwordBuffer = new TextEncoder().encode(password);
@@ -34,7 +33,7 @@ async function comparePassword(password, storedHashJSON) {
     }
 }
 
-// 3. UTILITY: Função de Consulta ao Banco (Usa Pool do Neon)
+// 3. UTILITY: Função de Consulta ao Banco
 async function queryDB(sql, params, env) {
     if (!env.DATABASE_URL) throw new Error("DATABASE_URL não configurada.");
     
@@ -49,7 +48,7 @@ async function queryDB(sql, params, env) {
     }
 }
 
-// 4. UTILITY: Log de Auditoria (Acessa cabeçalhos da Cloudflare)
+// 4. UTILITY: Log de Auditoria
 async function logAudit(user_id, action, meta, c) {
     try {
         const ip = c.req.header('CF-Connecting-IP') || 'unknown';
@@ -77,10 +76,22 @@ async function logAudit(user_id, action, meta, c) {
     }
 }
 
-// 5. O APLICATIVO HONO (Substitui o Express)
+// 5. UTILITY: Criar Notificação
+async function createNotification(userId, type, message, relatedId, env) {
+    try {
+        await queryDB(
+            "INSERT INTO notifications (user_id, type, message, related_id) VALUES ($1, $2, $3, $4)",
+            [userId, type, message, relatedId],
+            env
+        );
+    } catch (err) {
+        console.error("Erro ao criar notificação:", err);
+    }
+}
+
 const app = new Hono();
 
-// Middleware de CORS (Substitui require("cors"))
+// Middleware de CORS
 app.use('*', async (c, next) => {
     c.res.headers.set('Access-Control-Allow-Origin', '*');
     c.res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -135,7 +146,92 @@ app.post('/api/login', async (c) => {
     return c.json({ user: { id: user.id, username: user.username, avatar: user.avatar, bio: user.bio } });
 });
 
-// --- ROTA 1: ADMIN LOGIN (POST) ---
+// --- ATUALIZAR PERFIL ---
+app.put('/api/users/:id', async (c) => {
+    const userId = parseInt(c.req.param('id'));
+    const { password, avatar, bio } = await c.req.json();
+    const env = c.env;
+
+    try {
+        let updates = [];
+        let params = [];
+        let paramIndex = 1;
+
+        if (password) {
+            const hash = await hashPassword(password);
+            updates.push(`password = $${paramIndex++}`);
+            params.push(hash);
+        }
+        if (avatar !== undefined) {
+            updates.push(`avatar = $${paramIndex++}`);
+            params.push(avatar);
+        }
+        if (bio !== undefined) {
+            updates.push(`bio = $${paramIndex++}`);
+            params.push(bio);
+        }
+
+        if (updates.length === 0) {
+            return c.json({ error: "Nenhuma alteração fornecida" }, 400);
+        }
+
+        params.push(userId);
+        const result = await queryDB(
+            `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING id, username, avatar, bio`,
+            params,
+            env
+        );
+
+        if (result.rowCount === 0) {
+            return c.json({ error: "Usuário não encontrado" }, 404);
+        }
+
+        await logAudit(userId, "UPDATE_PROFILE", { updates }, c);
+        return c.json(result.rows[0]);
+    } catch (err) {
+        console.error("Erro ao atualizar perfil:", err);
+        return c.json({ error: "Erro ao atualizar perfil" }, 500);
+    }
+});
+
+// --- NOTIFICAÇÕES ---
+app.get('/api/notifications/:user_id', async (c) => {
+    const userId = parseInt(c.req.param('user_id'));
+    const env = c.env;
+
+    try {
+        const { rows } = await queryDB(
+            `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+            [userId],
+            env
+        );
+        return c.json(rows);
+    } catch (err) {
+        console.error("Erro ao buscar notificações:", err);
+        return c.json({ error: "Erro ao buscar notificações" }, 500);
+    }
+});
+
+app.post('/api/notifications/:id/read', async (c) => {
+    const notifId = parseInt(c.req.param('id'));
+    const env = c.env;
+
+    try {
+        await queryDB(
+            `UPDATE notifications SET is_read = TRUE WHERE id = $1`,
+            [notifId],
+            env
+        );
+        return c.json({ success: true });
+    } catch (err) {
+        return c.json({ error: "Erro ao marcar notificação" }, 500);
+    }
+});
+
+// =====================================================================
+// [ROTAS DE ADMIN]
+// =====================================================================
+
 app.post('/api/admin/login', async (c) => {
     const body = await c.req.json(); 
     
@@ -146,7 +242,6 @@ app.post('/api/admin/login', async (c) => {
     return c.json({ error: "Senha incorreta" }, 401);
 });
 
-// --- ROTA 2: GERENCIAR USUÁRIOS (GET) ---
 app.get("/api/admin/users", async (c) => {
     const adminPasswordFromQuery = c.req.query('admin_password');
     const env = c.env;
@@ -163,7 +258,6 @@ app.get("/api/admin/users", async (c) => {
     }
 });
 
-// --- ROTA 3: RASTREAMENTO/LOGS (GET) ---
 app.get("/api/admin/logs", async (c) => {
     const adminPasswordFromQuery = c.req.query('admin_password');
     const env = c.env;
@@ -197,6 +291,8 @@ app.delete("/api/admin/users/:id", async (c) => {
         await queryDB("DELETE FROM video_reactions WHERE user_id = $1", [id], env);
         await queryDB("DELETE FROM videos WHERE user_id = $1", [id], env);
         await queryDB("DELETE FROM audit_logs WHERE user_id = $1", [id], env);
+        await queryDB("DELETE FROM video_likes WHERE user_id = $1", [id], env);
+        await queryDB("DELETE FROM notifications WHERE user_id = $1", [id], env);
 
         const result = await queryDB("DELETE FROM users WHERE id = $1", [id], env);
         
@@ -234,7 +330,7 @@ app.post("/api/admin/reset-password", async (c) => {
 });
 
 // =====================================================================
-// [ROTAS DE VÍDEO E UPLOAD]
+// [ROTAS DE VÍDEO]
 // =====================================================================
 
 app.post('/api/upload', async (c) => {
@@ -283,15 +379,34 @@ app.post('/api/upload', async (c) => {
     }
 });
 
-// --- Listar Vídeos (Página Principal - Filtrado) ---
+// --- Listar Vídeos Públicos (com likes do usuário) ---
 app.get("/api/videos", async (c) => {
+    const userId = c.req.query('user_id');
+    const env = c.env;
+
     try {
-        const { rows } = await queryDB(`
-            SELECT v.*, u.username, u.avatar FROM videos v
+        let query = `
+            SELECT 
+                v.*, 
+                u.username, 
+                u.avatar,
+                (SELECT COUNT(*) FROM video_likes WHERE video_id = v.id) as likes
+        `;
+
+        if (userId) {
+            query += `,
+                (SELECT COUNT(*) > 0 FROM video_likes WHERE video_id = v.id AND user_id = $1) as user_liked
+            `;
+        }
+
+        query += `
+            FROM videos v
             LEFT JOIN users u ON v.user_id = u.id
             WHERE v.is_restricted = FALSE
             ORDER BY v.created_at DESC LIMIT 50
-        `, [], c.env);
+        `;
+
+        const { rows } = await queryDB(query, userId ? [parseInt(userId)] : [], env);
         return c.json(rows);
     } catch (err) {
         console.error("Erro ao buscar vídeos:", err);
@@ -299,19 +414,101 @@ app.get("/api/videos", async (c) => {
     }
 });
 
-// --- Listar Conteúdo Restrito (ROTA CORRIGIDA) ---
+// --- Listar Vídeos Secretos (com likes do usuário) ---
 app.get("/api/secret-videos", async (c) => {
+    const userId = c.req.query('user_id');
+    const env = c.env;
+
     try {
-        const { rows } = await queryDB(`
-            SELECT v.*, u.username, u.avatar FROM videos v
+        let query = `
+            SELECT 
+                v.*, 
+                u.username, 
+                u.avatar,
+                (SELECT COUNT(*) FROM video_likes WHERE video_id = v.id) as likes
+        `;
+
+        if (userId) {
+            query += `,
+                (SELECT COUNT(*) > 0 FROM video_likes WHERE video_id = v.id AND user_id = $1) as user_liked
+            `;
+        }
+
+        query += `
+            FROM videos v
             LEFT JOIN users u ON v.user_id = u.id
             WHERE v.is_restricted = TRUE
             ORDER BY v.created_at DESC LIMIT 50
-        `, [], c.env);
+        `;
+
+        const { rows } = await queryDB(query, userId ? [parseInt(userId)] : [], env);
         return c.json(rows);
     } catch (err) {
         console.error("Erro ao buscar conteúdo restrito:", err);
         return c.json({ error: "Erro ao buscar conteúdo restrito" }, 500);
+    }
+});
+
+// --- Like/Unlike Vídeo ---
+app.post("/api/videos/:id/like", async (c) => {
+    const videoId = parseInt(c.req.param('id'));
+    const { user_id } = await c.req.json();
+    const env = c.env;
+
+    try {
+        const existing = await queryDB(
+            "SELECT * FROM video_likes WHERE video_id = $1 AND user_id = $2",
+            [videoId, user_id],
+            env
+        );
+
+        if (existing.rows.length > 0) {
+            await queryDB(
+                "DELETE FROM video_likes WHERE video_id = $1 AND user_id = $2",
+                [videoId, user_id],
+                env
+            );
+        } else {
+            await queryDB(
+                "INSERT INTO video_likes (video_id, user_id) VALUES ($1, $2)",
+                [videoId, user_id],
+                env
+            );
+
+            const videoData = await queryDB("SELECT user_id, title FROM videos WHERE id = $1", [videoId], env);
+            if (videoData.rows[0] && videoData.rows[0].user_id !== user_id) {
+                await createNotification(
+                    videoData.rows[0].user_id,
+                    'like',
+                    `Alguém curtiu seu vídeo: ${videoData.rows[0].title}`,
+                    videoId,
+                    env
+                );
+            }
+        }
+
+        return c.json({ success: true });
+    } catch (err) {
+        console.error("Erro ao dar like:", err);
+        return c.json({ error: "Erro ao dar like" }, 500);
+    }
+});
+
+// --- Incrementar Views ---
+app.post("/api/videos/:id/view", async (c) => {
+    const videoId = parseInt(c.req.param('id'));
+    const env = c.env;
+
+    try {
+        await queryDB(
+            "UPDATE videos SET views = COALESCE(views, 0) + 1 WHERE id = $1",
+            [videoId],
+            env
+        );
+        return c.json({ success: true });
+    } catch (err) {
+        console.error("Erro ao incrementar view:", err);
+        return c.json({ error: "Erro ao incrementar view" }, 500);
     }
 });
 
@@ -329,6 +526,7 @@ app.delete("/api/videos/:id", async (c) => {
     try {
         await queryDB("DELETE FROM comments WHERE video_id = $1", [videoId], env);
         await queryDB("DELETE FROM video_reactions WHERE video_id = $1", [videoId], env);
+        await queryDB("DELETE FROM video_likes WHERE video_id = $1", [videoId], env);
         
         const videoResult = await queryDB("SELECT bunny_id FROM videos WHERE id = $1", [videoId], env);
         const bunnyId = videoResult.rows[0]?.bunny_id;
@@ -362,7 +560,7 @@ app.delete("/api/videos/:id", async (c) => {
 });
 
 // =====================================================================
-// [ROTAS SOCIAIS E FEEDBACK]
+// [ROTAS SOCIAIS]
 // =====================================================================
 
 app.post("/api/mural", async (c) => {
@@ -408,6 +606,15 @@ app.post("/api/send-message", async (c) => {
             "INSERT INTO inbox (from_id, to_id, msg) VALUES ($1, $2, $3)",
             [parseInt(from_id), parseInt(to_id), msg], env
         );
+
+        await createNotification(
+            parseInt(to_id),
+            'message',
+            'Você recebeu uma nova mensagem',
+            parseInt(from_id),
+            env
+        );
+
         await logAudit(from_id, "SEND_MSG", { to_id }, c);
         return c.json({ ok: true });
     } catch (err) {
@@ -469,6 +676,18 @@ app.post("/api/comment", async (c) => {
             [parseInt(video_id), parseInt(user_id), comment], 
             env
         );
+
+        const videoData = await queryDB("SELECT user_id, title FROM videos WHERE id = $1", [video_id], env);
+        if (videoData.rows[0] && videoData.rows[0].user_id !== user_id) {
+            await createNotification(
+                videoData.rows[0].user_id,
+                'comment',
+                `Novo comentário no seu vídeo: ${videoData.rows[0].title}`,
+                video_id,
+                env
+            );
+        }
+
         await logAudit(user_id, "COMMENT", { video_id, comment }, c); 
         return c.json({ ok: true });
     } catch (err) {
@@ -478,13 +697,12 @@ app.post("/api/comment", async (c) => {
 });
 
 // =====================================================================
-// [STARTUP E HANDLERS FINAIS]
+// [HANDLERS FINAIS]
 // =====================================================================
 
 app.get("/health", (c) => c.json({ ok: true }));
 app.all("*", (c) => c.json({ error: "not found" }, 404));
 
-// 6. EXPORT DEFAULT HANDLER PARA CLOUDFLARE WORKERS
 export default {
     async fetch(request, env, ctx) {
         return app.fetch(request, env, ctx);
