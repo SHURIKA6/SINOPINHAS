@@ -438,22 +438,19 @@ export default function Home() {
                       <div className={styles.videoIframe}>
                         <iframe
                           src={v.gdrive_id ? `https://drive.google.com/file/d/${v.gdrive_id}/preview` : (v.bunny_id ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID || '548459'}/${v.bunny_id}?autoplay=false` : "")}
-                          style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7 }}
-                          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
+                                style={{ width: "100%", height: "100%", border: 'none', borderRadius: 7 }}
+                                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowFullScreen />
                       </div>
-                      <div className={styles.videoInfo}>
-                        <h3 className={styles.videoTitle}>{v.title}</h3>
-                        <p className={styles.videoViews}>Por {v.username || 'Anônimo'}</p>
+                      <div className={styles.videoInfo}> {/* <-- APLICAR CLASSE INFO */}
+                            <h3 className={styles.videoTitle}>{v.title}</h3>
+                            <p className={styles.videoViews}>Por {v.username || 'Anônimo'}</p>
                         <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
-                        
-
                         <button onClick={() => openComments(v)} style={{
                            marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
                            color:'#fff', border:'none', borderRadius:6, cursor:'pointer'
                         }}>
                           💬 Ver Comentários
                         </button>
-
                       </div>
                     </div>
                   ))}
