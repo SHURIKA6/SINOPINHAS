@@ -304,13 +304,11 @@ export default function Home() {
     }
     if (!file) return showToast('Escolha um vídeo!', 'error');
     
-    // Validação de tamanho (500MB)
-    const maxSize = 500 * 1024 * 1024; // 500MB em bytes
+    const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
       return showToast('Vídeo muito grande! Máximo: 500MB', 'error');
     }
 
-    // Validação de tipo
     const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
     if (!allowedTypes.includes(file.type)) {
       return showToast('Formato inválido! Use MP4, WebM, OGG, MOV ou AVI', 'error');
@@ -403,6 +401,7 @@ export default function Home() {
       <Head>
         <title>SINOPINHAS - Streaming de Vídeos</title>
         <meta name="description" content="Plataforma de streaming de vídeos" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="theme-color" content="#18142a" />
       </Head>
 
@@ -429,28 +428,28 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
           }} onClick={() => setShowAuth(false)}>
             <div style={{
               background: '#1a1a1a', borderRadius: 12, padding: 32,
-              maxWidth: 400, width: '90%'
+              maxWidth: 400, width: '100%'
             }} onClick={e => e.stopPropagation()}>
               <h2 style={{ margin: '0 0 24px' }}>{isLogin ? 'Login' : 'Criar Conta'}</h2>
               <form onSubmit={handleAuth}>
                 <input
                   type="text" placeholder="Username"
                   value={username} onChange={e => setUsername(e.target.value)}
-                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
                 />
                 <input
                   type="password" placeholder="Senha"
                   value={password} onChange={e => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
                 />
-                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, marginBottom: 16, cursor:'pointer', fontWeight:600 }}>
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, marginBottom: 16, cursor:'pointer', fontWeight:600, fontSize: 16 }}>
                   {isLogin ? 'Entrar' : 'Criar Conta'}
                 </button>
-                <button type="button" onClick={() => setIsLogin(!isLogin)} style={{ width: '100%', padding: 12, background: 'none', color: '#aaa', border: 'none', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setIsLogin(!isLogin)} style={{ width: '100%', padding: 12, background: 'none', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: 14 }}>
                   {isLogin ? 'Criar conta' : 'Fazer login'}
                 </button>
               </form>
@@ -462,31 +461,31 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
           }} onClick={() => setShowProfile(false)}>
             <div style={{
               background: '#1a1a1a', borderRadius: 12, padding: 32,
-              maxWidth: 400, width: '90%'
+              maxWidth: 400, width: '100%'
             }} onClick={e => e.stopPropagation()}>
               <h2 style={{ margin: '0 0 24px' }}>✏️ Editar Perfil</h2>
               <form onSubmit={updateProfile}>
                 <input
                   type="text" placeholder="URL do Avatar"
                   value={newAvatar} onChange={e => setNewAvatar(e.target.value)}
-                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
                 />
                 <textarea
                   placeholder="Bio"
                   value={newBio} onChange={e => setNewBio(e.target.value)}
                   rows="3"
-                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', resize: 'vertical' }}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', resize: 'vertical', fontSize: 16 }}
                 />
                 <input
                   type="password" placeholder="Nova Senha (deixe vazio para não alterar)"
                   value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
                 />
-                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, cursor:'pointer', fontWeight:600 }}>
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, cursor:'pointer', fontWeight:600, fontSize: 16 }}>
                   Salvar Alterações
                 </button>
               </form>
@@ -498,20 +497,20 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
           }} onClick={() => setShowAdminAuth(false)}>
             <div style={{
               background: '#1a1a1a', borderRadius: 12, padding: 32,
-              maxWidth: 400, width: '90%'
+              maxWidth: 400, width: '100%'
             }} onClick={e => e.stopPropagation()}>
               <h2 style={{ margin: '0 0 24px' }}>🔒 Acesso Admin</h2>
               <form onSubmit={handleAdminLogin}>
                 <input
                   type="password" placeholder="Senha de admin"
                   value={adminPassword} onChange={e => setAdminPassword(e.target.value)}
-                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
                 />
-                <button type="submit" style={{ width: '100%', padding: 12, background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight:600 }}>
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight:600, fontSize: 16 }}>
                   Entrar como Admin
                 </button>
               </form>
@@ -523,11 +522,11 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
+            alignItems: 'center', justifyContent: 'center', padding: '20px'
           }} onClick={() => setShowSecretAuth(false)}>
             <div style={{
               background: '#1a1a1a', borderRadius: 12, padding: 32,
-              maxWidth: 400, width: '90%'
+              maxWidth: 400, width: '100%'
             }} onClick={e => e.stopPropagation()}>
               <h2 style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
               <form onSubmit={handleSecretAuth}>
@@ -538,13 +537,13 @@ export default function Home() {
                   style={{
                     width: '100%', padding: 12, marginBottom: 16,
                     background: '#0f0f0f', border: '1px solid #303030',
-                    borderRadius: 8, color: '#fff', fontSize: 15
+                    borderRadius: 8, color: '#fff', fontSize: 16
                   }}
                 />
                 <button type="submit" style={{
                   width: '100%', padding: 12, background: '#e53e3e',
                   color: '#fff', border: 'none', borderRadius: 8,
-                  fontSize: 15, fontWeight: 600, cursor: 'pointer'
+                  fontSize: 16, fontWeight: 600, cursor: 'pointer'
                 }}>
                   Liberar Acesso
                 </button>
@@ -554,57 +553,151 @@ export default function Home() {
         )}
 
         <header style={{
-          background: '#212121', padding: '16px 24px', display: 'flex',
-          alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #303030'
+          background: '#212121', 
+          padding: '16px 24px', 
+          display: 'flex',
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          borderBottom: '2px solid #303030',
+          flexWrap: 'wrap',
+          gap: '12px'
         }}>
           <h1 style={{
-            margin: 0, fontSize: 28, fontWeight: 700,
-            letterSpacing: "2px", background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+            margin: 0, 
+            fontSize: 28, 
+            fontWeight: 700,
+            letterSpacing: "2px", 
+            background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
+            WebkitBackgroundClip: "text", 
+            WebkitTextFillColor: "transparent",
+            minWidth: '180px'
           }}>SINOPINHAS</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+          
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 10, 
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            flex: 1
+          }}>
             <button onClick={() => setShowSecretAuth(true)} style={{
-              padding: '7px 16px', background: '#e53e3e', color: '#fff',
-              border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer'
+              padding: '7px 14px', 
+              background: '#e53e3e', 
+              color: '#fff',
+              border: 'none', 
+              borderRadius: 8, 
+              fontSize: 14, 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}>
-              Conteúdo Restrito
+              🔒 Restrito
             </button>
+            
             {isAdmin && (
-              <span style={{ padding: '6px 12px', background: '#10b981', borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#fff" }}>
+              <span style={{ 
+                padding: '6px 12px', 
+                background: '#10b981', 
+                borderRadius: 8, 
+                fontSize: 12, 
+                fontWeight: 600, 
+                color: "#fff" 
+              }}>
                 ADMIN
               </span>
             )}
+            
             {user ? (
               <>
                 <button onClick={() => setShowProfile(true)} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '7px 16px', background: '#303030', border: 'none',
-                  borderRadius: 8, cursor: 'pointer', color: '#fff'
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8,
+                  padding: '7px 14px', 
+                  background: '#303030', 
+                  border: 'none',
+                  borderRadius: 8, 
+                  cursor: 'pointer', 
+                  color: '#fff',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '150px'
                 }}>
-                  {user.avatar && <img src={user.avatar} style={{ width: 24, height: 24, borderRadius: '50%' }} />}
-                  <strong>{user.username}</strong>
+                  {user.avatar && (
+                    <img 
+                      src={user.avatar} 
+                      style={{ 
+                        width: 24, 
+                        height: 24, 
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }} 
+                      alt={user.username}
+                    />
+                  )}
+                  <strong style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>{user.username}</strong>
                 </button>
-                <button onClick={logout} style={{ padding: '7px 16px', background: '#303030', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Sair</button>
+                
+                <button onClick={logout} style={{ 
+                  padding: '7px 14px', 
+                  background: '#303030', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  cursor: 'pointer',
+                  fontSize: 14
+                }}>Sair</button>
               </>
             ) : (
-              <button onClick={() => setShowAuth(true)} style={{ padding: '7px 16px', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Login</button>
+              <button onClick={() => setShowAuth(true)} style={{ 
+                padding: '7px 16px', 
+                background: '#8d6aff', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 8, 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                fontSize: 14
+              }}>Login</button>
             )}
+            
             {!isAdmin ? (
-              <button onClick={() => setShowAdminAuth(true)} style={{ padding: '7px 16px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Admin</button>
+              <button onClick={() => setShowAdminAuth(true)} style={{ 
+                padding: '7px 14px', 
+                background: '#10b981', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 8, 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                fontSize: 14
+              }}>Admin</button>
             ) : (
-              <button onClick={logoutAdmin} style={{ padding: '7px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Sair Admin</button>
+              <button onClick={logoutAdmin} style={{ 
+                padding: '7px 14px', 
+                background: '#ef4444', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 8, 
+                cursor: 'pointer',
+                fontSize: 14
+              }}>Sair Admin</button>
             )}
           </div>
         </header>
 
-        <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030' }}>
+        <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030', overflowX: 'auto' }}>
           {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: '14px 20px', background: 'none', border: 'none',
               borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
               color: activeTab === tab ? '#fff' : '#aaa', fontSize: 16,
               fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
-              transition: 'all 0.3s', position: 'relative'
+              transition: 'all 0.3s', position: 'relative', whiteSpace: 'nowrap'
             }}>
               {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? (
                 <>
@@ -627,7 +720,7 @@ export default function Home() {
         <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
           
           {(activeTab === 'videos' || activeTab === 'secret') && (
-            <div style={{ marginBottom: 20, display: 'flex', gap: 15 }}>
+            <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
               <input
                 type="text"
                 placeholder="🔍 Buscar vídeos por título ou autor..."
@@ -635,6 +728,7 @@ export default function Home() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   flex: 1,
+                  minWidth: '200px',
                   padding: '12px 20px',
                   background: '#1a1a1a',
                   border: '1px solid #303030',
@@ -653,7 +747,8 @@ export default function Home() {
                   borderRadius: 10,
                   color: '#fff',
                   fontSize: 16,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minWidth: '150px'
                 }}
               >
                 <option value="recent">📅 Mais Recentes</option>
@@ -867,12 +962,12 @@ export default function Home() {
               <h2 style={{ marginBottom: 20 }}>👮‍♂️ Painel de Controle</h2>
 
               <div style={{ background: '#20153e', padding: 20, borderRadius: 12, marginBottom: 40 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15, flexWrap: 'wrap', gap: '10px' }}>
                   <h3 style={{ margin:0 }}>👥 Gerenciar Usuários</h3>
                   <button onClick={loadUsers} style={{ cursor:'pointer', padding:'4px 10px'}}>Atualizar</button>
                 </div>
-                <div style={{maxHeight: 300, overflowY: 'auto'}}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                <div style={{maxHeight: 300, overflowY: 'auto', overflowX: 'auto'}}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: '500px' }}>
                     <thead>
                       <tr style={{textAlign:'left', color:'#aaa', borderBottom: '1px solid #444'}}>
                         <th style={{padding:10}}>ID</th>
@@ -886,8 +981,8 @@ export default function Home() {
                           <td style={{padding:10, color:'#666'}}>#{u.id}</td>
                           <td style={{fontWeight:'bold'}}>{u.username}</td>
                           <td>
-                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#000' }}>🔑 Resetar</button>
-                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#fff' }}>🚫 Banir</button>
+                            <button onClick={() => resetPassword(u.id)} style={{ marginRight: 10, background:'#eab308', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#000', fontSize: 12 }}>🔑 Resetar</button>
+                            <button onClick={() => banUser(u.id)} style={{ background:'#ef4444', border:'none', padding:'4px 10px', borderRadius:4, cursor:'pointer', color:'#fff', fontSize: 12 }}>🚫 Banir</button>
                           </td>
                         </tr>
                       ))}
@@ -897,12 +992,12 @@ export default function Home() {
               </div>
 
               <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12 }}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 20, flexWrap: 'wrap', gap: '10px'}}>
                   <h3 style={{color:'#fff', margin:0}}>📜 Central de Inteligência (Logs)</h3>
                   <button onClick={fetchLogs} style={{padding:'8px 16px', cursor:'pointer'}}>Atualizar</button>
                 </div>
                 <div style={{overflowX: 'auto'}}>
-                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14}}>
+                  <table style={{width:'100%', borderCollapse:'collapse', color:'#ccc', fontSize: 14, minWidth: '800px'}}>
                     <thead>
                       <tr style={{background:'#333', color:'#fff', textAlign:'left'}}>
                         <th style={{padding:10}}>Data/Hora</th>
@@ -1009,17 +1104,17 @@ export default function Home() {
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex',
-            justifyContent: 'center', alignItems: 'center'
+            justifyContent: 'center', alignItems: 'center', padding: '20px'
           }} onClick={() => setShowCommentsModal(false)}>
             
             <div style={{
-              background: '#1a1a1a', width: '90%', maxWidth: 600, maxHeight: '80vh',
+              background: '#1a1a1a', width: '100%', maxWidth: 600, maxHeight: '90vh',
               borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden'
             }} onClick={e => e.stopPropagation()}>
               
-              <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between' }}>
-                <h3 style={{ margin: 0 }}>Comentários: {currentVideo.title}</h3>
-                <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer'}}>✕</button>
+              <div style={{ padding: 16, borderBottom: '1px solid #333', display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 10 }}>Comentários: {currentVideo.title}</h3>
+                <button onClick={() => setShowCommentsModal(false)} style={{background:'none', border:'none', color:'#fff', fontSize:20, cursor:'pointer', minWidth: 30}}>✕</button>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
@@ -1028,8 +1123,8 @@ export default function Home() {
                 ) : (
                   videoComments.map((c, i) => (
                     <div key={i} style={{ marginBottom: 16, borderBottom: '1px solid #333', paddingBottom: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5, flexWrap: 'wrap', gap: 5 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 'bold', color: '#8d6aff' }}>{c.username || 'Anônimo'}</span>
                           <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleDateString()}</span>
                         </div>
@@ -1049,7 +1144,7 @@ export default function Home() {
                           </button>
                         )}
                       </div>
-                      <p style={{ margin: 0, color: '#ddd' }}>{c.comment}</p>
+                      <p style={{ margin: 0, color: '#ddd', wordBreak: 'break-word' }}>{c.comment}</p>
                     </div>
                   ))
                 )}
@@ -1060,9 +1155,9 @@ export default function Home() {
                   value={newComment}
                   onChange={e => setNewComment(e.target.value)}
                   placeholder="Escreva algo legal..."
-                  style={{ flex: 1, padding: 10, borderRadius: 20, border: 'none', background: '#333', color: '#fff' }}
+                  style={{ flex: 1, padding: 10, borderRadius: 20, border: 'none', background: '#333', color: '#fff', fontSize: 16 }}
                 />
-                <button type="submit" style={{ background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, padding: '0 20px', fontWeight: 'bold', cursor: 'pointer' }}>
+                <button type="submit" style={{ background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, padding: '0 20px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   Enviar
                 </button>
               </form>
@@ -1074,6 +1169,68 @@ export default function Home() {
       <style jsx>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          overflow-x: hidden;
+        }
+
+        @media (max-width: 768px) {
+          div[style*="padding: 38"] {
+            padding: 20px 16px !important;
+          }
+
+          div[style*="display: grid"][style*="gridTemplateColumns"] {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+
+          h1 {
+            font-size: 22px !important;
+          }
+
+          h2 {
+            font-size: 20px !important;
+          }
+
+          h3 {
+            font-size: 18px !important;
+          }
+
+          div[style*="maxWidth: 620"] {
+            max-width: 100% !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          div[style*="padding: 38"] {
+            padding: 16px 12px !important;
+          }
+
+          h1 {
+            font-size: 20px !important;
+            letter-spacing: 1px !important;
+          }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+          button {
+            min-height: 44px !important;
+          }
+        }
+
+        @supports (padding: env(safe-area-inset-top)) {
+          header {
+            padding-top: max(16px, env(safe-area-inset-top)) !important;
+          }
         }
       `}</style>
     </>
