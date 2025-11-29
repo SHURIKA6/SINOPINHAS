@@ -9,23 +9,13 @@ const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-// ✅ FUNÇÃO DE FINGERPRINT INLINE
-const sendFingerprint = async (action, metadata = {}) => {
-  try {
-    return {
-      ...metadata,
-      fingerprint: navigator.userAgent || 'unknown',
-      screen: `${screen.width}x${screen.height}`,
-      language: navigator.language,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      platform: navigator.platform,
-      action: action
-    };
-  } catch (err) {
-    console.error('Erro ao capturar fingerprint:', err);
-    return metadata;
-  }
-};
+import { sendFingerprint } from '../lib/fingerprint';
+
+// Use normalmente:
+const fpData = await sendFingerprint('USER_LOGIN', { 
+  username: loginUsername 
+});
+
 
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret }) => {
   return (
