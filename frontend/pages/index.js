@@ -38,10 +38,23 @@ export default function Home() {
   const [videoComments, setVideoComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showProfile, setShowProfile] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [newAvatar, setNewAvatar] = useState('');
+  const [newBio, setNewBio] = useState('');
+
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedAdminPassword = localStorage.getItem('adminPassword');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      const u = JSON.parse(savedUser);
+      setUser(u);
+      setNewAvatar(u.avatar || '');
+      setNewBio(u.bio || '');
+      loadNotifications(u.id);
+    }
     if (savedAdminPassword) {
       setAdminPassword(savedAdminPassword);
       setIsAdmin(true);
@@ -65,6 +78,16 @@ export default function Home() {
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const loadNotifications = async (userId) => {
+    try {
+      const res = await axios.get(`${API}/api/notifications/${userId}`);
+      const unread = res.data.filter(n => !n.is_read).length;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error('Erro ao carregar notificações:', err);
+    }
   };
 
   const loadVideos = async () => {
@@ -93,12 +116,51 @@ export default function Home() {
 
   const canDelete = (ownerId) => isAdmin || (user && user.id.toString() === ownerId);
 
+  const toggleLike = async (videoId) => {
+    if (!user) return showToast('Faça login para curtir', 'error');
+    try {
+      await axios.post(`${API}/api/videos/${videoId}/like`, { user_id: user.id });
+      await loadVideos();
+      if (activeTab === 'secret') await loadSecretVideos();
+    } catch (err) {
+      showToast('Erro ao curtir vídeo', 'error');
+    }
+  };
+
+  const updateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const updates = {};
+      if (newPassword) updates.password = newPassword;
+      if (newAvatar !== user.avatar) updates.avatar = newAvatar;
+      if (newBio !== user.bio) updates.bio = newBio;
+
+      if (Object.keys(updates).length === 0) {
+        return showToast('Nenhuma alteração feita', 'error');
+      }
+
+      const res = await axios.put(`${API}/api/users/${user.id}`, updates);
+      const updatedUser = { ...user, ...res.data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setNewPassword('');
+      setShowProfile(false);
+      showToast('Perfil atualizado!', 'success');
+    } catch (err) {
+      showToast('Erro ao atualizar perfil', 'error');
+    }
+  };
+
   const openComments = async (video) => {
     setCurrentVideo(video);
     setShowCommentsModal(true);
     try {
       const res = await axios.get(`${API}/api/comments/${video.id}`);
       setVideoComments(res.data);
+      
+      if (user) {
+        await axios.post(`${API}/api/videos/${video.id}/view`, { user_id: user.id });
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -165,7 +227,10 @@ export default function Home() {
       setShowAuth(false);
       setUsername('');
       setPassword('');
+      setNewAvatar(res.data.user.avatar || '');
+      setNewBio(res.data.user.bio || '');
       showToast(isLogin ? 'Login realizado!' : 'Conta criada!', 'success');
+      if (res.data.user.id) loadNotifications(res.data.user.id);
     } catch (err) {
       showToast(err.response?.data?.error || 'Erro ao autenticar', 'error');
     }
@@ -203,6 +268,7 @@ export default function Home() {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    setUnreadCount(0);
     showToast('Logout realizado', 'success');
   };
 
@@ -266,6 +332,16 @@ export default function Home() {
     }
   };
 
+  const filteredVideos = videos.filter(v => 
+    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredSecretVideos = secretVideos.filter(v => 
+    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <Head>
@@ -320,6 +396,42 @@ export default function Home() {
                 </button>
                 <button type="button" onClick={() => setIsLogin(!isLogin)} style={{ width: '100%', padding: 12, background: 'none', color: '#aaa', border: 'none', cursor: 'pointer' }}>
                   {isLogin ? 'Criar conta' : 'Fazer login'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showProfile && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
+            alignItems: 'center', justifyContent: 'center'
+          }} onClick={() => setShowProfile(false)}>
+            <div style={{
+              background: '#1a1a1a', borderRadius: 12, padding: 32,
+              maxWidth: 400, width: '90%'
+            }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ margin: '0 0 24px' }}>✏️ Editar Perfil</h2>
+              <form onSubmit={updateProfile}>
+                <input
+                  type="text" placeholder="URL do Avatar"
+                  value={newAvatar} onChange={e => setNewAvatar(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                />
+                <textarea
+                  placeholder="Bio"
+                  value={newBio} onChange={e => setNewBio(e.target.value)}
+                  rows="3"
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', resize: 'vertical' }}
+                />
+                <input
+                  type="password" placeholder="Nova Senha (deixe vazio para não alterar)"
+                  value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                  style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff' }}
+                />
+                <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 8, cursor:'pointer', fontWeight:600 }}>
+                  Salvar Alterações
                 </button>
               </form>
             </div>
@@ -408,7 +520,14 @@ export default function Home() {
             )}
             {user ? (
               <>
-                <span style={{ fontSize: 16, color: '#aaa' }}><strong style={{ color: '#fff' }}>{user.username}</strong></span>
+                <button onClick={() => setShowProfile(true)} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '7px 16px', background: '#303030', border: 'none',
+                  borderRadius: 8, cursor: 'pointer', color: '#fff'
+                }}>
+                  {user.avatar && <img src={user.avatar} style={{ width: 24, height: 24, borderRadius: '50%' }} />}
+                  <strong>{user.username}</strong>
+                </button>
                 <button onClick={logout} style={{ padding: '7px 16px', background: '#303030', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Sair</button>
               </>
             ) : (
@@ -429,35 +548,68 @@ export default function Home() {
               borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
               color: activeTab === tab ? '#fff' : '#aaa', fontSize: 16,
               fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s', position: 'relative'
             }}>
-              {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? 'Mensagens' : 'SAFADEZA'}
+              {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? (
+                <>
+                  Mensagens
+                  {unreadCount > 0 && (
+                    <span style={{
+                      position: 'absolute', top: 8, right: 8,
+                      background: '#ef4444', borderRadius: '50%',
+                      width: 20, height: 20, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 'bold'
+                    }}>{unreadCount}</span>
+                  )}
+                </>
+              ) : 'SAFADEZA'}
             </button>
           ))}
         </div>
 
         <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
           
+          {(activeTab === 'videos' || activeTab === 'secret') && (
+            <div style={{ marginBottom: 20 }}>
+              <input
+                type="text"
+                placeholder="🔍 Buscar vídeos por título ou autor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  background: '#1a1a1a',
+                  border: '1px solid #303030',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 16
+                }}
+              />
+            </div>
+          )}
+
           {activeTab === 'videos' && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-                {loading ? 'Carregando...' : `${videos.length} vídeo${videos.length !== 1 ? 's' : ''}`}
+                {loading ? 'Carregando...' : `${filteredVideos.length} vídeo${filteredVideos.length !== 1 ? 's' : ''}`}
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 80 }}>
                   <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                 </div>
-              ) : videos.length === 0 ? (
+              ) : filteredVideos.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
                   <div style={{ fontSize: 41, marginBottom: 18 }}>📹</div>
-                  <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo enviado ainda</p>
+                  <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo encontrado</p>
                   <button onClick={() => setActiveTab('upload')} style={{ marginTop: 18, padding: '10px 24px', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, fontWeight: 600, cursor: 'pointer' }}>
                     Fazer primeiro upload
                   </button>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                  {videos.map((v) => (
+                  {filteredVideos.map((v) => (
                     <div key={v.id} style={{ background: "#20153e", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #18142355", paddingBottom: 6 }}>
                       {canDelete(v.user_id?.toString()) && (
                         <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
@@ -471,7 +623,12 @@ export default function Home() {
                       <div style={{ padding: 14 }}>
                         <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
                         <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
-                        <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
+                        <div style={{ marginTop: 7, fontSize: 15, color: "#c2bcf7", display: 'flex', gap: 15 }}>
+                          <button onClick={() => toggleLike(v.id)} style={{ background: 'none', border: 'none', color: v.user_liked ? '#ff6b9d' : '#c2bcf7', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            {v.user_liked ? '❤️' : '🤍'} {v.likes || 0}
+                          </button>
+                          <span>👁️ {v.views || 0}</span>
+                        </div>
                         
                         <button onClick={() => openComments(v)} style={{
                            marginTop: 12, width:'100%', padding:'8px', background:'#352f5b', 
@@ -630,27 +787,27 @@ export default function Home() {
           )}
 
           {activeTab === 'inbox' && (
-            <Inbox user={user} usersList={usersList} />
+            <Inbox user={user} usersList={usersList} onMessageRead={() => user && loadNotifications(user.id)} />
           )}
 
           {activeTab === 'secret' && showSecretTab && (
             <div>
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#e53e3e' }}>
-                🔥 SAFADEZA ({loading ? 'Carregando...' : `${secretVideos.length} vídeo${secretVideos.length !== 1 ? 's' : ''}`})
+                🔥 SAFADEZA ({loading ? 'Carregando...' : `${filteredSecretVideos.length} vídeo${filteredSecretVideos.length !== 1 ? 's' : ''}`})
               </h2>
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 80 }}>
                   <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                 </div>
-              ) : secretVideos.length === 0 ? (
+              ) : filteredSecretVideos.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa', border: '2px dashed #e53e3e' }}>
                   <div style={{ fontSize: 41, marginBottom: 18 }}>🔥</div>
-                  <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito ainda</p>
+                  <p style={{ fontSize: 19, margin: 0, color: '#e53e3e', fontWeight: 600 }}>Nenhum conteúdo restrito encontrado</p>
                   <p style={{ fontSize: 14, color: '#888', marginTop: 10 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                  {secretVideos.map((v) => (
+                  {filteredSecretVideos.map((v) => (
                     <div key={v.id} style={{ background: "#3d1a1a", borderRadius: 14, overflow: "hidden", position: "relative", boxShadow: "0 4px 28px #e53e3e55", paddingBottom: 6, border: '2px solid #e53e3e' }}>
                       {canDelete(v.user_id?.toString()) && (
                         <button onClick={() => deleteVideo(v.id, v.user_id)} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, color: '#fff' }}>🗑️</button>
@@ -667,7 +824,12 @@ export default function Home() {
                         </div>
                         <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h3>
                         <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {v.username || 'Anônimo'}</p>
-                        <div style={{ marginTop: 7, fontSize: 15, color: "#ffb3b3" }}>💜 {v.likes || 0} • 👁️ {v.views || 0}</div>
+                        <div style={{ marginTop: 7, fontSize: 15, color: "#ffb3b3", display: 'flex', gap: 15 }}>
+                          <button onClick={() => toggleLike(v.id)} style={{ background: 'none', border: 'none', color: v.user_liked ? '#ff6b9d' : '#ffb3b3', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            {v.user_liked ? '❤️' : '🤍'} {v.likes || 0}
+                          </button>
+                          <span>👁️ {v.views || 0}</span>
+                        </div>
                         
                         <button onClick={() => openComments(v)} style={{
                            marginTop: 12, width:'100%', padding:'8px', background:'#5b2f2f', 
@@ -732,6 +894,12 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 }
