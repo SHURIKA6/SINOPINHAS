@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 export default function TermsModal({ onAccept, onDecline }) {
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [confirmText, setConfirmText] = useState('');
   const [agreedToAll, setAgreedToAll] = useState(false);
 
   const handleScroll = (e) => {
@@ -13,7 +12,7 @@ export default function TermsModal({ onAccept, onDecline }) {
     }
   };
 
-  const canAccept = hasScrolled && confirmText.toLowerCase() === 'aceito' && agreedToAll;
+  const canAccept = hasScrolled && agreedToAll;
 
   return (
     <div style={{
@@ -301,7 +300,7 @@ export default function TermsModal({ onAccept, onDecline }) {
               <li><strong>Código Civil Brasileiro (Lei 10.406/2002)</strong></li>
               <li><strong>Código Penal Brasileiro (Decreto-Lei 2.848/1940)</strong></li>
               <li><strong>Lei nº 12.965/2014</strong> - Marco Civil da Internet</li>
-              <li><strong>Lei nº 13.709/2018</strong> - LGPD (Lei Geral de Proteção de Dados)</li>
+              <li><strong>Lei nº 13.709/2018</strong> - LGPD (Lei Geral de Proteo de Dados)</li>
               <li><strong>Lei nº 8.069/1990</strong> - Estatuto da Criança e do Adolescente (ECA)</li>
               <li><strong>Lei nº 9.610/1998</strong> - Lei de Direitos Autorais</li>
               <li><strong>Lei nº 12.737/2012</strong> - Lei Carolina Dieckmann (crimes cibernéticos)</li>
@@ -357,29 +356,6 @@ export default function TermsModal({ onAccept, onDecline }) {
               por minhas ações na plataforma.
             </span>
           </label>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ color: '#fff', fontSize: 14, marginBottom: 8, display: 'block' }}>
-            <strong>Para confirmar, digite exatamente:</strong> <span style={{ color: '#8d6aff' }}>ACEITO</span>
-          </label>
-          <input
-            type="text"
-            value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="Digite: ACEITO"
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              background: '#0f0f0f',
-              border: confirmText.toLowerCase() === 'aceito' ? '2px solid #10b981' : '2px solid #444',
-              borderRadius: 8,
-              color: '#fff',
-              fontSize: 16,
-              outline: 'none',
-              transition: 'all 0.3s'
-            }}
-          />
         </div>
 
         <div style={{
@@ -459,18 +435,6 @@ export default function TermsModal({ onAccept, onDecline }) {
             ☑️ Marque a caixa de confirmação acima
           </p>
         )}
-        
-        {hasScrolled && agreedToAll && confirmText.toLowerCase() !== 'aceito' && (
-          <p style={{
-            textAlign: 'center',
-            color: '#fbbf24',
-            fontSize: 13,
-            marginTop: 12,
-            marginBottom: 0
-          }}>
-            ✍️ Digite "ACEITO" no campo acima
-          </p>
-        )}
       </div>
 
       <style jsx>{`
@@ -502,4 +466,3 @@ export default function TermsModal({ onAccept, onDecline }) {
     </div>
   );
 }
-// =====================================================================
