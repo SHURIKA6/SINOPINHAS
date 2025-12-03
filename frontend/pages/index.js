@@ -3,13 +3,13 @@ import { useEffect, useState, useCallback, useMemo, memo } from "react";
 import axios from "axios";
 import Head from "next/head";
 
-// LAZY LOAD de componentes pesados
+
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-// ✅ FUNÇÃO DE FINGERPRINT INLINE
+
 const sendFingerprint = async (action, metadata = {}) => {
   try {
     return {
