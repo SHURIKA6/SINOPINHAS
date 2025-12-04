@@ -207,7 +207,16 @@ async function logAudit(user_id, action, meta = {}, c) {
     else if (userAgent.match(/Android/i)) deviceType = "Android Tablet";
     else if (userAgent.match(/Mobile|Tablet/i)) deviceType = "Mobile";
 
-    const fingerprint = meta?.fingerprint || null;
+    // Garantir que fingerprint seja uma string e limitar tamanho (hash SHA-256 = 64 chars)
+    let fingerprint = meta?.fingerprint || null;
+    if (fingerprint && typeof fingerprint === 'string') {
+      // Limitar a 255 caracteres para evitar problemas no banco
+      fingerprint = fingerprint.substring(0, 255);
+    } else if (fingerprint) {
+      // Se não for string, converter para string ou usar null
+      fingerprint = String(fingerprint).substring(0, 255);
+    }
+    
     const screenResolution = meta?.screen || null;
     const browserLanguage = meta?.language || acceptLanguage;
     const clientTimezone = meta?.timezone || cfTimezone;
@@ -218,6 +227,25 @@ async function logAudit(user_id, action, meta = {}, c) {
     }
 
     const safeUserId = user_id ? parseInt(user_id) : null;
+
+    // Serializar meta para JSON, limitando tamanho se necessário
+    let detailsJson = JSON.stringify(meta);
+    // Limitar details a 50KB para evitar problemas no banco (geralmente campos JSON/TEXT suportam muito mais, mas é uma precaução)
+    if (detailsJson.length > 50000) {
+      console.warn(`⚠️ Details muito grande (${detailsJson.length} chars), truncando...`);
+      // Manter apenas campos essenciais se exceder limite
+      const essentialMeta = {
+        fingerprint: meta?.fingerprint,
+        screen: meta?.screen,
+        language: meta?.language,
+        timezone: meta?.timezone,
+        platform: meta?.platform,
+        action: meta?.action,
+        hash: meta?.hash,
+        secondaryHash: meta?.secondaryHash
+      };
+      detailsJson = JSON.stringify(essentialMeta);
+    }
 
     try {
       await queryDB(
@@ -231,7 +259,7 @@ async function logAudit(user_id, action, meta = {}, c) {
           action,
           realIP,
           userAgent,
-          JSON.stringify(meta),
+          detailsJson,
           deviceType,
           cfCountry,
           cfCity,

@@ -1,5 +1,5 @@
 // lib/fingerprint.js - VERSÃO MELHORADA
-export function getDeviceFingerprint() {
+export async function getDeviceFingerprint() {
   try {
     const fingerprint = {
       // IDENTIFICADORES DE HARDWARE
@@ -76,7 +76,7 @@ export function getDeviceFingerprint() {
     }
 
     const fpString = JSON.stringify(fingerprint);
-    fingerprint.hash = generateStrongHash(fpString);
+    fingerprint.hash = await generateStrongHash(fpString);
     fingerprint.secondaryHash = simpleHash(
       `${fingerprint.canvas}|${fingerprint.webgl}|${fingerprint.audioFingerprint}`
     );
@@ -88,37 +88,195 @@ export function getDeviceFingerprint() {
   }
 }
 
-// Restante das funções auxiliares permanecem iguais
-// ... (getCanvasFingerprint, getWebGLFingerprint, etc.)
-
-// VALIDAÇÃO DE FINGERPRINT NO BACKEND
-export async function validateFingerprint(fingerprint, userId, c) {
+// Função para gerar hash forte (SHA-256)
+async function generateStrongHash(str) {
   try {
-    // Buscar fingerprints anteriores do usuário
-    const { rows } = await queryDB(
-      `SELECT DISTINCT fingerprint FROM audit_logs 
-       WHERE user_id = $1 AND fingerprint IS NOT NULL 
-       ORDER BY created_at DESC LIMIT 10`,
-      [userId],
-      c.env
-    );
-
-    const knownFingerprints = rows.map(r => r.fingerprint);
-    
-    // Se é um novo dispositivo, alertar
-    if (knownFingerprints.length > 0 && !knownFingerprints.includes(fingerprint)) {
-      await logAudit(userId, 'NEW_DEVICE_DETECTED', { 
-        new_fingerprint: fingerprint,
-        known_fingerprints: knownFingerprints.length 
-      }, c);
-      
-      // Você pode exigir verificação adicional aqui
-      return { isNewDevice: true, requireVerification: false };
-    }
-
-    return { isNewDevice: false, requireVerification: false };
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   } catch (err) {
-    console.error('Erro ao validar fingerprint:', err);
-    return { isNewDevice: false, requireVerification: false };
+    console.error('Erro ao gerar hash forte:', err);
+    return simpleHash(str);
+  }
+}
+
+// Função para gerar hash simples
+function simpleHash(str) {
+  let hash = 0;
+  if (str.length === 0) return hash.toString();
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(16);
+}
+
+// Canvas Fingerprint
+function getCanvasFingerprint() {
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 200;
+    canvas.height = 50;
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('SINOPINHAS', 2, 15);
+    ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+    ctx.fillText('SINOPINHAS', 4, 17);
+    return canvas.toDataURL();
+  } catch (err) {
+    return 'error';
+  }
+}
+
+// WebGL Fingerprint
+function getWebGLFingerprint() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return 'not_supported';
+    
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      return {
+        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
+        version: gl.getParameter(gl.VERSION),
+        shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)
+      };
+    }
+    return {
+      version: gl.getParameter(gl.VERSION),
+      shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)
+    };
+  } catch (err) {
+    return 'error';
+  }
+}
+
+// WebGL Vendor
+function getWebGLVendor() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return 'not_supported';
+    
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      return gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+    }
+    return gl.getParameter(gl.VENDOR);
+  } catch (err) {
+    return 'error';
+  }
+}
+
+// Audio Fingerprint
+function getAudioFingerprint() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return 'not_supported';
+    
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const analyser = context.createAnalyser();
+    const gainNode = context.createGain();
+    const scriptProcessor = context.createScriptProcessor(4096, 1, 1);
+    
+    gainNode.gain.value = 0;
+    oscillator.type = 'triangle';
+    oscillator.connect(analyser);
+    analyser.connect(scriptProcessor);
+    scriptProcessor.connect(gainNode);
+    gainNode.connect(context.destination);
+    
+    oscillator.start(0);
+    
+    let audioHash = '';
+    scriptProcessor.onaudioprocess = function(bins) {
+      const output = bins.inputBuffer.getChannelData(0);
+      let hash = 0;
+      for (let i = 0; i < output.length; i++) {
+        hash += Math.abs(output[i]);
+      }
+      audioHash = hash.toString(36);
+    };
+    
+    setTimeout(() => {
+      oscillator.stop();
+      context.close();
+    }, 100);
+    
+    return audioHash || 'timeout';
+  } catch (err) {
+    return 'error';
+  }
+}
+
+// Font Fingerprint
+function getFontFingerprint() {
+  const baseFonts = ['monospace', 'sans-serif', 'serif'];
+  const testFonts = [
+    'Arial', 'Verdana', 'Times New Roman', 'Courier New', 'Georgia',
+    'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS',
+    'Impact', 'Lucida Console', 'Tahoma', 'Courier', 'Lucida Sans Unicode'
+  ];
+  
+  const testString = 'mmmmmmmmmmlli';
+  const testSize = '72px';
+  const h = document.getElementsByTagName('body')[0];
+  
+  const baseWidths = {};
+  const baseHeights = {};
+  
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  
+  baseFonts.forEach(baseFont => {
+    context.font = `${testSize} ${baseFont}`;
+    baseWidths[baseFont] = context.measureText(testString).width;
+    baseHeights[baseFont] = context.measureText(testString).height;
+  });
+  
+  const detected = [];
+  testFonts.forEach(font => {
+    let detected_font = false;
+    baseFonts.forEach(baseFont => {
+      const name = `${font}, ${baseFont}`;
+      context.font = `${testSize} ${name}`;
+      const width = context.measureText(testString).width;
+      const height = context.measureText(testString).height;
+      
+      if (width !== baseWidths[baseFont] || height !== baseHeights[baseFont]) {
+        if (!detected_font) {
+          detected.push(font);
+          detected_font = true;
+        }
+      }
+    });
+  });
+  
+  return detected;
+}
+
+// Plugin Fingerprint
+function getPluginFingerprint() {
+  try {
+    const plugins = [];
+    if (navigator.plugins) {
+      for (let i = 0; i < navigator.plugins.length; i++) {
+        plugins.push(navigator.plugins[i].name);
+      }
+    }
+    return plugins;
+  } catch (err) {
+    return [];
   }
 }

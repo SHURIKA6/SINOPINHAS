@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const DEFAULT_API = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Inbox({ user, usersList, onMessageRead }) {
+export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_API }) {
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newMessage, setNewMessage] = useState('');

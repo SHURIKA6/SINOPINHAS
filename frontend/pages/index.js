@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback, useMemo, memo } from "react";
 import axios from "axios";
 import Head from "next/head";
+import { getDeviceFingerprint } from '../lib/fingerprint';
 
 
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
@@ -12,6 +13,28 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 const sendFingerprint = async (action, metadata = {}) => {
   try {
+    // Obter fingerprint completo do dispositivo
+    const deviceFingerprint = await getDeviceFingerprint();
+    
+    // Extrair hash (string) para o campo fingerprint do banco
+    const fingerprintHash = typeof deviceFingerprint.hash === 'string' 
+      ? deviceFingerprint.hash 
+      : (typeof deviceFingerprint.secondaryHash === 'string' 
+          ? deviceFingerprint.secondaryHash 
+          : 'unknown');
+    
+    // Retornar dados completos
+    // O campo 'fingerprint' será usado no banco (apenas o hash - string curta)
+    // O resto dos dados completos vai em 'details' via JSON.stringify(meta)
+    return {
+      ...metadata,
+      ...deviceFingerprint,
+      fingerprint: fingerprintHash, // String curta para o campo fingerprint no banco
+      action: action
+    };
+  } catch (err) {
+    console.error('Erro ao capturar fingerprint:', err);
+    // Fallback para dados básicos em caso de erro
     return {
       ...metadata,
       fingerprint: navigator.userAgent || 'unknown',
@@ -21,9 +44,6 @@ const sendFingerprint = async (action, metadata = {}) => {
       platform: navigator.platform,
       action: action
     };
-  } catch (err) {
-    console.error('Erro ao capturar fingerprint:', err);
-    return metadata;
   }
 };
 
