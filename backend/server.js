@@ -5,9 +5,6 @@ const app = new Hono();
 
 app.use("/*", cors());
 
-// ==========================================
-// UTILITY: Hash e Compare (SEM BCRYPTJS)
-// ==========================================
 async function hash(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + "SINOPINHAS_SALT_2025");
@@ -21,12 +18,22 @@ async function compare(password, hashedPassword) {
   return computedHash === hashedPassword;
 }
 
-// ==========================================
-// DETECÇÃO E BLOQUEIO DE VPN/PROXY
-// ==========================================
+const VPN_ASNS = [
+  'AS60068', 'AS20473', 'AS29073', 'AS31109', 'AS32934', 'AS40027', 'AS43350',
+  'AS46844', 'AS49697', 'AS51167', 'AS60068', 'AS60781', 'AS61889', 'AS63062',
+  'AS63949', 'AS20473', 'AS29073', 'AS31109', 'AS32934', 'AS40027', 'AS43350'
+];
+
+const VPN_KEYWORDS = [
+  'vpn', 'proxy', 'tor', 'anonymizer', 'anonymizing', 'hide', 'mask',
+  'privacy', 'secure', 'shield', 'guard', 'expressvpn', 'nordvpn', 'surfshark',
+  'cyberghost', 'pia', 'private internet', 'windscribe', 'tunnelbear', 'hotspot',
+  'datacenter', 'hosting', 'server', 'cloud', 'aws', 'azure', 'gcp', 'digitalocean',
+  'linode', 'vultr', 'ovh', 'hetzner', 'contabo', 'leaseweb', 'online.net'
+];
+
 async function isVPN(ip, c) {
   try {
-
     const proxyHeaders = [
       "X-Forwarded-For",
       "X-ProxyUser-Ip",
@@ -38,79 +45,167 @@ async function isVPN(ip, c) {
       "Client-IP",
       "WL-Proxy-Client-IP",
       "Proxy-Client-IP",
+      "X-Real-IP",
+      "X-Originating-IP",
+      "X-Remote-IP",
+      "X-Remote-Addr"
     ];
 
     for (const header of proxyHeaders) {
       const value = c.req.header(header);
-      if (value && value.includes(",")) {
-        console.log(`🚫 VPN detectada via header ${header}`);
-        return true;
+      if (value) {
+        if (value.includes(",")) {
+          console.log(`🚫 VPN detectada via header ${header}: ${value}`);
+          return true;
+        }
+        if (value.toLowerCase().includes('proxy') || value.toLowerCase().includes('vpn')) {
+          console.log(`🚫 VPN detectada via header suspeito ${header}: ${value}`);
+          return true;
+        }
       }
     }
 
     const cfThreatScore = c.req.header("CF-Threat-Score");
-    if (cfThreatScore && parseInt(cfThreatScore) > 10) {
+    if (cfThreatScore && parseInt(cfThreatScore) > 5) {
       console.log(`🚫 VPN detectada via CF Threat Score: ${cfThreatScore}`);
       return true;
     }
 
     const cfIsTor = c.req.header("CF-Is-Tor");
     if (cfIsTor === "1") {
-      console.log("🚫 Conexão TOR detectada");
+      console.log("🚫 Conexão TOR detectada via Cloudflare");
       return true;
     }
 
-
-    try {
-      const response = await fetch(`https://internetdb.shodan.io/${ip}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.tags && (data.tags.includes("vpn") || data.tags.includes("proxy"))) {
-          console.log(`🚫 VPN/Proxy detectada via Shodan para IP ${ip}`);
-          return true;
-        }
-      }
-    } catch (apiErr) {
-      console.log("⚠️ API Shodan não disponível, continuando...");
-    }
-
-    
     const vpnRanges = [
-      "10.",
-      "172.16.",
-      "172.17.",
-      "172.18.",
-      "172.19.",
-      "172.20.",
-      "172.21.",
-      "172.22.",
-      "172.23.",
-      "172.24.",
-      "172.25.",
-      "172.26.",
-      "172.27.",
-      "172.28.",
-      "172.29.",
-      "172.30.",
-      "172.31.",
-      "192.168.",
+      "10.", "172.16.", "172.17.", "172.18.", "172.19.", "172.20.",
+      "172.21.", "172.22.", "172.23.", "172.24.", "172.25.", "172.26.",
+      "172.27.", "172.28.", "172.29.", "172.30.", "172.31.", "192.168.",
+      "127.", "169.254.", "::1", "fc00:", "fe80:"
     ];
 
     for (const range of vpnRanges) {
       if (ip.startsWith(range)) {
-        console.log(`🚫 IP privado/VPN detectado: ${ip}`);
+        console.log(`🚫 IP privado detectado: ${ip}`);
         return true;
+      }
+    }
+
+    const checks = await Promise.allSettled([
+      checkVPNShodan(ip),
+      checkVPNIPAPI(ip),
+      checkVPNIPAPICom(ip),
+      checkVPNCloudflare(ip, c)
+    ]);
+
+    for (const check of checks) {
+      if (check.status === 'fulfilled' && check.value === true) {
+        return true;
+      }
+    }
+
+    const cfASN = c.req.header("CF-Connecting-ASN");
+    if (cfASN) {
+      const asnString = `AS${cfASN}`;
+      if (VPN_ASNS.includes(asnString)) {
+        console.log(`🚫 VPN detectada via ASN conhecido: ${asnString}`);
+        return true;
+      }
+    }
+
+    const cfISP = c.req.header("CF-Connecting-ASN");
+    if (cfISP) {
+      const ispLower = String(cfISP).toLowerCase();
+      for (const keyword of VPN_KEYWORDS) {
+        if (ispLower.includes(keyword)) {
+          console.log(`🚫 VPN detectada via ISP suspeito: ${cfISP}`);
+          return true;
+        }
       }
     }
 
     return false;
   } catch (err) {
     console.error("⚠️ Erro ao verificar VPN:", err.message);
-    return false;
+    return true;
   }
 }
 
-// MIDDLEWARE DE BLOQUEIO DE VPN
+async function checkVPNShodan(ip) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch(`https://internetdb.shodan.io/${ip}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.tags && (data.tags.includes("vpn") || data.tags.includes("proxy") || data.tags.includes("tor"))) {
+        console.log(`🚫 VPN detectada via Shodan: ${ip}`);
+        return true;
+      }
+    }
+  } catch (err) {
+  }
+  return false;
+}
+
+async function checkVPNIPAPI(ip) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch(`https://ipapi.co/${ip}/json/`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.org && VPN_KEYWORDS.some(kw => data.org.toLowerCase().includes(kw))) {
+        console.log(`🚫 VPN detectada via ipapi.co (org): ${data.org}`);
+        return true;
+      }
+      if (data.vpn === true || data.proxy === true || data.tor === true) {
+        console.log(`🚫 VPN detectada via ipapi.co: ${ip}`);
+        return true;
+      }
+    }
+  } catch (err) {
+  }
+  return false;
+}
+
+async function checkVPNIPAPICom(ip) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,isp,org,as,asname,proxy,hosting`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'success') {
+        if (data.proxy === true || data.hosting === true) {
+          console.log(`🚫 VPN detectada via ip-api.com: ${ip}`);
+          return true;
+        }
+        const ispOrg = `${data.isp || ''} ${data.org || ''} ${data.asname || ''}`.toLowerCase();
+        if (VPN_KEYWORDS.some(kw => ispOrg.includes(kw))) {
+          console.log(`🚫 VPN detectada via ip-api.com (ISP): ${ispOrg}`);
+          return true;
+        }
+      }
+    }
+  } catch (err) {
+  }
+  return false;
+}
+
+async function checkVPNCloudflare(ip, c) {
+  return false;
+}
+
 async function blockVPN(c, next) {
   const cfConnectingIP = c.req.header("CF-Connecting-IP");
   const xForwardedFor = c.req.header("X-Forwarded-For");
@@ -137,14 +232,11 @@ async function blockVPN(c, next) {
   return await next();
 }
 
-// aplicar VPN só nas rotas sensíveis
 app.use("/api/register", blockVPN);
 app.use("/api/login", blockVPN);
 app.use("/api/upload", blockVPN);
+app.use("/api/log-terms", blockVPN);
 
-// ==========================================
-// UTILITY: Consulta ao Banco de Dados
-// ==========================================
 async function queryDB(sql, params = [], env) {
   try {
     const { Pool } = await import("pg");
@@ -158,9 +250,6 @@ async function queryDB(sql, params = [], env) {
   }
 }
 
-// ==========================================
-// UTILITY: Log de Auditoria FORENSE COMPLETO
-// ==========================================
 async function logAudit(user_id, action, meta = {}, c) {
   try {
     const cfConnectingIP = c.req.header("CF-Connecting-IP");
@@ -207,13 +296,10 @@ async function logAudit(user_id, action, meta = {}, c) {
     else if (userAgent.match(/Android/i)) deviceType = "Android Tablet";
     else if (userAgent.match(/Mobile|Tablet/i)) deviceType = "Mobile";
 
-    // Garantir que fingerprint seja uma string e limitar tamanho (hash SHA-256 = 64 chars)
     let fingerprint = meta?.fingerprint || null;
     if (fingerprint && typeof fingerprint === 'string') {
-      // Limitar a 255 caracteres para evitar problemas no banco
       fingerprint = fingerprint.substring(0, 255);
     } else if (fingerprint) {
-      // Se não for string, converter para string ou usar null
       fingerprint = String(fingerprint).substring(0, 255);
     }
     
@@ -228,12 +314,9 @@ async function logAudit(user_id, action, meta = {}, c) {
 
     const safeUserId = user_id ? parseInt(user_id) : null;
 
-    // Serializar meta para JSON, limitando tamanho se necessário
     let detailsJson = JSON.stringify(meta);
-    // Limitar details a 50KB para evitar problemas no banco (geralmente campos JSON/TEXT suportam muito mais, mas é uma precaução)
     if (detailsJson.length > 50000) {
       console.warn(`⚠️ Details muito grande (${detailsJson.length} chars), truncando...`);
-      // Manter apenas campos essenciais se exceder limite
       const essentialMeta = {
         fingerprint: meta?.fingerprint,
         screen: meta?.screen,
@@ -306,9 +389,6 @@ async function logAudit(user_id, action, meta = {}, c) {
   }
 }
 
-// ==========================================
-// ROTA: Registrar aceitação dos termos
-// ==========================================
 app.post("/api/log-terms", async (c) => {
   try {
     const body = await c.req.json();
@@ -320,9 +400,6 @@ app.post("/api/log-terms", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Registro de Usuário
-// ==========================================
 app.post("/api/register", async (c) => {
   const env = c.env;
   try {
@@ -379,9 +456,6 @@ app.post("/api/register", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Login de Usuário
-// ==========================================
 app.post("/api/login", async (c) => {
   const env = c.env;
   try {
@@ -443,9 +517,6 @@ app.post("/api/login", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Atualizar perfil do usuário
-// ==========================================
 app.put("/api/users/:id", async (c) => {
   const userId = c.req.param("id");
   const env = c.env;
@@ -490,9 +561,6 @@ app.put("/api/users/:id", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Upload de vídeo PARA BUNNY CDN
-// ==========================================
 app.post("/api/upload", async (c) => {
   const env = c.env;
   try {
@@ -587,9 +655,6 @@ app.post("/api/upload", async (c) => {
 }
 );
 
-// ==========================================
-// ROTA: Listar vídeos públicos
-// ==========================================
 app.get("/api/videos", async (c) => {
   const env = c.env;
   const userId = c.req.query("user_id");
@@ -621,9 +686,6 @@ app.get("/api/videos", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Listar vídeos restritos
-// ==========================================
 app.get("/api/secret-videos", async (c) => {
   const env = c.env;
   const userId = c.req.query("user_id");
@@ -655,9 +717,6 @@ app.get("/api/secret-videos", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Deletar vídeo
-// ==========================================
 app.delete("/api/videos/:id", async (c) => {
   const videoId = c.req.param("id");
   const env = c.env;
@@ -692,9 +751,6 @@ app.delete("/api/videos/:id", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Curtir vídeo
-// ==========================================
 app.post("/api/videos/:id/like", async (c) => {
   const videoId = c.req.param("id");
   const env = c.env;
@@ -722,9 +778,6 @@ app.post("/api/videos/:id/like", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Registrar visualização
-// ==========================================
 app.post("/api/videos/:id/view", async (c) => {
   const videoId = c.req.param("id");
   const env = c.env;
@@ -741,9 +794,6 @@ app.post("/api/videos/:id/view", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Adicionar comentário
-// ==========================================
 app.post("/api/comment", async (c) => {
   const env = c.env;
   try {
@@ -777,9 +827,6 @@ app.post("/api/comment", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Buscar comentários
-// ==========================================
 app.get("/api/comments/:videoId", async (c) => {
   const videoId = c.req.param("videoId");
   const env = c.env;
@@ -802,9 +849,6 @@ app.get("/api/comments/:videoId", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Deletar comentário
-// ==========================================
 app.delete("/api/comments/:id", async (c) => {
   const commentId = c.req.param("id");
   const env = c.env;
@@ -830,9 +874,6 @@ app.delete("/api/comments/:id", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Buscar notificações
-// ==========================================
 app.get("/api/notifications/:userId", async (c) => {
   const userId = c.req.param("userId");
   const env = c.env;
@@ -851,9 +892,6 @@ app.get("/api/notifications/:userId", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Buscar todos os usuários (para inbox)
-// ==========================================
 app.get("/api/users/all", async (c) => {
   const env = c.env;
   try {
@@ -871,9 +909,6 @@ app.get("/api/users/all", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Enviar mensagem
-// ==========================================
 app.post("/api/send-message", async (c) => {
   const env = c.env;
   try {
@@ -893,9 +928,6 @@ app.post("/api/send-message", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Buscar mensagens
-// ==========================================
 app.get("/api/inbox/:userId", async (c) => {
   const userId = c.req.param("userId");
   const env = c.env;
@@ -921,9 +953,6 @@ app.get("/api/inbox/:userId", async (c) => {
   }
 });
 
-// ==========================================
-// ADMIN: Login
-// ==========================================
 app.post("/api/admin/login", async (c) => {
   const env = c.env;
   try {
@@ -944,9 +973,6 @@ app.post("/api/admin/login", async (c) => {
   }
 });
 
-// ==========================================
-// ADMIN: Listar usuários
-// ==========================================
 app.get("/api/admin/users", async (c) => {
   const env = c.env;
   const adminPassword = c.req.query("admin_password");
@@ -971,9 +997,6 @@ app.get("/api/admin/users", async (c) => {
   }
 });
 
-// ==========================================
-// ADMIN: Resetar senha
-// ==========================================
 app.post("/api/admin/reset-password", async (c) => {
   const env = c.env;
   try {
@@ -996,9 +1019,6 @@ app.post("/api/admin/reset-password", async (c) => {
   }
 });
 
-// ==========================================
-// ADMIN: Banir usuário
-// ==========================================
 app.delete("/api/admin/users/:userId", async (c) => {
   const userId = c.req.param("userId");
   const env = c.env;
@@ -1025,9 +1045,6 @@ app.delete("/api/admin/users/:userId", async (c) => {
   }
 });
 
-// ==========================================
-// ADMIN: Buscar logs de auditoria
-// ==========================================
 app.get("/api/admin/logs", async (c) => {
   const env = c.env;
   const adminPassword = c.req.query("admin_password");
@@ -1056,9 +1073,6 @@ app.get("/api/admin/logs", async (c) => {
   }
 });
 
-// ==========================================
-// ROTA: Health Check
-// ==========================================
 app.get("/", (c) => {
   return c.json({
     status: "online",

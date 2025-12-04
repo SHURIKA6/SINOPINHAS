@@ -13,28 +13,22 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 const sendFingerprint = async (action, metadata = {}) => {
   try {
-    // Obter fingerprint completo do dispositivo
     const deviceFingerprint = await getDeviceFingerprint();
     
-    // Extrair hash (string) para o campo fingerprint do banco
     const fingerprintHash = typeof deviceFingerprint.hash === 'string' 
       ? deviceFingerprint.hash 
       : (typeof deviceFingerprint.secondaryHash === 'string' 
           ? deviceFingerprint.secondaryHash 
           : 'unknown');
     
-    // Retornar dados completos
-    // O campo 'fingerprint' será usado no banco (apenas o hash - string curta)
-    // O resto dos dados completos vai em 'details' via JSON.stringify(meta)
     return {
       ...metadata,
       ...deviceFingerprint,
-      fingerprint: fingerprintHash, // String curta para o campo fingerprint no banco
+      fingerprint: fingerprintHash,
       action: action
     };
   } catch (err) {
     console.error('Erro ao capturar fingerprint:', err);
-    // Fallback para dados básicos em caso de erro
     return {
       ...metadata,
       fingerprint: navigator.userAgent || 'unknown',
@@ -628,6 +622,7 @@ await axios.post(`${API}/api/log-terms`, fingerprintData);
         <Head>
           <title>SINOPINHAS - Termos de Uso</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
         </Head>
         {showTerms && (
           <TermsModal 
@@ -649,6 +644,7 @@ await axios.post(`${API}/api/log-terms`, fingerprintData);
         <meta name="theme-color" content="#18142a" />
         <link rel="preconnect" href={API} />
         <link rel="dns-prefetch" href={API} />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
       </Head>
 
       <div style={{

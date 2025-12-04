@@ -1,43 +1,33 @@
-// lib/fingerprint.js - VERSÃO MELHORADA
 export async function getDeviceFingerprint() {
   try {
     const fingerprint = {
-      // IDENTIFICADORES DE HARDWARE
       canvas: getCanvasFingerprint(),
       webgl: getWebGLFingerprint(),
       webglVendor: getWebGLVendor(),
       
-      // CPU e Performance
       hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
       deviceMemory: navigator.deviceMemory || 'unknown',
       cpuClass: navigator.cpuClass || 'unknown',
       
-      // Tela
       screen: `${screen.width}x${screen.height}`,
       availScreen: `${screen.availWidth}x${screen.availHeight}`,
       colorDepth: screen.colorDepth,
       pixelRatio: window.devicePixelRatio,
       
-      // Audio Fingerprint
       audioFingerprint: getAudioFingerprint(),
       
-      // Font Fingerprint
       fonts: getFontFingerprint(),
       
-      // IDENTIFICADORES DE SOFTWARE
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       language: navigator.language,
       languages: navigator.languages?.join(',') || navigator.language,
       
-      // Timezone
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       timezoneOffset: new Date().getTimezoneOffset(),
       
-      // Storage disponível
       storageQuota: null,
       
-      // IDENTIFICADORES DE REDE
       connection: navigator.connection ? {
         effectiveType: navigator.connection.effectiveType,
         downlink: navigator.connection.downlink,
@@ -45,7 +35,6 @@ export async function getDeviceFingerprint() {
         saveData: navigator.connection.saveData
       } : null,
       
-      // IDENTIFICADORES DE DISPOSITIVO
       touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
       maxTouchPoints: navigator.maxTouchPoints || 0,
       bluetooth: 'bluetooth' in navigator,
@@ -62,13 +51,11 @@ export async function getDeviceFingerprint() {
       localStorage: typeof localStorage !== 'undefined',
       indexedDB: typeof indexedDB !== 'undefined',
       
-      // NOVOS: Detecção de comportamento suspeito
-      webdriver: navigator.webdriver || false, // Detecta automação
+      webdriver: navigator.webdriver || false,
       languages_length: navigator.languages ? navigator.languages.length : 0,
       permissions: null,
     };
 
-    // Detectar se está em iframe (possível ataque)
     try {
       fingerprint.inIframe = window.self !== window.top;
     } catch (e) {
@@ -88,7 +75,6 @@ export async function getDeviceFingerprint() {
   }
 }
 
-// Função para gerar hash forte (SHA-256)
 async function generateStrongHash(str) {
   try {
     const encoder = new TextEncoder();
@@ -102,19 +88,17 @@ async function generateStrongHash(str) {
   }
 }
 
-// Função para gerar hash simples
 function simpleHash(str) {
   let hash = 0;
   if (str.length === 0) return hash.toString();
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
   return Math.abs(hash).toString(16);
 }
 
-// Canvas Fingerprint
 function getCanvasFingerprint() {
   try {
     const canvas = document.createElement('canvas');
@@ -136,7 +120,6 @@ function getCanvasFingerprint() {
   }
 }
 
-// WebGL Fingerprint
 function getWebGLFingerprint() {
   try {
     const canvas = document.createElement('canvas');
@@ -161,7 +144,6 @@ function getWebGLFingerprint() {
   }
 }
 
-// WebGL Vendor
 function getWebGLVendor() {
   try {
     const canvas = document.createElement('canvas');
@@ -178,7 +160,6 @@ function getWebGLVendor() {
   }
 }
 
-// Audio Fingerprint
 function getAudioFingerprint() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -220,7 +201,6 @@ function getAudioFingerprint() {
   }
 }
 
-// Font Fingerprint
 function getFontFingerprint() {
   const baseFonts = ['monospace', 'sans-serif', 'serif'];
   const testFonts = [
@@ -266,7 +246,6 @@ function getFontFingerprint() {
   return detected;
 }
 
-// Plugin Fingerprint
 function getPluginFingerprint() {
   try {
     const plugins = [];
