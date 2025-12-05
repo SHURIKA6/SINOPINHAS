@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+*.pem
+dist/
+build/
+.next/
+out/
+.wrangler/
+.cache/
+*.swp
+*.swo
+*~
+
