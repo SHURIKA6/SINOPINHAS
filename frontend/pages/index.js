@@ -305,7 +305,7 @@ export default function Home() {
         <Head>
           <title>SINOPINHAS - Termos de Uso</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
+
         </Head>
         {showTerms && (
           <TermsModal
@@ -326,7 +326,9 @@ export default function Home() {
         <meta name="theme-color" content="#18142a" />
         <link rel="preconnect" href={API} />
         <link rel="dns-prefetch" href={API} />
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
+        {(activeTab === 'videos' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
+        )}
       </Head>
 
       <div style={{
