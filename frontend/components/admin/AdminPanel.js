@@ -29,7 +29,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
         try {
             await resetUserPassword(userId, adminPassword);
             showToast('Senha alterada para 123456', 'success');
-        } catch (err) { showToast('Erro ao resetar', 'error'); }
+        } catch (err) { showToast(err.message || 'Erro ao resetar', 'error'); }
     };
 
     const handleBanUser = async (userId) => {
@@ -38,7 +38,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
             await banUser(userId, adminPassword);
             showToast('Usuário banido/apagado!', 'success');
             loadUsers();
-        } catch (err) { showToast('Erro ao banir', 'error'); }
+        } catch (err) { showToast(err.message || 'Erro ao banir', 'error'); }
     };
 
     return (

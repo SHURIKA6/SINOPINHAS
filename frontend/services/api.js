@@ -7,6 +7,28 @@ const api = axios.create({
     baseURL: API
 });
 
+// Interceptador para tratamento global de erros
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Extrai a mensagem de erro bonita do backend (se existir)
+        const backendError = error.response?.data?.error;
+        const cleanMessage = backendError || "Ocorreu um erro inesperado. Tente novamente.";
+
+        // Cria um erro novo com a mensagem limpa para o frontend exibir
+        const customError = new Error(cleanMessage);
+        customError.originalError = error;
+        customError.status = error.response?.status;
+
+        // Se for erro de autorização (401/403) e não for na tela de login, pode redirecionar se quiser
+        if (error.response?.status === 401 && typeof window !== 'undefined' && !window.location.pathname.includes('login')) {
+            // Opcional: window.location.href = '/?login=true';
+        }
+
+        return Promise.reject(customError);
+    }
+);
+
 export const sendFingerprint = async (action, metadata = {}) => {
     try {
         const deviceFingerprint = await getDeviceFingerprint();

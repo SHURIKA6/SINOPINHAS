@@ -199,7 +199,7 @@ export default function Home() {
       setVideoComments(data);
       showToast('Comentário enviado!', 'success');
     } catch (err) {
-      showToast(err.response?.data?.error || 'Erro ao comentar', 'error');
+      showToast(err.message || 'Erro ao comentar', 'error');
     }
   };
 
@@ -211,7 +211,7 @@ export default function Home() {
       setVideoComments(data);
       showToast('Comentário deletado!', 'success');
     } catch (err) {
-      showToast('Erro ao deletar comentário', 'error');
+      showToast(err.message || 'Erro ao deletar comentário', 'error');
     }
   };
 
@@ -224,7 +224,7 @@ export default function Home() {
       await loadVideos();
       await loadSecretVideos();
     } catch (err) {
-      showToast(err.response?.data?.error || 'Erro ao deletar', 'error');
+      showToast(err.message || 'Erro ao deletar', 'error');
     }
   }, [user, isAdmin, adminPassword, showToast, loadVideos, loadSecretVideos]);
 

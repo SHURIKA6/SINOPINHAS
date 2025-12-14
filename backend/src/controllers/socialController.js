@@ -1,5 +1,6 @@
 import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
+import { sanitize } from '../utils/sanitize.js';
 
 export const likeVideo = async (c) => {
     const videoId = c.req.param("id");
@@ -49,13 +50,16 @@ export const postComment = async (c) => {
     try {
         const { video_id, user_id, comment } = await c.req.json();
 
-        if (!comment || !comment.trim()) {
+        // Prevent XSS
+        const cleanComment = sanitize(comment);
+
+        if (!cleanComment || !cleanComment.trim()) {
             return c.json({ error: "Comentário vazio" }, 400);
         }
 
         await queryDB(
             "INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
-            [video_id, user_id, comment],
+            [video_id, user_id, cleanComment],
             env
         );
 
@@ -163,10 +167,11 @@ export const sendMessage = async (c) => {
     const env = c.env;
     try {
         const { from_id, to_id, msg } = await c.req.json();
+        const cleanMsg = sanitize(msg);
 
         await queryDB(
             "INSERT INTO messages (from_id, to_id, msg) VALUES ($1, $2, $3)",
-            [from_id, to_id, msg],
+            [from_id, to_id, cleanMsg],
             env
         );
 
