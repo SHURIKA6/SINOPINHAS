@@ -8,3 +8,4 @@ npm-debug.log*
 .wrangler/
 dist/
 build/
+.dev.vars
