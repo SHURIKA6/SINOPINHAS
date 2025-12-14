@@ -7,7 +7,18 @@ import socialRoutes from './src/routes/social.js';
 
 const app = new Hono();
 
-app.use("/*", cors());
+app.use("/*", cors({
+  origin: [
+    'https://sinopinhas.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Upgrade-Insecure-Requests'],
+  exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+  maxAge: 600,
+  credentials: true,
+}));
 
 // Mount routes
 app.route('/api', authRoutes);
