@@ -35,4 +35,9 @@ app.get("/", (c) => {
   });
 });
 
+app.onError((err, c) => {
+  console.error("❌ Erro não tratado:", err);
+  return c.json({ error: "Erro interno no servidor" }, 500);
+});
+
 export default app;

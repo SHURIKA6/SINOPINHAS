@@ -13,6 +13,7 @@ export async function queryDB(sql, params = [], env) {
                 max: 10, // Max concurrent connections
                 idleTimeoutMillis: 30000,
                 connectionTimeoutMillis: 2000,
+                ssl: { rejectUnauthorized: false } // Required for most cloud DBs
             });
 
             pool.on('error', (err) => {
