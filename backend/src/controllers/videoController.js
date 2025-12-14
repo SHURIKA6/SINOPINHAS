@@ -9,6 +9,7 @@ export const uploadVideo = async (c) => {
         const formData = await c.req.formData();
         const file = formData.get("file");
         const title = formData.get("title");
+        const description = formData.get("description") || ""; // Get description
         const userId = formData.get("user_id");
         const isRestricted = formData.get("is_restricted") === "true";
 
@@ -18,6 +19,7 @@ export const uploadVideo = async (c) => {
         }
 
         console.log(`📤 Upload: "${title}" (${file.size} bytes)`);
+        console.log(`📝 Descrição: ${description.substring(0, 50)}...`);
         console.log(`🔑 API Key (8 primeiros): ${env.BUNNY_API_KEY?.substring(0, 8)}`);
         console.log(`📚 BUNNY_LIBRARY_ID: ${env.BUNNY_LIBRARY_ID}`);
 
@@ -68,8 +70,8 @@ export const uploadVideo = async (c) => {
         }
 
         await queryDB(
-            "INSERT INTO videos (title, bunny_id, user_id, is_restricted) VALUES ($1, $2, $3, $4)",
-            [title, videoGuid, userId, isRestricted],
+            "INSERT INTO videos (title, description, bunny_id, user_id, is_restricted) VALUES ($1, $2, $3, $4, $5)",
+            [title, description, videoGuid, userId, isRestricted],
             env
         );
 

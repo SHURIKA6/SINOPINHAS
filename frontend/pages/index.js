@@ -449,6 +449,17 @@ export default function Home() {
               <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
                 {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
               </h2>
+
+              <div style={{ background: '#221c35', padding: 24, borderRadius: 16, marginBottom: 32, border: '1px solid #303030' }}>
+                <h3 style={{ marginTop: 0, fontSize: 22, color: '#fff' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
+                <p style={{ color: '#ccc', lineHeight: '1.6', fontSize: 16 }}>
+                  Bem-vindo à comunidade oficial de vídeos de Sinop! Aqui você encontra os melhores conteúdos locais,
+                  desde eventos e notícias até entretenimento e cultura da nossa região.
+                  Navegue pelos vídeos abaixo, deixe seu like e comentário para fortalecer nossa comunidade.
+                  Todo conteúdo é enviado por usuários verificados.
+                </p>
+              </div>
+
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 80 }}>
                   <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />

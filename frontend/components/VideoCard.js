@@ -65,8 +65,10 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     </div>
                 )}
                 <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</h3>
-                <p style={{ margin: '9px 0 0', fontSize: 14, color: '#aaa' }}>Por {video.username || 'Anônimo'}</p>
-                <div style={{ marginTop: 7, fontSize: 15, color: isSecret ? "#ffb3b3" : "#c2bcf7", display: 'flex', gap: 15 }}>
+                <p style={{ margin: '9px 0 0', fontSize: 13, color: '#ddd', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 45 }}>
+                    {video.description || "Sem descrição disponível."}
+                </p>
+                <div style={{ marginTop: 12, fontSize: 15, color: isSecret ? "#ffb3b3" : "#c2bcf7", display: 'flex', gap: 15 }}>
                     <button
                         onClick={() => onLike(video.id)}
                         style={{

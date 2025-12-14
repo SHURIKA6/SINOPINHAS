@@ -5,6 +5,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
     const [file, setFile] = useState(null);
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [videoTitle, setVideoTitle] = useState('');
+    const [description, setDescription] = useState('');
     const [progress, setProgress] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [isRestricted, setIsRestricted] = useState(false);
@@ -32,6 +33,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
         const form = new FormData();
         form.append('file', file);
         form.append('title', finalTitle);
+        form.append('description', description);
         form.append('user_id', user.id.toString());
         form.append('is_restricted', isRestricted.toString());
 
@@ -49,6 +51,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
             setFile(null);
             setThumbnailFile(null);
             setVideoTitle('');
+            setDescription('');
             setIsRestricted(false);
             await loadVideos();
             if (isRestricted) {
@@ -123,6 +126,14 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         value={videoTitle}
                         onChange={(e) => setVideoTitle(e.target.value)}
                         style={{ width: '100%', padding: 14, background: '#1a1a1a', border: '1px solid #303030', borderRadius: 10, color: '#fff', fontSize: 16, marginBottom: 16 }}
+                    />
+
+                    <textarea
+                        placeholder="📝 Descrição / Sinopse (Importante para AdSense)"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows={4}
+                        style={{ width: '100%', padding: 14, background: '#1a1a1a', border: '1px solid #303030', borderRadius: 10, color: '#fff', fontSize: 15, marginBottom: 16, resize: 'vertical' }}
                     />
 
                     <div style={{ marginBottom: 20 }}>
