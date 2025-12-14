@@ -4,6 +4,7 @@ import authRoutes from './src/routes/auth.js';
 import adminRoutes from './src/routes/admin.js';
 import videoRoutes from './src/routes/video.js';
 import socialRoutes from './src/routes/social.js';
+import debugRoutes from './src/routes/debug.js';
 
 const app = new Hono();
 
@@ -25,6 +26,7 @@ app.route('/api', authRoutes);
 app.route('/api', adminRoutes);
 app.route('/api', videoRoutes);
 app.route('/api', socialRoutes);
+app.route('/api/debug', debugRoutes);
 
 app.get("/", (c) => {
   return c.json({
