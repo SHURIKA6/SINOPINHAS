@@ -70,7 +70,8 @@ app.get('/fix-db', async (c) => {
                 created_at TIMESTAMP DEFAULT NOW()
             )`,
             `ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'`,
-            `ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`
         ];
 
         const results = [];

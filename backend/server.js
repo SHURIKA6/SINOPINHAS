@@ -9,11 +9,11 @@ import debugRoutes from './src/routes/debug.js';
 const app = new Hono();
 
 app.use("/*", async (c, next) => {
-  // FORCE CORS HEADERS - Applied before route handler
-  const origin = c.req.header('Origin') || 'https://sinopinhas.vercel.app';
+  // Hardcoded origin for stability
+  const origin = 'https://sinopinhas.vercel.app';
   c.header('Access-Control-Allow-Origin', origin);
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Upgrade-Insecure-Requests, X-Requested-With');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Upgrade-Insecure-Requests, X-Requested-With, Accept, Content-Length');
   c.header('Access-Control-Allow-Credentials', 'true');
   c.header('Access-Control-Max-Age', '600');
 
