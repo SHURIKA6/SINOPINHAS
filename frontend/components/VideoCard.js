@@ -37,7 +37,14 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
             )}
 
             <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative' }}>
-                {video.gdrive_id ? (
+                {video.video_url ? (
+                    <video
+                        src={video.video_url}
+                        controls
+                        style={{ width: "100%", height: "100%", objectFit: 'contain' }}
+                        poster={video.thumbnail || null}
+                    />
+                ) : video.gdrive_id ? (
                     <iframe
                         src={`https://drive.google.com/file/d/${video.gdrive_id}/preview`}
                         style={{ width: "100%", height: "100%", border: 'none' }}
@@ -45,12 +52,9 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                         allowFullScreen
                     />
                 ) : video.bunny_id ? (
-                    <iframe
-                        src={`https://iframe.mediadelivery.net/embed/548459/${video.bunny_id}?autoplay=false&preload=true`}
-                        style={{ width: "100%", height: "100%", border: 'none' }}
-                        allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                        allowFullScreen
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#aaa', flexDirection: 'column', gap: 10 }}>
+                        <span>⚠️ Vídeo indisponível (BunnyCDN expirado)</span>
+                    </div>
                 ) : (
                     <div style={{ width: "100%", height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
                         Sem vídeo
