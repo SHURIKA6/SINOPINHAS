@@ -69,7 +69,8 @@ app.get('/fix-db', async (c) => {
                 read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW()
             )`,
-            `ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'`
+            `ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`
         ];
 
         const results = [];
