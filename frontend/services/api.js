@@ -26,8 +26,12 @@ api.interceptors.response.use(
         }
 
         // DETECT HARD CRASH OR CORS ERROR (Usually DB connection failure)
-        if (error.message === 'Network Error' || (error.response?.status === 500 && !backendError)) {
+        // Only override if we didn't receive a polite error from the backend
+        if ((error.message === 'Network Error' || (error.message && error.message.includes('NetworkError'))) && !backendError) {
             customError.message = "Erro de Conexão: Verifique 'DATABASE_URL' no Cloudflare.";
+        } else if (error.response?.status === 500 && !backendError) {
+            // If 500 but no error message in body -> Hard Crash
+            customError.message = "Erro Interno: Verifique logs do servidor.";
         }
 
         return Promise.reject(customError);
