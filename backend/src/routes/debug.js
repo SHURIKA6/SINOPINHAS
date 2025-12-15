@@ -28,4 +28,59 @@ app.get('/health', async (c) => {
     }
 });
 
+app.get('/fix-db', async (c) => {
+    const env = c.env;
+    try {
+        const queries = [
+            `CREATE TABLE IF NOT EXISTS comments (
+                id SERIAL PRIMARY KEY,
+                video_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                comment TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )`,
+            `CREATE TABLE IF NOT EXISTS likes (
+                id SERIAL PRIMARY KEY,
+                video_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )`,
+            `CREATE TABLE IF NOT EXISTS views (
+                id SERIAL PRIMARY KEY,
+                video_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )`,
+            `CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                related_id INTEGER,
+                message TEXT,
+                read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )`,
+            `CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                from_id INTEGER NOT NULL,
+                to_id INTEGER NOT NULL,
+                msg TEXT NOT NULL,
+                is_admin BOOLEAN DEFAULT FALSE,
+                read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )`
+        ];
+
+        const results = [];
+        for (const q of queries) {
+            await queryDB(q, [], env);
+            results.push("Executed: " + q.substring(0, 50) + "...");
+        }
+
+        return c.json({ success: true, actions: results });
+    } catch (err) {
+        return c.json({ error: "DB Fix Failed", details: err.message }, 500);
+    }
+});
+
 export default app;
