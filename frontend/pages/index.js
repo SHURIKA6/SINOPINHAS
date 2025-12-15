@@ -59,6 +59,7 @@ export async function getServerSideProps(context) {
 export default function Home({ initialVideo }) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [toast, setToast] = useState(null); // Restored
 
   // Auth & Modal States
   const [showAuth, setShowAuth] = useState(false); // Restored
