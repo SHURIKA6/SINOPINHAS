@@ -38,4 +38,36 @@ app.onError((err, c) => {
   return createErrorResponse(c, "INTERNAL_ERROR", "Ocorreu um erro interno no servidor.", 500, err.message);
 });
 
-export default app;
+// Hono's default fetch handler
+const honoFetch = app.fetch;
+
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      // Global OPTIONS preflight check (Manual safeguard before matching routes)
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders
+        });
+      }
+
+      return await honoFetch(request, env, ctx);
+    } catch (err) {
+      console.error("🔥 CRITICAL ENTRYPOINT ERROR:", err);
+
+      // Fallback manual CORS response
+      return new Response(JSON.stringify({
+        error: 'INTERNAL_ERROR',
+        message: 'Internal server error',
+        details: err.message
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+  }
+};

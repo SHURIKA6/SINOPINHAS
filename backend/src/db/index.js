@@ -42,12 +42,27 @@ export async function queryDB(sql, params = [], env) {
     let retries = 2; // Try up to 3 times total
     let lastError = null;
 
+
+
     while (retries >= 0) {
         const start = Date.now();
         let client;
         try {
-            client = await pool.connect();
-            const result = await client.query(sql, params);
+            // Defensive setup: Strict timeout for connection and query
+            const dbOperation = async () => {
+                const c = await pool.connect();
+                try {
+                    return await c.query(sql, params);
+                } finally {
+                    c.release();
+                }
+            };
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("DB_TIMEOUT")), 5000)
+            );
+
+            const result = await Promise.race([dbOperation(), timeoutPromise]);
 
             const duration = Date.now() - start;
             if (duration > 500) {
@@ -58,19 +73,12 @@ export async function queryDB(sql, params = [], env) {
             lastError = err;
             console.error(`⚠️ Erro no banco (Tentativa ${3 - retries}/3):`, err.message);
 
-            // If connection strictly failed, might need to reset pool
-            if (err.message.includes('ECONNREFUSED') || err.message.includes('connection') || err.message.includes('terminat')) {
-                // Try to force recreate pool on next call? 
-                // For now, just retry logic.
-            }
-
             if (retries === 0) break;
 
             retries--;
             await new Promise(r => setTimeout(r, 500)); // Wait 500ms before retry
-        } finally {
-            if (client) client.release();
         }
+        // Client is released inside dbOperation finally block
     }
 
     // If we're here, all retries failed
