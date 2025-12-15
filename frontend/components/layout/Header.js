@@ -167,7 +167,7 @@ export default function Header({
             </header>
 
             <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030', overflowX: 'auto' }}>
-                {['videos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+                {['videos', 'photos', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)} style={{
                         padding: '14px 20px', background: 'none', border: 'none',
                         borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
@@ -175,7 +175,7 @@ export default function Header({
                         fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
                         transition: 'all 0.3s', position: 'relative', whiteSpace: 'nowrap'
                     }}>
-                        {tab === 'videos' ? 'Vídeos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? (
+                        {tab === 'videos' ? 'Vídeos' : tab === 'photos' ? 'Fotos' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? (
                             <>
                                 Mensagens
                                 {unreadCount > 0 && (

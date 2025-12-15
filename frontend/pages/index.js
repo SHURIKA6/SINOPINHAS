@@ -347,6 +347,19 @@ export default function Home({ initialVideo }) {
               onVideoClick={openComments}
               showToast={showToast}
               canDelete={canDelete}
+              filterType="video"
+            />
+          )}
+
+          {activeTab === 'photos' && (
+            <HomeFeed
+              user={user}
+              isAdmin={isAdmin}
+              adminPassword={adminPassword}
+              onVideoClick={openComments}
+              showToast={showToast}
+              canDelete={canDelete}
+              filterType="photo"
             />
           )}
 

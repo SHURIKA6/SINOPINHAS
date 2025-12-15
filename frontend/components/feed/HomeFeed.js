@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import VideoCard from '../VideoCard';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 
-export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete }) {
+export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType = 'video' }) {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -12,7 +12,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     useEffect(() => {
         loadVideos();
-    }, [searchQuery, sortBy]); // Reload when search/sort changes
+    }, [searchQuery, sortBy, filterType]); // Reload when search/sort/filter changes
 
     const loadVideos = async () => {
         setLoading(true);
@@ -24,10 +24,19 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             } else {
                 data = await fetchVideos(user?.id);
             }
+
+            // Filter by type
+            if (filterType === 'photo') {
+                data = data.filter(v => v.type === 'photo');
+            } else {
+                // Video: include 'video' AND legacy (undefined/null)
+                data = data.filter(v => !v.type || v.type === 'video');
+            }
+
             setVideos(data);
         } catch (error) {
             console.error("Erro ao carregar vídeos:", error);
-            showToast('error', 'Erro ao carregar vídeos');
+            showToast('error', 'Erro ao carregar conteúdo');
         } finally {
             setLoading(false);
         }
@@ -52,21 +61,21 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         try {
             await likeVideo(videoId, user.id);
         } catch (err) {
-            showToast('error', 'Erro ao curtir vídeo');
+            showToast('error', 'Erro ao curtir');
             loadVideos(); // Revert on error
         }
     };
 
     const handleDeleteVideo = async (videoId) => {
-        if (!confirm('Tem certeza que deseja excluir este vídeo?')) return;
+        if (!confirm('Tem certeza que deseja excluir?')) return;
 
         try {
             await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
             setVideos(prev => prev.filter(v => v.id !== videoId));
-            showToast('success', 'Vídeo removido com sucesso!');
+            showToast('success', 'Removido com sucesso!');
         } catch (err) {
             console.error(err);
-            showToast('error', 'Erro ao excluir vídeo');
+            showToast('error', 'Erro ao excluir');
         }
     };
 
@@ -83,6 +92,9 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
     const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
 
+    const label = filterType === 'photo' ? 'foto' : 'vídeo';
+    const Label = filterType === 'photo' ? 'Foto' : 'Vídeo';
+
     return (
         <div>
             <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
@@ -90,7 +102,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
                     <input
                         type="text"
-                        placeholder="🔍 Buscar vídeos..."
+                        placeholder={`🔍 Buscar ${label}s...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{
@@ -127,13 +139,13 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
                 {/* Header */}
                 <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-                    {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
+                    {loading ? 'Carregando...' : `${sortedVideos.length} ${label}${sortedVideos.length !== 1 ? 's' : ''}`}
                 </h2>
 
                 <div style={{ background: '#221c35', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid #303030' }}>
                     <h3 style={{ marginTop: 0, fontSize: 22, color: '#fff' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
                     <p style={{ color: '#ccc', lineHeight: '1.6', fontSize: 16 }}>
-                        Bem-vindo à comunidade oficial de vídeos de Sinop! Aqui você encontra os melhores conteúdos locais.
+                        Bem-vindo à comunidade oficial de Sinop! Aqui você encontra os melhores conteúdos locais.
                     </p>
                 </div>
 
@@ -144,8 +156,8 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                     </div>
                 ) : sortedVideos.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
-                        <div style={{ fontSize: 41, marginBottom: 18 }}>📹</div>
-                        <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo encontrado</p>
+                        <div style={{ fontSize: 41, marginBottom: 18 }}>{filterType === 'photo' ? '🖼️' : '📹'}</div>
+                        <p style={{ fontSize: 19, margin: 0 }}>Nenhum {label} encontrado</p>
                     </div>
                 ) : (
                     <>
