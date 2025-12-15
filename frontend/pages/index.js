@@ -69,6 +69,12 @@ export default function Home({ initialVideo }) {
   // State for Feeds is now internal to HomeFeed/SecretFeed
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Global Video Modal State (required for SSR/SEO deep linking)
+  const [currentVideo, setCurrentVideo] = useState(initialVideo || null);
+  const [showCommentsModal, setShowCommentsModal] = useState(!!initialVideo);
+  const [videoComments, setVideoComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedAdminPassword = localStorage.getItem('adminPassword');
@@ -111,7 +117,7 @@ export default function Home({ initialVideo }) {
     }
 
     showToast('Termos aceitos! Bem-vindo ao SINOPINHAS 🎉', 'success');
-    loadVideos();
+    // loadVideos(); // Removed - Feeds load automatically
   };
 
   const handleDeclineTerms = () => {
