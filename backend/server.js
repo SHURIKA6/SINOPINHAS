@@ -8,14 +8,24 @@ import debugRoutes from './src/routes/debug.js';
 
 const app = new Hono();
 
-app.use("/*", cors({
-  origin: (origin) => origin || '*', // Dynamic reflection to allow ALL origins with credentials
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowHeaders: ['Content-Type', 'Authorization', 'Upgrade-Insecure-Requests', 'X-Requested-With'],
-  exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
-  maxAge: 600,
-  credentials: true,
-}));
+app.use("/*", async (c, next) => {
+  // FORCE CORS HEADERS - Applied before route handler
+  const origin = c.req.header('Origin') || 'https://sinopinhas.vercel.app';
+  c.header('Access-Control-Allow-Origin', origin);
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Upgrade-Insecure-Requests, X-Requested-With');
+  c.header('Access-Control-Allow-Credentials', 'true');
+  c.header('Access-Control-Max-Age', '600');
+
+  try {
+    await next();
+  } catch (err) {
+    // Catch ANY error that bubbled up and wasn't caught by onError yet
+    // This is a safety net. Usually onError handles it.
+    console.error("🔥 Global Middleware Catch:", err);
+    throw err;
+  }
+});
 
 // Handle OPTIONS explicitly just in case
 app.options("/*", (c) => {
