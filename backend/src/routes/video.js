@@ -4,9 +4,14 @@ import * as videoController from '../controllers/videoController.js';
 
 const app = new Hono();
 
-app.post('/upload', blockVPN, videoController.uploadVideo);
-app.get('/videos', videoController.listVideos);
-app.get('/secret-videos', videoController.listSecretVideos);
-app.delete('/videos/:id', videoController.deleteVideo);
+// Search routes
+app.get('/videos/search', videoController.searchVideos);
+app.get('/videos/:id', videoController.getVideo);
+
+// Existing routes (Restored)
+app.post('/upload', blockVPN, videoController.uploadVideo); // /api/upload
+app.get('/videos', videoController.listVideos); // /api/videos
+app.get('/secret-videos', videoController.listSecretVideos); // /api/secret-videos
+app.delete('/videos/:id', videoController.deleteVideo); // /api/videos/:id
 
 export default app;

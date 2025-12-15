@@ -1,0 +1,190 @@
+import { useState, useEffect, useMemo } from 'react';
+import VideoCard from '../VideoCard';
+import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
+
+export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete }) {
+    const [videos, setVideos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('recent');
+    const [page, setPage] = useState(1);
+    const VIDEOS_PER_PAGE = 12;
+
+    useEffect(() => {
+        loadVideos();
+    }, [searchQuery, sortBy]); // Reload when search/sort changes
+
+    const loadVideos = async () => {
+        setLoading(true);
+        try {
+            let data = [];
+            if (searchQuery.trim().length > 2) {
+                // Use Backend Search
+                data = await searchVideos(searchQuery);
+            } else {
+                data = await fetchVideos(user?.id);
+            }
+            setVideos(data);
+        } catch (error) {
+            console.error("Erro ao carregar vídeos:", error);
+            showToast('error', 'Erro ao carregar vídeos');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const toggleLike = async (videoId) => {
+        if (!user) return showToast('error', 'Faça login para curtir!');
+
+        // Update UI immediately (optimistic)
+        setVideos(prev => prev.map(v => {
+            if (v.id === videoId) {
+                const isLiked = !v.user_liked;
+                return {
+                    ...v,
+                    user_liked: isLiked,
+                    likes: isLiked ? parseInt(v.likes) + 1 : parseInt(v.likes) - 1
+                };
+            }
+            return v;
+        }));
+
+        try {
+            await likeVideo(videoId, user.id);
+        } catch (err) {
+            showToast('error', 'Erro ao curtir vídeo');
+            loadVideos(); // Revert on error
+        }
+    };
+
+    const handleDeleteVideo = async (videoId) => {
+        if (!confirm('Tem certeza que deseja excluir este vídeo?')) return;
+
+        try {
+            await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
+            setVideos(prev => prev.filter(v => v.id !== videoId));
+            showToast('success', 'Vídeo removido com sucesso!');
+        } catch (err) {
+            console.error(err);
+            showToast('error', 'Erro ao excluir vídeo');
+        }
+    };
+
+
+    const sortedVideos = useMemo(() => {
+        let list = [...videos];
+        if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
+        else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
+        // 'recent' is default from DB usually, but we sort again just in case
+        else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return list;
+    }, [videos, sortBy]);
+
+    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
+    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
+
+    return (
+        <div>
+            <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+                {/* Search and Sort */}
+                <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
+                    <input
+                        type="text"
+                        placeholder="🔍 Buscar vídeos..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{
+                            flex: 1,
+                            minWidth: '200px',
+                            padding: '12px 20px',
+                            background: '#1a1a1a',
+                            border: '1px solid #303030',
+                            borderRadius: 10,
+                            color: '#fff',
+                            fontSize: 16
+                        }}
+                    />
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        style={{
+                            padding: '12px 20px',
+                            background: '#1a1a1a',
+                            border: '1px solid #303030',
+                            borderRadius: 10,
+                            color: '#fff',
+                            fontSize: 16,
+                            cursor: 'pointer',
+                            minWidth: '150px',
+                            flex: 1
+                        }}
+                    >
+                        <option value="recent">📅 Mais Recentes</option>
+                        <option value="popular">🔥 Mais Visualizados</option>
+                        <option value="liked">❤️ Mais Curtidos</option>
+                    </select>
+                </div>
+
+                {/* Header */}
+                <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
+                    {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
+                </h2>
+
+                <div style={{ background: '#221c35', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid #303030' }}>
+                    <h3 style={{ marginTop: 0, fontSize: 22, color: '#fff' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
+                    <p style={{ color: '#ccc', lineHeight: '1.6', fontSize: 16 }}>
+                        Bem-vindo à comunidade oficial de vídeos de Sinop! Aqui você encontra os melhores conteúdos locais.
+                    </p>
+                </div>
+
+                {/* Grid */}
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: 80 }}>
+                        <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                    </div>
+                ) : sortedVideos.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
+                        <div style={{ fontSize: 41, marginBottom: 18 }}>📹</div>
+                        <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo encontrado</p>
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                            {paginatedVideos.map((v) => (
+                                <VideoCard
+                                    key={v.id}
+                                    video={v}
+                                    onDelete={handleDeleteVideo}
+                                    onLike={toggleLike}
+                                    onOpenComments={onVideoClick}
+                                    canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
+                                    isSecret={false}
+                                />
+                            ))}
+                        </div>
+
+                        {hasMoreVideos && (
+                            <div style={{ textAlign: 'center', marginTop: 30 }}>
+                                <button
+                                    onClick={() => setPage(p => p + 1)}
+                                    style={{
+                                        padding: '12px 32px',
+                                        background: '#8d6aff',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: 10,
+                                        fontSize: 16,
+                                        fontWeight: 600,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Carregar Mais
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}

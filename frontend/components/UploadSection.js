@@ -53,7 +53,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
             setVideoTitle('');
             setDescription('');
             setIsRestricted(false);
-            await loadVideos();
+            if (loadVideos) await loadVideos();
             if (isRestricted) {
                 setActiveTab('secret');
             } else {
@@ -129,7 +129,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                     />
 
                     <textarea
-                        placeholder="📝 Descrição / Sinopse (Importante para AdSense)"
+                        placeholder="📝 Descrição"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={4}

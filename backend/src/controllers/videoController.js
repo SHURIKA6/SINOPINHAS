@@ -176,3 +176,68 @@ export const deleteVideo = async (c) => {
         return c.json({ error: "Erro ao deletar vídeo R2" }, 500);
     }
 };
+
+export const getVideo = async (c) => {
+    const videoId = c.req.param("id");
+    const env = c.env;
+    try {
+        const { rows } = await queryDB(
+            `SELECT v.*, u.username,
+       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
+       (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+       FROM videos v
+       LEFT JOIN users u ON v.user_id = u.id
+       WHERE v.id = $1`,
+            [videoId],
+            env
+        );
+
+        if (rows.length === 0) {
+            return c.json({ error: "Vídeo não encontrado" }, 404);
+        }
+
+        const video = rows[0];
+        const videoWithUrl = {
+            ...video,
+            video_url: video.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${video.bunny_id}` : null
+        };
+
+        return c.json(videoWithUrl);
+    } catch (err) {
+        console.error("❌ Erro ao buscar vídeo:", err);
+        return c.json({ error: "Erro ao buscar vídeo" }, 500);
+    }
+};
+
+export const searchVideos = async (c) => {
+    const env = c.env;
+    const query = c.req.query("q");
+    try {
+        if (!query) return c.json([]);
+
+        const { rows } = await queryDB(
+            `SELECT v.*, u.username,
+       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
+       (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+       FROM videos v
+       LEFT JOIN users u ON v.user_id = u.id
+       WHERE v.is_restricted = false 
+       AND (v.title ILIKE $1 OR v.description ILIKE $1)
+       ORDER BY v.created_at DESC LIMIT 50`,
+            [`%${query}%`],
+            env
+        );
+
+        // Inject R2 URL
+        const videosWithUrl = rows.map(v => ({
+            ...v,
+            video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
+        }));
+
+        console.log(`🔍 Busca por "${query}": ${rows.length} resultados`);
+        return c.json(videosWithUrl);
+    } catch (err) {
+        console.error("❌ Erro na busca:", err);
+        return c.json({ error: "Erro ao buscar" }, 500);
+    }
+};

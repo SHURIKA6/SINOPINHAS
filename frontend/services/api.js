@@ -81,6 +81,11 @@ export const fetchSecretVideos = async (userId = null) => {
     return res.data;
 };
 
+export const searchVideos = async (query) => {
+    const res = await api.get(`/api/videos/search?q=${encodeURIComponent(query)}`);
+    return res.data;
+};
+
 export const likeVideo = (videoId, userId) => {
     return api.post(`/api/videos/${videoId}/like`, { user_id: userId });
 };

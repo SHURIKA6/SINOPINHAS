@@ -28,10 +28,35 @@ import {
 
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
+const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
+const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Home() {
+export async function getServerSideProps(context) {
+  const { v } = context.query;
+  let initialVideo = null;
+
+  if (v) {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+      const res = await fetch(`${apiUrl}/api/videos/${v}`);
+      if (res.ok) {
+        initialVideo = await res.json();
+      }
+    } catch (err) {
+      console.error('Error fetching video for SEO:', err);
+    }
+  }
+
+  return {
+    props: {
+      initialVideo
+    }
+  };
+}
+
+export default function Home({ initialVideo }) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
@@ -41,28 +66,8 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [activeTab, setActiveTab] = useState('videos');
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
-
-  const [showAuth, setShowAuth] = useState(false);
-  const [showAdminAuth, setShowAdminAuth] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-
-  const [videos, setVideos] = useState([]);
-  const [secretVideos, setSecretVideos] = useState([]);
-
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [currentVideo, setCurrentVideo] = useState(null);
-  const [videoComments, setVideoComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
+  // State for Feeds is now internal to HomeFeed/SecretFeed
   const [unreadCount, setUnreadCount] = useState(0);
-
-  const [page, setPage] = useState(1);
-  const VIDEOS_PER_PAGE = 12;
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -136,44 +141,7 @@ export default function Home() {
     }
   };
 
-  const loadVideos = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await fetchVideos(user ? user.id : null);
-      setVideos(data);
-    } catch (err) {
-      showToast('Erro ao carregar vídeos', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, showToast]);
-
-  const loadSecretVideos = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await fetchSecretVideos(user ? user.id : null);
-      setSecretVideos(data);
-    } catch (err) {
-      showToast('Erro ao carregar vídeos restritos', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, showToast]);
-
-  const canDelete = useCallback((ownerId) => {
-    return isAdmin || (user && user.id.toString() === ownerId);
-  }, [isAdmin, user]);
-
-  const toggleLike = useCallback(async (videoId) => {
-    if (!user) return showToast('Faça login para curtir', 'error');
-    try {
-      await likeVideo(videoId, user.id);
-      await loadVideos();
-      if (activeTab === 'secret') await loadSecretVideos();
-    } catch (err) {
-      showToast('Erro ao curtir vídeo', 'error');
-    }
-  }, [user, showToast, loadVideos, loadSecretVideos, activeTab]);
+  /* Removed loadVideos/loadSecretVideos/toggleLike - Handled by Feed components */
 
   const openComments = useCallback(async (video) => {
     setCurrentVideo(video);
@@ -215,18 +183,13 @@ export default function Home() {
     }
   };
 
-  const deleteVideo = useCallback(async (videoId, ownerId) => {
-    if (!user && !isAdmin) return showToast('Faça login para deletar', 'error');
-    if (!confirm('Tem certeza que deseja deletar este vídeo?')) return;
-    try {
-      await removeVideo(videoId, user ? user.id : null, isAdmin ? adminPassword : null);
-      showToast('Vídeo deletado!', 'success');
-      await loadVideos();
-      await loadSecretVideos();
-    } catch (err) {
-      showToast(err.message || 'Erro ao deletar', 'error');
-    }
-  }, [user, isAdmin, adminPassword, showToast, loadVideos, loadSecretVideos]);
+  // canDelete and deleteVideo logic moved to Feed, but canDelete helper kept for props if needed?
+  // Actually canDelete is useful to pass down. I removed it in the chunk above by accident! 
+  // I need to RESTORE canDelete.
+
+  const canDelete = useCallback((ownerId) => {
+    return isAdmin || (user && user.id.toString() === ownerId);
+  }, [isAdmin, user]);
 
   const handleAuthSuccess = (userData) => {
     setUser(userData);
@@ -257,47 +220,7 @@ export default function Home() {
     showToast('Saiu do modo admin', 'success');
   };
 
-  const filteredVideos = useMemo(() => {
-    return videos.filter(v =>
-      v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [videos, searchQuery]);
-
-  const filteredSecretVideos = useMemo(() => {
-    return secretVideos.filter(v =>
-      v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (v.username || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [secretVideos, searchQuery]);
-
-  const sortVideos = useCallback((videoList) => {
-    const sorted = [...videoList];
-    switch (sortBy) {
-      case 'recent':
-        return sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      case 'popular':
-        return sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
-      case 'liked':
-        return sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-      default:
-        return sorted;
-    }
-  }, [sortBy]);
-
-  const sortedVideos = useMemo(() => sortVideos(filteredVideos), [filteredVideos, sortVideos]);
-  const sortedSecretVideos = useMemo(() => sortVideos(filteredSecretVideos), [filteredSecretVideos, sortVideos]);
-
-  const paginatedVideos = useMemo(() => {
-    return sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
-  }, [sortedVideos, page]);
-
-  const paginatedSecretVideos = useMemo(() => {
-    return sortedSecretVideos.slice(0, page * VIDEOS_PER_PAGE);
-  }, [sortedSecretVideos, page]);
-
-  const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
-  const hasMoreSecretVideos = paginatedSecretVideos.length < sortedSecretVideos.length;
+  /* Logic removed */
 
   if (!termsAccepted) {
     return (
@@ -320,8 +243,15 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>SINOPINHAS - Streaming de Vídeos</title>
-        <meta name="description" content="Plataforma de streaming de vídeos" />
+        <title>{currentVideo ? `${currentVideo.title} | Sinopinhas` : "SINOPINHAS - Streaming de Vídeos"}</title>
+        <meta name="description" content={currentVideo?.description || "Plataforma de streaming de vídeos"} />
+
+        {/* Open Graph / Social Media */}
+        <meta property="og:type" content="video.other" />
+        <meta property="og:title" content={currentVideo ? currentVideo.title : "SINOPINHAS"} />
+        <meta property="og:description" content={currentVideo?.description || "Assista aos melhores vídeos exclusivos na Sinopinhas."} />
+        <meta property="og:image" content="https://sinopinhas.vercel.app/og-default.jpg" />
+        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : 'https://sinopinhas.vercel.app'} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="theme-color" content="#18142a" />
         <link rel="preconnect" href={API} />
@@ -405,167 +335,33 @@ export default function Home() {
 
         <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
-          {(activeTab === 'videos' || activeTab === 'secret') && (
-            <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
-              <input
-                type="text"
-                placeholder="🔍 Buscar vídeos por título ou autor..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  flex: 1,
-                  minWidth: '200px',
-                  padding: '12px 20px',
-                  background: '#1a1a1a',
-                  border: '1px solid #303030',
-                  borderRadius: 10,
-                  color: '#fff',
-                  fontSize: 16
-                }}
-              />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{
-                  padding: '12px 20px',
-                  background: '#1a1a1a',
-                  border: '1px solid #303030',
-                  borderRadius: 10,
-                  color: '#fff',
-                  fontSize: 16,
-                  cursor: 'pointer',
-                  minWidth: '150px',
-                  flex: 1
-                }}
-              >
-                <option value="recent">📅 Mais Recentes</option>
-                <option value="popular">🔥 Mais Visualizados</option>
-                <option value="liked">❤️ Mais Curtidos</option>
-              </select>
-            </div>
-          )}
 
+          {/* Feeds */}
           {activeTab === 'videos' && (
-            <div>
-              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-                {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
-              </h2>
-
-              <div style={{ background: '#221c35', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid #303030' }}>
-                <h3 style={{ marginTop: 0, fontSize: 22, color: '#fff' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
-                <p style={{ color: '#ccc', lineHeight: '1.6', fontSize: 16 }}>
-                  Bem-vindo à comunidade oficial de vídeos de Sinop! Aqui você encontra os melhores conteúdos locais.
-                  Navegue pelos vídeos abaixo, deixe seu like e comentário para fortalecer nossa comunidade.
-                  Todo conteúdo é enviado por usuários verificados.
-                </p>
-              </div>
-
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: 80 }}>
-                  <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-                </div>
-              ) : sortedVideos.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
-                  <div style={{ fontSize: 41, marginBottom: 18 }}>📹</div>
-                  <p style={{ fontSize: 19, margin: 0 }}>Nenhum vídeo encontrado</p>
-                  <button onClick={() => setActiveTab('upload')} style={{ marginTop: 18, padding: '10px 24px', background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 20, fontWeight: 600, cursor: 'pointer' }}>
-                    Fazer primeiro upload
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                    {paginatedVideos.map((v) => (
-                      <VideoCard
-                        key={v.id}
-                        video={v}
-                        onDelete={deleteVideo}
-                        onLike={toggleLike}
-                        onOpenComments={openComments}
-                        canDelete={canDelete(v.user_id?.toString())}
-                        isSecret={false}
-                      />
-                    ))}
-                  </div>
-
-                  {hasMoreVideos && (
-                    <div style={{ textAlign: 'center', marginTop: 30 }}>
-                      <button
-                        onClick={() => setPage(p => p + 1)}
-                        style={{
-                          padding: '12px 32px',
-                          background: '#8d6aff',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 10,
-                          fontSize: 16,
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Carregar Mais
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            <HomeFeed
+              user={user}
+              isAdmin={isAdmin}
+              adminPassword={adminPassword}
+              onVideoClick={openComments}
+              showToast={showToast}
+              canDelete={canDelete}
+            />
           )}
 
           {activeTab === 'secret' && (
-            <div>
-              <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#ff6b9d' }}>
-                🔒 CONTEÚDO RESTRITO ({sortedSecretVideos.length})
-              </h2>
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: 80 }}>
-                  <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-                </div>
-              ) : sortedSecretVideos.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
-                  <div style={{ fontSize: 41, marginBottom: 18 }}>🔒</div>
-                  <p style={{ fontSize: 19, margin: 0 }}>Nenhum conteúdo restrito encontrado</p>
-                  <p style={{ fontSize: 14, marginTop: 8 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                    {paginatedSecretVideos.map((v) => (
-                      <VideoCard
-                        key={v.id}
-                        video={v}
-                        onDelete={deleteVideo}
-                        onLike={toggleLike}
-                        onOpenComments={openComments}
-                        canDelete={canDelete(v.user_id?.toString())}
-                        isSecret={true}
-                      />
-                    ))}
-                  </div>
-
-                  {hasMoreSecretVideos && (
-                    <div style={{ textAlign: 'center', marginTop: 30 }}>
-                      <button
-                        onClick={() => setPage(p => p + 1)}
-                        style={{
-                          padding: '12px 32px',
-                          background: '#e53e3e',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 10,
-                          fontSize: 16,
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Carregar Mais
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            <SecretFeed
+              user={user}
+              isAdmin={isAdmin}
+              adminPassword={adminPassword}
+              onVideoClick={openComments}
+              showToast={showToast}
+              canDelete={canDelete}
+            />
           )}
+
+          {/* Legacy Upload/Admin tabs below */}
+
+          {/* Legacy grid removed */}
 
           {activeTab === 'upload' && (
             <UploadSection
