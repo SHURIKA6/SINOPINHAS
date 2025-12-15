@@ -1,5 +1,6 @@
 import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
+import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 export const uploadVideo = async (c) => {
     const env = c.env;
@@ -21,7 +22,7 @@ export const uploadVideo = async (c) => {
 
         if (!file || !title || !userId) {
             console.log("❌ Faltam dados obrigatórios");
-            return c.json({ error: "Faltam dados obrigatórios" }, 400);
+            return createErrorResponse(c, "INVALID_INPUT", "Faltam dados obrigatórios", 400);
         }
 
         // Generate unique filename (simple random string + timestamp)
@@ -51,7 +52,7 @@ export const uploadVideo = async (c) => {
         await logAudit(userId, "VIDEO_UPLOADED_R2", { title, r2_key: r2Key, is_restricted: isRestricted }, c);
         console.log(`✅ Detalhes salvos no banco!`);
 
-        return c.json({ success: true, bunny_id: r2Key });
+        return createResponse(c, { success: true, bunny_id: r2Key });
     } catch (err) {
         console.error("❌ ERRO NO UPLOAD:", err);
         throw err;
@@ -88,7 +89,7 @@ export const listVideos = async (c) => {
         }));
 
         console.log(`✅ Listados ${rows.length} vídeos públicos`);
-        return c.json(videosWithUrl);
+        return createResponse(c, videosWithUrl);
     } catch (err) {
         console.error("❌ Erro ao buscar vídeos:", err);
         throw err;
@@ -125,7 +126,7 @@ export const listSecretVideos = async (c) => {
         }));
 
         console.log(`✅ Listados ${rows.length} vídeos restritos`);
-        return c.json(videosWithUrl);
+        return createResponse(c, videosWithUrl);
     } catch (err) {
         console.error("❌ Erro ao buscar vídeos restritos:", err);
         throw err;
@@ -140,14 +141,14 @@ export const deleteVideo = async (c) => {
         const isAdmin = adminPassword === env.ADMIN_PASSWORD;
 
         if (!isAdmin && !userId) {
-            return c.json({ error: "Não autorizado" }, 403);
+            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
         }
 
         // Get video details to find the R2 Key
         const { rows } = await queryDB("SELECT user_id, bunny_id FROM videos WHERE id = $1", [videoId], env);
 
         if (rows.length === 0) {
-            return c.json({ error: "Vídeo não encontrado" }, 404);
+            return createErrorResponse(c, "NOT_FOUND", "Vídeo não encontrado", 404);
         }
 
         const video = rows[0];
@@ -155,7 +156,7 @@ export const deleteVideo = async (c) => {
         // Authorization Check
         if (!isAdmin) {
             if (video.user_id.toString() !== userId.toString()) {
-                return c.json({ error: "Não autorizado" }, 403);
+                return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
             }
         }
 
@@ -170,7 +171,7 @@ export const deleteVideo = async (c) => {
         await logAudit(userId || null, "VIDEO_DELETED_R2", { video_id: videoId, is_admin: isAdmin }, c);
         console.log(`✅ Vídeo deletado do DB: ID ${videoId}`);
 
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao deletar vídeo:", err);
         throw err;
@@ -193,7 +194,7 @@ export const getVideo = async (c) => {
         );
 
         if (rows.length === 0) {
-            return c.json({ error: "Vídeo não encontrado" }, 404);
+            return createErrorResponse(c, "NOT_FOUND", "Vídeo não encontrado", 404);
         }
 
         const video = rows[0];
@@ -202,7 +203,7 @@ export const getVideo = async (c) => {
             video_url: video.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${video.bunny_id}` : null
         };
 
-        return c.json(videoWithUrl);
+        return createResponse(c, videoWithUrl);
     } catch (err) {
         console.error("❌ Erro ao buscar vídeo:", err);
         throw err;
@@ -213,7 +214,7 @@ export const searchVideos = async (c) => {
     const env = c.env;
     const query = c.req.query("q");
     try {
-        if (!query) return c.json([]);
+        if (!query) return createResponse(c, []);
 
         const { rows } = await queryDB(
             `SELECT v.*, u.username,
@@ -235,7 +236,7 @@ export const searchVideos = async (c) => {
         }));
 
         console.log(`🔍 Busca por "${query}": ${rows.length} resultados`);
-        return c.json(videosWithUrl);
+        return createResponse(c, videosWithUrl);
     } catch (err) {
         console.error("❌ Erro na busca:", err);
         throw err;

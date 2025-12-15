@@ -1,6 +1,7 @@
 import { queryDB } from '../db/index.js';
 import { hash } from '../utils/hash.js';
 import { logAudit } from '../middleware/audit.js';
+import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 export const login = async (c) => {
     const env = c.env;
@@ -10,15 +11,15 @@ export const login = async (c) => {
         if (password === env.ADMIN_PASSWORD) {
             await logAudit(null, "ADMIN_LOGIN_SUCCESS", {}, c);
             console.log("✅ Admin login bem-sucedido");
-            return c.json({ success: true });
+            return createResponse(c, { success: true });
         }
 
         await logAudit(null, "ADMIN_LOGIN_FAILED", {}, c);
         console.log("❌ Admin login falhou - senha incorreta");
-        return c.json({ error: "Senha incorreta" }, 401);
+        return createErrorResponse(c, "AUTH_ERROR", "Senha incorreta", 401);
     } catch (err) {
         console.error("❌ Erro no login admin:", err);
-        return c.json({ error: "Erro no servidor" }, 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro no servidor", 500);
     }
 };
 
@@ -28,7 +29,7 @@ export const listUsers = async (c) => {
 
     if (adminPassword !== env.ADMIN_PASSWORD) {
         console.log("❌ Tentativa de acesso admin não autorizado");
-        return c.json({ error: "Não autorizado" }, 403);
+        return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
     }
 
     try {
@@ -39,10 +40,10 @@ export const listUsers = async (c) => {
         );
 
         console.log(`✅ Admin listou ${rows.length} usuários`);
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         console.error("❌ Erro ao listar usuários:", err);
-        return c.json({ error: "Erro ao listar usuários" }, 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao listar usuários", 500);
     }
 };
 
@@ -52,7 +53,7 @@ export const resetPassword = async (c) => {
         const { user_id, admin_password } = await c.req.json();
 
         if (admin_password !== env.ADMIN_PASSWORD) {
-            return c.json({ error: "Não autorizado" }, 403);
+            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
         }
 
         const hashedPassword = await hash("123456");
@@ -61,10 +62,10 @@ export const resetPassword = async (c) => {
         await logAudit(null, "ADMIN_PASSWORD_RESET", { target_user_id: user_id }, c);
         console.log(`✅ Admin resetou senha do User ${user_id}`);
 
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao resetar senha:", err);
-        return c.json({ error: "Erro ao resetar senha" }, 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao resetar senha", 500);
     }
 };
 
@@ -75,7 +76,7 @@ export const banUser = async (c) => {
         const { admin_password } = await c.req.json();
 
         if (admin_password !== env.ADMIN_PASSWORD) {
-            return c.json({ error: "Não autorizado" }, 403);
+            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
         }
 
         await queryDB("DELETE FROM videos WHERE user_id = $1", [userId], env);
@@ -87,10 +88,10 @@ export const banUser = async (c) => {
         await logAudit(null, "ADMIN_USER_BANNED", { target_user_id: userId }, c);
         console.log(`✅ Admin baniu User ${userId}`);
 
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao banir usuário:", err);
-        return c.json({ error: "Erro ao banir usuário" }, 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao banir usuário", 500);
     }
 };
 
@@ -100,7 +101,7 @@ export const getLogs = async (c) => {
 
     if (adminPassword !== env.ADMIN_PASSWORD) {
         console.log("❌ Tentativa de acesso aos logs não autorizada");
-        return c.json({ error: "Não autorizado" }, 403);
+        return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
     }
 
     try {
@@ -115,9 +116,9 @@ export const getLogs = async (c) => {
         );
 
         console.log(`✅ Admin acessou ${rows.length} logs`);
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         console.error("❌ Erro ao buscar logs:", err);
-        return c.json({ error: "Erro ao buscar logs" }, 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao buscar logs", 500);
     }
 };

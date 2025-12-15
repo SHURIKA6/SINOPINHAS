@@ -2,6 +2,7 @@ import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
 // Forced Deployment Trigger: 2025-12-15 v2
 import { sanitize } from '../utils/sanitize.js';
+import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 export const likeVideo = async (c) => {
     const videoId = c.req.param("id");
@@ -23,7 +24,7 @@ export const likeVideo = async (c) => {
             console.log(`❤️ Like adicionado: Vídeo ${videoId} por User ${user_id}`);
         }
 
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao curtir vídeo:", err);
         throw err;
@@ -39,7 +40,7 @@ export const viewVideo = async (c) => {
         await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
 
         console.log(`👁️ View registrada: Vídeo ${videoId} por User ${user_id}`);
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar view:", err);
         throw err;
@@ -55,7 +56,7 @@ export const postComment = async (c) => {
         const cleanComment = sanitize(comment);
 
         if (!cleanComment || !cleanComment.trim()) {
-            return c.json({ error: "Comentário vazio" }, 400);
+            return createErrorResponse(c, "INVALID_INPUT", "Comentário vazio", 400);
         }
 
         await queryDB(
@@ -75,7 +76,7 @@ export const postComment = async (c) => {
         }
 
         console.log(`💬 Comentário adicionado: Vídeo ${video_id} por User ${user_id}`);
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         // AUTO-REPAIR: If table missing (42P01), create it and retry
         if (err.code === '42P01') {
@@ -97,7 +98,7 @@ export const postComment = async (c) => {
             );
             // Notifications table might also be missing, handle separately or assume subsequent calls fix it
             // For simplicity, we just retry the main partial
-            return c.json({ success: true, repaired: true });
+            return createResponse(c, { success: true, repaired: true });
         }
 
         console.error("❌ Erro ao adicionar comentário:", err);
@@ -120,12 +121,12 @@ export const getComments = async (c) => {
         );
 
         console.log(`✅ Listados ${rows.length} comentários do vídeo ${videoId}`);
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         // Graceful handling for missing table
         if (err.code === '42P01') {
             console.log("⚠️ Tabela 'comments' inexistente. Retornando lista vazia.");
-            return c.json([]);
+            return createResponse(c, []);
         }
 
         console.error("❌ Erro ao buscar comentários:", err);
@@ -144,7 +145,7 @@ export const deleteComment = async (c) => {
             const { rows } = await queryDB("SELECT user_id FROM comments WHERE id = $1", [commentId], env);
 
             if (rows.length === 0 || rows[0].user_id !== user_id) {
-                return c.json({ error: "Não autorizado" }, 403);
+                return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
             }
         }
 
@@ -161,7 +162,7 @@ export const deleteComment = async (c) => {
 export const getNotifications = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
-    if (!userId) return c.json({ error: "Parâmetro 'userId' inválido" }, 400);
+    if (!userId) return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' inválido", 400);
 
     try {
         const { rows } = await queryDB(
@@ -192,7 +193,7 @@ export const listAllUsers = async (c) => {
     } catch (err) {
         console.error("❌ Erro ao listar usuários:", err);
         // Auto-recovery: Return empty list if something is wrong (e.g. missing column)
-        return c.json([]);
+        return createResponse(c, []);
     }
 };
 
@@ -214,7 +215,7 @@ export const sendMessage = async (c) => {
         );
 
         console.log(`📨 Mensagem enviada: De User ${from_id} para User ${to_id} (Admin: ${finalIsAdmin})`);
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         // Auto-Repair: ensure messages table exists
         if (err.code === '42P01') {
@@ -231,7 +232,7 @@ export const sendMessage = async (c) => {
                 )
              `, [], env);
             // Retry? For now, let user retry.
-            return c.json({ error: "Tabela criada. Tente novamente." }, 500);
+            return createErrorResponse(c, "TABLE_CREATED", "Tabela criada. Tente novamente.", 500);
         }
 
         console.error("❌ Erro ao enviar mensagem:", err);
@@ -242,7 +243,7 @@ export const sendMessage = async (c) => {
 export const getInbox = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
-    if (!userId) return c.json({ error: "Parâmetro 'userId' inválido" }, 400);
+    if (!userId) return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' inválido", 400);
 
     try {
         const { rows } = await queryDB(
@@ -264,10 +265,10 @@ export const getInbox = async (c) => {
         // Auto-Recovery
         if (err.code === '42P01') {
             console.log("⚠️ Tabela 'messages' inexistente. Retornando vazio.");
-            return c.json([]);
+            return createResponse(c, []);
         }
         console.error("❌ Erro ao buscar mensagens:", err);
-        return c.json([]); // Fail safe
+        return createResponse(c, []); // Fail safe
     }
 };
 
@@ -277,7 +278,7 @@ export const getAdminInbox = async (c) => {
         const adminPass = c.req.query("admin_password");
 
         if (adminPass !== env.ADMIN_PASSWORD) {
-            return c.json({ error: "Não autorizado" }, 403);
+            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
         }
 
         const { rows } = await queryDB(
@@ -293,10 +294,10 @@ export const getAdminInbox = async (c) => {
         );
 
         console.log(`✅ [ADMIN] Listadas ${rows.length} mensagens globais`);
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         console.error("❌ Erro ao buscar todas as mensagens:", err);
-        return c.json([]); // Fail safe
+        return createResponse(c, []); // Fail safe
     }
 };
 
@@ -304,7 +305,7 @@ export const logTerms = async (c) => {
     try {
         const body = await c.req.json();
         await logAudit(null, "TERMS_ACCEPTED", body, c);
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar termos:", err);
         throw err;

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { queryDB } from '../db/index.js';
+import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 const app = new Hono();
 
@@ -18,13 +19,14 @@ app.get('/health', async (c) => {
         const result = await queryDB("SELECT NOW() as now", [], env);
         diagnostics.db_connection = "SUCCESS ✅";
         diagnostics.db_result = result.rows[0];
-        return c.json(diagnostics);
+        diagnostics.db_result = result.rows[0];
+        return createResponse(c, diagnostics);
     } catch (err) {
         console.error("Health Check DB Error:", err);
         diagnostics.db_connection = "FAILED ❌";
         diagnostics.error = err.message;
         diagnostics.stack = err.stack;
-        return c.json(diagnostics, 500);
+        return createErrorResponse(c, "HEALTH_CHECK_FAILED", "Falha no diagnóstico", 500, diagnostics);
     }
 });
 
@@ -80,9 +82,9 @@ app.get('/fix-db', async (c) => {
             results.push("Executed: " + q.substring(0, 50) + "...");
         }
 
-        return c.json({ success: true, actions: results });
+        return createResponse(c, { success: true, actions: results });
     } catch (err) {
-        return c.json({ error: "DB Fix Failed", details: err.message }, 500);
+        return createErrorResponse(c, "DB_FIX_FAILED", "Falha ao corrigir banco", 500, err.message);
     }
 });
 

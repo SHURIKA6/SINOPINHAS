@@ -3,50 +3,87 @@ const { Pool } = pg;
 
 let pool;
 
+const createPool = (env) => {
+    // Basic connection config
+    const config = {
+        connectionString: env.DATABASE_URL,
+        idleTimeoutMillis: 5000,
+        connectionTimeoutMillis: 5000,
+        max: 10, // Limit connections in serverless environment
+    };
+
+    // Add SSL for production (Hyperdrive/Neon/Supabase usually need this)
+    if (!env.DATABASE_URL.includes('sslmode=disable') && !env.DATABASE_URL.includes('localhost')) {
+        config.ssl = { rejectUnauthorized: false };
+    }
+
+    const newPool = new Pool(config);
+
+    newPool.on('error', (err) => {
+        console.error('❌ FATAL: Unexpected error on idle client', err);
+        // Don't exit process in Workers, but we might want to unset the pool so it recreates
+        // However, pg pool handles reconnection automatically for many cases.
+    });
+
+    return newPool;
+};
+
 export async function queryDB(sql, params = [], env) {
-    try {
-        // Singleton pattern for connection pool
-        if (!pool) {
-            if (!env.DATABASE_URL) {
-                throw new Error("DATABASE_URL não configurada nas variáveis de ambiente!");
-            }
+    if (!env.DATABASE_URL) {
+        throw new Error("DATABASE_URL não configurada nas variáveis de ambiente!");
+    }
 
-            console.log("🔌 Inicializando novo Pool de conexões...");
+    // Singleton pattern for connection pool
+    if (!pool) {
+        console.log("🔌 Inicializando novo Pool de conexões...");
+        pool = createPool(env);
+    }
 
-            // Basic connection config
-            const config = {
-                connectionString: env.DATABASE_URL,
-                idleTimeoutMillis: 10000, // 10s idle
-                connectionTimeoutMillis: 3000, // 3s fail fast
-            };
+    let retries = 2; // Try up to 3 times total
+    let lastError = null;
 
-            // Add SSL for production (Hyperdrive/Neon/Supabase usually need this)
-            if (env.DATABASE_URL.includes('sslmode=disable')) {
-                // Do nothing
-            } else {
-                config.ssl = { rejectUnauthorized: false };
-            }
-
-            pool = new Pool(config);
-
-            pool.on('error', (err) => {
-                console.error('❌ Erro inesperado no cliente PG', err);
-                // process.exit(-1) is bad in Workers, just log and let pool reconnect
-            });
-        }
-
+    while (retries >= 0) {
         const start = Date.now();
-        const result = await pool.query(sql, params);
-        const duration = Date.now() - start;
+        let client;
+        try {
+            client = await pool.connect();
+            const result = await client.query(sql, params);
 
-        // Log slow queries (> 500ms)
-        if (duration > 500) {
-            console.warn(`⚠️ Query lenta (${duration}ms): ${sql.substring(0, 100)}...`);
+            const duration = Date.now() - start;
+            if (duration > 500) {
+                console.warn(`⚠️ Query lenta (${duration}ms): ${sql.substring(0, 100)}...`);
+            }
+            return result;
+        } catch (err) {
+            lastError = err;
+            console.error(`⚠️ Erro no banco (Tentativa ${3 - retries}/3):`, err.message);
+
+            // If connection strictly failed, might need to reset pool
+            if (err.message.includes('ECONNREFUSED') || err.message.includes('connection') || err.message.includes('terminat')) {
+                // Try to force recreate pool on next call? 
+                // For now, just retry logic.
+            }
+
+            if (retries === 0) break;
+
+            retries--;
+            await new Promise(r => setTimeout(r, 500)); // Wait 500ms before retry
+        } finally {
+            if (client) client.release();
         }
+    }
 
-        return result;
-    } catch (err) {
-        console.error("❌ Erro no banco de dados:", err);
-        throw err;
+    // If we're here, all retries failed
+    console.error("❌ Erro PERSISTENTE no banco de dados:", lastError);
+    throw lastError;
+}
+
+export async function healthCheck(env) {
+    try {
+        const res = await queryDB('SELECT 1 as healthy', [], env);
+        return res.rows[0].healthy === 1;
+    } catch (e) {
+        console.error("Health check failed:", e);
+        return false;
     }
 }

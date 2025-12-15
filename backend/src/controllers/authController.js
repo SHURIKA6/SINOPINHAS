@@ -1,6 +1,7 @@
 import { queryDB } from '../db/index.js';
 import { hash, compare } from '../utils/hash.js';
 import { logAudit } from '../middleware/audit.js';
+import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 export const register = async (c) => {
     const env = c.env;
@@ -14,7 +15,7 @@ export const register = async (c) => {
         if (username.length < 4) {
             console.log("❌ Username muito curto");
             // logAudit(null, "REGISTER_FAILED_USERNAME_SHORT", body, c); // optional
-            return c.json({ error: "Nome de usuário deve ter pelo menos 4 caracteres" }, 400);
+            return createErrorResponse(c, "INVALID_INPUT", "Nome de usuário deve ter pelo menos 4 caracteres", 400);
         }
 
         console.log(`🔍 Verificando se "${username}" existe...`);
@@ -27,7 +28,7 @@ export const register = async (c) => {
         if (existing.length > 0) {
             console.log(`❌ Usuário "${username}" já existe`);
             await logAudit(null, "REGISTER_FAILED_USERNAME_EXISTS", { username, ...body }, c);
-            return c.json({ error: "Usuário já existe" }, 400);
+            return createErrorResponse(c, "USER_EXISTS", "Usuário já existe", 400);
         }
 
         console.log("🔐 Gerando hash da senha...");
@@ -49,7 +50,7 @@ export const register = async (c) => {
             console.error("⚠️ Erro ao salvar log (não crítico):", logErr.message);
         }
 
-        return c.json({ user });
+        return createResponse(c, { user });
     } catch (err) {
         console.error("❌ ERRO CRÍTICO AO REGISTRAR:", err);
         console.error("Stack trace:", err.stack);
@@ -69,7 +70,7 @@ export const login = async (c) => {
         if (!username || !password) {
             console.log("❌ Campos vazios no login");
             await logAudit(null, "LOGIN_FAILED_MISSING_FIELDS", body, c);
-            return c.json({ error: "Preencha todos os campos" }, 400);
+            return createErrorResponse(c, "INVALID_INPUT", "Preencha todos os campos", 400);
         }
 
         console.log(`🔍 Buscando usuário: "${username}"`);
@@ -82,7 +83,7 @@ export const login = async (c) => {
         if (rows.length === 0) {
             console.log(`❌ Usuário "${username}" não encontrado`);
             await logAudit(null, "LOGIN_FAILED_USER_NOT_FOUND", { username, ...body }, c);
-            return c.json({ error: "Usuário ou senha incorretos" }, 401);
+            return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
         const user = rows[0];
@@ -92,7 +93,7 @@ export const login = async (c) => {
         if (!validPassword) {
             console.log(`❌ Senha incorreta para usuário: ${username}`);
             await logAudit(user.id, "LOGIN_FAILED_WRONG_PASSWORD", { username, ...body }, c);
-            return c.json({ error: "Usuário ou senha incorretos" }, 401);
+            return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
         console.log(`✅ Login bem-sucedido: ${username} (ID: ${user.id})`);
@@ -103,7 +104,7 @@ export const login = async (c) => {
             console.error("⚠️ Erro ao salvar log (não crítico):", logErr.message);
         }
 
-        return c.json({
+        return createResponse(c, {
             user: {
                 id: user.id,
                 username: user.username,
@@ -142,7 +143,7 @@ export const updateProfile = async (c) => {
         }
 
         if (updates.length === 0) {
-            return c.json({ error: "Nenhum campo para atualizar" }, 400);
+            return createErrorResponse(c, "INVALID_INPUT", "Nenhum campo para atualizar", 400);
         }
 
         values.push(userId);
@@ -155,7 +156,7 @@ export const updateProfile = async (c) => {
         await logAudit(userId, "USER_PROFILE_UPDATED", { updates: updates.join(", ") }, c);
         console.log(`✅ Perfil atualizado: User ID ${userId}`);
 
-        return c.json(rows[0]);
+        return createResponse(c, rows[0]);
     } catch (err) {
         console.error("❌ Erro ao atualizar perfil:", err);
         throw err;
