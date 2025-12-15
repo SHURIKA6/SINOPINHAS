@@ -60,10 +60,17 @@ export default function Home({ initialVideo }) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
+  // Auth & Modal States
+  const [showAuth, setShowAuth] = useState(false); // Restored
+  const [showAdminAuth, setShowAdminAuth] = useState(false); // Restored
+  const [showProfile, setShowProfile] = useState(false); // Restored
+
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
+
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState(''); // Restored
 
   const [activeTab, setActiveTab] = useState('videos');
   // State for Feeds is now internal to HomeFeed/SecretFeed
@@ -362,7 +369,7 @@ export default function Home({ initialVideo }) {
               user={user}
               setShowAuth={setShowAuth}
               showToast={showToast}
-              loadVideos={loadVideos}
+              // loadVideos prop removed
               setActiveTab={setActiveTab}
             />
           )}
