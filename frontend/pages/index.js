@@ -90,20 +90,8 @@ export default function Home({ initialVideo }) {
       setIsAdmin(true);
     }
 
-    if (acceptedTerms === 'true') {
-      loadVideos();
-    }
+    // Legacy data loading removed. Feeds manage their own data.
   }, []);
-
-  useEffect(() => {
-    if (activeTab === 'secret' && showSecretTab) {
-      loadSecretVideos();
-    }
-  }, [activeTab, showSecretTab]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [activeTab, searchQuery, sortBy]);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
