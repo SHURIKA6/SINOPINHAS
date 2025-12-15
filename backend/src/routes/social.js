@@ -19,5 +19,6 @@ app.get('/notifications/:userId', socialController.getNotifications);
 app.get('/users/all', socialController.listAllUsers);
 app.post('/send-message', validate(schemas.sendMessageSchema), socialController.sendMessage);
 app.get('/inbox/:userId', socialController.getInbox);
+app.get('/admin/inbox', socialController.getAdminInbox);
 
 export default app;

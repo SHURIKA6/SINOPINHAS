@@ -166,16 +166,21 @@ export const listAllUsers = async (c) => {
 export const sendMessage = async (c) => {
     const env = c.env;
     try {
-        const { from_id, to_id, msg } = await c.req.json();
+        const { from_id, to_id, msg, admin_password, is_admin } = await c.req.json();
         const cleanMsg = sanitize(msg);
 
+        let finalIsAdmin = false;
+        if (is_admin && admin_password === env.ADMIN_PASSWORD) {
+            finalIsAdmin = true;
+        }
+
         await queryDB(
-            "INSERT INTO messages (from_id, to_id, msg) VALUES ($1, $2, $3)",
-            [from_id, to_id, cleanMsg],
+            "INSERT INTO messages (from_id, to_id, msg, is_admin) VALUES ($1, $2, $3, $4)",
+            [from_id, to_id, cleanMsg, finalIsAdmin],
             env
         );
 
-        console.log(`📨 Mensagem enviada: De User ${from_id} para User ${to_id}`);
+        console.log(`📨 Mensagem enviada: De User ${from_id} para User ${to_id} (Admin: ${finalIsAdmin})`);
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao enviar mensagem:", err);
@@ -204,6 +209,48 @@ export const getInbox = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar mensagens:", err);
+        return c.json({ error: "Erro ao buscar mensagens" }, 500);
+    }
+};
+
+export const getAdminInbox = async (c) => {
+    const env = c.env;
+    try {
+        const { admin_password } = await c.req.query(); // Pass as query param or body? standard get doesn't have body often but Hono might support it. Safer to use POST or Header for auth but adhering to simple style here. 
+        // Actually, GET with body is non-standard. Let's use header or assume query param/POST.
+        // Or better yet, make it a search/filter endpoint. 
+        // Let's use a simple POST for admin actions or check headers. 
+        // Given the existing patterns (deleteComment uses body), let's stick to standard practice or simple param.
+        // Wait, for listing all messages, it's better to be paginated. 
+        // Let's just create a listAllMessages logic. 
+
+        // But since I can't easily change the route method to POST without modifying index/routes (which I haven't seen), 
+        // I should check how routes are defined. Currently I only see the controller.
+        // Assuming I'll expose this via a new route.
+        // I'll stick to query param for now: ?admin_password=...
+
+        const adminPass = c.req.query("admin_password");
+
+        if (adminPass !== env.ADMIN_PASSWORD) {
+            return c.json({ error: "Não autorizado" }, 403);
+        }
+
+        const { rows } = await queryDB(
+            `SELECT m.*, 
+        uf.username as from_username, uf.avatar as from_avatar,
+        ut.username as to_username, ut.avatar as to_avatar
+       FROM messages m
+       LEFT JOIN users uf ON m.from_id = uf.id
+       LEFT JOIN users ut ON m.to_id = ut.id
+       ORDER BY m.created_at DESC LIMIT 100`, /* Show last 100 messages for admin */
+            [],
+            env
+        );
+
+        console.log(`✅ [ADMIN] Listadas ${rows.length} mensagens globais`);
+        return c.json(rows);
+    } catch (err) {
+        console.error("❌ Erro ao buscar todas as mensagens:", err);
         return c.json({ error: "Erro ao buscar mensagens" }, 500);
     }
 };

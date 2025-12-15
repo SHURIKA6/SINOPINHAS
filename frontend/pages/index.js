@@ -578,7 +578,12 @@ export default function Home() {
           )}
 
           {activeTab === 'inbox' && user && (
-            <Inbox user={user} API={API} />
+            <Inbox
+              user={user}
+              API={API}
+              isAdmin={isAdmin}
+              adminPassword={adminPassword}
+            />
           )}
 
           {activeTab === 'admin' && isAdmin && (
