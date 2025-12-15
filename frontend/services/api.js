@@ -25,6 +25,11 @@ api.interceptors.response.use(
             // Opcional: window.location.href = '/?login=true';
         }
 
+        // DETECT HARD CRASH OR CORS ERROR (Usually DB connection failure)
+        if (error.message === 'Network Error' || (error.response?.status === 500 && !backendError)) {
+            customError.message = "Erro de Conexão: Verifique 'DATABASE_URL' no Cloudflare.";
+        }
+
         return Promise.reject(customError);
     }
 );
