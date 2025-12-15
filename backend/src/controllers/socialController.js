@@ -44,6 +44,9 @@ export const viewVideo = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar view:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao registrar view" }, 500);
     }
 };
@@ -80,6 +83,9 @@ export const postComment = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao adicionar comentário:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao adicionar comentário" }, 500);
     }
 };
@@ -102,6 +108,9 @@ export const getComments = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar comentários:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar comentários" }, 500);
     }
 };
@@ -127,6 +136,9 @@ export const deleteComment = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao deletar comentário:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao deletar comentário" }, 500);
     }
 };
@@ -145,6 +157,9 @@ export const getNotifications = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar notificações:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar notificações" }, 500);
     }
 };
@@ -162,6 +177,9 @@ export const listAllUsers = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao listar usuários:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao listar usuários" }, 500);
     }
 };
@@ -187,6 +205,9 @@ export const sendMessage = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao enviar mensagem:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao enviar mensagem" }, 500);
     }
 };
@@ -212,6 +233,9 @@ export const getInbox = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar mensagens:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar mensagens" }, 500);
     }
 };
@@ -254,6 +278,9 @@ export const getAdminInbox = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar todas as mensagens:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar mensagens" }, 500);
     }
 };
@@ -265,6 +292,9 @@ export const logTerms = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar termos:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao registrar" }, 500);
     }
 };
