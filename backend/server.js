@@ -9,11 +9,7 @@ import debugRoutes from './src/routes/debug.js';
 const app = new Hono();
 
 app.use("/*", cors({
-  origin: [
-    'https://sinopinhas.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001'
-  ],
+  origin: (origin) => origin || '*', // Dynamic reflection to allow ALL origins with credentials
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowHeaders: ['Content-Type', 'Authorization', 'Upgrade-Insecure-Requests', 'X-Requested-With'],
   exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
@@ -23,10 +19,12 @@ app.use("/*", cors({
 
 // Handle OPTIONS explicitly just in case
 app.options("/*", (c) => {
+  const origin = c.req.header('Origin') || 'https://sinopinhas.vercel.app';
   return c.text('', 204, {
-    'Access-Control-Allow-Origin': 'https://sinopinhas.vercel.app',
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '600'
   });
 });
@@ -50,10 +48,12 @@ app.get("/", (c) => {
 app.onError((err, c) => {
   console.error("❌ Erro não tratado:", err);
 
-  // Ensure CORS headers are present even on error
-  c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  // Dynamic origin reflection for credentials support
+  const origin = c.req.header('Origin') || 'https://sinopinhas.vercel.app';
+  c.header('Access-Control-Allow-Origin', origin);
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  c.header('Access-Control-Allow-Credentials', 'true');
 
   return c.json({
     error: "Erro interno no servidor",
