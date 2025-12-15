@@ -36,8 +36,14 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                 </button>
             )}
 
-            <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative' }}>
-                {video.video_url ? (
+            <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {video.type === 'photo' ? (
+                    <img
+                        src={video.video_url}
+                        alt={video.title}
+                        style={{ width: "100%", height: "100%", objectFit: 'contain' }}
+                    />
+                ) : video.video_url ? (
                     <video
                         src={video.video_url}
                         controls
@@ -53,11 +59,11 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     />
                 ) : video.bunny_id ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#aaa', flexDirection: 'column', gap: 10 }}>
-                        <span>⚠️ Vídeo indisponível (BunnyCDN expirado)</span>
+                        <span>⚠️ Conteúdo indisponível</span>
                     </div>
                 ) : (
                     <div style={{ width: "100%", height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-                        Sem vídeo
+                        Sem conteúdo
                     </div>
                 )}
             </div>

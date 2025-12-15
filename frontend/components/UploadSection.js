@@ -9,22 +9,30 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
     const [progress, setProgress] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [isRestricted, setIsRestricted] = useState(false);
+    const [uploadType, setUploadType] = useState('video'); // 'video' or 'photo'
 
     const upload = async () => {
         if (!user) {
             setShowAuth(true);
-            return showToast('Faça login para enviar vídeos', 'error');
+            return showToast('Faça login para enviar conteúdo', 'error');
         }
-        if (!file) return showToast('Escolha um vídeo!', 'error');
+        if (!file) return showToast(`Escolha um ${uploadType === 'video' ? 'vídeo' : 'foto'}!`, 'error');
 
         const maxSize = 500 * 1024 * 1024;
         if (file.size > maxSize) {
-            return showToast('Vídeo muito grande! Máximo: 500MB', 'error');
+            return showToast('Arquivo muito grande! Máximo: 500MB', 'error');
         }
 
-        const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
-        if (!allowedTypes.includes(file.type)) {
-            return showToast('Formato inválido! Use MP4, WebM, OGG, MOV ou AVI', 'error');
+        // Validate type
+        if (uploadType === 'video') {
+            const allowedVideo = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+            if (!allowedVideo.includes(file.type)) {
+                return showToast('Formato de vídeo inválido!', 'error');
+            }
+        } else {
+            if (!file.type.startsWith('image/')) {
+                return showToast('Formato de imagem inválido!', 'error');
+            }
         }
 
         const finalTitle = videoTitle.trim() || file.name;
@@ -36,8 +44,9 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
         form.append('description', description);
         form.append('user_id', user.id.toString());
         form.append('is_restricted', isRestricted.toString());
+        form.append('type', uploadType);
 
-        if (thumbnailFile) {
+        if (thumbnailFile && uploadType === 'video') {
             form.append('thumbnail', thumbnailFile);
         }
 
@@ -46,7 +55,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                 const percent = Math.round((e.loaded * 100) / e.total);
                 setProgress(percent);
             });
-            showToast('Vídeo enviado! 🎉', 'success');
+            showToast(`${uploadType === 'video' ? 'Vídeo' : 'Foto'} enviado! 🎉`, 'success');
             setProgress(0);
             setFile(null);
             setThumbnailFile(null);
@@ -67,7 +76,41 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
 
     return (
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>📤 Enviar Vídeo</h2>
+            <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>📤 Enviar Conteúdo</h2>
+
+            {/* Type Selector */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                <button
+                    onClick={() => setUploadType('video')}
+                    style={{
+                        flex: 1,
+                        padding: 12,
+                        background: uploadType === 'video' ? '#8d6aff' : '#303030',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    🎥 Vídeo
+                </button>
+                <button
+                    onClick={() => setUploadType('photo')}
+                    style={{
+                        flex: 1,
+                        padding: 12,
+                        background: uploadType === 'photo' ? '#fe7d45' : '#303030',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    📸 Foto
+                </button>
+            </div>
 
             <div
                 style={{
@@ -93,13 +136,15 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                 }}
                 onClick={() => document.getElementById('file-input').click()}
             >
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>
+                    {uploadType === 'video' ? '🎬' : '🖼️'}
+                </div>
                 <p style={{ fontSize: 18, margin: 0, color: '#aaa' }}>
-                    {isDragging ? 'Solte o vídeo aqui!' : 'Arraste um vídeo ou clique para selecionar'}
+                    {isDragging ? `Solte o ${uploadType} aqui!` : `Arraste ou clique para selecionar ${uploadType === 'video' ? 'vídeo' : 'foto'}`}
                 </p>
                 <input
                     type="file"
-                    accept="video/*"
+                    accept={uploadType === 'video' ? "video/*" : "image/*"}
                     onChange={(e) => {
                         const f = e.target.files[0];
                         if (f) {

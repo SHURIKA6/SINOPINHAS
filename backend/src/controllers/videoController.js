@@ -12,6 +12,12 @@ export const uploadVideo = async (c) => {
         const description = formData.get("description") || "";
         const userId = formData.get("user_id");
         const isRestricted = formData.get("is_restricted") === "true";
+        // Type: 'video' or 'photo'. Default to 'video' if not provided.
+        // Also auto-detect based on mime type if needed.
+        let type = formData.get("type") || "video";
+        if (file.type.startsWith("image/")) {
+            type = "photo";
+        }
 
         if (!file || !title || !userId) {
             console.log("❌ Faltam dados obrigatórios");
@@ -24,7 +30,7 @@ export const uploadVideo = async (c) => {
         const extension = file.name.split('.').pop();
         const r2Key = `${timestamp}-${randomStr}.${extension}`;
 
-        console.log(`📤 Upload: "${title}" (${file.size} bytes) -> R2 Key: ${r2Key}`);
+        console.log(`📤 Upload: "${title}" (${file.size} bytes) [${type}] -> R2 Key: ${r2Key}`);
 
         // Upload to R2 (Direct Binding)
         await env.VIDEO_BUCKET.put(r2Key, file.stream(), {
@@ -37,8 +43,8 @@ export const uploadVideo = async (c) => {
 
         // Save metadata to DB (using bunny_id column to store R2 Key)
         await queryDB(
-            "INSERT INTO videos (title, description, bunny_id, user_id, is_restricted) VALUES ($1, $2, $3, $4, $5)",
-            [title, description, r2Key, userId, isRestricted],
+            "INSERT INTO videos (title, description, bunny_id, user_id, is_restricted, type) VALUES ($1, $2, $3, $4, $5, $6)",
+            [title, description, r2Key, userId, isRestricted, type],
             env
         );
 
