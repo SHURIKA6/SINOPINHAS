@@ -130,6 +130,12 @@ export const getComments = async (c) => {
         console.log(`✅ Listados ${rows.length} comentários do vídeo ${videoId}`);
         return c.json(rows);
     } catch (err) {
+        // Graceful handling for missing table
+        if (err.code === '42P01') {
+            console.log("⚠️ Tabela 'comments' inexistente. Retornando lista vazia.");
+            return c.json([]);
+        }
+
         console.error("❌ Erro ao buscar comentários:", err);
         c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
         c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
