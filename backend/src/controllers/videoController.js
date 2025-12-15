@@ -48,6 +48,9 @@ export const uploadVideo = async (c) => {
         return c.json({ success: true, bunny_id: r2Key });
     } catch (err) {
         console.error("❌ ERRO NO UPLOAD:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json(
             {
                 error: "Erro ao fazer upload para R2",
@@ -91,6 +94,9 @@ export const listVideos = async (c) => {
         return c.json(videosWithUrl);
     } catch (err) {
         console.error("❌ Erro ao buscar vídeos:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar vídeos" }, 500);
     }
 };
@@ -128,6 +134,9 @@ export const listSecretVideos = async (c) => {
         return c.json(videosWithUrl);
     } catch (err) {
         console.error("❌ Erro ao buscar vídeos restritos:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar vídeos" }, 500);
     }
 };
@@ -173,6 +182,9 @@ export const deleteVideo = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao deletar vídeo:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao deletar vídeo R2" }, 500);
     }
 };
@@ -205,6 +217,9 @@ export const getVideo = async (c) => {
         return c.json(videoWithUrl);
     } catch (err) {
         console.error("❌ Erro ao buscar vídeo:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao buscar vídeo" }, 500);
     }
 };

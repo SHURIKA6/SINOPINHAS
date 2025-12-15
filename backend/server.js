@@ -14,12 +14,22 @@ app.use("/*", cors({
     'http://localhost:3000',
     'http://localhost:3001'
   ],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'Upgrade-Insecure-Requests'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Upgrade-Insecure-Requests', 'X-Requested-With'],
   exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
   maxAge: 600,
   credentials: true,
 }));
+
+// Handle OPTIONS explicitly just in case
+app.options("/*", (c) => {
+  return c.text('', 204, {
+    'Access-Control-Allow-Origin': 'https://sinopinhas.vercel.app',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '600'
+  });
+});
 
 // Mount routes
 app.route('/api', authRoutes);
