@@ -403,7 +403,7 @@ export default function Home() {
           />
         )}
 
-        <div style={{ padding: 38, maxWidth: 1160, margin: '0 auto' }}>
+        <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
           {(activeTab === 'videos' || activeTab === 'secret') && (
             <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
@@ -434,7 +434,8 @@ export default function Home() {
                   color: '#fff',
                   fontSize: 16,
                   cursor: 'pointer',
-                  minWidth: '150px'
+                  minWidth: '150px',
+                  flex: 1
                 }}
               >
                 <option value="recent">📅 Mais Recentes</option>
@@ -450,11 +451,10 @@ export default function Home() {
                 {loading ? 'Carregando...' : `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''}`}
               </h2>
 
-              <div style={{ background: '#221c35', padding: 24, borderRadius: 16, marginBottom: 32, border: '1px solid #303030' }}>
+              <div style={{ background: '#221c35', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid #303030' }}>
                 <h3 style={{ marginTop: 0, fontSize: 22, color: '#fff' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
                 <p style={{ color: '#ccc', lineHeight: '1.6', fontSize: 16 }}>
-                  Bem-vindo à comunidade oficial de vídeos de Sinop! Aqui você encontra os melhores conteúdos locais,
-                  desde eventos e notícias até entretenimento e cultura da nossa região.
+                  Bem-vindo à comunidade oficial de vídeos de Sinop! Aqui você encontra os melhores conteúdos locais.
                   Navegue pelos vídeos abaixo, deixe seu like e comentário para fortalecer nossa comunidade.
                   Todo conteúdo é enviado por usuários verificados.
                 </p>
@@ -474,7 +474,7 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                     {paginatedVideos.map((v) => (
                       <VideoCard
                         key={v.id}

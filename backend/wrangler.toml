@@ -14,7 +14,7 @@ id = "c03f688aa2f74835a143172205b316d7"
 [vars]
 BUNNY_LIBRARY_ID = "548459"
 BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
-R2_PUBLIC_DOMAIN = "https://pub-xxxxxxxxxxxx.r2.dev" # PREENCHER COM SEU DOMINIO R2
+R2_PUBLIC_DOMAIN = "https://pub-b7b53312e6c44feab756e8163490e341.r2.dev" # PREENCHER COM SEU DOMINIO R2
 # ADMIN_PASSWORD deve ser configurado via 'wrangler secret put ADMIN_PASSWORD'
 
 # Observability (logs do Cloudflare)

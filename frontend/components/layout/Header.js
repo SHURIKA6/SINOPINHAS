@@ -18,7 +18,7 @@ export default function Header({
         <>
             <header style={{
                 background: '#212121',
-                padding: '16px 24px',
+                padding: '12px 16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -29,7 +29,7 @@ export default function Header({
             }}>
                 <h1 style={{
                     margin: 0,
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: 700,
                     letterSpacing: "2px",
                     background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
