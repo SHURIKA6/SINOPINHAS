@@ -161,6 +161,8 @@ export const deleteComment = async (c) => {
 export const getNotifications = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
+    if (!userId) return c.json({ error: "Parâmetro 'userId' inválido" }, 400);
+
     try {
         const { rows } = await queryDB(
             "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
@@ -240,6 +242,8 @@ export const sendMessage = async (c) => {
 export const getInbox = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
+    if (!userId) return c.json({ error: "Parâmetro 'userId' inválido" }, 400);
+
     try {
         const { rows } = await queryDB(
             `SELECT m.*, 

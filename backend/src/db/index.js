@@ -16,9 +16,8 @@ export async function queryDB(sql, params = [], env) {
             // Basic connection config
             const config = {
                 connectionString: env.DATABASE_URL,
-                max: 10,
-                idleTimeoutMillis: 30000,
-                connectionTimeoutMillis: 5000, // Increased timeout
+                idleTimeoutMillis: 10000, // 10s idle
+                connectionTimeoutMillis: 3000, // 3s fail fast
             };
 
             // Add SSL for production (Hyperdrive/Neon/Supabase usually need this)

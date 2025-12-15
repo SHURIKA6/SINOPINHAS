@@ -13,10 +13,10 @@ api.interceptors.response.use(
     (error) => {
         // Extrai a mensagem de erro bonita do backend (se existir)
         const backendError = error.response?.data?.error;
-        const cleanMessage = backendError || "Ocorreu um erro inesperado. Tente novamente.";
+        let customMessage = backendError;
 
         // Cria um erro novo com a mensagem limpa para o frontend exibir
-        const customError = new Error(cleanMessage);
+        const customError = new Error(customMessage || "Ocorreu um erro inesperado.");
         customError.originalError = error;
         customError.status = error.response?.status;
 
@@ -27,11 +27,22 @@ api.interceptors.response.use(
 
         // DETECT HARD CRASH OR CORS ERROR (Usually DB connection failure)
         // Only override if we didn't receive a polite error from the backend
+        if (backendError) {
+            // Backend enviou erro estruturado
+            if (backendError === 'INTERNAL_ERROR') {
+                customMessage = "O servidor encontrou um erro interno. Tente novamente mais tarde.";
+            } else {
+                customMessage = backendError;
+            }
+        }
+
+        // DETECT HARD CRASH OR CORS ERROR
         if ((error.message === 'Network Error' || (error.message && error.message.includes('NetworkError'))) && !backendError) {
-            customError.message = "Erro de Conexão: Verifique 'DATABASE_URL' no Cloudflare.";
+            customError.message = "Erro de Conexão: O servidor não respondeu (Verifique DATABASE_URL).";
         } else if (error.response?.status === 500 && !backendError) {
-            // If 500 but no error message in body -> Hard Crash
-            customError.message = "Erro Interno: Verifique logs do servidor.";
+            customError.message = "Erro Interno: Falha crítica no servidor.";
+        } else {
+            customError.message = customMessage || error.message;
         }
 
         return Promise.reject(customError);
