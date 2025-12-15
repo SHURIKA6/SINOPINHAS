@@ -26,10 +26,7 @@ export const likeVideo = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao curtir vídeo:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao curtir vídeo" }, 500);
+        throw err;
     }
 };
 
@@ -45,10 +42,7 @@ export const viewVideo = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar view:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao registrar view" }, 500);
+        throw err;
     }
 };
 
@@ -107,10 +101,7 @@ export const postComment = async (c) => {
         }
 
         console.error("❌ Erro ao adicionar comentário:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao adicionar comentário" }, 500);
+        throw err;
     }
 };
 
@@ -138,10 +129,7 @@ export const getComments = async (c) => {
         }
 
         console.error("❌ Erro ao buscar comentários:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao buscar comentários" }, 500);
+        throw err;
     }
 };
 
@@ -166,10 +154,7 @@ export const deleteComment = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao deletar comentário:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao deletar comentário" }, 500);
+        throw err;
     }
 };
 
@@ -187,10 +172,7 @@ export const getNotifications = async (c) => {
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar notificações:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao buscar notificações" }, 500);
+        throw err;
     }
 };
 
@@ -251,10 +233,7 @@ export const sendMessage = async (c) => {
         }
 
         console.error("❌ Erro ao enviar mensagem:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao enviar mensagem" }, 500);
+        throw err;
     }
 };
 
@@ -324,9 +303,6 @@ export const logTerms = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar termos:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro ao registrar" }, 500);
+        throw err;
     }
 };

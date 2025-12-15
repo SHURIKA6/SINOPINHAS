@@ -53,10 +53,7 @@ export const register = async (c) => {
     } catch (err) {
         console.error("❌ ERRO CRÍTICO AO REGISTRAR:", err);
         console.error("Stack trace:", err.stack);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro no servidor: " + err.message }, 500);
+        throw err;
     }
 };
 
@@ -117,10 +114,7 @@ export const login = async (c) => {
     } catch (err) {
         console.error("❌ ERRO CRÍTICO AO FAZER LOGIN:", err);
         console.error("Stack trace:", err.stack);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro no servidor: " + err.message }, 500);
+        throw err;
     }
 };
 
@@ -164,9 +158,6 @@ export const updateProfile = async (c) => {
         return c.json(rows[0]);
     } catch (err) {
         console.error("❌ Erro ao atualizar perfil:", err);
-        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
-        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        return c.json({ error: "Erro no servidor" }, 500);
+        throw err;
     }
 };
