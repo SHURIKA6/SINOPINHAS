@@ -11,10 +11,10 @@ export const register = async (c) => {
         const username = body.username;
         const password = body.password;
 
-        if (!username || !password) {
-            console.log("❌ Campos vazios");
-            await logAudit(null, "REGISTER_FAILED_MISSING_FIELDS", body, c);
-            return c.json({ error: "Preencha todos os campos" }, 400);
+        if (username.length < 4) {
+            console.log("❌ Username muito curto");
+            // logAudit(null, "REGISTER_FAILED_USERNAME_SHORT", body, c); // optional
+            return c.json({ error: "Nome de usuário deve ter pelo menos 4 caracteres" }, 400);
         }
 
         console.log(`🔍 Verificando se "${username}" existe...`);

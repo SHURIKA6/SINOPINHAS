@@ -25,6 +25,9 @@ export const likeVideo = async (c) => {
         return c.json({ success: true });
     } catch (err) {
         console.error("❌ Erro ao curtir vídeo:", err);
+        c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+        c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return c.json({ error: "Erro ao curtir vídeo" }, 500);
     }
 };

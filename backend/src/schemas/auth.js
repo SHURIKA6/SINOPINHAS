@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
-    username: z.string().min(3, "Username muito curto").max(20, "Username muito longo").regex(/^[a-zA-Z0-9_]+$/, "Username deve conter apenas letras, números e underline"),
+    username: z.string().min(4, "Username muito curto").max(20, "Username muito longo").regex(/^[a-zA-Z0-9_]+$/, "Username deve conter apenas letras, números e underline"),
     password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres")
 });
 
