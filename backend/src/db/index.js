@@ -7,18 +7,32 @@ export async function queryDB(sql, params = [], env) {
     try {
         // Singleton pattern for connection pool
         if (!pool) {
+            if (!env.DATABASE_URL) {
+                throw new Error("DATABASE_URL não configurada nas variáveis de ambiente!");
+            }
+
             console.log("🔌 Inicializando novo Pool de conexões...");
-            pool = new Pool({
+
+            // Basic connection config
+            const config = {
                 connectionString: env.DATABASE_URL,
-                max: 10, // Max concurrent connections
+                max: 10,
                 idleTimeoutMillis: 30000,
-                connectionTimeoutMillis: 2000,
-                ssl: { rejectUnauthorized: false } // Required for most cloud DBs
-            });
+                connectionTimeoutMillis: 5000, // Increased timeout
+            };
+
+            // Add SSL for production (Hyperdrive/Neon/Supabase usually need this)
+            if (env.DATABASE_URL.includes('sslmode=disable')) {
+                // Do nothing
+            } else {
+                config.ssl = { rejectUnauthorized: false };
+            }
+
+            pool = new Pool(config);
 
             pool.on('error', (err) => {
                 console.error('❌ Erro inesperado no cliente PG', err);
-                process.exit(-1);
+                // process.exit(-1) is bad in Workers, just log and let pool reconnect
             });
         }
 

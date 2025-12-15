@@ -39,7 +39,16 @@ app.get("/", (c) => {
 
 app.onError((err, c) => {
   console.error("❌ Erro não tratado:", err);
-  return c.json({ error: "Erro interno no servidor" }, 500);
+
+  // Ensure CORS headers are present even on error
+  c.header('Access-Control-Allow-Origin', 'https://sinopinhas.vercel.app');
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  return c.json({
+    error: "Erro interno no servidor",
+    details: err.message || "Unknown error"
+  }, 500);
 });
 
 export default app;
