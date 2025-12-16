@@ -11,7 +11,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
   const [usersLoading, setUsersLoading] = useState(true);
   const [localUsersList, setLocalUsersList] = useState([]);
 
-  // Admin states
+  // Estados de Admin
   const [showAdminInbox, setShowAdminInbox] = useState(false);
   const [sendAsAdmin, setSendAsAdmin] = useState(false);
 
@@ -38,6 +38,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     }
   };
 
+  // --- Carregamento de Mensagens ---
   const loadMessages = async () => {
     if (!user) return;
     try {
@@ -57,6 +58,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     }
   };
 
+  // --- Envio de Mensagem ---
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedUser) return;
@@ -76,30 +78,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     }
   };
 
-  // Logic to filter messages for the selected user
-  // If in Admin Mode, we might want to just see "All Recent Messages" flat, OR grouped by user.
-  // For simplicity, let's keep the user selection flow, but if "Admin Mode", maybe we see ALL conversations?
-  // Current implementation filters by `selectedUser`.
-  // If `showAdminInbox` is true, `messages` contains ALL messages from ALL users (last 100).
-  // This might be confusing if we reuse `selectedUser`.
-
-  // Better approach for Admin View:
-  // 1. Show list of "Conversations" (unique pairs of users).
-  // 2. Or just show the flat list of messages when no user is selected?
-  // Let's stick to the existing UI pattern: Select a user to see chat with THEM.
-  // BUT `getAdminInbox` returns `from` and `to`. 
-  // If I select a user in the sidebar, I want to see thoughts between ME (admin) and THEM? N/A.
-  // Admin wants to see chats between User A and User B. This is complex to fit into "Current User vs Selected User" model.
-
-  // Alternative: Admin Mode adds a "Spy Mode" behavior?
-  // Or simply: Admin Mode lets you see messages sent TO ADMIN or AS ADMIN?
-  // Request: "Create `getAdminInbox` to see all chats".
-  // This implies seeing everything. 
-
-  // UI Adjustment:
-  // If `showAdminInbox`:
-  // Sidebar: List ALL users.
-  // Main Panel: When User X is selected, show ALL messages where User X is sender OR receiver.
+  // Lógica de Filtragem (Admin vê tudo ou filtra por usuário)
 
   const filteredMessages = selectedUser
     ? messages.filter(m =>

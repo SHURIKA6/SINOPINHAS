@@ -7,6 +7,7 @@ import { sign } from 'hono/jwt';
 // Helper to get secret consistently
 const getJwtSecret = (env) => env.JWT_SECRET || 'development_secret_123';
 
+// --- Login Administrativo ---
 export const login = async (c) => {
     const env = c.env;
     try {
@@ -34,6 +35,7 @@ export const login = async (c) => {
     }
 };
 
+// --- Gestão de Usuários ---
 export const listUsers = async (c) => {
     const env = c.env;
 
@@ -54,6 +56,7 @@ export const listUsers = async (c) => {
     }
 };
 
+// --- Reset de Senha ---
 export const resetPassword = async (c) => {
     const env = c.env;
     try {
@@ -75,6 +78,7 @@ export const resetPassword = async (c) => {
     }
 };
 
+// --- Banimento de Usuários ---
 export const banUser = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
@@ -98,6 +102,7 @@ export const banUser = async (c) => {
     }
 };
 
+// --- Logs do Sistema ---
 export const getLogs = async (c) => {
     const env = c.env;
 

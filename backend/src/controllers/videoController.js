@@ -2,6 +2,7 @@ import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
+// --- Upload e Gerenciamento de Vídeos ---
 export const uploadVideo = async (c) => {
     const env = c.env;
     try {
@@ -62,6 +63,7 @@ export const uploadVideo = async (c) => {
     }
 };
 
+// --- Listagem de Vídeos (Públicos) ---
 export const listVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
@@ -120,6 +122,7 @@ export const listVideos = async (c) => {
     }
 };
 
+// --- Vídeos Secretos (Privados) ---
 export const listSecretVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
@@ -157,6 +160,7 @@ export const listSecretVideos = async (c) => {
     }
 };
 
+// --- Exclusão de Vídeos ---
 export const deleteVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -237,6 +241,7 @@ export const getVideo = async (c) => {
     }
 };
 
+// --- Busca de Vídeos ---
 export const searchVideos = async (c) => {
     const env = c.env;
     const query = c.req.query("q");

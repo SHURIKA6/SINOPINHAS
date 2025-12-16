@@ -4,6 +4,7 @@ import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
 
+// --- Registro de Usuário ---
 export const register = async (c) => {
     const env = c.env;
     try {
@@ -66,6 +67,7 @@ export const register = async (c) => {
     }
 };
 
+// --- Login de Usuário ---
 export const login = async (c) => {
     const env = c.env;
     try {
@@ -135,6 +137,7 @@ export const login = async (c) => {
     }
 };
 
+// --- Perfil de Usuário ---
 export const updateProfile = async (c) => {
     const userId = c.req.param("id");
     const env = c.env;

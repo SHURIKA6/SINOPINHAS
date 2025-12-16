@@ -3,13 +3,13 @@ import { Pool } from '@neondatabase/serverless';
 let pool;
 
 const createPool = (env) => {
-    // Neon Serverless driver handles connection string parsing and SSL automatically
-    // It uses HTTP/WebSockets for connection scaling
+    // Driver Neon Serverless lida com parsing e SSL automaticamente
+    // Usa HTTP/WebSockets para escalar conexões
     const connectionString = env.DATABASE_URL;
 
     const newPool = new Pool({
         connectionString,
-        max: 20, // We can be more generous with connections as they are virtualized
+        max: 20, // Podemos ser mais generosos pois as conexões são virtualizadas
         connectionTimeoutMillis: 5000,
         idleTimeoutMillis: 5000
     });
@@ -26,13 +26,13 @@ export async function queryDB(sql, params = [], env) {
         throw new Error("DATABASE_URL não configurada nas variáveis de ambiente!");
     }
 
-    // Singleton pattern for connection pool
+    // Padrão Singleton para o pool de conexões
     if (!pool) {
         console.log("🔌 Inicializando novo Pool Neon Serverless...");
         pool = createPool(env);
     }
 
-    let retries = 2; // Try up to 3 times total
+    let retries = 2; // Tentar até 3 vezes no total
     let lastError = null;
 
 
@@ -41,7 +41,7 @@ export async function queryDB(sql, params = [], env) {
         const start = Date.now();
         let client;
         try {
-            // Defensive setup: Strict timeout for connection and query
+            // Setup Defensivo: Timeout estrito para conexão e query
             const dbOperation = async () => {
                 const c = await pool.connect();
                 try {
@@ -69,12 +69,12 @@ export async function queryDB(sql, params = [], env) {
             if (retries === 0) break;
 
             retries--;
-            await new Promise(r => setTimeout(r, 500)); // Wait 500ms before retry
+            await new Promise(r => setTimeout(r, 500)); // Esperar 500ms antes de tentar novamente
         }
-        // Client is released inside dbOperation finally block
+        // Cliente liberado dentro do bloco finally
     }
 
-    // If we're here, all retries failed
+    // Se chegou aqui, todas as tentativas falharam
     console.error("❌ Erro PERSISTENTE no banco de dados:", lastError);
     throw lastError;
 }

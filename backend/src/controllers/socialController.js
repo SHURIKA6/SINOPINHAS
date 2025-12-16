@@ -1,26 +1,31 @@
-// --- Social Interactions (Likes, Views) ---
-const videoId = c.req.param("id");
-const env = c.env;
-try {
-    const { user_id } = await c.req.json();
+import { queryDB } from '../db/index.js';
+import { logAudit } from '../middleware/audit.js';
+import { sanitize } from '../utils/sanitize.js';
+import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
-    const { rows: existing } = await queryDB(
-        "SELECT * FROM likes WHERE video_id = $1 AND user_id = $2",
-        [videoId, user_id],
-        env
-    );
+// --- Interações Sociais (Curtidas, Visualizações) ---
+export const likeVideo = async (c) => {
+    const videoId = c.req.param("id");
+    const env = c.env;
+    try {
 
-    if (existing.length > 0) {
-        await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, user_id], env);
-    } else {
-        await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
+        const { rows: existing } = await queryDB(
+            "SELECT * FROM likes WHERE video_id = $1 AND user_id = $2",
+            [videoId, user_id],
+            env
+        );
+
+        if (existing.length > 0) {
+            await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, user_id], env);
+        } else {
+            await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
+        }
+
+        return createResponse(c, { success: true });
+    } catch (err) {
+        console.error("❌ Erro ao curtir vídeo:", err);
+        throw err;
     }
-
-    return createResponse(c, { success: true });
-} catch (err) {
-    console.error("❌ Erro ao curtir vídeo:", err);
-    throw err;
-}
 };
 
 export const viewVideo = async (c) => {
@@ -37,7 +42,7 @@ export const viewVideo = async (c) => {
     }
 };
 
-// --- Comments Section ---
+// --- Seção de Comentários ---
 export const postComment = async (c) => {
     const env = c.env;
     try {
@@ -140,7 +145,7 @@ export const deleteComment = async (c) => {
     }
 };
 
-// --- Notifications & Messaging ---
+// --- Notificações e Mensagens ---
 export const getNotifications = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
