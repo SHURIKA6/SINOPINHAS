@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret }) => {
+const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret, onShare }) => {
     return (
         <div style={{
             background: isSecret ? "#3d1a1a" : "#20153e",
@@ -96,6 +96,16 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     </button>
                     <span>👁️ {video.views || 0}</span>
                 </div>
+                <button
+                    onClick={() => onShare && onShare(video)}
+                    style={{
+                        marginTop: 8, background: 'none', border: '1px solid #444',
+                        borderRadius: 6, color: '#aaa', padding: '6px 12px', width: '100%',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}
+                >
+                    📤 Enviar / Compartilhar
+                </button>
 
                 <button
                     onClick={() => onOpenComments(video)}

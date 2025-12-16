@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import VideoCard from '../VideoCard';
+import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType = 'video' }) {
@@ -9,6 +10,8 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     const [sortBy, setSortBy] = useState('recent');
     const [page, setPage] = useState(1);
     const VIDEOS_PER_PAGE = 12;
+
+    const [videoToShare, setVideoToShare] = useState(null);
 
     useEffect(() => {
         loadVideos();
@@ -171,9 +174,19 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                     onOpenComments={onVideoClick}
                                     canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
                                     isSecret={false}
+                                    onShare={(video) => setVideoToShare(video)}
                                 />
                             ))}
                         </div>
+
+                        {videoToShare && (
+                            <ShareModal
+                                video={videoToShare}
+                                user={user}
+                                onClose={() => setVideoToShare(null)}
+                                showToast={showToast}
+                            />
+                        )}
 
                         {hasMoreVideos && (
                             <div style={{ textAlign: 'center', marginTop: 30 }}>

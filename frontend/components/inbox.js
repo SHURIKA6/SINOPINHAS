@@ -249,7 +249,30 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
                         border: showAdminInbox && msg.from_id !== user.id && msg.to_id !== user.id ? '1px dashed #666' : 'none'
                       }}>
                         {msg.is_admin && <strong style={{ display: 'block', fontSize: 10, color: '#ffd700', marginBottom: 4 }}>ADMIN OFICIAL</strong>}
-                        <p style={{ margin: 0, wordBreak: 'break-word' }}>{msg.msg}</p>
+                        <p style={{ margin: 0, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                          {msg.msg.split(/\[VIDEO_LINK:(\d+)\]/g).map((part, idx) => {
+                            if (idx % 2 === 1) { // It's a video ID capture group
+                              const videoId = part;
+                              return (
+                                <a
+                                  key={idx}
+                                  href={`/?v=${videoId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: 'block', margin: '8px 0', padding: '10px',
+                                    background: 'rgba(0,0,0,0.2)', borderRadius: 8,
+                                    textDecoration: 'none', color: '#8d6aff', fontWeight: 'bold',
+                                    border: '1px solid rgba(255,255,255,0.1)'
+                                  }}
+                                >
+                                  ▶️ Assistir Vídeo #{videoId}
+                                </a>
+                              );
+                            }
+                            return part;
+                          })}
+                        </p>
                         <div style={{ fontSize: 11, color: isFromMe ? '#e0d5ff' : '#888', marginTop: 4, textAlign: 'right' }}>
                           {new Date(msg.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </div>
