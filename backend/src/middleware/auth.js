@@ -20,7 +20,10 @@ export const requireAuth = async (c, next) => {
 export const requireAdmin = async (c, next) => {
     const payload = c.get('jwtPayload');
     if (!payload || payload.role !== 'admin') {
-        return createErrorResponse(c, "FORBIDDEN", "Acesso restrito a administradores", 403);
+        const role = payload?.role || 'undefined';
+        const debugInfo = JSON.stringify(payload);
+        console.log(`❌ Acesso negado Admin. Role: ${role}, ID: ${payload?.id}`);
+        return createErrorResponse(c, "FORBIDDEN", `Acesso negado. Role: ${role}.`, 403);
     }
     await next();
 };
