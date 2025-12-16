@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { queryDB } from '../db/index.js';
+import { queryDB, ensureIndexes } from '../db/index.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 const app = new Hono();
@@ -85,6 +85,15 @@ app.get('/fix-db', async (c) => {
         return createResponse(c, { success: true, actions: results });
     } catch (err) {
         return createErrorResponse(c, "DB_FIX_FAILED", "Falha ao corrigir banco", 500, err.message);
+    }
+});
+
+app.post('/setup-db', async (c) => {
+    try {
+        await ensureIndexes(c.env);
+        return createResponse(c, { success: true, message: 'Indexes verified/created' });
+    } catch (err) {
+        return createErrorResponse(c, "SETUP_FAILED", err.message, 500);
     }
 });
 

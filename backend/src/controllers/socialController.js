@@ -275,36 +275,35 @@ export const getInbox = async (c) => {
 export const getAdminInbox = async (c) => {
     const env = c.env;
     try {
-        try {
-            // Auth handled by middleware
+        // Auth handled by middleware
 
-            const { rows } = await queryDB(
-                `SELECT m.*, 
+        const { rows } = await queryDB(
+            `SELECT m.*, 
         uf.username as from_username, uf.avatar as from_avatar,
         ut.username as to_username, ut.avatar as to_avatar
        FROM messages m
        LEFT JOIN users uf ON m.from_id = uf.id
        LEFT JOIN users ut ON m.to_id = ut.id
        ORDER BY m.created_at DESC LIMIT 100`, /* Show last 100 messages for admin */
-                [],
-                env
-            );
+            [],
+            env
+        );
 
-            console.log(`✅ [ADMIN] Listadas ${rows.length} mensagens globais`);
-            return createResponse(c, rows);
-        } catch (err) {
-            console.error("❌ Erro ao buscar todas as mensagens:", err);
-            return createResponse(c, []); // Fail safe
-        }
-    };
+        console.log(`✅ [ADMIN] Listadas ${rows.length} mensagens globais`);
+        return createResponse(c, rows);
+    } catch (err) {
+        console.error("❌ Erro ao buscar todas as mensagens:", err);
+        return createResponse(c, []); // Fail safe
+    }
+};
 
-    export const logTerms = async (c) => {
-        try {
-            const body = await c.req.json();
-            await logAudit(null, "TERMS_ACCEPTED", body, c);
-            return createResponse(c, { success: true });
-        } catch (err) {
-            console.error("❌ Erro ao registrar termos:", err);
-            throw err;
-        }
-    };
+export const logTerms = async (c) => {
+    try {
+        const body = await c.req.json();
+        await logAudit(null, "TERMS_ACCEPTED", body, c);
+        return createResponse(c, { success: true });
+    } catch (err) {
+        console.error("❌ Erro ao registrar termos:", err);
+        throw err;
+    }
+};
