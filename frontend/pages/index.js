@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useAuth } from "../hooks/useAuth";
 import Head from "next/head";
 
 // Componentes
@@ -69,87 +70,20 @@ export default function Home({ initialVideo }) {
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
 
-  const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState(''); // Restored
+  // useAuth Hook
+  const {
+    user,
+    isAdmin,
+    unreadCount,
+    handleAuthSuccess,
+    handleAdminAuthSuccess,
+    logout,
+    logoutAdmin
+  } = useAuth(showToast);
 
-  const [activeTab, setActiveTab] = useState('videos');
-  // State for Feeds is now internal to HomeFeed/SecretFeed
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // --- Estado Global do Modal de Vídeo (SEO/Deep Linking) ---
-  const [currentVideo, setCurrentVideo] = useState(initialVideo || null);
-  const [showCommentsModal, setShowCommentsModal] = useState(!!initialVideo);
-  const [videoComments, setVideoComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedAdminPassword = localStorage.getItem('adminPassword');
-    const acceptedTerms = localStorage.getItem('termsAccepted');
-
-    if (acceptedTerms === 'true') {
-      setTermsAccepted(true);
-    } else {
-      setShowTerms(true);
-    }
-
-    if (savedUser) {
-      const u = JSON.parse(savedUser);
-      setUser(u);
-      loadNotifications(u.id);
-    }
-    if (savedAdminPassword) {
-      setAdminPassword(savedAdminPassword);
-      setIsAdmin(true);
-      // Ensure we have a valid ADMIN token by re-logging in automatically
-      import('../services/api').then(api => {
-        api.loginAdmin(savedAdminPassword).catch(err => {
-          console.error("Auto-login Admin failed:", err);
-          // If auto-login fails, maybe clear admin state?
-          // setIsAdmin(false); 
-          // localStorage.removeItem('adminPassword');
-        });
-      });
-    }
-
-  }, []);
-
-  const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }, []);
-
-  const handleAcceptTerms = async () => {
-    localStorage.setItem('termsAccepted', 'true');
-    setTermsAccepted(true);
-    setShowTerms(false);
-
-    try {
-      if (user) await logTermsAcceptance(user.id);
-      else await logTermsAcceptance(null);
-    } catch (err) {
-      console.error('Erro ao registrar aceitação:', err);
-    }
-
-    showToast('Termos aceitos! Bem-vindo ao SINOPINHAS 🎉', 'success');
-    // loadVideos(); // Removed - Feeds load automatically
-  };
-
-  const handleDeclineTerms = () => {
-    alert('Você precisa aceitar os termos para usar a plataforma.');
-    window.location.href = 'https://www.google.com';
-  };
-
-  const loadNotifications = async (userId) => {
-    try {
-      const data = await fetchNotifications(userId);
-      const unread = data.filter(n => !n.is_read).length;
-      setUnreadCount(unread);
-    } catch (err) {
-      console.error('Erro ao carregar notificações:', err);
-    }
-  };
+  // Removido estado manual de user/auth pois agora está no hook
+  // adminPassword removido por segurança (gerenciado via Token agora)
+  const adminPassword = ""; // Placeholder para evitar quebras em componentes que ainda pedem (serão refatorados depois)
 
   // Funções de interação movidas para os componentes de Feed
 
@@ -201,34 +135,7 @@ export default function Home({ initialVideo }) {
     return isAdmin || (user && user.id.toString() === ownerId);
   }, [isAdmin, user]);
 
-  const handleAuthSuccess = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setShowAuth(false);
-    if (userData.id) loadNotifications(userData.id);
-  };
-
-  const handleAdminAuthSuccess = (password) => {
-    setIsAdmin(true);
-    setAdminPassword(password);
-    localStorage.setItem('adminPassword', password);
-    setActiveTab('admin');
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    setUnreadCount(0);
-    showToast('Logout realizado', 'success');
-  };
-
-  const logoutAdmin = () => {
-    setIsAdmin(false);
-    setAdminPassword('');
-    localStorage.removeItem('adminPassword');
-    setActiveTab('videos');
-    showToast('Saiu do modo admin', 'success');
-  };
+  /* Logic moved to useAuth */
 
   /* Logic removed */
 
