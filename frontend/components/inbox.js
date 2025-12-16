@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const DEFAULT_API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,7 +26,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     try {
       setUsersLoading(true);
       if (!usersList || usersList.length === 0) {
-        const res = await axios.get(`${API}/api/users/all`);
+        const res = await api.get(`/api/users/all`);
         setLocalUsersList(res.data);
       } else {
         setLocalUsersList(usersList);
@@ -44,11 +44,9 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       setLoading(true);
       let res;
       if (showAdminInbox && isAdmin) {
-        res = await axios.get(`${API}/api/admin/inbox`, {
-          params: { admin_password: adminPassword }
-        });
+        res = await api.get(`/api/admin/inbox`);
       } else {
-        res = await axios.get(`${API}/api/inbox/${user.id}`);
+        res = await api.get(`/api/inbox/${user.id}`);
       }
       setMessages(res.data);
       if (onMessageRead) onMessageRead();
@@ -64,12 +62,12 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     if (!newMessage.trim() || !selectedUser) return;
 
     try {
-      await axios.post(`${API}/api/send-message`, {
+      await api.post(`/api/send-message`, {
         from_id: user.id,
         to_id: selectedUser.id,
         msg: newMessage,
-        is_admin: sendAsAdmin,
-        admin_password: sendAsAdmin ? adminPassword : null
+        is_admin: sendAsAdmin
+        // removed admin_password
       });
       setNewMessage('');
       await loadMessages();

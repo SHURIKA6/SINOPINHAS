@@ -148,13 +148,13 @@ export const deleteComment = (commentId, userId, adminPassword = null) => {
     });
 };
 
-export const fetchUsers = async (adminPassword) => {
-    const res = await api.get(`/api/admin/users?admin_password=${adminPassword}`);
+export const fetchUsers = async () => {
+    const res = await api.get(`/api/admin/users`);
     return res.data;
 };
 
-export const fetchLogs = async (adminPassword) => {
-    const res = await api.get(`/api/admin/logs?admin_password=${adminPassword}`);
+export const fetchLogs = async () => {
+    const res = await api.get(`/api/admin/logs`);
     return res.data;
 };
 

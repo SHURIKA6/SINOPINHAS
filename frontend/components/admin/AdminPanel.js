@@ -12,16 +12,25 @@ export default function AdminPanel({ adminPassword, showToast }) {
 
     const loadUsers = async () => {
         try {
-            const data = await fetchUsers(adminPassword);
+            const data = await fetchUsers();
             setUsersList(data);
-        } catch (err) { showToast('Erro ao carregar usuários', 'error'); }
+        } catch (err) {
+            if (err.status === 401) {
+                showToast('Sessão expirada. Faça login novamente.', 'error');
+            } else {
+                showToast('Erro ao carregar usuários', 'error');
+            }
+        }
     };
 
     const loadLogs = async () => {
         try {
-            const data = await fetchLogs(adminPassword);
+            const data = await fetchLogs();
             setLogs(data);
-        } catch (err) { showToast('Erro ao buscar registros', 'error'); }
+        } catch (err) {
+            if (err.status === 401) return; // Already handled by loadUsers toast potentially
+            showToast('Erro ao buscar registros', 'error');
+        }
     };
 
     const handleResetPassword = async (userId) => {
