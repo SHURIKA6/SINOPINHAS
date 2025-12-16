@@ -1,28 +1,21 @@
-import pg from 'pg';
-const { Pool } = pg;
+import { Pool } from '@neondatabase/serverless';
 
 let pool;
 
 const createPool = (env) => {
-    // Basic connection config
-    const config = {
-        connectionString: env.DATABASE_URL,
-        idleTimeoutMillis: 5000,
+    // Neon Serverless driver handles connection string parsing and SSL automatically
+    // It uses HTTP/WebSockets for connection scaling
+    const connectionString = env.DATABASE_URL;
+
+    const newPool = new Pool({
+        connectionString,
+        max: 20, // We can be more generous with connections as they are virtualized
         connectionTimeoutMillis: 5000,
-        max: 10, // Limit connections in serverless environment
-    };
-
-    // Add SSL for production (Hyperdrive/Neon/Supabase usually need this)
-    if (!env.DATABASE_URL.includes('sslmode=disable') && !env.DATABASE_URL.includes('localhost')) {
-        config.ssl = { rejectUnauthorized: false };
-    }
-
-    const newPool = new Pool(config);
+        idleTimeoutMillis: 5000
+    });
 
     newPool.on('error', (err) => {
         console.error('❌ FATAL: Unexpected error on idle client', err);
-        // Don't exit process in Workers, but we might want to unset the pool so it recreates
-        // However, pg pool handles reconnection automatically for many cases.
     });
 
     return newPool;
@@ -35,7 +28,7 @@ export async function queryDB(sql, params = [], env) {
 
     // Singleton pattern for connection pool
     if (!pool) {
-        console.log("🔌 Inicializando novo Pool de conexões...");
+        console.log("🔌 Inicializando novo Pool Neon Serverless...");
         pool = createPool(env);
     }
 
