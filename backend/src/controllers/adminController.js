@@ -4,6 +4,9 @@ import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
 
+// Helper to get secret consistently
+const getJwtSecret = (env) => env.JWT_SECRET || 'development_secret_123';
+
 export const login = async (c) => {
     const env = c.env;
     try {
@@ -17,7 +20,7 @@ export const login = async (c) => {
                 role: 'admin',
                 iat: Math.floor(Date.now() / 1000),
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 hours
-            }, c.env.JWT_SECRET || 'development_secret_123');
+            }, getJwtSecret(env));
 
             return createResponse(c, { success: true, token });
         }
@@ -54,11 +57,10 @@ export const listUsers = async (c) => {
 export const resetPassword = async (c) => {
     const env = c.env;
     try {
-        const { user_id, admin_password } = await c.req.json();
+        const { user_id } = await c.req.json();
 
-        if (admin_password !== env.ADMIN_PASSWORD) {
-            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
-        }
+        // Admin check is already handled by middleware
+
 
         const hashedPassword = await hash("123456");
         await queryDB("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, user_id], env);
@@ -77,12 +79,9 @@ export const banUser = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
     try {
-        const { admin_password } = await c.req.json();
+        // Admin check is already handled by middleware
 
-        if (admin_password !== env.ADMIN_PASSWORD) {
-            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
-        }
-
+        // Cascading delete
         await queryDB("DELETE FROM videos WHERE user_id = $1", [userId], env);
         await queryDB("DELETE FROM comments WHERE user_id = $1", [userId], env);
         await queryDB("DELETE FROM likes WHERE user_id = $1", [userId], env);

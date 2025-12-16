@@ -3,7 +3,7 @@ import { createErrorResponse } from '../utils/api-utils.js';
 
 export const authMiddleware = async (c, next) => {
     const jwtMiddleware = jwt({
-        secret: c.env.JWT_SECRET || 'fallback_secret_please_change_in_prod',
+        secret: c.env.JWT_SECRET || 'development_secret_123',
     });
     return jwtMiddleware(c, next);
 };
