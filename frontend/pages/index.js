@@ -70,7 +70,11 @@ export default function Home({ initialVideo }) {
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
 
-
+  const [activeTab, setActiveTab] = useState('videos');
+  const [currentVideo, setCurrentVideo] = useState(null);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [videoComments, setVideoComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
