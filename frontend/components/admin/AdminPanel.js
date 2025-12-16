@@ -18,7 +18,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
             if (err.status === 401) {
                 showToast('Sessão expirada. Faça login novamente.', 'error');
             } else {
-                showToast('Erro ao carregar usuários', 'error');
+                showToast(err.message || 'Erro ao carregar usuários', 'error');
             }
         }
     };
@@ -28,8 +28,8 @@ export default function AdminPanel({ adminPassword, showToast }) {
             const data = await fetchLogs();
             setLogs(data);
         } catch (err) {
-            if (err.status === 401) return; // Already handled by loadUsers toast potentially
-            showToast('Erro ao buscar registros', 'error');
+            if (err.status === 401) return;
+            showToast(err.message || 'Erro ao buscar registros', 'error');
         }
     };
 
