@@ -24,7 +24,7 @@ api.interceptors.response.use(
     (error) => {
         // Extrai a mensagem de erro bonita do backend (se existir)
         const backendError = error.response?.data?.error;
-        let customMessage = backendError;
+        let customMessage = error.response?.data?.message || backendError;
 
         // Cria um erro novo com a mensagem limpa para o frontend exibir
         const customError = new Error(customMessage || "Ocorreu um erro inesperado.");
