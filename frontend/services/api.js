@@ -7,6 +7,17 @@ const api = axios.create({
     baseURL: API
 });
 
+// Interceptador para adicionar Token JWT
+api.interceptors.request.use((config) => {
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    }
+    return config;
+});
+
 // Interceptador para tratamento global de erros
 api.interceptors.response.use(
     (response) => response,
@@ -161,6 +172,9 @@ export const loginUser = async (username, password) => {
         auth_type: 'login',
     });
     const res = await api.post('/api/login', { username, password, ...fingerprintData });
+    if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+    }
     return res.data;
 };
 
@@ -170,11 +184,17 @@ export const registerUser = async (username, password) => {
         auth_type: 'register',
     });
     const res = await api.post('/api/register', { username, password, ...fingerprintData });
+    if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+    }
     return res.data;
 };
 
 export const loginAdmin = async (password) => {
     const res = await api.post('/api/admin/login', { password });
+    if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+    }
     return res.data;
 };
 

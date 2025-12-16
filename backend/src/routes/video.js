@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { blockVPN } from '../middleware/vpn.js';
+import { authMiddleware } from '../middleware/auth.js';
 import * as videoController from '../controllers/videoController.js';
 
 const app = new Hono();
@@ -8,10 +9,12 @@ const app = new Hono();
 app.get('/videos/search', videoController.searchVideos);
 app.get('/videos/:id', videoController.getVideo);
 
-// Existing routes (Restored)
-app.post('/upload', blockVPN, videoController.uploadVideo); // /api/upload
+// Protected Routes
+app.post('/upload', authMiddleware, blockVPN, videoController.uploadVideo); // /api/upload
+app.delete('/videos/:id', authMiddleware, videoController.deleteVideo); // /api/videos/:id
+
+// Public Routes
 app.get('/videos', videoController.listVideos); // /api/videos
 app.get('/secret-videos', videoController.listSecretVideos); // /api/secret-videos
-app.delete('/videos/:id', videoController.deleteVideo); // /api/videos/:id
 
 export default app;

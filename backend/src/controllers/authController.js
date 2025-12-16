@@ -2,6 +2,7 @@ import { queryDB } from '../db/index.js';
 import { hash, compare } from '../utils/hash.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+import { sign } from 'hono/jwt';
 
 export const register = async (c) => {
     const env = c.env;
@@ -50,7 +51,14 @@ export const register = async (c) => {
             console.error("⚠️ Erro ao salvar log (não crítico):", logErr.message);
         }
 
-        return createResponse(c, { user });
+        const token = await sign({
+            id: user.id,
+            username: user.username,
+            role: 'user',
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
+        }, c.env.JWT_SECRET || 'development_secret_123');
+
+        return createResponse(c, { user, token });
     } catch (err) {
         console.error("❌ ERRO CRÍTICO AO REGISTRAR:", err);
         console.error("Stack trace:", err.stack);
@@ -104,6 +112,13 @@ export const login = async (c) => {
             console.error("⚠️ Erro ao salvar log (não crítico):", logErr.message);
         }
 
+        const token = await sign({
+            id: user.id,
+            username: user.username,
+            role: 'user',
+            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
+        }, c.env.JWT_SECRET || 'development_secret_123');
+
         return createResponse(c, {
             user: {
                 id: user.id,
@@ -111,6 +126,7 @@ export const login = async (c) => {
                 avatar: user.avatar,
                 bio: user.bio,
             },
+            token
         });
     } catch (err) {
         console.error("❌ ERRO CRÍTICO AO FAZER LOGIN:", err);

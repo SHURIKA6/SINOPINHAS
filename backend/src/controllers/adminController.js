@@ -2,6 +2,7 @@ import { queryDB } from '../db/index.js';
 import { hash } from '../utils/hash.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+import { sign } from 'hono/jwt';
 
 export const login = async (c) => {
     const env = c.env;
@@ -11,7 +12,14 @@ export const login = async (c) => {
         if (password === env.ADMIN_PASSWORD) {
             await logAudit(null, "ADMIN_LOGIN_SUCCESS", {}, c);
             console.log("✅ Admin login bem-sucedido");
-            return createResponse(c, { success: true });
+
+            const token = await sign({
+                role: 'admin',
+                iat: Math.floor(Date.now() / 1000),
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 hours
+            }, c.env.JWT_SECRET || 'development_secret_123');
+
+            return createResponse(c, { success: true, token });
         }
 
         await logAudit(null, "ADMIN_LOGIN_FAILED", {}, c);
