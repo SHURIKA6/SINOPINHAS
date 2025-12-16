@@ -70,16 +70,7 @@ export default function Home({ initialVideo }) {
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
 
-  // useAuth Hook
-  const {
-    user,
-    isAdmin,
-    unreadCount,
-    handleAuthSuccess,
-    handleAdminAuthSuccess,
-    logout,
-    logoutAdmin
-  } = useAuth(showToast);
+
 
   // Removido estado manual de user/auth pois agora está no hook
   // adminPassword removido por segurança (gerenciado via Token agora)
