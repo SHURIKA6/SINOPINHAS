@@ -70,6 +70,17 @@ export default function Home({ initialVideo }) {
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
 
+
+  const {
+    user,
+    isAdmin,
+    unreadCount,
+    handleAuthSuccess,
+    handleAdminAuthSuccess,
+    logout,
+    logoutAdmin
+  } = useAuth(showToast);
+
   const [activeTab, setActiveTab] = useState('videos');
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -81,16 +92,39 @@ export default function Home({ initialVideo }) {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
-  // useAuth Hook
-  const {
-    user,
-    isAdmin,
-    unreadCount,
-    handleAuthSuccess,
-    handleAdminAuthSuccess,
-    logout,
-    logoutAdmin
-  } = useAuth(showToast);
+  useEffect(() => {
+    const accepted = localStorage.getItem('terms_accepted');
+    if (accepted) {
+      setTermsAccepted(true);
+    } else {
+      setShowTerms(true);
+    }
+  }, []);
+
+  const handleAcceptTerms = async (locationData) => {
+    setTermsAccepted(true);
+    setShowTerms(false);
+    localStorage.setItem('terms_accepted', 'true');
+    try {
+      await logTermsAcceptance({
+        accepted_at: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+        ...locationData
+      });
+    } catch (err) {
+      console.error("Erro ao registrar termos:", err);
+    }
+  };
+
+  const handleDeclineTerms = () => {
+    alert("Você precisa aceitar os termos para usar a plataforma.");
+  };
+
+  const handleLogout = () => {
+    logout();
+    setActiveTab('videos');
+  };
+
 
   // Removido estado manual de user/auth pois agora está no hook
   // adminPassword removido por segurança (gerenciado via Token agora)
