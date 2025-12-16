@@ -138,7 +138,7 @@ export const deleteComment = async (c) => {
 
         await queryDB("DELETE FROM comments WHERE id = $1", [commentId], env);
 
-        return c.json({ success: true });
+        return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao deletar comentário:", err);
         throw err;
@@ -158,7 +158,7 @@ export const getNotifications = async (c) => {
             env
         );
 
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         console.error("❌ Erro ao buscar notificações:", err);
         throw err;
@@ -174,7 +174,7 @@ export const listAllUsers = async (c) => {
             env
         );
 
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         console.error("❌ Erro ao listar usuários:", err);
         // Auto-recovery: Return empty list if something is wrong (e.g. missing column)
@@ -243,7 +243,7 @@ export const getInbox = async (c) => {
             env
         );
 
-        return c.json(rows);
+        return createResponse(c, rows);
     } catch (err) {
         // Auto-Recovery
         if (err.code === '42P01') {

@@ -102,6 +102,15 @@ export default function Home({ initialVideo }) {
     if (savedAdminPassword) {
       setAdminPassword(savedAdminPassword);
       setIsAdmin(true);
+      // Ensure we have a valid ADMIN token by re-logging in automatically
+      import('../services/api').then(api => {
+        api.loginAdmin(savedAdminPassword).catch(err => {
+          console.error("Auto-login Admin failed:", err);
+          // If auto-login fails, maybe clear admin state?
+          // setIsAdmin(false); 
+          // localStorage.removeItem('adminPassword');
+        });
+      });
     }
 
   }, []);
