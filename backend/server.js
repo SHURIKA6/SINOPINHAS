@@ -33,7 +33,14 @@ app.get("/", (c) => {
   });
 });
 
+import { HTTPException } from 'hono/http-exception';
+
 app.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    // Return the specific HTTP error (401, 403, 404, etc.)
+    return createErrorResponse(c, "REQUEST_ERROR", err.message, err.status);
+  }
+
   console.error("❌ Erro não tratado (Global Handler):", err);
   return createErrorResponse(c, "INTERNAL_ERROR", "Ocorreu um erro interno no servidor.", 500, err.message);
 });

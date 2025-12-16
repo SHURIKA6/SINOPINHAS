@@ -33,12 +33,8 @@ export const login = async (c) => {
 
 export const listUsers = async (c) => {
     const env = c.env;
-    const adminPassword = c.req.query("admin_password");
 
-    if (adminPassword !== env.ADMIN_PASSWORD) {
-        console.log("❌ Tentativa de acesso admin não autorizado");
-        return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
-    }
+    // Auth handled by requireAdmin middleware
 
     try {
         const { rows } = await queryDB(
@@ -105,12 +101,8 @@ export const banUser = async (c) => {
 
 export const getLogs = async (c) => {
     const env = c.env;
-    const adminPassword = c.req.query("admin_password");
 
-    if (adminPassword !== env.ADMIN_PASSWORD) {
-        console.log("❌ Tentativa de acesso aos logs não autorizada");
-        return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
-    }
+    // Auth handled by middleware
 
     try {
         const { rows } = await queryDB(
