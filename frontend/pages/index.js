@@ -32,7 +32,7 @@ const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandodasilvaribeiro.workers.dev';
 
 export async function getServerSideProps(context) {
   const { v } = context.query;
@@ -40,7 +40,7 @@ export async function getServerSideProps(context) {
 
   if (v) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandodasilvaribeiro.workers.dev'; // Fixed fallback
       const res = await fetch(`${apiUrl}/api/videos/${v}`);
       if (res.ok) {
         initialVideo = await res.json();
@@ -58,6 +58,11 @@ export async function getServerSideProps(context) {
 }
 
 export default function Home({ initialVideo }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [toast, setToast] = useState(null); // Restored
@@ -184,13 +189,14 @@ export default function Home({ initialVideo }) {
 
   /* Logic removed */
 
+  if (!mounted) return null; // Prevent SSR crashes
+
   if (!termsAccepted) {
     return (
       <>
         <Head>
           <title>SINOPINHAS - Termos de Uso</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
         </Head>
         {showTerms && (
           <TermsModal
