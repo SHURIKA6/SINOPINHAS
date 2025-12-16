@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { blockVPN } from '../middleware/vpn.js';
 import { validate } from '../middleware/validate.js';
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 import * as schemas from '../schemas/social.js';
 import * as socialController from '../controllers/socialController.js';
 
@@ -19,6 +20,6 @@ app.get('/notifications/:userId', socialController.getNotifications);
 app.get('/users/all', socialController.listAllUsers);
 app.post('/send-message', validate(schemas.sendMessageSchema), socialController.sendMessage);
 app.get('/inbox/:userId', socialController.getInbox);
-app.get('/admin/inbox', socialController.getAdminInbox);
+app.get('/admin/inbox', authMiddleware, requireAdmin, socialController.getAdminInbox);
 
 export default app;

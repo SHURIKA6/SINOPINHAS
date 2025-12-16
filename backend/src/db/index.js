@@ -88,3 +88,24 @@ export async function healthCheck(env) {
         return false;
     }
 }
+
+export async function ensureIndexes(env) {
+    console.log("🛠️ Verificando índices do banco de dados...");
+    const queries = [
+        "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
+        "CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(from_id, to_id)",
+        "CREATE INDEX IF NOT EXISTS idx_likes_video_user ON likes(video_id, user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
+        "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)"
+    ];
+
+    for (const q of queries) {
+        try {
+            await queryDB(q, [], env);
+        } catch (err) {
+            console.warn(`⚠️ Falha ao criar índice (não crítico): ${err.message}`);
+        }
+    }
+    console.log("✅ Índices verificados/criados.");
+}
