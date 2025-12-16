@@ -72,6 +72,22 @@ export default function Home({ initialVideo }) {
 
 
 
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
+  // useAuth Hook
+  const {
+    user,
+    isAdmin,
+    unreadCount,
+    handleAuthSuccess,
+    handleAdminAuthSuccess,
+    logout,
+    logoutAdmin
+  } = useAuth(showToast);
+
   // Removido estado manual de user/auth pois agora está no hook
   // adminPassword removido por segurança (gerenciado via Token agora)
   const adminPassword = ""; // Placeholder para evitar quebras em componentes que ainda pedem (serão refatorados depois)
