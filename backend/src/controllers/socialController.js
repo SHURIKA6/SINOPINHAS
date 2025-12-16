@@ -1,34 +1,26 @@
-import { queryDB } from '../db/index.js';
-import { logAudit } from '../middleware/audit.js';
-// Forced Deployment Trigger: 2025-12-15 v2
-import { sanitize } from '../utils/sanitize.js';
-import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+// --- Social Interactions (Likes, Views) ---
+const videoId = c.req.param("id");
+const env = c.env;
+try {
+    const { user_id } = await c.req.json();
 
-export const likeVideo = async (c) => {
-    const videoId = c.req.param("id");
-    const env = c.env;
-    try {
-        const { user_id } = await c.req.json();
+    const { rows: existing } = await queryDB(
+        "SELECT * FROM likes WHERE video_id = $1 AND user_id = $2",
+        [videoId, user_id],
+        env
+    );
 
-        const { rows: existing } = await queryDB(
-            "SELECT * FROM likes WHERE video_id = $1 AND user_id = $2",
-            [videoId, user_id],
-            env
-        );
-
-        if (existing.length > 0) {
-            await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, user_id], env);
-            console.log(`💔 Like removido: Vídeo ${videoId} por User ${user_id}`);
-        } else {
-            await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
-            console.log(`❤️ Like adicionado: Vídeo ${videoId} por User ${user_id}`);
-        }
-
-        return createResponse(c, { success: true });
-    } catch (err) {
-        console.error("❌ Erro ao curtir vídeo:", err);
-        throw err;
+    if (existing.length > 0) {
+        await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, user_id], env);
+    } else {
+        await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
     }
+
+    return createResponse(c, { success: true });
+} catch (err) {
+    console.error("❌ Erro ao curtir vídeo:", err);
+    throw err;
+}
 };
 
 export const viewVideo = async (c) => {
@@ -38,8 +30,6 @@ export const viewVideo = async (c) => {
         const { user_id } = await c.req.json();
 
         await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
-
-        console.log(`👁️ View registrada: Vídeo ${videoId} por User ${user_id}`);
         return createResponse(c, { success: true });
     } catch (err) {
         console.error("❌ Erro ao registrar view:", err);
@@ -47,6 +37,7 @@ export const viewVideo = async (c) => {
     }
 };
 
+// --- Comments Section ---
 export const postComment = async (c) => {
     const env = c.env;
     try {
@@ -75,12 +66,10 @@ export const postComment = async (c) => {
             );
         }
 
-        console.log(`💬 Comentário adicionado: Vídeo ${video_id} por User ${user_id}`);
         return createResponse(c, { success: true });
     } catch (err) {
-        // AUTO-REPAIR: If table missing (42P01), create it and retry
+        // Auto-Repair Table
         if (err.code === '42P01') {
-            console.log("⚠️ Tabela 'comments' inexistente. Criando automaticamente...");
             await queryDB(`
                 CREATE TABLE IF NOT EXISTS comments (
                     id SERIAL PRIMARY KEY,
@@ -90,14 +79,11 @@ export const postComment = async (c) => {
                     created_at TIMESTAMP DEFAULT NOW()
                 )
             `, [], env);
-            // Retry the insert
             await queryDB(
                 "INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
                 [video_id, user_id, sanitize(comment)],
                 env
             );
-            // Notifications table might also be missing, handle separately or assume subsequent calls fix it
-            // For simplicity, we just retry the main partial
             return createResponse(c, { success: true, repaired: true });
         }
 
@@ -123,11 +109,7 @@ export const getComments = async (c) => {
         console.log(`✅ Listados ${rows.length} comentários do vídeo ${videoId}`);
         return createResponse(c, rows);
     } catch (err) {
-        // Graceful handling for missing table
-        if (err.code === '42P01') {
-            console.log("⚠️ Tabela 'comments' inexistente. Retornando lista vazia.");
-            return createResponse(c, []);
-        }
+        if (err.code === '42P01') return createResponse(c, []);
 
         console.error("❌ Erro ao buscar comentários:", err);
         throw err;
@@ -150,7 +132,6 @@ export const deleteComment = async (c) => {
         }
 
         await queryDB("DELETE FROM comments WHERE id = $1", [commentId], env);
-        console.log(`✅ Comentário deletado: ID ${commentId}`);
 
         return c.json({ success: true });
     } catch (err) {
@@ -159,6 +140,7 @@ export const deleteComment = async (c) => {
     }
 };
 
+// --- Notifications & Messaging ---
 export const getNotifications = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
@@ -171,7 +153,6 @@ export const getNotifications = async (c) => {
             env
         );
 
-        console.log(`✅ Listadas ${rows.length} notificações do User ${userId}`);
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao buscar notificações:", err);
@@ -188,7 +169,6 @@ export const listAllUsers = async (c) => {
             env
         );
 
-        console.log(`✅ Listados ${rows.length} usuários`);
         return c.json(rows);
     } catch (err) {
         console.error("❌ Erro ao listar usuários:", err);
@@ -214,7 +194,6 @@ export const sendMessage = async (c) => {
             env
         );
 
-        console.log(`📨 Mensagem enviada: De User ${from_id} para User ${to_id} (Admin: ${finalIsAdmin})`);
         return createResponse(c, { success: true });
     } catch (err) {
         // Auto-Repair: ensure messages table exists
@@ -259,7 +238,6 @@ export const getInbox = async (c) => {
             env
         );
 
-        console.log(`✅ Listadas ${rows.length} mensagens do User ${userId}`);
         return c.json(rows);
     } catch (err) {
         // Auto-Recovery
@@ -289,7 +267,6 @@ export const getAdminInbox = async (c) => {
             env
         );
 
-        console.log(`✅ [ADMIN] Listadas ${rows.length} mensagens globais`);
         return createResponse(c, rows);
     } catch (err) {
         console.error("❌ Erro ao buscar todas as mensagens:", err);
