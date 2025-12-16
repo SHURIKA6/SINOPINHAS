@@ -245,7 +245,7 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | Sinopinhas` : "SINOPINHAS - Streaming de Vídeos"}</title>
+        <title>{currentVideo ? `${currentVideo.title} | Sinopinhas` : "SINOPINHAS by SHURA"}</title>
         <meta name="description" content={currentVideo?.description || "Plataforma de streaming de vídeos"} />
 
         {/* Open Graph / Social Media */}
