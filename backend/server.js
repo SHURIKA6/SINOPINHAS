@@ -10,10 +10,9 @@ import healthRoutes from './src/routes/health.js';
 
 const app = new Hono();
 
-// Apply Centralized CORS Middleware
-app.use("/*", corsMiddleware);
+// Aplicar Middleware de CORS Centralizado
 
-// Mount routes
+// Montagem das Rotas do Sistema
 app.route('/api', authRoutes);
 app.route('/api', adminRoutes);
 app.route('/api', videoRoutes);
@@ -37,7 +36,7 @@ import { HTTPException } from 'hono/http-exception';
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    // Return the specific HTTP error (401, 403, 404, etc.)
+    // Retornar a exceção HTTP específica (401, 403, 404, etc.)
     return createErrorResponse(c, "REQUEST_ERROR", err.message, err.status);
   }
 
@@ -45,13 +44,13 @@ app.onError((err, c) => {
   return createErrorResponse(c, "INTERNAL_ERROR", "Ocorreu um erro interno no servidor.", 500, err.message);
 });
 
-// Hono's default fetch handler
+// Handler de fetch padrão do Hono
 const honoFetch = app.fetch;
 
 export default {
   async fetch(request, env, ctx) {
     try {
-      // Global OPTIONS preflight check (Manual safeguard before matching routes)
+      // Verificação de preflight OPTIONS Global (Salvaguarda manual antes de roteamento)
       if (request.method === 'OPTIONS') {
         return new Response(null, {
           status: 204,
@@ -63,7 +62,7 @@ export default {
     } catch (err) {
       console.error("🔥 CRITICAL ENTRYPOINT ERROR:", err);
 
-      // Fallback manual CORS response
+      // Resposta manual de fallback para CORS em caso de crash total
       return new Response(JSON.stringify({
         error: 'INTERNAL_ERROR',
         message: 'Internal server error',

@@ -6,13 +6,13 @@ export const corsHeaders = {
 };
 
 /**
- * Helper to standard API responses
+ * Helper para padronizar respostas da API
  * @param {import('hono').Context} c 
  * @param {object} data 
  * @param {number} status 
  */
 export const createResponse = (c, data, status = 200) => {
-    // Ensure headers are applied
+    // Garantir que headers sejam aplicados
     Object.entries(corsHeaders).forEach(([key, value]) => {
         c.header(key, value);
     });
@@ -20,7 +20,7 @@ export const createResponse = (c, data, status = 200) => {
 };
 
 /**
- * Helper for error responses
+ * Helper para respostas de erro
  * @param {import('hono').Context} c 
  * @param {string} code 
  * @param {string} message 

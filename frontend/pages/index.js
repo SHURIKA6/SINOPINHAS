@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Head from "next/head";
 
-// Components
+// Componentes
 import VideoCard from '../components/VideoCard';
 import Header from '../components/layout/Header';
 import UploadSection from '../components/UploadSection';
@@ -12,7 +12,7 @@ import AdminAuthModal from '../components/auth/AdminAuthModal';
 import SecretAuthModal from '../components/auth/SecretAuthModal';
 import ProfileModal from '../components/auth/ProfileModal';
 
-// Services
+// Serviços
 import {
   logTermsAcceptance,
   fetchNotifications,
@@ -61,10 +61,10 @@ export default function Home({ initialVideo }) {
   const [showTerms, setShowTerms] = useState(false);
   const [toast, setToast] = useState(null); // Restored
 
-  // Auth & Modal States
-  const [showAuth, setShowAuth] = useState(false); // Restored
-  const [showAdminAuth, setShowAdminAuth] = useState(false); // Restored
-  const [showProfile, setShowProfile] = useState(false); // Restored
+  // --- Estados de Autenticação e Modais ---
+  const [showAuth, setShowAuth] = useState(false);
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
@@ -77,7 +77,7 @@ export default function Home({ initialVideo }) {
   // State for Feeds is now internal to HomeFeed/SecretFeed
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Global Video Modal State (required for SSR/SEO deep linking)
+  // --- Estado Global do Modal de Vídeo (SEO/Deep Linking) ---
   const [currentVideo, setCurrentVideo] = useState(initialVideo || null);
   const [showCommentsModal, setShowCommentsModal] = useState(!!initialVideo);
   const [videoComments, setVideoComments] = useState([]);
@@ -104,7 +104,6 @@ export default function Home({ initialVideo }) {
       setIsAdmin(true);
     }
 
-    // Legacy data loading removed. Feeds manage their own data.
   }, []);
 
   const showToast = useCallback((message, type = 'success') => {
@@ -143,7 +142,7 @@ export default function Home({ initialVideo }) {
     }
   };
 
-  /* Removed loadVideos/loadSecretVideos/toggleLike - Handled by Feed components */
+  // Funções de interação movidas para os componentes de Feed
 
   const openComments = useCallback(async (video) => {
     setCurrentVideo(video);
@@ -248,7 +247,7 @@ export default function Home({ initialVideo }) {
         <title>{currentVideo ? `${currentVideo.title} | Sinopinhas` : "SINOPINHAS by SHURA"}</title>
         <meta name="description" content={currentVideo?.description || "Plataforma de streaming de vídeos"} />
 
-        {/* Open Graph / Social Media */}
+        {/* Metadados Open Graph / Redes Sociais */}
         <meta property="og:type" content="video.other" />
         <meta property="og:title" content={currentVideo ? currentVideo.title : "SINOPINHAS"} />
         <meta property="og:description" content={currentVideo?.description || "Assista aos melhores vídeos exclusivos na Sinopinhas."} />
@@ -338,7 +337,7 @@ export default function Home({ initialVideo }) {
         <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
 
-          {/* Feeds */}
+          {/* Seções de Feed */}
           {activeTab === 'videos' && (
             <HomeFeed
               user={user}
@@ -374,9 +373,9 @@ export default function Home({ initialVideo }) {
             />
           )}
 
-          {/* Legacy Upload/Admin tabs below */}
+          {/* Seções Legadas (Upload/Admin/Inbox) */}
 
-          {/* Legacy grid removed */}
+
 
           {activeTab === 'upload' && (
             <UploadSection

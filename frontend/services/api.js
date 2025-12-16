@@ -7,7 +7,7 @@ const api = axios.create({
     baseURL: API
 });
 
-// Interceptador para adicionar Token JWT
+// Interceptador para adicionar Token JWT na requisição
 api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');
@@ -18,13 +18,13 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Interceptador para tratamento global de erros
+// Interceptador para tratamento global de respostas e erros
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Extrai a mensagem de erro bonita do backend (se existir)
+        // Extrai mensagem de erro padronizada do backend
         const backendError = error.response?.data?.error;
-        console.error("Debug API Error Response:", error.response?.data);
+        // console.error("Debug API Error Response:", error.response?.data); // Útil para debug
         let customMessage = error.response?.data?.message || backendError;
 
         // Cria um erro novo com a mensagem limpa para o frontend exibir
@@ -37,8 +37,8 @@ api.interceptors.response.use(
             // Opcional: window.location.href = '/?login=true';
         }
 
-        // DETECT HARD CRASH OR CORS ERROR (Usually DB connection failure)
-        // Only override if we didn't receive a polite error from the backend
+        // Detecção de falhas críticas ou erros de CORS/Banco
+        // Só substitui se o backend não enviou um erro tratado
         if (backendError) {
             // Backend enviou erro estruturado
             if (backendError === 'INTERNAL_ERROR') {
@@ -48,7 +48,7 @@ api.interceptors.response.use(
             }
         }
 
-        // DETECT HARD CRASH OR CORS ERROR
+        // Erros de Rede ou Crash do Servidor
         if ((error.message === 'Network Error' || (error.message && error.message.includes('NetworkError'))) && !backendError) {
             customError.message = "Erro de Conexão: O servidor não respondeu (Verifique DATABASE_URL).";
         } else if (error.response?.status === 500 && !backendError) {

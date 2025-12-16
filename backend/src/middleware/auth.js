@@ -8,7 +8,7 @@ export const authMiddleware = async (c, next) => {
     return jwtMiddleware(c, next);
 };
 
-// Custom middleware to enforce specific roles or extract user data cleanly
+// Middleware customizado para verificar autenticação simples
 export const requireAuth = async (c, next) => {
     const payload = c.get('jwtPayload');
     if (!payload) {
@@ -17,6 +17,7 @@ export const requireAuth = async (c, next) => {
     await next();
 };
 
+// Middleware para exigir privilégios de Administrador
 export const requireAdmin = async (c, next) => {
     const payload = c.get('jwtPayload');
     if (!payload || payload.role !== 'admin') {

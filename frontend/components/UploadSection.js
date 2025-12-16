@@ -23,7 +23,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
             return showToast('Arquivo muito grande! Máximo: 500MB', 'error');
         }
 
-        // Validate type
+        // Validar tipo de arquivo
         if (uploadType === 'video') {
             const allowedVideo = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
             if (!allowedVideo.includes(file.type)) {
@@ -78,7 +78,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
             <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>📤 Enviar Conteúdo</h2>
 
-            {/* Type Selector */}
+            {/* Seletor de Tipo */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                 <button
                     onClick={() => setUploadType('video')}
