@@ -31,8 +31,8 @@ const ProfileModal = dynamic(() => import('../components/auth/ProfileModal'), { 
 
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
-const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
-const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
+const HomeFeed = dynamic(() => import('../components/feed/HomeFeed')); // SSR Enabled
+const SecretFeed = dynamic(() => import('../components/feed/SecretFeed')); // SSR Enabled
 
 /*
 export async function getServerSideProps(context) {

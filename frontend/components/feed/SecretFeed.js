@@ -139,7 +139,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                             <SkeletonVideoCard key={i} />
                         ))}
                     </div>
-                ) : videos.length === 0 ? (
+                ) : sortedVideos.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
                         <div style={{ fontSize: 41, marginBottom: 18 }}>🔒</div>
                         <p style={{ fontSize: 19, margin: 0 }}>Nenhum conteúdo restrito encontrado</p>
