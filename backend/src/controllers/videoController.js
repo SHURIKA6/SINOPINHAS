@@ -192,68 +192,55 @@ export const listSecretVideos = async (c) => {
 
 // --- Exclusão de Vídeos ---
 export const deleteVideo = async (c) => {
+    // --- Secure Delete Logic (Updated) ---
     const videoId = c.req.param("id");
     const env = c.env;
-    const payload = c.get('jwtPayload'); // Get JWT payload from authMiddleware
+    const payload = c.get('jwtPayload'); // Trust the Token
 
+    // 1. Validate AuthN
+    if (!payload?.id) {
+        return createErrorResponse(c, "UNAUTHORIZED", "Login required", 401);
+    }
     try {
-        let userId = null;
-        let adminPassword = null;
-
-        // Try to parse body safely (handles empty body/delete method quirks)
-        try {
-            const body = await c.req.json();
-            userId = body.userId;
-            adminPassword = body.adminPassword;
-        } catch (e) {
-            // Body might be empty, rely on Token
-        }
-
-        // Determine Admin Status: Trust Token Role OR Explicit Password
-        const isTokenAdmin = payload?.role === 'admin';
-        const isPasswordAdmin = adminPassword === env.ADMIN_PASSWORD;
-        const isAdmin = isTokenAdmin || isPasswordAdmin;
-
-        // Determine Requesting User ID: Trust Token ID first, fallback to Body
-        const requesterId = payload?.id || userId;
-
-        if (!isAdmin && !requesterId) {
-            return createErrorResponse(c, "FORBIDDEN", "Não autorizado (Login necessário)", 403);
-        }
-
-        // Get video details to find the R2 Key
+        // 2. Fetch Metadata
         const { rows } = await queryDB("SELECT user_id, bunny_id FROM videos WHERE id = $1", [videoId], env);
 
+        // 3. Resource Not Found Logic
         if (rows.length === 0) {
-            return createErrorResponse(c, "NOT_FOUND", "Vídeo não encontrado", 404);
+            // Standard 404 if it truly doesn't exist
+            return createErrorResponse(c, "NOT_FOUND", "Video not found", 404);
         }
 
         const video = rows[0];
+        const requesterId = payload.id;
+        const isAdmin = payload.role === 'admin';
+        const isOwner = String(video.user_id) === String(requesterId);
 
-        // Authorization Check
-        if (!isAdmin) {
-            if (video.user_id.toString() !== requesterId.toString()) {
-                return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
-            }
+        // 4. Authorization Guard (Secure 404)
+        if (!isAdmin && !isOwner) {
+            // Return 404 to prevent ID enumeration (Security by Obscurity for private resources)
+            // returning 403 leaks that ID "9" exists but is forbidden. 404 says "I don't know what you are talking about".
+            console.warn(`[Security] User ${requesterId} tried to delete video ${videoId} (owned by ${video.user_id}). Returned 404.`);
+            return createErrorResponse(c, "NOT_FOUND", "Video not found", 404);
         }
 
-        // Delete from R2 (Safe delete - ignore if fails, e.g. legacy/missing)
+        // 5. Execution (Storage + DB)
+        // Delete from R2 (Safe delete)
         if (video.bunny_id) {
             try {
                 console.log(`🗑️ Deletando do R2: ${video.bunny_id}`);
                 await env.VIDEO_BUCKET.delete(video.bunny_id);
             } catch (storageErr) {
-                console.warn(`⚠️ Falha ao deletar do R2 (pode ser legado/inexistente): ${storageErr.message}`);
-                // Proceed to delete from DB anyway
+                console.warn(`⚠️ Falha Storage: ${storageErr.message}`);
             }
         }
 
         // Delete from DB
         await queryDB("DELETE FROM videos WHERE id = $1", [videoId], env);
-        await logAudit(userId || null, "VIDEO_DELETED_R2", { video_id: videoId, is_admin: isAdmin }, c);
-        console.log(`✅ Vídeo deletado do DB: ID ${videoId}`);
+        await logAudit(requesterId, "VIDEO_DELETED", { video_id: videoId, is_admin: isAdmin }, c);
 
-        // CACHE INVALIDATION
+        console.log(`✅ Vídeo removido: ${videoId}`);
+
         // CACHE INVALIDATION
         c.executionCtx.waitUntil(Promise.all([
             env.MURAL_STORE.delete('videos_public'),
