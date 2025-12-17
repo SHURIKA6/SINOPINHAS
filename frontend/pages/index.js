@@ -98,8 +98,10 @@ export default function Home({ initialVideo }) {
   const [activeTab, setActiveTab] = useState('videos');
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [newComment, setNewComment] = useState(""); // Added missing state
-  const adminPassword = ""; // Moved up to avoid TDZ
+
+  // States moved up to prevent TDZ (ReferenceError: ne)
+  const [newComment, setNewComment] = useState("");
+  const adminPassword = "";
 
   /* Hook de Comentários */
   const {
@@ -143,7 +145,7 @@ export default function Home({ initialVideo }) {
     setActiveTab('videos');
   };
 
-  const adminPassword = "";
+
 
   // Funções de interação (Delegam para o Hook)
 
