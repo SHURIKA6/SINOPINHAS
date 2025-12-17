@@ -2,16 +2,16 @@ import React, { useEffect } from 'react';
 
 export default function WeatherSection() {
     useEffect(() => {
-        // Remove script if it already exists to force reload/re-execution if needed, 
-        // or just ensure it's added.
-        const existingScript = document.getElementById('weather-widget-script');
-        if (!existingScript) {
-            const script = document.createElement('script');
-            script.id = 'weather-widget-script';
-            script.src = "https://app3.weatherwidget.org/js/?id=ww_a20925b9a387d";
-            script.async = true;
-            document.body.appendChild(script);
-        }
+        // Inject script for weatherwidget.io
+        !function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (!d.getElementById(id)) {
+                js = d.createElement(s);
+                js.id = id;
+                js.src = 'https://weatherwidget.io/js/widget.min.js';
+                fjs.parentNode.insertBefore(js, fjs);
+            }
+        }(document, 'script', 'weatherwidget-io-js');
     }, []);
 
     return (
@@ -22,20 +22,22 @@ export default function WeatherSection() {
             justifyContent: 'center',
             padding: '40px 20px',
             color: '#fff',
-            textAlign: 'center'
+            textAlign: 'center',
+            width: '100%'
         }}>
-            <h2 style={{ fontSize: '28px', marginBottom: '30px' }}>⛅ Clima</h2>
+            <h2 style={{ fontSize: '28px', marginBottom: '30px' }}>⛅ Clima em Sinop</h2>
 
-            <div
-                id="ww_a20925b9a387d"
-                v='1.3'
-                loc='id'
-                a='{"t":"horizontal","lang":"pt","sl_lpl":1,"ids":["wl5044"],"font":"Times","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"image","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722","el_nme":3,"el_cwt":3}'
-                style={{ maxWidth: '100%', overflow: 'hidden' }}
-            >
-                Mais previsões:
-                <a href="https://tempolongo.com/rio_de_janeiro_tempo_25_dias/" id="ww_a20925b9a387d_u" target="_blank">
-                    Previsão do Tempo
+            <div style={{ width: '100%', maxWidth: '800px' }}>
+                <a
+                    className="weatherwidget-io"
+                    href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                    data-label_1="SINOP"
+                    data-label_2="WEATHER"
+                    data-icons="Climacons Animated"
+                    data-days="5"
+                    data-theme="original"
+                >
+                    SINOP WEATHER
                 </a>
             </div>
         </div>
