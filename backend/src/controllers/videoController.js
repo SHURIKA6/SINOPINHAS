@@ -54,7 +54,11 @@ export const uploadVideo = async (c) => {
         console.log(`✅ Detalhes salvos no banco!`);
 
         // CACHE INVALIDATION
-        c.executionCtx.waitUntil(env.MURAL_STORE.delete('videos_public'));
+        // CACHE INVALIDATION
+        c.executionCtx.waitUntil(Promise.all([
+            env.MURAL_STORE.delete('videos_public'),
+            env.MURAL_STORE.delete('videos_secret')
+        ]));
 
         return createResponse(c, { success: true, bunny_id: r2Key });
     } catch (err) {
@@ -126,6 +130,20 @@ export const listVideos = async (c) => {
 export const listSecretVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
+
+    // CACHE - Only cache the global secret feed (no user_id filter)
+    if (!userId) {
+        try {
+            const cached = await env.MURAL_STORE.get('videos_secret', { type: 'json' });
+            if (cached) {
+                console.log("⚡ Servindo Secret Feed do Cache KV");
+                return createResponse(c, cached);
+            }
+        } catch (e) {
+            console.warn("⚠️ Falha ao ler cache:", e);
+        }
+    }
+
     try {
         let query = `
       SELECT v.*, u.username,
@@ -151,6 +169,13 @@ export const listSecretVideos = async (c) => {
             ...v,
             video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
         }));
+
+        // CACHE - Save secret feed for 60 seconds
+        if (!userId) {
+            c.executionCtx.waitUntil(
+                env.MURAL_STORE.put('videos_secret', JSON.stringify(videosWithUrl), { expirationTtl: 60 })
+            );
+        }
 
         console.log(`✅ Listados ${rows.length} vídeos restritos`);
         return createResponse(c, videosWithUrl);
@@ -200,7 +225,11 @@ export const deleteVideo = async (c) => {
         console.log(`✅ Vídeo deletado do DB: ID ${videoId}`);
 
         // CACHE INVALIDATION
-        c.executionCtx.waitUntil(env.MURAL_STORE.delete('videos_public'));
+        // CACHE INVALIDATION
+        c.executionCtx.waitUntil(Promise.all([
+            env.MURAL_STORE.delete('videos_public'),
+            env.MURAL_STORE.delete('videos_secret')
+        ]));
 
         return createResponse(c, { success: true });
     } catch (err) {
