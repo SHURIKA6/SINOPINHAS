@@ -38,7 +38,7 @@ export default function WeatherSection() {
                    Q = Super silencioso (remove textos extras)
                 */}
                 <img
-                    src="https://wttr.in/Sinop?lang=pt&m"
+                    src="https://wttr.in/Sinop.png?lang=pt&m"
                     alt="Previsão do Tempo Sinop"
                     style={{
                         maxWidth: '100%',
