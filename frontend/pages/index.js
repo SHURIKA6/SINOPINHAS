@@ -4,15 +4,6 @@ import { useAuth } from "../hooks/useAuth";
 import Head from "next/head";
 
 // Componentes
-import VideoCard from '../components/VideoCard';
-import Header from '../components/layout/Header';
-import UploadSection from '../components/UploadSection';
-import AdminPanel from '../components/admin/AdminPanel';
-import AuthModal from '../components/auth/AuthModal';
-import AdminAuthModal from '../components/auth/AdminAuthModal';
-import SecretAuthModal from '../components/auth/SecretAuthModal';
-import ProfileModal from '../components/auth/ProfileModal';
-
 // Serviços
 import {
   logTermsAcceptance,
@@ -27,10 +18,27 @@ import {
   removeVideo
 } from '../services/api';
 
+// Componentes Dinâmicos (Client-Side Only para evitar 500 Error)
+const VideoCard = dynamic(() => import('../components/VideoCard'), { ssr: false });
+const Header = dynamic(() => import('../components/layout/Header'), { ssr: false });
+const UploadSection = dynamic(() => import('../components/UploadSection'), { ssr: false });
+const AdminPanel = dynamic(() => import('../components/admin/AdminPanel'), { ssr: false });
+const AuthModal = dynamic(() => import('../components/auth/AuthModal'), { ssr: false });
+const AdminAuthModal = dynamic(() => import('../components/auth/AdminAuthModal'), { ssr: false });
+const SecretAuthModal = dynamic(() => import('../components/auth/SecretAuthModal'), { ssr: false });
+const ProfileModal = dynamic(() => import('../components/auth/ProfileModal'), { ssr: false });
+
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
+
+/*
+export async function getServerSideProps(context) {
+  // Desativado para evitar erro 500 no Vercel
+  return { props: { initialVideo: null } };
+}
+*/
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
