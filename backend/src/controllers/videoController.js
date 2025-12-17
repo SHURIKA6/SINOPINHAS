@@ -194,12 +194,31 @@ export const listSecretVideos = async (c) => {
 export const deleteVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
-    try {
-        const { userId, adminPassword } = await c.req.json();
-        const isAdmin = adminPassword === env.ADMIN_PASSWORD;
+    const payload = c.get('jwtPayload'); // Get JWT payload from authMiddleware
 
-        if (!isAdmin && !userId) {
-            return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
+    try {
+        let userId = null;
+        let adminPassword = null;
+
+        // Try to parse body safely (handles empty body/delete method quirks)
+        try {
+            const body = await c.req.json();
+            userId = body.userId;
+            adminPassword = body.adminPassword;
+        } catch (e) {
+            // Body might be empty, rely on Token
+        }
+
+        // Determine Admin Status: Trust Token Role OR Explicit Password
+        const isTokenAdmin = payload?.role === 'admin';
+        const isPasswordAdmin = adminPassword === env.ADMIN_PASSWORD;
+        const isAdmin = isTokenAdmin || isPasswordAdmin;
+
+        // Determine Requesting User ID: Trust Token ID first, fallback to Body
+        const requesterId = payload?.id || userId;
+
+        if (!isAdmin && !requesterId) {
+            return createErrorResponse(c, "FORBIDDEN", "Não autorizado (Login necessário)", 403);
         }
 
         // Get video details to find the R2 Key
@@ -213,7 +232,7 @@ export const deleteVideo = async (c) => {
 
         // Authorization Check
         if (!isAdmin) {
-            if (video.user_id.toString() !== userId.toString()) {
+            if (video.user_id.toString() !== requesterId.toString()) {
                 return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
             }
         }

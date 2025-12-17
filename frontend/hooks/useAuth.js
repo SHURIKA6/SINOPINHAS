@@ -10,6 +10,19 @@ export function useAuth(showToast) {
     // Initial check
     useEffect(() => {
         const checkAuth = async () => {
+            // Admin Auth restoration
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload.role === 'admin') {
+                        setIsAdmin(true);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse token for admin check", e);
+                }
+            }
+
             // User Auth
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
@@ -22,12 +35,6 @@ export function useAuth(showToast) {
                     logout();
                 }
             }
-
-            // Admin Auth
-            // We NO LONGER store adminPassword in localStorage for security.
-            // We rely on the JWT token 'role'.
-            // However, to keep UI consistent, we might store a flag like 'isAdminMode'
-            // or just decode the token if possible. For now, simple state.
         };
 
         checkAuth();
