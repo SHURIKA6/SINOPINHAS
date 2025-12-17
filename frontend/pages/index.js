@@ -33,6 +33,7 @@ const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: fals
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
+const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
 
 
 
@@ -339,7 +340,7 @@ export default function Home({ initialVideo }) {
 
 
 
-const WeatherSection = dynamic(() => import('../components/WeatherSection'), {ssr: false });
+
 
           {activeTab === 'upload' && (
             <UploadSection
