@@ -53,12 +53,15 @@ export const getNews = async (c) => {
             description = description.replace(/<[^>]*>?/gm, ''); // Strip HTML
             description = description.substring(0, 150) + '...';
 
+            // Fallback Image (Inline SVG to avoid 404s)
+            const fallbackImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22300%22%20height%3D%22180%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20300%20180%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22300%22%20height%3D%22180%22%20fill%3D%22%23252525%22%3E%3C%2Frect%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666666%22%20font-family%3D%22sans-serif%22%20font-size%3D%2220%22%3ES%C3%B3%20Not%C3%ADcias%3C%2Ftext%3E%3C%2Fsvg%3E';
+
             return {
                 title: item.title,
                 link: item.link,
                 pubDate: item.pubDate,
                 description: description,
-                image: image || '/placeholder-news.jpg', // Fallback
+                image: image || fallbackImage,
                 source: 'Só Notícias'
             };
         });
