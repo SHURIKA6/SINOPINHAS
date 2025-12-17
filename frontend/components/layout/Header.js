@@ -166,38 +166,97 @@ export default function Header({
                 </div>
             </header>
 
-            <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030', overflowX: 'auto' }}>
+            <nav className="tab-container">
                 {['videos', 'photos', 'news', 'weather', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                        padding: '14px 18px', background: 'none', border: 'none',
-                        borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
-                        color: activeTab === tab ? '#fff' : '#aaa', fontSize: 16,
-                        fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
-                        transition: 'all 0.3s', position: 'relative', whiteSpace: 'nowrap'
-                    }}>
-                        {tab === 'videos' ? 'Vídeos' :
-                            tab === 'photos' ? 'Fotos' :
-                                tab === 'news' ? 'Notícias 📰' :
-                                    tab === 'weather' ? 'Clima ⛅' :
-                                        tab === 'upload' ? 'Upload' :
-                                            tab === 'admin' ? 'Admin' :
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                    >
+                        {tab === 'videos' ? '🎬 Vídeos' :
+                            tab === 'photos' ? '📷 Fotos' :
+                                tab === 'news' ? '📰 Notícias' :
+                                    tab === 'weather' ? '⛅ Clima' :
+                                        tab === 'upload' ? '📤 Upload' :
+                                            tab === 'admin' ? '⚙️ Admin' :
                                                 tab === 'inbox' ? (
-                                                    <>
-                                                        Mensagens
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        💬 Mensagens
                                                         {unreadCount > 0 && (
-                                                            <span style={{
-                                                                position: 'absolute', top: 8, right: 8,
-                                                                background: '#ef4444', borderRadius: '50%',
-                                                                width: 18, height: 18, display: 'flex',
-                                                                alignItems: 'center', justifyContent: 'center',
-                                                                fontSize: 11, fontWeight: 'bold'
-                                                            }}>{unreadCount}</span>
+                                                            <span className="badge">{unreadCount}</span>
                                                         )}
-                                                    </>
-                                                ) : 'SAFADEZA'}
+                                                    </span>
+                                                ) : '🔒 Secreto'}
                     </button>
                 ))}
-            </div>
+            </nav>
+
+            <style jsx>{`
+                .tab-container {
+                    background: #212121;
+                    padding: 16px 24px;
+                    display: flex;
+                    gap: 12px;
+                    overflow-x: auto;
+                    border-bottom: 1px solid #303030;
+                    margin-bottom: 1px;
+                    
+                    /* Hide scrollbar */
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                }
+                .tab-container::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .tab-btn {
+                    padding: 10px 20px;
+                    border-radius: 99px; /* Pill Shape */
+                    border: 1px solid transparent;
+                    background: rgba(255, 255, 255, 0.03);
+                    color: #aaa;
+                    font-size: 15px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    outline: none;
+                }
+
+                /* Hover State */
+                .tab-btn:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                    color: #fff;
+                    transform: translateY(-2px);
+                }
+
+                /* Active State */
+                .tab-btn.active {
+                    background: linear-gradient(135deg, #8d6aff 0%, #6040e6 100%);
+                    color: #fff;
+                    font-weight: 600;
+                    border-color: rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 4px 12px rgba(141, 106, 255, 0.3);
+                    transform: translateY(-1px);
+                }
+
+                .badge {
+                    background: #ff4757;
+                    color: white;
+                    border-radius: 50%;
+                    width: 18px;
+                    height: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
+                    font-weight: bold;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                }
+            `}</style>
         </>
     );
 }
