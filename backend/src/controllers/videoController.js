@@ -1,6 +1,7 @@
 import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+import { videoMetadataSchema } from '../schemas/video.js';
 
 // --- Upload e Gerenciamento de Vídeos ---
 export const uploadVideo = async (c) => {
@@ -10,20 +11,24 @@ export const uploadVideo = async (c) => {
 
         const formData = await c.req.formData();
         const file = formData.get("file");
-        const title = formData.get("title");
-        const description = formData.get("description") || "";
-        const userId = formData.get("user_id");
-        const isRestricted = formData.get("is_restricted") === "true";
-        // Type: 'video' or 'photo'. Default to 'video' if not provided.
-        // Also auto-detect based on mime type if needed.
-        let type = formData.get("type") || "video";
-        if (file.type.startsWith("image/")) {
-            type = "photo";
+        const validationResult = videoMetadataSchema.safeParse({
+            title: formData.get("title"),
+            description: formData.get("description"),
+            is_restricted: formData.get("is_restricted"),
+            type: formData.get("type") || (file.type.startsWith("image/") ? "photo" : "video")
+        });
+
+        if (!validationResult.success) {
+            const errors = validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(", ");
+            console.log(`❌ input inválido: ${errors}`);
+            return createErrorResponse(c, "INVALID_INPUT", errors, 400);
         }
 
-        if (!file || !title || !userId) {
-            console.log("❌ Faltam dados obrigatórios");
-            return createErrorResponse(c, "INVALID_INPUT", "Faltam dados obrigatórios", 400);
+        const { title, description, is_restricted: isRestricted, type } = validationResult.data;
+        const userId = formData.get("user_id");
+
+        if (!file || !userId) {
+            return createErrorResponse(c, "INVALID_INPUT", "Arquivo e ID de usuário são obrigatórios", 400);
         }
 
         // Generate unique filename (simple random string + timestamp)

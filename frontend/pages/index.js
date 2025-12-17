@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useComments } from "../hooks/useComments";
 import Head from "next/head";
 
 // Componentes
@@ -104,9 +105,15 @@ export default function Home({ initialVideo }) {
   const [activeTab, setActiveTab] = useState('videos');
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [videoComments, setVideoComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
+  /* Hook de Comentários */
+  const {
+    comments: videoComments,
+    loadComments,
+    addComment,
+    removeComment
+  } = useComments(showToast, user, isAdmin, adminPassword);
 
+  /* Lógica de Termos e Logout (Preservada) */
   useEffect(() => {
     const accepted = localStorage.getItem('terms_accepted');
     if (accepted) {
@@ -140,51 +147,31 @@ export default function Home({ initialVideo }) {
     setActiveTab('videos');
   };
 
+  const adminPassword = "";
 
-  // Removido estado manual de user/auth pois agora está no hook
-  // adminPassword removido por segurança (gerenciado via Token agora)
-  const adminPassword = ""; // Placeholder para evitar quebras em componentes que ainda pedem (serão refatorados depois)
-
-  // Funções de interação movidas para os componentes de Feed
+  // Funções de interação (Delegam para o Hook)
 
   const openComments = useCallback(async (video) => {
     setCurrentVideo(video);
     setShowCommentsModal(true);
-    try {
-      const data = await fetchComments(video.id);
-      setVideoComments(data);
-      if (user) {
+    await loadComments(video.id);
+    if (user) {
+      try {
         await viewVideo(video.id, user.id);
-      }
-    } catch (err) { console.error(err); }
-  }, [user]);
+      } catch (e) { console.error(e); }
+    }
+  }, [loadComments, user]);
 
   const sendComment = async (e) => {
     e.preventDefault();
-    if (!user) return showToast('Faça login para comentar', 'error');
     if (!newComment.trim()) return;
 
-    try {
-      await postComment(currentVideo.id, user.id, newComment);
-      setNewComment("");
-      const data = await fetchComments(currentVideo.id);
-      setVideoComments(data);
-      showToast('Comentário enviado!', 'success');
-    } catch (err) {
-      showToast(err.message || 'Erro ao comentar', 'error');
-    }
+    const success = await addComment(currentVideo.id, newComment);
+    if (success) setNewComment("");
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!confirm('Deletar este comentário?')) return;
-    try {
-      await deleteComment(commentId, user.id, isAdmin ? adminPassword : null);
-      const data = await fetchComments(currentVideo.id);
-      setVideoComments(data);
-      showToast('Comentário deletado!', 'success');
-    } catch (err) {
-      showToast(err.message || 'Erro ao deletar comentário', 'error');
-    }
+    await removeComment(commentId, currentVideo.id);
   };
 
   // canDelete and deleteVideo logic moved to Feed, but canDelete helper kept for props if needed?
