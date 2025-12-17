@@ -207,7 +207,8 @@ export const uploadVideo = (formData, onUploadProgress) => {
 };
 
 export const removeVideo = (videoId, userId, adminPassword = null) => {
-    const deleteData = adminPassword ? { adminPassword } : { userId };
+    // Send both fields. Backend checks adminPassword first, then uses userId for ownership check if not admin.
+    const deleteData = { userId, adminPassword };
     return api.delete(`/api/videos/${videoId}`, { data: deleteData });
 };
 

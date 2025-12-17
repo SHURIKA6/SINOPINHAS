@@ -218,10 +218,15 @@ export const deleteVideo = async (c) => {
             }
         }
 
-        // Delete from R2
+        // Delete from R2 (Safe delete - ignore if fails, e.g. legacy/missing)
         if (video.bunny_id) {
-            console.log(`🗑️ Deletando do R2: ${video.bunny_id}`);
-            await env.VIDEO_BUCKET.delete(video.bunny_id);
+            try {
+                console.log(`🗑️ Deletando do R2: ${video.bunny_id}`);
+                await env.VIDEO_BUCKET.delete(video.bunny_id);
+            } catch (storageErr) {
+                console.warn(`⚠️ Falha ao deletar do R2 (pode ser legado/inexistente): ${storageErr.message}`);
+                // Proceed to delete from DB anyway
+            }
         }
 
         // Delete from DB
