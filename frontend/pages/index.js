@@ -38,7 +38,6 @@ const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr:
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
-/*
 export async function getServerSideProps(context) {
   const { v } = context.query;
   let initialVideo = null;
@@ -61,7 +60,6 @@ export async function getServerSideProps(context) {
     }
   };
 }
-*/
 
 export default function Home({ initialVideo }) {
   const [mounted, setMounted] = useState(false);
@@ -100,6 +98,9 @@ export default function Home({ initialVideo }) {
   const [activeTab, setActiveTab] = useState('videos');
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [newComment, setNewComment] = useState(""); // Added missing state
+  const adminPassword = ""; // Moved up to avoid TDZ
+
   /* Hook de Comentários */
   const {
     comments: videoComments,
