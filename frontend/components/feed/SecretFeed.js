@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import VideoCard from '../VideoCard';
+import SkeletonVideoCard from '../SkeletonVideoCard';
 import { fetchSecretVideos, likeVideo, removeVideo } from '../../services/api';
 
 export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete }) {
@@ -133,10 +134,12 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
 
                 {/* Grid */}
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: 80 }}>
-                        <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #e53e3e', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                        {[...Array(8)].map((_, i) => (
+                            <SkeletonVideoCard key={i} />
+                        ))}
                     </div>
-                ) : sortedVideos.length === 0 ? (
+                ) : videos.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
                         <div style={{ fontSize: 41, marginBottom: 18 }}>🔒</div>
                         <p style={{ fontSize: 19, margin: 0 }}>Nenhum conteúdo restrito encontrado</p>

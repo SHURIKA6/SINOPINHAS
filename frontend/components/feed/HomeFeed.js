@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import VideoCard from '../VideoCard';
+import SkeletonVideoCard from '../SkeletonVideoCard';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 
@@ -154,8 +155,10 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
                 {/* Grid */}
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: 80 }}>
-                        <div style={{ width: 55, height: 55, border: '5px solid #303030', borderTop: '5px solid #8d6aff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                        {[...Array(8)].map((_, i) => (
+                            <SkeletonVideoCard key={i} />
+                        ))}
                     </div>
                 ) : sortedVideos.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
