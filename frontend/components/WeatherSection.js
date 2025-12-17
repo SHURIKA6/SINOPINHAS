@@ -22,7 +22,7 @@ export default function WeatherSection() {
         const fetchRealData = async () => {
             try {
                 // Coordinates for Sinop, MT: -11.8641, -55.5031
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-11.8641&longitude=-55.5031&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m&timezone=America%2FCuiaba');
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-11.8641&longitude=-55.5031&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=America%2FCuiaba');
                 const data = await res.json();
                 setRealData(data.current);
             } catch (error) {
@@ -178,6 +178,7 @@ export default function WeatherSection() {
                                 icon="🌬️"
                                 label="Vento"
                                 value={realData ? `${realData.wind_speed_10m} km/h` : '--'}
+                                subValue={realData ? `Rajadas: ${realData.wind_gusts_10m} km/h` : ''}
                             />
                             <DetailBlock
                                 icon="💧"
@@ -276,7 +277,7 @@ export default function WeatherSection() {
 }
 
 // Componente auxiliar para os blocos de detalhes
-function DetailBlock({ icon, label, value }) {
+function DetailBlock({ icon, label, value, subValue }) {
     return (
         <div style={{
             background: 'rgba(255,255,255,0.03)',
@@ -298,7 +299,9 @@ function DetailBlock({ icon, label, value }) {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</span>
                 <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{value}</span>
+                {subValue && <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{subValue}</span>}
             </div>
         </div>
     );
 }
+```
