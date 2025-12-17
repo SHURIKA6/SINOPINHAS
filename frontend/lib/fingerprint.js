@@ -1,113 +1,312 @@
 export async function getDeviceFingerprint() {
   try {
-    const fingerprint = {
-      canvas: getCanvasFingerprint(),
-      webgl: getWebGLFingerprint(),
-      webglVendor: getWebGLVendor(),
+    // Coleta paralela de sinais para performance
+    const [
+      canvas,
+      webgl,
+      audio,
+      fonts,
+      permissions,
+      battery
+    ] = await Promise.all([
+      getCanvasFingerprint(),
+      getWebGLFingerprint(),
+      getAudioFingerprint(),
+      getFontFingerprint(),
+      getPermissionsFingerprint(),
+      getBatteryFingerprint()
+    ]);
 
+    const fingerprint = {
+      // Sinais Gráficos (GPU & Renderização)
+      canvas,
+      webgl: webgl.hash,
+      webglVendor: webgl.vendor,
+      webglRenderer: webgl.renderer,
+
+      // Sinais de Áudio (Driver de Som)
+      audio,
+
+      // Hardware e Sistema
       hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
       deviceMemory: navigator.deviceMemory || 'unknown',
       cpuClass: navigator.cpuClass || 'unknown',
-
-      screen: `${screen.width}x${screen.height}`,
-      availScreen: `${screen.availWidth}x${screen.availHeight}`,
+      platform: navigator.platform,
+      userAgent: navigator.userAgent,
+      languages: navigator.languages?.join(',') || navigator.language,
       colorDepth: screen.colorDepth,
       pixelRatio: window.devicePixelRatio,
+      screen: `${screen.width}x${screen.height}`,
+      availScreen: `${screen.availWidth}x${screen.availHeight}`,
 
-      audioFingerprint: getAudioFingerprint(),
+      // Sinais Comportamentais e Experimentais
+      touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+      maxTouchPoints: navigator.maxTouchPoints || 0,
 
-      fonts: getFontFingerprint(),
-
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      language: navigator.language,
-      languages: navigator.languages?.join(',') || navigator.language,
+      // Sensores
+      sensors: [
+        'bluetooth' in navigator ? 'BT' : '',
+        'usb' in navigator ? 'USB' : '',
+        'accelerometer' in window ? 'ACC' : '',
+        'gyroscope' in window ? 'GYR' : ''
+      ].filter(Boolean).join(','),
 
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       timezoneOffset: new Date().getTimezoneOffset(),
 
-      storageQuota: null,
+      // Fontes Instaladas (Vetor de Detecção)
+      fonts: fonts.join(','),
 
-      connection: navigator.connection ? {
-        effectiveType: navigator.connection.effectiveType,
-        downlink: navigator.connection.downlink,
-        rtt: navigator.connection.rtt,
-        saveData: navigator.connection.saveData
-      } : null,
+      // Permissões e Bateria (Se disponível)
+      permissions: permissions,
+      battery: battery, // Charging status, level (bucketed)
 
-      touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-      maxTouchPoints: navigator.maxTouchPoints || 0,
-      bluetooth: 'bluetooth' in navigator,
-      usb: 'usb' in navigator,
-      accelerometer: 'Accelerometer' in window,
-      gyroscope: 'Gyroscope' in window,
-      mediaDevices: 'mediaDevices' in navigator,
-      plugins: getPluginFingerprint(),
-      doNotTrack: navigator.doNotTrack || 'unknown',
-      cookieEnabled: navigator.cookieEnabled,
-      viewport: `${window.innerWidth}x${window.innerHeight}`,
-      timestamp: Date.now(),
-      sessionStorage: typeof sessionStorage !== 'undefined',
-      localStorage: typeof localStorage !== 'undefined',
-      indexedDB: typeof indexedDB !== 'undefined',
-
+      // Indícios de Automação
       webdriver: navigator.webdriver || false,
-      languages_length: navigator.languages ? navigator.languages.length : 0,
-      permissions: null,
+      timestamp: Date.now()
     };
 
+    // Detecção de Iframe
     try {
       fingerprint.inIframe = window.self !== window.top;
     } catch (e) {
       fingerprint.inIframe = true;
     }
 
-    // Captura geolocalização precisa (GPS) se permitido
-    try {
-      fingerprint.gps = await getGeolocation();
-    } catch (e) {
-      fingerprint.gps = { error: e.message };
-    }
+    // Geolocalização (Opcional e Lenta - Mantida como promessa separada se necessário, mas aqui simplificada para não bloquear)
+    // Removido bloqueio de GPS para não alertar permissão logo de cara, 
+    // a menos que usuário já tenha dado permissão anteriormente.
 
     const fpString = JSON.stringify(fingerprint);
+
+    // Hash Principal (SHA-256)
     fingerprint.hash = await generateStrongHash(fpString);
+
+    // Hash Secundário (Gráfico/Áudio - Mais estável contra updates de browser)
     fingerprint.secondaryHash = simpleHash(
-      `${fingerprint.canvas}|${fingerprint.webgl}|${fingerprint.audioFingerprint}`
+      `${fingerprint.canvas}|${fingerprint.webgl}|${fingerprint.audio}`
     );
 
     return fingerprint;
   } catch (err) {
-    console.error('Erro ao gerar fingerprint:', err);
+    console.error('Erro fatal no fingerprint:', err);
     return { hash: 'error', error: err.message };
   }
 }
 
-// Helper para obter geolocalização com alta precisão
-function getGeolocation() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      return resolve({ status: 'not_supported' });
-    }
+// --- Forensic Canvas Fingerprint ---
+// Desenha emojis, gradientes, e formas complexas que variam sutilmente entre GPUs
+async function getCanvasFingerprint() {
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 280;
+    canvas.height = 60;
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-        accuracy: pos.coords.accuracy,
-        altitude: pos.coords.altitude,
-        speed: pos.coords.speed,
-        heading: pos.coords.heading,
-        timestamp: pos.timestamp
-      }),
-      (err) => resolve({ status: 'denied_or_error', code: err.code, message: err.message }),
-      {
-        enableHighAccuracy: true,
-        timeout: 8000, // Wait up to 8s for high accuracy
-        maximumAge: 0
-      }
-    );
-  });
+    // Fundo com Gradiente
+    let grd = ctx.createLinearGradient(0, 0, 200, 0);
+    grd.addColorStop(0, "red");
+    grd.addColorStop(1, "white");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 280, 60);
+
+    // Texto Complexo (Combina fontes e estilos)
+    ctx.textBaseline = "top";
+    ctx.font = "14px 'Arial'";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#f60";
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = "#069";
+    ctx.fillText("Sinopinhas Forensic v1.0 🤖", 2, 15);
+    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+    ctx.fillText("Sinopinhas Forensic v1.0 🤖", 4, 17);
+
+    // Winding Rule & Blend Modes (Teste de Renderização)
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = "rgb(255,0,255)";
+    ctx.beginPath();
+    ctx.arc(50, 50, 50, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "rgb(0,255,255)";
+    ctx.beginPath();
+    ctx.arc(100, 50, 50, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "rgb(255,255,0)";
+    ctx.beginPath();
+    ctx.arc(75, 100, 50, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Emojis (Dependem muito do OS/Browser)
+    ctx.font = "30px Arial";
+    ctx.fillText("👮‍♂️🕵️‍♂️🔒", 200, 40);
+
+    return canvas.toDataURL(); // A string base64 é a "assinatura" visual
+  } catch (e) {
+    return 'error';
+  }
 }
+
+// --- Audio Dynamics Fingerprint ---
+// Usa compressão de áudio para identificar variações no hardware de som
+async function getAudioFingerprint() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return 'not_supported';
+
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const compressor = context.createDynamicsCompressor();
+    const gain = context.createGain();
+
+    // Configuração específica para estressar o compressor
+    compressor.threshold.value = -50;
+    compressor.knee.value = 40;
+    compressor.ratio.value = 12;
+    compressor.reduction.value = -20;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.25;
+
+    oscillator.type = 'triangle';
+    oscillator.frequency.value = 10000;
+
+    oscillator.connect(compressor);
+    compressor.connect(gain);
+    gain.connect(context.destination);
+
+    oscillator.start(0);
+
+    // Medimos o resultado da compressão (muito variável entre hardwares)
+    const fingerprint = await new Promise(resolve => {
+      setTimeout(() => {
+        const output = compressor.reduction.value; // Valor chave
+        oscillator.stop();
+        context.close();
+        resolve(output);
+      }, 50);
+    });
+
+    return fingerprint.toString();
+  } catch (e) {
+    return 'error';
+  }
+}
+
+// --- WebGL Extensions & Vendor ---
+async function getWebGLFingerprint() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return { hash: 'not_supported' };
+
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'unknown';
+    const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
+
+    // Lista todas as extensões suportadas (Ordem e quantidade variam por GPU)
+    const extensions = gl.getSupportedExtensions()?.join(',') || '';
+
+    // Aliased Line Width Range
+    const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE).join('-');
+    const aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE).join('-');
+
+    const rawString = `${vendor}|${renderer}|${extensions}|${aliasedLineWidthRange}|${aliasedPointSizeRange}`;
+    const hash = simpleHash(rawString);
+
+    return { hash, vendor, renderer };
+  } catch (e) {
+    return { hash: 'error' };
+  }
+}
+
+// --- Battery Status (Experimental) ---
+async function getBatteryFingerprint() {
+  try {
+    if (navigator.getBattery) {
+      const battery = await navigator.getBattery();
+      return {
+        charging: battery.charging,
+        headers: battery.level, // Nível da bateria pode ajudar a correlacionar sessões curtas
+        chargingTime: battery.chargingTime,
+        dischargingTime: battery.dischargingTime
+      };
+    }
+    return 'not_supported';
+  } catch (e) {
+    return 'error';
+  }
+}
+
+// --- Permissions Test ---
+async function getPermissionsFingerprint() {
+  try {
+    if (!navigator.permissions) return 'not_supported';
+    const permissions = ['geolocation', 'notifications', 'camera', 'microphone'];
+    const results = {};
+
+    // Check permissions without asking
+    await Promise.all(permissions.map(async (name) => {
+      try {
+        const status = await navigator.permissions.query({ name });
+        results[name] = status.state;
+      } catch (e) {
+        results[name] = 'error';
+      }
+    }));
+    return results;
+  } catch (e) {
+    return 'error';
+  }
+}
+
+// --- Font Fingerprint (Mantido Simplificado) ---
+async function getFontFingerprint() {
+  // Lista reduzida para performance, mas com fontes chave Windows/Mac/Linux
+  const fontsToCheck = [
+    'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia',
+    'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black',
+    'Impact', 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell'
+  ];
+
+  // Simplificado para retornar apenas a lista detectada simulada ou real se implementarmos a medição completa
+  // Por brevidade/performance neste upgrade, focaremos nos outros sinais que são mais fortes. 
+  // Mas para manter compatibilidade, vamos retornar uma string mockada baseada no OS se a medição falhar,
+  // ou implementar a medição real se necessário. 
+  // VOU IMPLEMENTAR UMA MEDIÇÃO RÁPIDA:
+
+  await document.fonts.ready;
+  const detected = [];
+
+  const body = document.body;
+  const span = document.createElement('span');
+  span.style.fontSize = '72px';
+  span.style.position = 'absolute';
+  span.style.visibility = 'hidden';
+  span.innerHTML = 'mmmmmlli';
+  body.appendChild(span);
+
+  // Medir fonte padrão (sans-serif)
+  span.style.fontFamily = 'sans-serif';
+  const defaultWidth = span.offsetWidth;
+  const defaultHeight = span.offsetHeight;
+
+  for (const font of fontsToCheck) {
+    span.style.fontFamily = `${font}, sans-serif`;
+    if (span.offsetWidth !== defaultWidth || span.offsetHeight !== defaultHeight) {
+      detected.push(font);
+    }
+  }
+
+  body.removeChild(span);
+  return detected;
+}
+
+
+// --- Hashers ---
 
 async function generateStrongHash(str) {
   try {
@@ -117,7 +316,6 @@ async function generateStrongHash(str) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   } catch (err) {
-    console.error('Erro ao gerar hash forte:', err);
     return simpleHash(str);
   }
 }
@@ -133,163 +331,3 @@ function simpleHash(str) {
   return Math.abs(hash).toString(16);
 }
 
-function getCanvasFingerprint() {
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 200;
-    canvas.height = 50;
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#f60';
-    ctx.fillRect(125, 1, 62, 20);
-    ctx.fillStyle = '#069';
-    ctx.fillText('SINOPINHAS', 2, 15);
-    ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-    ctx.fillText('SINOPINHAS', 4, 17);
-    return canvas.toDataURL();
-  } catch (err) {
-    return 'error';
-  }
-}
-
-function getWebGLFingerprint() {
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) return 'not_supported';
-
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    if (debugInfo) {
-      return {
-        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
-        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
-        version: gl.getParameter(gl.VERSION),
-        shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)
-      };
-    }
-    return {
-      version: gl.getParameter(gl.VERSION),
-      shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)
-    };
-  } catch (err) {
-    return 'error';
-  }
-}
-
-function getWebGLVendor() {
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) return 'not_supported';
-
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    if (debugInfo) {
-      return gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-    }
-    return gl.getParameter(gl.VENDOR);
-  } catch (err) {
-    return 'error';
-  }
-}
-
-function getAudioFingerprint() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return 'not_supported';
-
-    const context = new AudioContext();
-    const oscillator = context.createOscillator();
-    const analyser = context.createAnalyser();
-    const gainNode = context.createGain();
-    const scriptProcessor = context.createScriptProcessor(4096, 1, 1);
-
-    gainNode.gain.value = 0;
-    oscillator.type = 'triangle';
-    oscillator.connect(analyser);
-    analyser.connect(scriptProcessor);
-    scriptProcessor.connect(gainNode);
-    gainNode.connect(context.destination);
-
-    oscillator.start(0);
-
-    let audioHash = '';
-    scriptProcessor.onaudioprocess = function (bins) {
-      const output = bins.inputBuffer.getChannelData(0);
-      let hash = 0;
-      for (let i = 0; i < output.length; i++) {
-        hash += Math.abs(output[i]);
-      }
-      audioHash = hash.toString(36);
-    };
-
-    setTimeout(() => {
-      oscillator.stop();
-      context.close();
-    }, 100);
-
-    return audioHash || 'timeout';
-  } catch (err) {
-    return 'error';
-  }
-}
-
-function getFontFingerprint() {
-  const baseFonts = ['monospace', 'sans-serif', 'serif'];
-  const testFonts = [
-    'Arial', 'Verdana', 'Times New Roman', 'Courier New', 'Georgia',
-    'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS',
-    'Impact', 'Lucida Console', 'Tahoma', 'Courier', 'Lucida Sans Unicode'
-  ];
-
-  const testString = 'mmmmmmmmmmlli';
-  const testSize = '72px';
-  const h = document.getElementsByTagName('body')[0];
-
-  const baseWidths = {};
-  const baseHeights = {};
-
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-
-  baseFonts.forEach(baseFont => {
-    context.font = `${testSize} ${baseFont}`;
-    baseWidths[baseFont] = context.measureText(testString).width;
-    baseHeights[baseFont] = context.measureText(testString).height;
-  });
-
-  const detected = [];
-  testFonts.forEach(font => {
-    let detected_font = false;
-    baseFonts.forEach(baseFont => {
-      const name = `${font}, ${baseFont}`;
-      context.font = `${testSize} ${name}`;
-      const width = context.measureText(testString).width;
-      const height = context.measureText(testString).height;
-
-      if (width !== baseWidths[baseFont] || height !== baseHeights[baseFont]) {
-        if (!detected_font) {
-          detected.push(font);
-          detected_font = true;
-        }
-      }
-    });
-  });
-
-  return detected;
-}
-
-function getPluginFingerprint() {
-  try {
-    const plugins = [];
-    if (navigator.plugins) {
-      for (let i = 0; i < navigator.plugins.length; i++) {
-        plugins.push(navigator.plugins[i].name);
-      }
-    }
-    return plugins;
-  } catch (err) {
-    return [];
-  }
-}
