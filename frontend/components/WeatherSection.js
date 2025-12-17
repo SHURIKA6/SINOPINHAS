@@ -20,7 +20,8 @@ export default function WeatherSection() {
             document.body.appendChild(script);
         };
 
-        loadWidget();
+        // Small delay to ensure DOM is ready for double widget injection
+        setTimeout(loadWidget, 100);
     }, []);
 
     return (
@@ -81,54 +82,89 @@ export default function WeatherSection() {
                     </h2>
                 </div>
 
-                <p style={{
-                    color: '#94a3b8',
-                    marginBottom: '40px',
-                    textAlign: 'center',
-                    fontSize: '16px',
-                    maxWidth: '400px',
-                    lineHeight: '1.6'
-                }}>
-                    Acompanhe em tempo real as condições climáticas de Sinop e prepare-se para o seu dia.
-                </p>
-
+                {/* HOJE (Current) */}
                 <div style={{
                     width: '100%',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                    background: '#1e293b' // Fallback color while loading
+                    marginBottom: '20px'
                 }}>
-                    <a
-                        className="weatherwidget-io"
-                        href="https://forecast7.com/pt/n11d86n55d51/sinop/"
-                        data-label_1="SINOP"
-                        data-label_2="MATO GROSSO"
-                        data-font="Roboto"
-                        data-icons="Climacons Animated"
-                        data-mode="Forecast"
-                        data-days="7"
-                        data-theme="weather_one"
-                        data-basecolor="#1e293b"
-                        data-accent="#8d6aff"
-                        data-textcolor="#ffffff"
-                        data-highcolor="#fcd34d"
-                        data-lowcolor="#94a3b8"
-                        data-suncolor="#fcd34d"
-                        data-mooncolor="#fcd34d"
-                        data-cloudcolor="#f1f5f9"
-                        data-cloudfill="#1e293b"
-                        data-raincolor="#60a5fa"
-                        data-snowcolor="#f8fafc"
-                        style={{
-                            display: 'block',
-                            position: 'relative',
-                            height: '100%',
-                            textDecoration: 'none'
-                        }}
-                    >
-                        CARREGANDO PREVISÃO...
-                    </a>
+                    <div style={{
+                        marginBottom: '10px',
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        color: '#fcd34d',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        <span>☀️</span> Hoje em Sinop
+                    </div>
+                    <div style={{
+                        width: '100%',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                        background: '#1e293b'
+                    }}>
+                        <a
+                            className="weatherwidget-io"
+                            href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                            data-label_1="SINOP"
+                            data-label_2="AGORA"
+                            data-font="Roboto"
+                            data-icons="Climacons Animated"
+                            data-mode="Current"
+                            data-days="3"
+                            data-theme="weather_one"
+                            data-basecolor="#1e293b"
+                            data-accent="#8d6aff"
+                            data-textcolor="#ffffff"
+                            data-highcolor="#fcd34d"
+                            data-lowcolor="#94a3b8"
+                        >
+                            SINOP HOJE
+                        </a>
+                    </div>
+                </div>
+
+                {/* PROXIMOS DIAS (List) */}
+                <div style={{
+                    width: '100%',
+                }}>
+                    <div style={{
+                        marginBottom: '10px',
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        color: '#60a5fa',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        <span>📅</span> Próximos 7 Dias
+                    </div>
+                    <div style={{
+                        width: '100%',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                        background: '#1e293b'
+                    }}>
+                        <a
+                            className="weatherwidget-io"
+                            href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                            data-label_1="SINOP"
+                            data-label_2="FUTURO"
+                            data-font="Roboto"
+                            data-icons="Climacons Animated"
+                            data-mode="Forecast"
+                            data-days="7"
+                            data-theme="weather_one"
+                            data-basecolor="#0f172a"
+                            data-accent="#8d6aff"
+                            data-textcolor="#e2e8f0"
+                        >
+                            SINOP FUTURO
+                        </a>
+                    </div>
                 </div>
 
                 <div style={{
@@ -142,7 +178,7 @@ export default function WeatherSection() {
                         <span>📍</span> Sinop - MT
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>📡</span> Atualizado agora
+                        <span>📡</span> Dados via Forecast7
                     </div>
                 </div>
             </div>
