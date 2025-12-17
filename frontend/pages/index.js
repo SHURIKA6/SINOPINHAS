@@ -82,6 +82,24 @@ export default function Home({ initialVideo }) {
   const [showSecretTab, setShowSecretTab] = useState(false);
 
 
+  const [theme, setTheme] = useState('dark');
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // Recado Especial / Special Message
+    console.log("%ceu amo muito a anna julia assinado _Riad777", "color: #ff6b9d; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);");
+  }, []);
+
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -209,13 +227,14 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | Sinopinhas` : "SINOPINHAS by SHURA"}</title>
-        <meta name="description" content={currentVideo?.description || "Plataforma de streaming de vídeos"} />
+        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS - A Rede Social oficial de Sinop'}</title>
+        {/* eu amo muito a anna julia assinado _Riad777 */}
+        <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista aos melhores vídeos de Sinop no SINOPINHAS! Conteúdo local, clima, notícias e muito mais."} />
 
         {/* Metadados Open Graph / Redes Sociais */}
         <meta property="og:type" content="video.other" />
-        <meta property="og:title" content={currentVideo ? currentVideo.title : "SINOPINHAS"} />
-        <meta property="og:description" content={currentVideo?.description || "Assista aos melhores vídeos exclusivos na Sinopinhas."} />
+        <meta property="og:title" content={currentVideo?.title || initialVideo?.title || "SINOPINHAS"} />
+        <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Assista aos melhores vídeos exclusivos na Sinopinhas."} />
         <meta property="og:image" content="https://sinopinhas.vercel.app/og-default.jpg" />
         <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : 'https://sinopinhas.vercel.app'} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -230,9 +249,10 @@ export default function Home({ initialVideo }) {
 
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(120deg, #18142a 80%, #8d6aff 100%)',
-        color: '#fff',
-        fontFamily: 'Arial, sans-serif'
+        background: 'var(--bg-gradient)',
+        color: 'var(--text-color)',
+        fontFamily: 'Arial, sans-serif',
+        transition: 'background 0.3s ease, color 0.3s ease'
       }}>
         {toast && (
           <div style={{
@@ -262,6 +282,8 @@ export default function Home({ initialVideo }) {
           setShowProfile={setShowProfile}
           logout={handleLogout}
           logoutAdmin={logoutAdmin}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
 
         {showAuth && (
@@ -393,8 +415,10 @@ export default function Home({ initialVideo }) {
           }} onClick={() => setShowCommentsModal(false)}>
 
             <div style={{
-              background: '#1a1a1a', borderRadius: 16, padding: 32,
-              maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto'
+              background: 'var(--card-bg)', borderRadius: 16, padding: 32,
+              maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto',
+              color: 'var(--text-color)',
+              border: '1px solid var(--border-color)'
             }} onClick={e => e.stopPropagation()}>
               <h2 style={{ margin: '0 0 24px', fontSize: 22 }}>💬 Comentários - {currentVideo.title}</h2>
 
@@ -404,11 +428,12 @@ export default function Home({ initialVideo }) {
                 ) : (
                   videoComments.map((c, i) => (
                     <div key={i} style={{
-                      background: '#252525',
+                      background: 'var(--input-bg)',
                       padding: 16,
                       borderRadius: 10,
                       marginBottom: 12,
-                      position: 'relative'
+                      position: 'relative',
+                      border: '1px solid var(--border-color)'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                         {c.avatar && (
@@ -451,10 +476,10 @@ export default function Home({ initialVideo }) {
                     style={{
                       width: '100%',
                       padding: 12,
-                      background: '#252525',
-                      border: '1px solid #303030',
+                      background: 'var(--input-bg)',
+                      border: '1px solid var(--border-color)',
                       borderRadius: 10,
-                      color: '#fff',
+                      color: 'var(--text-color)',
                       fontSize: 15,
                       resize: 'vertical',
                       marginBottom: 12

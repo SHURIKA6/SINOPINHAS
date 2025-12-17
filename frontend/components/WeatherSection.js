@@ -50,11 +50,12 @@ export default function WeatherSection() {
             justifyContent: 'center',
             width: '100%',
             padding: '40px 20px',
-            color: '#fff',
+            color: 'var(--text-color)',
             position: 'relative',
             background: 'transparent',
             minHeight: '80vh',
-            fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+            fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+            transition: 'color 0.3s ease'
         }}>
 
             {/* Background com Animação Suave - Efeito Aurora */}
@@ -67,8 +68,8 @@ export default function WeatherSection() {
                 height: '100%',
                 maxWidth: '1400px',
                 background: `
-                    radial-gradient(circle at 20% 30%, rgba(141, 106, 255, 0.4) 0%, transparent 60%),
-                    radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.3) 0%, transparent 60%)
+                    radial-gradient(circle at 20% 30%, rgba(141, 106, 255, 0.2) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.2) 0%, transparent 60%)
                 `,
                 filter: 'blur(80px)',
                 zIndex: 0,
@@ -93,21 +94,21 @@ export default function WeatherSection() {
                         fontSize: '64px',
                         fontWeight: '800',
                         marginBottom: '10px',
-                        background: 'linear-gradient(to right, #ffffff, #c4b5fd)',
+                        background: 'linear-gradient(to right, var(--text-color), var(--accent-color))',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        textShadow: '0 4px 30px rgba(141, 106, 255, 0.4)',
+                        textShadow: '0 4px 30px rgba(141, 106, 255, 0.2)',
                         letterSpacing: '-2px'
                     }}>
                         Sinop Weather
                     </h2>
                     <p style={{
                         fontSize: '20px',
-                        color: '#cbd5e1',
+                        color: 'var(--secondary-text)',
                         fontWeight: '500',
                         marginTop: '0'
                     }}>
-                        Monitoramento climático da nossa SINOPINHA!
+                        Monitoramento climático da nossa SINOPINHAS!
                     </p>
                 </div>
 
@@ -122,22 +123,23 @@ export default function WeatherSection() {
 
                     {/* LEFTSIDE: CARD HOJE */}
                     <div style={{
-                        background: 'rgba(15, 23, 42, 0.6)',
+                        background: 'var(--card-bg)',
                         backdropFilter: 'blur(20px)',
                         borderRadius: '32px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        border: '1px solid var(--border-color)',
                         padding: '32px',
-                        boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
+                        boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '24px'
+                        gap: '24px',
+                        transition: 'background 0.3s ease, border-color 0.3s ease'
                     }}>
                         {/* Header do Card */}
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            borderBottom: '1px solid var(--border-color)',
                             paddingBottom: '20px'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -155,8 +157,8 @@ export default function WeatherSection() {
                                     ☀️
                                 </div>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#fff' }}>Agora</h3>
-                                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>Condições atuais</span>
+                                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-color)' }}>Agora</h3>
+                                    <span style={{ fontSize: '14px', color: 'var(--secondary-text)' }}>Condições atuais</span>
                                 </div>
                             </div>
                             <span style={{
@@ -183,7 +185,7 @@ export default function WeatherSection() {
                                 data-theme="weather_one"
                                 data-basecolor="rgba(0,0,0,0)"
                                 data-accent="#c4b5fd"
-                                data-textcolor="#ffffff"
+                                data-textcolor="var(--text-color)"
                                 data-highcolor="#fcd34d"
                                 data-lowcolor="#94a3b8"
                             >SINOP HOJE</a>
@@ -231,19 +233,20 @@ export default function WeatherSection() {
                     }}>
                         {/* Weekly Forecast Card */}
                         <div style={{
-                            background: 'rgba(15, 23, 42, 0.6)',
+                            background: 'var(--card-bg)',
                             backdropFilter: 'blur(20px)',
                             borderRadius: '32px',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            border: '1px solid var(--border-color)',
                             padding: '32px',
-                            boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
+                            boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
+                            transition: 'background 0.3s ease, border-color 0.3s ease'
                         }}>
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '16px',
                                 marginBottom: '24px',
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                borderBottom: '1px solid var(--border-color)',
                                 paddingBottom: '20px'
                             }}>
                                 <div style={{
@@ -260,8 +263,8 @@ export default function WeatherSection() {
                                     📅
                                 </div>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#fff' }}>Previsão 7 Dias</h3>
-                                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>Tendência da semana</span>
+                                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-color)' }}>Previsão 7 Dias</h3>
+                                    <span style={{ fontSize: '14px', color: 'var(--secondary-text)' }}>Tendência da semana</span>
                                 </div>
                             </div>
 
@@ -278,7 +281,7 @@ export default function WeatherSection() {
                                     data-theme="weather_one"
                                     data-basecolor="rgba(0,0,0,0)"
                                     data-accent="#38bdf8"
-                                    data-textcolor="#e2e8f0"
+                                    data-textcolor="var(--text-color)"
                                     style={{
                                         display: 'block',
                                         height: '340px'
@@ -289,14 +292,16 @@ export default function WeatherSection() {
 
                         {/* Astronomy & UV Card (New to fill space) */}
                         <div style={{
-                            background: 'rgba(15, 23, 42, 0.6)',
+                            background: 'var(--card-bg)',
                             backdropFilter: 'blur(20px)',
                             borderRadius: '32px',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            border: '1px solid var(--border-color)',
                             padding: '25px',
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: '15px'
+                            gap: '15px',
+                            boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
+                            transition: 'background 0.3s ease, border-color 0.3s ease'
                         }}>
                             <AstroBlock
                                 icon="🌅"
@@ -321,6 +326,7 @@ export default function WeatherSection() {
 
             </div>
 
+
             <style jsx>{`
                 @keyframes pulseAurora {
                     0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); }
@@ -335,11 +341,11 @@ export default function WeatherSection() {
 function DetailBlock({ icon, label, value, subValue, color }) {
     return (
         <div style={{
-            background: 'rgba(255,255,255,0.03)',
+            background: 'var(--input-bg)',
             padding: '20px',
             borderRadius: '24px',
             textAlign: 'center',
-            border: '1px solid rgba(255,255,255,0.05)',
+            border: '1px solid var(--border-color)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -350,21 +356,21 @@ function DetailBlock({ icon, label, value, subValue, color }) {
             overflow: 'hidden'
         }}
             onMouseOver={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                e.currentTarget.style.background = 'var(--accent-color)';
                 e.currentTarget.style.transform = 'translateY(-3px)';
                 e.currentTarget.style.borderColor = color + '40'; // add subtle color border
             }}
             onMouseOut={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                e.currentTarget.style.background = 'var(--input-bg)';
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
             }}
         >
             <span style={{ fontSize: '28px', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }}>{icon}</span>
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</span>
-                <span style={{ fontSize: '20px', fontWeight: '800', color: '#fff' }}>{value}</span>
-                {subValue && <span style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '4px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', alignSelf: 'center' }}>{subValue}</span>}
+                <span style={{ fontSize: '12px', color: 'var(--secondary-text)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</span>
+                <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-color)' }}>{value}</span>
+                {subValue && <span style={{ fontSize: '11px', color: 'var(--text-color)', marginTop: '4px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', alignSelf: 'center' }}>{subValue}</span>}
             </div>
         </div>
     );
@@ -383,12 +389,12 @@ function AstroBlock({ icon, label, value, isIndex }) {
         }}>
             <span style={{ fontSize: '24px' }}>{icon}</span>
             <div>
-                <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>{label}</span>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--secondary-text)', textTransform: 'uppercase' }}>{label}</span>
                 <span style={{
                     display: 'block',
                     fontSize: '18px',
                     fontWeight: '700',
-                    color: isIndex ? (value > 8 ? '#f43f5e' : value > 5 ? '#f59e0b' : '#10b981') : '#fff'
+                    color: isIndex ? (value > 8 ? '#f43f5e' : value > 5 ? '#f59e0b' : '#10b981') : 'var(--text-color)'
                 }}>
                     {value}
                 </span>
@@ -396,3 +402,4 @@ function AstroBlock({ icon, label, value, isIndex }) {
         </div>
     );
 }
+

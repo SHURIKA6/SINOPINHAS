@@ -108,10 +108,10 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                             flex: 1,
                             minWidth: '200px',
                             padding: '12px 20px',
-                            background: '#1a1a1a',
-                            border: '1px solid #e53e3e', // Red border
+                            background: 'var(--input-bg)',
+                            border: '1px solid #e53e3e', // Keep red border for secret flavor
                             borderRadius: 10,
-                            color: '#fff',
+                            color: 'var(--text-color)',
                             fontSize: 16
                         }}
                     />
@@ -120,10 +120,10 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                         onChange={(e) => setSortBy(e.target.value)}
                         style={{
                             padding: '12px 20px',
-                            background: '#1a1a1a',
-                            border: '1px solid #303030',
+                            background: 'var(--input-bg)',
+                            border: '1px solid var(--border-color)',
                             borderRadius: 10,
-                            color: '#fff',
+                            color: 'var(--text-color)',
                             fontSize: 16,
                             cursor: 'pointer',
                             minWidth: '150px',
@@ -149,12 +149,13 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                         ))}
                     </div>
                 ) : sortedVideos.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
+                    <div style={{ textAlign: 'center', padding: 64, background: 'var(--card-bg)', borderRadius: 16, color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
                         <div style={{ fontSize: 41, marginBottom: 18 }}>🔒</div>
                         <p style={{ fontSize: 19, margin: 0 }}>Nenhum conteúdo restrito encontrado</p>
                         <p style={{ fontSize: 14, marginTop: 8 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
                     </div>
                 ) : (
+
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
                             {paginatedVideos.map((v) => (

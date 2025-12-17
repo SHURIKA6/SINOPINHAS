@@ -75,7 +75,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
     };
 
     return (
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', color: 'var(--text-color)' }}>
             <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>📤 Enviar Conteúdo</h2>
 
             {/* Seletor de Tipo */}
@@ -85,12 +85,13 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                     style={{
                         flex: 1,
                         padding: 12,
-                        background: uploadType === 'video' ? '#8d6aff' : '#303030',
+                        background: uploadType === 'video' ? 'var(--accent-color)' : 'var(--input-bg)',
                         color: '#fff',
-                        border: 'none',
+                        border: '1px solid var(--border-color)',
                         borderRadius: 8,
                         cursor: 'pointer',
-                        fontWeight: 600
+                        fontWeight: 600,
+                        transition: 'all 0.3s ease'
                     }}
                 >
                     🎥 Vídeo
@@ -100,12 +101,13 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                     style={{
                         flex: 1,
                         padding: 12,
-                        background: uploadType === 'photo' ? '#fe7d45' : '#303030',
-                        color: '#fff',
-                        border: 'none',
+                        background: uploadType === 'photo' ? '#fe7d45' : 'var(--input-bg)',
+                        color: uploadType === 'photo' ? '#fff' : 'var(--text-color)',
+                        border: '1px solid var(--border-color)',
                         borderRadius: 8,
                         cursor: 'pointer',
-                        fontWeight: 600
+                        fontWeight: 600,
+                        transition: 'all 0.3s ease'
                     }}
                 >
                     📸 Foto
@@ -114,11 +116,11 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
 
             <div
                 style={{
-                    border: isDragging ? '3px dashed #8d6aff' : '2px dashed #444',
+                    border: isDragging ? '3px dashed var(--accent-color)' : '2px dashed var(--border-color)',
                     borderRadius: 16,
                     padding: 48,
                     textAlign: 'center',
-                    background: isDragging ? '#8d6aff22' : '#1a1a1a',
+                    background: isDragging ? 'rgba(141, 106, 255, 0.1)' : 'var(--card-bg)',
                     cursor: 'pointer',
                     marginBottom: 24,
                     transition: 'all 0.3s'
@@ -139,7 +141,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                 <div style={{ fontSize: 48, marginBottom: 16 }}>
                     {uploadType === 'video' ? '🎬' : '🖼️'}
                 </div>
-                <p style={{ fontSize: 18, margin: 0, color: '#aaa' }}>
+                <p style={{ fontSize: 18, margin: 0, color: 'var(--secondary-text)' }}>
                     {isDragging ? `Solte o ${uploadType} aqui!` : `Arraste ou clique para selecionar ${uploadType === 'video' ? 'vídeo' : 'foto'}`}
                 </p>
                 <input
@@ -159,10 +161,10 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
 
             {file && (
                 <>
-                    <div style={{ background: '#1a1a1a', padding: 20, borderRadius: 12, marginBottom: 20 }}>
-                        <p style={{ margin: '0 0 8px', fontSize: 14, color: '#aaa' }}>Arquivo selecionado:</p>
+                    <div style={{ background: 'var(--card-bg)', padding: 20, borderRadius: 12, marginBottom: 20, border: '1px solid var(--border-color)' }}>
+                        <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--secondary-text)' }}>Arquivo selecionado:</p>
                         <p style={{ margin: 0, fontWeight: 600, fontSize: 16 }}>{file.name}</p>
-                        <p style={{ margin: '8px 0 0', fontSize: 14, color: '#888' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--secondary-text)', opacity: 0.8 }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
 
                     <input
@@ -170,7 +172,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         placeholder={`📁 Nome do arquivo: ${file.name}`}
                         value={videoTitle}
                         onChange={(e) => setVideoTitle(e.target.value)}
-                        style={{ width: '100%', padding: 14, background: '#1a1a1a', border: '1px solid #303030', borderRadius: 10, color: '#fff', fontSize: 16, marginBottom: 16 }}
+                        style={{ width: '100%', padding: 14, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 16, marginBottom: 16 }}
                     />
 
                     <textarea
@@ -178,7 +180,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={4}
-                        style={{ width: '100%', padding: 14, background: '#1a1a1a', border: '1px solid #303030', borderRadius: 10, color: '#fff', fontSize: 15, marginBottom: 16, resize: 'vertical' }}
+                        style={{ width: '100%', padding: 14, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 15, marginBottom: 16, resize: 'vertical' }}
                     />
 
                     <div style={{ marginBottom: 20 }}>
@@ -189,13 +191,14 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                             onClick={() => document.getElementById('thumbnail-input').click()}
                             style={{
                                 padding: '12px 20px',
-                                background: '#303030',
-                                color: '#fff',
-                                border: 'none',
+                                background: 'var(--input-bg)',
+                                color: 'var(--text-color)',
+                                border: '1px solid var(--border-color)',
                                 borderRadius: 10,
                                 cursor: 'pointer',
                                 fontSize: 14,
-                                fontWeight: 500
+                                fontWeight: 500,
+                                transition: 'all 0.3s ease'
                             }}
                         >
                             Selecionar Thumbnail
@@ -232,9 +235,9 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
 
                     {progress > 0 && (
                         <div style={{ marginBottom: 20 }}>
-                            <div style={{ background: '#303030', height: 28, borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
+                            <div style={{ background: 'var(--input-bg)', height: 28, borderRadius: 14, overflow: 'hidden', position: 'relative', border: '1px solid var(--border-color)' }}>
                                 <div style={{
-                                    background: 'linear-gradient(90deg, #8d6aff, #fe7d45)',
+                                    background: 'linear-gradient(90deg, var(--accent-color), #fe7d45)',
                                     height: '100%',
                                     width: `${progress}%`,
                                     transition: 'width 0.3s',
@@ -257,7 +260,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         style={{
                             width: '100%',
                             padding: 16,
-                            background: progress > 0 ? '#555' : (isRestricted ? '#e53e3e' : '#8d6aff'),
+                            background: progress > 0 ? '#555' : (isRestricted ? '#e53e3e' : 'var(--accent-color)'),
                             color: '#fff',
                             border: 'none',
                             borderRadius: 10,
@@ -267,8 +270,9 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                             transition: 'all 0.3s'
                         }}
                     >
-                        {progress > 0 ? `Enviando... ${progress}%` : (isRestricted ? '🔒 Enviar Vídeo Privado' : '🚀 Enviar Vídeo')}
+                        {progress > 0 ? `Enviando... ${progress}%` : (isRestricted ? '🔒 Enviar Vídeo Privado' : '🚀 Enviar Conteúdo')}
                     </button>
+
                 </>
             )}
         </div>

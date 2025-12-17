@@ -3,13 +3,14 @@ import { memo } from "react";
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret, onShare }) => {
     return (
         <div style={{
-            background: isSecret ? "#3d1a1a" : "#20153e",
+            background: isSecret ? "#3d1a1a" : "var(--card-bg)",
             borderRadius: 14,
             overflow: "hidden",
             position: "relative",
-            boxShadow: isSecret ? "0 4px 28px #e53e3e55" : "0 4px 28px #18142355",
+            boxShadow: isSecret ? "0 4px 28px rgba(229, 62, 62, 0.3)" : "0 4px 28px rgba(0, 0, 0, 0.2)",
             paddingBottom: 6,
-            border: isSecret ? '2px solid #e53e3e' : 'none'
+            border: isSecret ? '2px solid #e53e3e' : '1px solid var(--border-color)',
+            transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease'
         }}>
             {canDelete && (
                 <button
@@ -19,7 +20,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                         top: 8,
                         right: 8,
                         zIndex: 10,
-                        background: 'rgba(0,0,0,0.8)',
+                        background: 'rgba(0,0,0,0.6)',
                         border: 'none',
                         borderRadius: '50%',
                         width: 40,
@@ -71,20 +72,20 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
             <div style={{ padding: 14 }}>
                 {isSecret && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' }}>🔒 PRIVADO</span>
+                        <span style={{ background: '#e53e3e', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold', color: '#fff' }}>🔒 PRIVADO</span>
                     </div>
                 )}
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</h3>
-                <p style={{ margin: '9px 0 0', fontSize: 13, color: '#ddd', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 45 }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-color)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</h3>
+                <p style={{ margin: '9px 0 0', fontSize: 13, color: 'var(--secondary-text)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 45 }}>
                     {video.description || "Sem descrição disponível."}
                 </p>
-                <div style={{ marginTop: 12, fontSize: 15, color: isSecret ? "#ffb3b3" : "#c2bcf7", display: 'flex', gap: 15 }}>
+                <div style={{ marginTop: 12, fontSize: 15, color: isSecret ? "#ffb3b3" : "var(--accent-color)", display: 'flex', gap: 15 }}>
                     <button
                         onClick={() => onLike(video.id)}
                         style={{
                             background: 'none',
                             border: 'none',
-                            color: video.user_liked ? '#ff6b9d' : (isSecret ? '#ffb3b3' : '#c2bcf7'),
+                            color: video.user_liked ? '#ff6b9d' : (isSecret ? '#ffb3b3' : 'var(--accent-color)'),
                             cursor: 'pointer',
                             fontSize: 15,
                             display: 'flex',
@@ -99,9 +100,10 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                 <button
                     onClick={() => onShare && onShare(video)}
                     style={{
-                        marginTop: 8, background: 'none', border: '1px solid #444',
-                        borderRadius: 6, color: '#aaa', padding: '6px 12px', width: '100%',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                        marginTop: 8, background: 'var(--input-bg)', border: '1px solid var(--border-color)',
+                        borderRadius: 6, color: 'var(--text-color)', padding: '6px 12px', width: '100%',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        transition: 'all 0.3s ease'
                     }}
                 >
                     📤 Enviar / Compartilhar
@@ -113,11 +115,13 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                         marginTop: 12,
                         width: '100%',
                         padding: '8px',
-                        background: isSecret ? '#5b2f2f' : '#352f5b',
+                        background: isSecret ? '#5b2f2f' : 'var(--accent-color)',
                         color: '#fff',
                         border: 'none',
                         borderRadius: 6,
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.3s ease'
                     }}
                 >
                     💬 Ver Comentários

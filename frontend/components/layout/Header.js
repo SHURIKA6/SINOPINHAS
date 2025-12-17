@@ -12,20 +12,23 @@ export default function Header({
     setShowProfile,
     logout,
     logoutAdmin,
-    setShowProfileModal
+    setShowProfileModal,
+    theme,
+    toggleTheme
 }) {
     return (
         <>
             <header style={{
-                background: '#212121',
+                background: 'var(--header-bg)',
                 padding: '12px 16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '2px solid #303030',
+                borderBottom: '2px solid var(--border-color)',
                 flexWrap: 'wrap',
                 gap: '12px',
-                position: 'relative'
+                position: 'relative',
+                transition: 'background 0.3s ease, border-color 0.3s ease'
             }}>
                 <h1 style={{
                     margin: 0,
@@ -47,6 +50,26 @@ export default function Header({
                     justifyContent: 'flex-end',
                     flex: 1
                 }}>
+                    <button
+                        onClick={toggleTheme}
+                        style={{
+                            padding: '7px 10px',
+                            background: 'var(--input-bg)',
+                            color: 'var(--text-color)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 8,
+                            fontSize: 18,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease'
+                        }}
+                        title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+                    >
+                        {theme === 'dark' ? '☀️' : '🌙'}
+                    </button>
+
                     <button onClick={() => setShowSecretAuth(true)} style={{
                         padding: '7px 12px',
                         background: '#e53e3e',
@@ -83,11 +106,11 @@ export default function Header({
                                 alignItems: 'center',
                                 gap: 6,
                                 padding: '6px 10px',
-                                background: '#303030',
-                                border: 'none',
+                                background: 'var(--input-bg)',
+                                border: '1px solid var(--border-color)',
                                 borderRadius: 8,
                                 cursor: 'pointer',
-                                color: '#fff',
+                                color: 'var(--text-color)',
                                 whiteSpace: 'nowrap',
                                 maxWidth: '120px',
                                 flexShrink: 0
@@ -116,9 +139,9 @@ export default function Header({
 
                             <button onClick={logout} style={{
                                 padding: '7px 12px',
-                                background: '#303030',
-                                color: '#fff',
-                                border: 'none',
+                                background: 'var(--input-bg)',
+                                color: 'var(--text-color)',
+                                border: '1px solid var(--border-color)',
                                 borderRadius: 8,
                                 cursor: 'pointer',
                                 fontSize: 13,
@@ -166,6 +189,7 @@ export default function Header({
                 </div>
             </header>
 
+
             <nav className="tab-container">
                 {['videos', 'photos', 'news', 'weather', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button
@@ -193,13 +217,14 @@ export default function Header({
 
             <style jsx>{`
                 .tab-container {
-                    background: #212121;
+                    background: var(--header-bg);
                     padding: 16px 24px;
                     display: flex;
                     gap: 12px;
                     overflow-x: auto;
-                    border-bottom: 1px solid #303030;
+                    border-bottom: 1px solid var(--border-color);
                     margin-bottom: 1px;
+                    transition: background 0.3s ease, border-color 0.3s ease;
                     
                     /* Hide scrollbar */
                     scrollbar-width: none;
@@ -212,9 +237,9 @@ export default function Header({
                 .tab-btn {
                     padding: 10px 20px;
                     border-radius: 99px; /* Pill Shape */
-                    border: 1px solid transparent;
-                    background: rgba(255, 255, 255, 0.03);
-                    color: #aaa;
+                    border: 1px solid var(--border-color);
+                    background: var(--input-bg);
+                    color: var(--secondary-text);
                     font-size: 15px;
                     font-weight: 500;
                     cursor: pointer;
@@ -228,14 +253,15 @@ export default function Header({
 
                 /* Hover State */
                 .tab-btn:hover {
-                    background: rgba(255, 255, 255, 0.08);
+                    background: var(--accent-color);
                     color: #fff;
                     transform: translateY(-2px);
+                    border-color: transparent;
                 }
 
                 /* Active State */
                 .tab-btn.active {
-                    background: linear-gradient(135deg, #8d6aff 0%, #6040e6 100%);
+                    background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
                     color: #fff;
                     font-weight: 600;
                     border-color: rgba(255, 255, 255, 0.1);
@@ -257,6 +283,7 @@ export default function Header({
                     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                 }
             `}</style>
+
         </>
     );
 }

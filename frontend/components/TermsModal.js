@@ -30,7 +30,7 @@ export default function TermsModal({ onAccept, onDecline }) {
       overflow: 'auto'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d1a40 100%)',
+        background: 'var(--card-bg)',
         borderRadius: 16,
         padding: 32,
         maxWidth: 750,
@@ -38,8 +38,9 @@ export default function TermsModal({ onAccept, onDecline }) {
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
-        border: '2px solid #8d6aff',
-        boxShadow: '0 20px 60px rgba(141, 106, 255, 0.3)'
+        border: '2px solid var(--accent-color)',
+        boxShadow: '0 20px 60px rgba(141, 106, 255, 0.2)',
+        transition: 'background 0.3s ease, border-color 0.3s ease'
       }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h1 style={{
@@ -53,10 +54,10 @@ export default function TermsModal({ onAccept, onDecline }) {
           }}>
             SINOPINHAS
           </h1>
-          <h2 style={{ margin: 0, fontSize: 18, color: '#aaa' }}>
+          <h2 style={{ margin: 0, fontSize: 18, color: 'var(--secondary-text)' }}>
             Termos de Uso, Responsabilidade e Política de Privacidade
           </h2>
-          <p style={{ margin: '8px 0 0', fontSize: 12, color: '#666' }}>
+          <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--secondary-text)', opacity: 0.7 }}>
             Data de última atualização: {new Date().toLocaleDateString('pt-BR')}
           </p>
         </div>
@@ -67,19 +68,20 @@ export default function TermsModal({ onAccept, onDecline }) {
             flex: 1,
             overflowY: 'auto',
             padding: '0 20px',
-            color: '#ccc',
+            color: 'var(--text-color)',
             lineHeight: 1.8,
             fontSize: 14,
             marginBottom: 20
           }}
         >
+
           <div style={{ marginBottom: 24, background: 'rgba(239, 68, 68, 0.15)', padding: 16, borderRadius: 8, border: '2px solid #ef4444' }}>
             <h3 style={{ color: '#ff6b6b', fontSize: 18, marginBottom: 12, marginTop: 0 }}>
               🚨 AVISO LEGAL IMPORTANTE
             </h3>
             <p style={{ color: '#fff', fontWeight: 700, margin: 0 }}>
-              AO ACEITAR ESTES TERMOS, VOCÊ ESTÁ CELEBRANDO UM CONTRATO JURIDICAMENTE VINCULANTE COM O SINOPINHAS. 
-              VOCÊ SERÁ LEGALMENTE RESPONSÁVEL POR TODAS AS AÇÕES REALIZADAS ATRAVÉS DA SUA CONTA. 
+              AO ACEITAR ESTES TERMOS, VOCÊ ESTÁ CELEBRANDO UM CONTRATO JURIDICAMENTE VINCULANTE COM O SINOPINHAS.
+              VOCÊ SERÁ LEGALMENTE RESPONSÁVEL POR TODAS AS AÇÕES REALIZADAS ATRAVÉS DA SUA CONTA.
               LEIA ATENTAMENTE CADA SEÇÃO ANTES DE CONTINUAR.
             </p>
           </div>
@@ -198,7 +200,7 @@ export default function TermsModal({ onAccept, onDecline }) {
               <li>Denúncia de crime previsto na legislação brasileira</li>
             </ul>
             <p style={{ color: '#ff6b6b', fontWeight: 700, background: 'rgba(239, 68, 68, 0.2)', padding: 12, borderRadius: 8, marginTop: 12 }}>
-              🚨 <strong>IMPORTANTE:</strong> NÃO há "anonimato" ou "privacidade absoluta" quando se trata de crimes. 
+              🚨 <strong>IMPORTANTE:</strong> NÃO há "anonimato" ou "privacidade absoluta" quando se trata de crimes.
               VOCÊ SERÁ IDENTIFICADO, LOCALIZADO E RESPONSABILIZADO.
             </p>
           </div>
@@ -337,8 +339,8 @@ export default function TermsModal({ onAccept, onDecline }) {
         </div>
 
         <div style={{
-          background: 'rgba(141, 106, 255, 0.1)',
-          border: '1px solid #8d6aff',
+          background: 'var(--input-bg)',
+          border: '1px solid var(--accent-color)',
           borderRadius: 8,
           padding: 16,
           marginBottom: 16
@@ -350,9 +352,9 @@ export default function TermsModal({ onAccept, onDecline }) {
               onChange={(e) => setAgreedToAll(e.target.checked)}
               style={{ marginTop: 4, width: 18, height: 18, cursor: 'pointer' }}
             />
-            <span style={{ color: '#fff', fontSize: 14, lineHeight: 1.6 }}>
-              <strong>CONFIRMO</strong> que li e compreendi TODOS os 11 itens dos Termos de Uso acima, 
-              e concordo integralmente com todas as cláusulas apresentadas, assumindo total responsabilidade 
+            <span style={{ color: 'var(--text-color)', fontSize: 14, lineHeight: 1.6 }}>
+              <strong>CONFIRMO</strong> que li e compreendi TODOS os 11 itens dos Termos de Uso acima,
+              e concordo integralmente com todas as cláusulas apresentadas, assumindo total responsabilidade
               por minhas ações na plataforma.
             </span>
           </label>
@@ -410,7 +412,7 @@ export default function TermsModal({ onAccept, onDecline }) {
             ✅ Concordo e Aceito os Termos
           </button>
         </div>
-        
+
         {!hasScrolled && (
           <p style={{
             textAlign: 'center',
@@ -423,7 +425,7 @@ export default function TermsModal({ onAccept, onDecline }) {
             ⬇️ Role até o final do documento
           </p>
         )}
-        
+
         {hasScrolled && !agreedToAll && (
           <p style={{
             textAlign: 'center',

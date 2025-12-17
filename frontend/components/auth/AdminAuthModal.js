@@ -25,18 +25,23 @@ export default function AdminAuthModal({ onClose, onAdminAuthSuccess, showToast 
             alignItems: 'center', justifyContent: 'center', padding: '20px'
         }} onClick={onClose}>
             <div style={{
-                background: '#1a1a1a', borderRadius: 12, padding: 32,
-                maxWidth: 400, width: '100%'
+                background: 'var(--card-bg)', borderRadius: 12, padding: 32,
+                maxWidth: 400, width: '100%',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-color)',
+                transition: 'background 0.3s ease, border-color 0.3s ease'
             }} onClick={e => e.stopPropagation()}>
-                <h2 style={{ margin: '0 0 24px' }}>🔒 Acesso Admin</h2>
+                <h2 style={{ margin: '0 0 24px' }}>🛡️ Painel Admin</h2>
                 <form onSubmit={handleSubmit}>
                     <input
-                        type="password" placeholder="Senha de admin"
-                        value={adminPassword} onChange={e => setAdminPassword(e.target.value)}
-                        style={{ width: '100%', padding: 12, marginBottom: 16, background: '#0f0f0f', border: '1px solid #303030', borderRadius: 8, color: '#fff', fontSize: 16 }}
+                        type="password"
+                        placeholder="Senha de Administrador"
+                        value={adminPassword}
+                        onChange={e => setAdminPassword(e.target.value)}
+                        style={{ width: '100%', padding: 12, marginBottom: 16, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-color)', fontSize: 16 }}
                     />
                     <button type="submit" style={{ width: '100%', padding: 12, background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 16 }}>
-                        Entrar como Admin
+                        Acessar como Admin
                     </button>
                 </form>
             </div>

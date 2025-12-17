@@ -127,10 +127,10 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                             flex: 1,
                             minWidth: '200px',
                             padding: '12px 20px',
-                            background: '#1a1a1a',
-                            border: '1px solid #303030',
+                            background: 'var(--input-bg)',
+                            border: '1px solid var(--border-color)',
                             borderRadius: 10,
-                            color: '#fff',
+                            color: 'var(--text-color)',
                             fontSize: 16
                         }}
                     />
@@ -139,10 +139,10 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                         onChange={(e) => setSortBy(e.target.value)}
                         style={{
                             padding: '12px 20px',
-                            background: '#1a1a1a',
-                            border: '1px solid #303030',
+                            background: 'var(--input-bg)',
+                            border: '1px solid var(--border-color)',
                             borderRadius: 10,
-                            color: '#fff',
+                            color: 'var(--text-color)',
                             fontSize: 16,
                             cursor: 'pointer',
                             minWidth: '150px',
@@ -156,13 +156,13 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 </div>
 
                 {/* Header */}
-                <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
+                <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: 'var(--text-color)' }}>
                     {loading ? 'Carregando...' : `${sortedVideos.length} ${label}${sortedVideos.length !== 1 ? 's' : ''}`}
                 </h2>
 
-                <div style={{ background: '#221c35', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid #303030' }}>
-                    <h3 style={{ marginTop: 0, fontSize: 22, color: '#fff' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
-                    <p style={{ color: '#ccc', lineHeight: '1.6', fontSize: 16 }}>
+                <div style={{ background: 'var(--card-bg)', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid var(--border-color)' }}>
+                    <h3 style={{ marginTop: 0, fontSize: 22, color: 'var(--text-color)' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
+                    <p style={{ color: 'var(--secondary-text)', lineHeight: '1.6', fontSize: 16 }}>
                         Bem-vindo à comunidade oficial de Sinop! Aqui você encontra os melhores conteúdos locais.
                     </p>
                 </div>
@@ -175,11 +175,12 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                         ))}
                     </div>
                 ) : sortedVideos.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 64, background: '#1a1a1a', borderRadius: 16, color: '#aaa' }}>
+                    <div style={{ textAlign: 'center', padding: 64, background: 'var(--card-bg)', borderRadius: 16, color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
                         <div style={{ fontSize: 41, marginBottom: 18 }}>{filterType === 'photo' ? '🖼️' : '📹'}</div>
                         <p style={{ fontSize: 19, margin: 0 }}>Nenhum {label} encontrado</p>
                     </div>
                 ) : (
+
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                             {paginatedVideos.map((v) => (

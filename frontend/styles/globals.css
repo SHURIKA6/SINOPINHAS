@@ -1,9 +1,34 @@
+:root {
+  --bg-color: #18142a;
+  --bg-gradient: linear-gradient(120deg, #18142a 80%, #8d6aff 100%);
+  --text-color: #ffffff;
+  --header-bg: #212121;
+  --card-bg: #1a1a1a;
+  --input-bg: #252525;
+  --border-color: #303030;
+  --accent-color: #8d6aff;
+  --secondary-text: #aaa;
+}
+
+[data-theme='light'] {
+  --bg-color: #f0f2f5;
+  --bg-gradient: linear-gradient(120deg, #f0f2f5 80%, #8d6aff 100%);
+  --text-color: #1a1a1a;
+  --header-bg: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #f5f5f5;
+  --border-color: #e0e0e0;
+  --accent-color: #6040e6;
+  --secondary-text: #666;
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background: #18142a;
-  color: #fff;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 * {
@@ -13,3 +38,4 @@ body {
 button {
   cursor: pointer;
 }
+
