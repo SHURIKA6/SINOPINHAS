@@ -304,4 +304,3 @@ function DetailBlock({ icon, label, value, subValue }) {
         </div>
     );
 }
-```
