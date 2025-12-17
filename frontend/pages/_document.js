@@ -4,9 +4,9 @@ export default function Document() {
     return (
         <Html lang="pt-BR">
             <Head>
-                <meta dangerouslySetInnerHTML={{
+                <script dangerouslySetInnerHTML={{
                     __html: `
-          <!--
+/*
           
           ███████╗██╗   ██╗     █████╗ ███╗   ███╗ ██████╗     ███╗   ███╗██╗   ██╗██╗████████╗ ██████╗      █████╗      █████╗ ███╗   ██╗███╗   ██╗ █████╗      ██╗██╗   ██╗██╗     ██╗ █████╗ 
           ██╔════╝██║   ██║    ██╔══██╗████╗ ████║██╔═══██╗    ████╗ ████║██║   ██║██║╚══██╔══╝██╔═══██╗    ██╔══██╗    ██╔══██╗████╗  ██║████╗  ██║██╔══██╗     ██║██║   ██║██║     ██║██╔══██╗
@@ -17,7 +17,7 @@ export default function Document() {
                                                                                                                                                                                                 
           ASSINADO: _Riad777
           
-          -->
+*/
         `}} />
             </Head>
             <body>
