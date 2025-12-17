@@ -2,16 +2,25 @@ import React, { useEffect } from 'react';
 
 export default function WeatherSection() {
     useEffect(() => {
-        // Inject script for weatherwidget.io
-        !function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (!d.getElementById(id)) {
-                js = d.createElement(s);
-                js.id = id;
-                js.src = 'https://weatherwidget.io/js/widget.min.js';
-                fjs.parentNode.insertBefore(js, fjs);
+        // Function to reload the widget script
+        const loadWidget = () => {
+            const id = 'weatherwidget-io-js';
+            const existingScript = document.getElementById(id);
+
+            // Remove existing script if it exists to force reload
+            if (existingScript) {
+                existingScript.remove();
             }
-        }(document, 'script', 'weatherwidget-io-js');
+
+            // Create and append new script
+            const script = document.createElement('script');
+            script.id = id;
+            script.src = 'https://weatherwidget.io/js/widget.min.js';
+            script.async = true;
+            document.body.appendChild(script);
+        };
+
+        loadWidget();
     }, []);
 
     return (
@@ -20,25 +29,122 @@ export default function WeatherSection() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
+            width: '100%',
             padding: '40px 20px',
             color: '#fff',
-            textAlign: 'center',
-            width: '100%'
+            position: 'relative',
         }}>
-            <h2 style={{ fontSize: '28px', marginBottom: '30px' }}>⛅ Clima em Sinop</h2>
+            {/* Background Decorativo */}
+            <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'radial-gradient(circle at 50% 30%, rgba(141, 106, 255, 0.15) 0%, rgba(0,0,0,0) 70%)',
+                pointerEvents: 'none',
+                zIndex: 0
+            }} />
 
-            <div style={{ width: '100%', maxWidth: '800px' }}>
-                <a
-                    className="weatherwidget-io"
-                    href="https://forecast7.com/pt/n11d86n55d51/sinop/"
-                    data-label_1="SINOP"
-                    data-label_2="WEATHER"
-                    data-icons="Climacons Animated"
-                    data-days="5"
-                    data-theme="original"
-                >
-                    SINOP WEATHER
-                </a>
+            <div style={{
+                position: 'relative',
+                zIndex: 1,
+                width: '100%',
+                maxWidth: '800px',
+                background: 'rgba(33, 33, 33, 0.6)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '24px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '40px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+            }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '30px'
+                }}>
+                    <span style={{ fontSize: '32px' }}>🌦️</span>
+                    <h2 style={{
+                        margin: 0,
+                        fontSize: '32px',
+                        fontWeight: '800',
+                        background: 'linear-gradient(135deg, #fff 0%, #a5b4fc 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        letterSpacing: '-0.5px'
+                    }}>
+                        Previsão do Tempo
+                    </h2>
+                </div>
+
+                <p style={{
+                    color: '#94a3b8',
+                    marginBottom: '40px',
+                    textAlign: 'center',
+                    fontSize: '16px',
+                    maxWidth: '400px',
+                    lineHeight: '1.6'
+                }}>
+                    Acompanhe em tempo real as condições climáticas de Sinop e prepare-se para o seu dia.
+                </p>
+
+                <div style={{
+                    width: '100%',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                    background: '#1e293b' // Fallback color while loading
+                }}>
+                    <a
+                        className="weatherwidget-io"
+                        href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                        data-label_1="SINOP"
+                        data-label_2="MATO GROSSO"
+                        data-font="Roboto"
+                        data-icons="Climacons Animated"
+                        data-mode="Current"
+                        data-days="5"
+                        data-theme="weather_one"
+                        data-basecolor="#1e293b"
+                        data-accent="#8d6aff"
+                        data-textcolor="#ffffff"
+                        data-highcolor="#fcd34d"
+                        data-lowcolor="#94a3b8"
+                        data-suncolor="#fcd34d"
+                        data-mooncolor="#fcd34d"
+                        data-cloudcolor="#f1f5f9"
+                        data-cloudfill="#1e293b"
+                        data-raincolor="#60a5fa"
+                        data-snowcolor="#f8fafc"
+                        style={{
+                            display: 'block',
+                            position: 'relative',
+                            height: '100%',
+                            textDecoration: 'none'
+                        }}
+                    >
+                        CARREGANDO PREVISÃO...
+                    </a>
+                </div>
+
+                <div style={{
+                    marginTop: '30px',
+                    display: 'flex',
+                    gap: '20px',
+                    fontSize: '13px',
+                    color: '#64748b'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>📍</span> Sinop - MT
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>📡</span> Atualizado agora
+                    </div>
+                </div>
             </div>
         </div>
     );
