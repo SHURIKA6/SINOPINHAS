@@ -86,6 +86,11 @@ export default function Home({ initialVideo }) {
   const [showSecretTab, setShowSecretTab] = useState(false);
 
 
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
   const {
     user,
     isAdmin,
@@ -101,11 +106,6 @@ export default function Home({ initialVideo }) {
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [videoComments, setVideoComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-
-  const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }, []);
 
   useEffect(() => {
     const accepted = localStorage.getItem('terms_accepted');
