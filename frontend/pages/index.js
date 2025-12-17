@@ -220,6 +220,7 @@ export default function Home({ initialVideo }) {
         <meta name="theme-color" content="#18142a" />
         <link rel="preconnect" href={API} />
         <link rel="dns-prefetch" href={API} />
+        <link rel="icon" href="/favicon.ico" />
         {(activeTab === 'videos' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
           <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
         )}
