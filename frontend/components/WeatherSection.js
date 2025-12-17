@@ -171,7 +171,7 @@ export default function WeatherSection() {
                         </div>
 
                         {/* Widget Visual (Iframe) */}
-                        <div style={{ borderRadius: '20px', overflow: 'hidden', minHeight: '180px', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)' }}>
+                        <div style={{ borderRadius: '20px', overflow: 'hidden', marginBottom: '10px' }}>
                             <a
                                 className="weatherwidget-io"
                                 href="https://forecast7.com/pt/n11d86n55d51/sinop/"
