@@ -1,6 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export default function WeatherSection() {
+    useEffect(() => {
+        // Remove script if it already exists to force reload/re-execution if needed, 
+        // or just ensure it's added.
+        const existingScript = document.getElementById('weather-widget-script');
+        if (!existingScript) {
+            const script = document.createElement('script');
+            script.id = 'weather-widget-script';
+            script.src = "https://app3.weatherwidget.org/js/?id=ww_a20925b9a387d";
+            script.async = true;
+            document.body.appendChild(script);
+        }
+    }, []);
+
     return (
         <div style={{
             display: 'flex',
@@ -11,66 +24,20 @@ export default function WeatherSection() {
             color: '#fff',
             textAlign: 'center'
         }}>
-            <h2 style={{ fontSize: '28px', marginBottom: '10px' }}>⛅ Clima em Sinop - MT</h2>
-            <p style={{ color: '#aaa', marginBottom: '30px' }}>
-                Confira a previsão atualizada em tempo real.
-            </p>
+            <h2 style={{ fontSize: '28px', marginBottom: '30px' }}>⛅ Clima</h2>
 
-            <div style={{
-                background: '#212121',
-                padding: '20px',
-                borderRadius: '16px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                marginBottom: '30px',
-                maxWidth: '600px',
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                overflow: 'hidden'
-            }}>
-                {/* 
-                   Usando wttr.in para gerar a imagem do clima sem precisar de API Key 
-                   Parâmetros:
-                   Sinop = Cidade
-                   lang=pt = Português
-                   m = Métrico
-                   0 = Apenas dia atual (simplificado) ou remover para ver mais dias
-                   Q = Super silencioso (remove textos extras)
-                */}
-                <img
-                    src="https://wttr.in/Sinop.png?lang=pt&m"
-                    alt="Previsão do Tempo Sinop"
-                    style={{
-                        maxWidth: '100%',
-                        height: 'auto',
-                        borderRadius: '8px'
-                    }}
-                />
-            </div>
-
-            <a
-                href="https://weather.com/pt-BR/clima/hoje/l/Sinop+Mato+Grosso"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                    padding: '14px 28px',
-                    background: '#0066cc',
-                    color: '#fff',
-                    textDecoration: 'none',
-                    borderRadius: '50px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 15px rgba(0,102,204,0.4)',
-                    transition: 'transform 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
-                }}
-                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+            <div
+                id="ww_a20925b9a387d"
+                v='1.3'
+                loc='id'
+                a='{"t":"horizontal","lang":"pt","sl_lpl":1,"ids":["wl5044"],"font":"Times","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"image","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722","el_nme":3,"el_cwt":3}'
+                style={{ maxWidth: '100%', overflow: 'hidden' }}
             >
-                🌍 Ver detalhes no Weather.com
-            </a>
+                Mais previsões:
+                <a href="https://tempolongo.com/rio_de_janeiro_tempo_25_dias/" id="ww_a20925b9a387d_u" target="_blank">
+                    Previsão do Tempo
+                </a>
+            </div>
         </div>
     );
 }
