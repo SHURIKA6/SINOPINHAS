@@ -158,35 +158,62 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
             <p style={{ color: '#aaa', fontSize: 14, margin: 0 }}>Nenhum outro usuário no sistema ainda</p>
           </div>
         ) : (
-          usersToShow.map(u => (
-            <div
-              key={u.id}
-              onClick={() => setSelectedUser(u)}
-              style={{
-                padding: 12,
-                marginBottom: 8,
-                background: selectedUser?.id === u.id ? '#8d6aff' : '#2a2a2a',
-                borderRadius: 8,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                border: selectedUser?.id === u.id && showAdminInbox ? '2px solid #ef4444' : 'none'
-              }}
-            >
-              {u.avatar ? (
-                <img src={u.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={u.username} />
-              ) : (
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#8d6aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold' }}>
-                  {u.username.charAt(0).toUpperCase()}
+          usersToShow.map(u => {
+            // Calcular mensagens não lidas deste usuário para mim
+            const unreadCount = messages.filter(m =>
+              m.from_id === u.id &&
+              m.to_id === user.id &&
+              !m.is_read
+            ).length;
+
+            return (
+              <div
+                key={u.id}
+                onClick={() => setSelectedUser(u)}
+                style={{
+                  padding: 12,
+                  marginBottom: 8,
+                  background: selectedUser?.id === u.id ? '#8d6aff' : '#2a2a2a',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  border: selectedUser?.id === u.id && showAdminInbox ? '2px solid #ef4444' : 'none',
+                  position: 'relative' // For absolute positioning of badge if needed, but flex is better
+                }}
+              >
+                {u.avatar ? (
+                  <img src={u.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={u.username} />
+                ) : (
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#8d6aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold' }}>
+                    {u.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontWeight: 600, color: '#fff', fontSize: 14 }}>{u.username}</div>
+                  {unreadCount > 0 && (
+                    <div style={{
+                      background: '#8d6aff',
+                      color: '#fff',
+                      borderRadius: '50%',
+                      width: 20,
+                      height: 20,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 11,
+                      fontWeight: 'bold',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                    }}>
+                      {unreadCount}
+                    </div>
+                  )}
                 </div>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, color: '#fff', fontSize: 14 }}>{u.username}</div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
