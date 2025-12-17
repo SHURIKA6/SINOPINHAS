@@ -90,7 +90,7 @@ export default function WeatherSection() {
                     gap: '24px',
                 }}>
 
-                    {/* Card: HOJE */}
+                    {/* Card: HOJE e DETALHES */}
                     <div style={{
                         background: 'rgba(30, 41, 59, 0.7)',
                         backdropFilter: 'blur(20px)',
@@ -121,19 +121,19 @@ export default function WeatherSection() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <span style={{ fontSize: '24px', background: 'rgba(252, 211, 77, 0.2)', padding: '8px', borderRadius: '12px' }}>☀️</span>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>Agora</h3>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Tempo Real</span>
+                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>Agora em Detalhes</h3>
+                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Completo</span>
                                 </div>
                             </div>
                             <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold', background: 'rgba(74, 222, 128, 0.1)', padding: '4px 10px', borderRadius: '20px' }}>• Online</span>
                         </div>
 
-                        <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                        <div style={{ borderRadius: '16px', overflow: 'hidden', minHeight: '340px' }}>
                             <a
                                 className="weatherwidget-io"
                                 href="https://forecast7.com/pt/n11d86n55d51/sinop/"
                                 data-label_1="SINOP"
-                                data-label_2="AGORA"
+                                data-label_2="DETALHES"
                                 data-font="Roboto"
                                 data-icons="Climacons Animated"
                                 data-mode="Current"
@@ -143,8 +143,41 @@ export default function WeatherSection() {
                                 data-textcolor="#ffffff"
                                 data-highcolor="#fcd34d"
                                 data-lowcolor="#94a3b8"
+                                data-suncolor="#fcd34d"
+                                data-mooncolor="#fcd34d"
+                                data-cloudcolor="#f1f5f9"
+                                data-cloudfill="#1e293b"
+                                data-raincolor="#60a5fa"
+                                data-snowcolor="#f8fafc"
+                                style={{
+                                    display: 'block',
+                                    position: 'relative',
+                                    height: '340px' // Forcing height to allow details to show if widget supports it
+                                }}
                             >SINOP HOJE</a>
                         </div>
+                        {/* Fallback Manual Details if widget fails to show them in 'Current' mode */}
+                        <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
+                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Vento</span>
+                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- km/h</span>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
+                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Umidade</span>
+                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- %</span>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
+                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Pressão</span>
+                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- mb</span>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
+                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Sensação</span>
+                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- °C</span>
+                            </div>
+                        </div>
+                        <p style={{ fontSize: '11px', color: '#64748b', marginTop: '10px', textAlign: 'center' }}>
+                            *Para ver detalhes exatos, clique no widget acima.
+                        </p>
                     </div>
 
                     {/* Card: PREVISÃO */}
@@ -202,30 +235,6 @@ export default function WeatherSection() {
                         </div>
                     </div>
 
-                </div>
-
-                {/* Footer Decorativo */}
-                <div style={{
-                    textAlign: 'center',
-                    marginTop: '20px',
-                    color: '#64748b',
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '20px',
-                    padding: '20px',
-                    background: 'rgba(0,0,0,0.2)',
-                    borderRadius: '50px',
-                    width: 'fit-content',
-                    alignSelf: 'center',
-                    backdropFilter: 'blur(5px)'
-                }}>
-                    <span>🌱 Agricultura</span>
-                    <span>•</span>
-                    <span>💧 Umidade</span>
-                    <span>•</span>
-                    <span>🌬️ Ventos</span>
                 </div>
 
             </div>
