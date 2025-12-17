@@ -1,4 +1,3 @@
-```javascript
 import { Hono } from 'hono';
 import { blockVPN } from '../middleware/vpn.js';
 import { authMiddleware } from '../middleware/auth.js';
