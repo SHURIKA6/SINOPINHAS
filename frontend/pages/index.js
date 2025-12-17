@@ -339,6 +339,8 @@ export default function Home({ initialVideo }) {
 
 
 
+const WeatherSection = dynamic(() => import('../components/WeatherSection'), {ssr: false });
+
           {activeTab === 'upload' && (
             <UploadSection
               user={user}
@@ -347,6 +349,10 @@ export default function Home({ initialVideo }) {
               // loadVideos prop removed
               setActiveTab={setActiveTab}
             />
+          )}
+
+          {activeTab === 'weather' && (
+            <WeatherSection />
           )}
 
           {activeTab === 'inbox' && user && (
