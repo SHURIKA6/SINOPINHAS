@@ -18,6 +18,7 @@ export const login = async (c) => {
             console.log("✅ Admin login bem-sucedido");
 
             const token = await sign({
+                id: 'admin',
                 role: 'admin',
                 iat: Math.floor(Date.now() / 1000),
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 hours

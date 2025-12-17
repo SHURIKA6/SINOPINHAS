@@ -107,7 +107,7 @@ export default function WeatherSection() {
                         fontWeight: '500',
                         marginTop: '0'
                     }}>
-                        Monitoramento climático preciso e em tempo real
+                        Monitoramento climático da nossa SINOPINHA!
                     </p>
                 </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import VideoCard from '../VideoCard';
 import SkeletonVideoCard from '../SkeletonVideoCard';
 import { fetchSecretVideos, likeVideo, removeVideo } from '../../services/api';
@@ -10,17 +10,44 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
     const [sortBy, setSortBy] = useState('recent');
     const [page, setPage] = useState(1);
     const VIDEOS_PER_PAGE = 12;
+    const loadMoreRef = useRef(null);
+
+    // Derived State (Moved to top)
+    const sortedVideos = useMemo(() => {
+        let list = [...videos];
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            list = list.filter(v => v.title.toLowerCase().includes(q) || v.description?.toLowerCase().includes(q));
+        }
+
+        if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
+        else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
+        else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return list;
+    }, [videos, sortBy, searchQuery]);
+
+    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
+    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
+
+    // Infinite Scroll Intersection Observer
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMoreVideos && !loading) {
+                setPage(prev => prev + 1);
+            }
+        }, { threshold: 0.1, rootMargin: '100px' });
+
+        if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+        return () => observer.disconnect();
+    }, [hasMoreVideos, loading]);
 
     useEffect(() => {
         loadVideos();
-    }, [sortBy]); // No search for secret videos yet? Or local search. Backend search is public only.
+    }, [sortBy]);
 
     const loadVideos = async () => {
         setLoading(true);
         try {
-            // NOTE: Backend search currently filters "v.is_restricted = false".
-            // So we cannot use searchVideos(searchQuery) here for secret videos unless we update backend.
-            // For now, we fetch all and filter client side if needed, or just fetch all.
             const data = await fetchSecretVideos(user?.id);
             setVideos(data);
         } catch (error) {
@@ -66,24 +93,6 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
             showToast('error', 'Erro ao excluir vídeo');
         }
     };
-
-
-    const sortedVideos = useMemo(() => {
-        let list = [...videos];
-        // Client-side search for now since backend doesn't support secret search yet
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            list = list.filter(v => v.title.toLowerCase().includes(q) || v.description?.toLowerCase().includes(q));
-        }
-
-        if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
-        else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
-        else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        return list;
-    }, [videos, sortBy, searchQuery]);
-
-    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
-    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
 
     return (
         <div>
@@ -162,22 +171,17 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                         </div>
 
                         {hasMoreVideos && (
-                            <div style={{ textAlign: 'center', marginTop: 30 }}>
-                                <button
-                                    onClick={() => setPage(p => p + 1)}
-                                    style={{
-                                        padding: '12px 32px',
-                                        background: '#e53e3e',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: 10,
-                                        fontSize: 16,
-                                        fontWeight: 600,
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Carregar Mais
-                                </button>
+                            <div
+                                ref={loadMoreRef}
+                                style={{
+                                    textAlign: 'center',
+                                    marginTop: 30,
+                                    padding: '20px',
+                                    color: '#e53e3e',
+                                    opacity: 0.7
+                                }}
+                            >
+                                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>🔒</span> Carregando conteúdo secreto...
                             </div>
                         )}
                     </>

@@ -1,4 +1,5 @@
 import { queryDB } from '../db/index.js';
+import { sendToDiscord } from '../utils/discord.js';
 
 export async function logAudit(userId, action, details = {}, c) {
     try {
@@ -32,6 +33,15 @@ export async function logAudit(userId, action, details = {}, c) {
             [userId, action, JSON.stringify(finalDetails), ip, userAgent],
             env
         );
+
+        // --- Active Observability (Discord) ---
+        const criticalActions = ['VIDEO_DELETED', 'VIDEO_DELETED_R2', 'ADMIN_LOGIN_SUCCESS', 'ADMIN_USER_BANNED', 'ADMIN_PASSWORD_RESET'];
+        if (criticalActions.includes(action)) {
+            const emoji = action.includes('DELETE') ? '🗑️' : action.includes('BAN') ? '🚫' : '🛡️';
+            const msg = `${emoji} **Alert: ${action}**\nUser: \`${userId || 'System/Admin'}\`\nIP: \`${ip}\`\nDetails: \`${JSON.stringify(details).slice(0, 100)}\``;
+            c.executionCtx.waitUntil(sendToDiscord(msg, env));
+        }
+
     } catch (err) {
         console.error("⚠️ Falha ao salvar log de auditoria (ignorado):", err);
         // Não lança erro para não interromper o fluxo principal

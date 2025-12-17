@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import VideoCard from '../VideoCard';
 import SkeletonVideoCard from '../SkeletonVideoCard';
 import ShareModal from '../ShareModal';
@@ -11,8 +11,34 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     const [sortBy, setSortBy] = useState('recent');
     const [page, setPage] = useState(1);
     const VIDEOS_PER_PAGE = 12;
+    const loadMoreRef = useRef(null); // Infinite Scroll Ref
 
     const [videoToShare, setVideoToShare] = useState(null);
+
+    // Derived State
+    const sortedVideos = useMemo(() => {
+        let list = [...videos];
+        if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
+        else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
+        // 'recent' is default from DB usually, but we sort again just in case
+        else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return list;
+    }, [videos, sortBy]);
+
+    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
+    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
+
+    // Infinite Scroll Intersection Observer
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMoreVideos && !loading) {
+                setPage(prev => prev + 1);
+            }
+        }, { threshold: 0.1, rootMargin: '100px' });
+
+        if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+        return () => observer.disconnect();
+    }, [hasMoreVideos, loading]);
 
     useEffect(() => {
         loadVideos();
@@ -83,18 +109,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         }
     };
 
-
-    const sortedVideos = useMemo(() => {
-        let list = [...videos];
-        if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
-        else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
-        // 'recent' is default from DB usually, but we sort again just in case
-        else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        return list;
-    }, [videos, sortBy]);
-
-    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
-    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
 
     const label = filterType === 'photo' ? 'foto' : 'vídeo';
     const Label = filterType === 'photo' ? 'Foto' : 'Vídeo';
@@ -192,22 +206,17 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                         )}
 
                         {hasMoreVideos && (
-                            <div style={{ textAlign: 'center', marginTop: 30 }}>
-                                <button
-                                    onClick={() => setPage(p => p + 1)}
-                                    style={{
-                                        padding: '12px 32px',
-                                        background: '#8d6aff',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: 10,
-                                        fontSize: 16,
-                                        fontWeight: 600,
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Carregar Mais
-                                </button>
+                            <div
+                                ref={loadMoreRef}
+                                style={{
+                                    textAlign: 'center',
+                                    marginTop: 30,
+                                    padding: '20px',
+                                    color: '#8d6aff',
+                                    opacity: 0.7
+                                }}
+                            >
+                                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span> Carregando mais...
                             </div>
                         )}
                     </>
