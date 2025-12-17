@@ -198,7 +198,7 @@ export const deleteVideo = async (c) => {
     const payload = c.get('jwtPayload'); // Trust the Token
 
     // 1. Validate AuthN
-    if (!payload?.id) {
+    if (!payload?.id && payload?.role !== 'admin') {
         return createErrorResponse(c, "UNAUTHORIZED", "Login required", 401);
     }
     try {
