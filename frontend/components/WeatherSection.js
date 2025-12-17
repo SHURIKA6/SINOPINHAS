@@ -1,7 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function WeatherSection() {
+    const [realData, setRealData] = useState(null);
+
     useEffect(() => {
+        // Load the visual widget script
         const loadWidget = () => {
             const id = 'weatherwidget-io-js';
             const existingScript = document.getElementById(id);
@@ -14,6 +17,20 @@ export default function WeatherSection() {
             document.body.appendChild(script);
         };
         setTimeout(loadWidget, 100);
+
+        // Fetch REAL data from Open-Meteo API (Free, no key)
+        const fetchRealData = async () => {
+            try {
+                // Coordinates for Sinop, MT: -11.8641, -55.5031
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-11.8641&longitude=-55.5031&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m&timezone=America%2FCuiaba');
+                const data = await res.json();
+                setRealData(data.current);
+            } catch (error) {
+                console.error("Failed to fetch real weather data", error);
+            }
+        };
+
+        fetchRealData();
     }, []);
 
     return (
@@ -39,7 +56,7 @@ export default function WeatherSection() {
                 transform: 'translate(-50%, -50%)',
                 width: '100%',
                 height: '100%',
-                maxWidth: '1200px',
+                maxWidth: '1400px',
                 background: `
                     radial-gradient(circle at 20% 30%, rgba(141, 106, 255, 0.4) 0%, transparent 60%),
                     radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.3) 0%, transparent 60%)
@@ -55,7 +72,7 @@ export default function WeatherSection() {
                 position: 'relative',
                 zIndex: 1,
                 width: '100%',
-                maxWidth: '900px',
+                maxWidth: '1000px', // Aumentado para preencher mais
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '40px'
@@ -64,7 +81,7 @@ export default function WeatherSection() {
                 {/* Header Section */}
                 <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                     <h2 style={{
-                        fontSize: '48px',
+                        fontSize: '56px',
                         fontWeight: '800',
                         marginBottom: '10px',
                         background: 'linear-gradient(to right, #ffffff, #c4b5fd)',
@@ -75,19 +92,20 @@ export default function WeatherSection() {
                         Sinop Weather
                     </h2>
                     <p style={{
-                        fontSize: '18px',
+                        fontSize: '20px',
                         color: '#94a3b8',
                         fontWeight: '500'
                     }}>
-                        Monitoramento climático em tempo real
+                        Monitoramento climático preciso e em tempo real
                     </p>
                 </div>
 
-                {/* Grid de Cards */}
+                {/* Grid de Cards Principal */}
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
                     gap: '24px',
+                    width: '100%'
                 }}>
 
                     {/* Card: HOJE e DETALHES */}
@@ -96,10 +114,13 @@ export default function WeatherSection() {
                         backdropFilter: 'blur(20px)',
                         borderRadius: '24px',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
-                        padding: '24px',
+                        padding: '30px', // Mais padding
                         boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
                         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                        animation: 'fadeInUp 0.6s ease-out'
+                        animation: 'fadeInUp 0.6s ease-out',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
                     }}
                         onMouseOver={e => {
                             e.currentTarget.style.transform = 'translateY(-5px)';
@@ -119,21 +140,22 @@ export default function WeatherSection() {
                             paddingBottom: '15px'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '24px', background: 'rgba(252, 211, 77, 0.2)', padding: '8px', borderRadius: '12px' }}>☀️</span>
+                                <span style={{ fontSize: '24px', background: 'rgba(252, 211, 77, 0.2)', padding: '10px', borderRadius: '12px' }}>☀️</span>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>Agora em Detalhes</h3>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Completo</span>
+                                    <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#fff' }}>Agora</h3>
+                                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>Dados ao vivo</span>
                                 </div>
                             </div>
-                            <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold', background: 'rgba(74, 222, 128, 0.1)', padding: '4px 10px', borderRadius: '20px' }}>• Online</span>
+                            <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold', background: 'rgba(74, 222, 128, 0.1)', padding: '4px 10px', borderRadius: '20px' }}>• API Conectada</span>
                         </div>
 
-                        <div style={{ borderRadius: '16px', overflow: 'hidden', minHeight: '340px' }}>
+                        {/* Widget Visual */}
+                        <div style={{ borderRadius: '16px', overflow: 'hidden', minHeight: '180px', marginBottom: '24px' }}>
                             <a
                                 className="weatherwidget-io"
                                 href="https://forecast7.com/pt/n11d86n55d51/sinop/"
                                 data-label_1="SINOP"
-                                data-label_2="DETALHES"
+                                data-label_2="AGORA"
                                 data-font="Roboto"
                                 data-icons="Climacons Animated"
                                 data-mode="Current"
@@ -143,50 +165,45 @@ export default function WeatherSection() {
                                 data-textcolor="#ffffff"
                                 data-highcolor="#fcd34d"
                                 data-lowcolor="#94a3b8"
-                                data-suncolor="#fcd34d"
-                                data-mooncolor="#fcd34d"
-                                data-cloudcolor="#f1f5f9"
-                                data-cloudfill="#1e293b"
-                                data-raincolor="#60a5fa"
-                                data-snowcolor="#f8fafc"
-                                style={{
-                                    display: 'block',
-                                    position: 'relative',
-                                    height: '340px' // Forcing height to allow details to show if widget supports it
-                                }}
                             >SINOP HOJE</a>
                         </div>
-                        {/* Fallback Manual Details if widget fails to show them in 'Current' mode */}
-                        <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
-                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Vento</span>
-                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- km/h</span>
-                            </div>
-                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
-                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Umidade</span>
-                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- %</span>
-                            </div>
-                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
-                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Pressão</span>
-                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- mb</span>
-                            </div>
-                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
-                                <span style={{ display: 'block', fontSize: '12px', color: '#94a3b8' }}>Sensação</span>
-                                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>-- °C</span>
-                            </div>
+
+                        {/* REAL DATA BLOCKS */}
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '12px'
+                        }}>
+                            <DetailBlock
+                                icon="🌬️"
+                                label="Vento"
+                                value={realData ? `${realData.wind_speed_10m} km/h` : '--'}
+                            />
+                            <DetailBlock
+                                icon="💧"
+                                label="Umidade"
+                                value={realData ? `${realData.relative_humidity_2m}%` : '--'}
+                            />
+                            <DetailBlock
+                                icon="🌡️"
+                                label="Sensação"
+                                value={realData ? `${realData.apparent_temperature}°C` : '--'}
+                            />
+                            <DetailBlock
+                                icon="⏲️"
+                                label="Pressão"
+                                value={realData ? `${realData.surface_pressure} hPa` : '--'}
+                            />
                         </div>
-                        <p style={{ fontSize: '11px', color: '#64748b', marginTop: '10px', textAlign: 'center' }}>
-                            *Para ver detalhes exatos, clique no widget acima.
-                        </p>
                     </div>
 
-                    {/* Card: PREVISÃO */}
+                    {/* Card: PREVISÃO SEMANAL */}
                     <div style={{
                         background: 'rgba(30, 41, 59, 0.7)',
                         backdropFilter: 'blur(20px)',
                         borderRadius: '24px',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
-                        padding: '24px',
+                        padding: '30px',
                         boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
                         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                         animation: 'fadeInUp 0.8s ease-out'
@@ -209,15 +226,16 @@ export default function WeatherSection() {
                             paddingBottom: '15px'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '24px', background: 'rgba(56, 189, 248, 0.2)', padding: '8px', borderRadius: '12px' }}>📅</span>
+                                <span style={{ fontSize: '24px', background: 'rgba(56, 189, 248, 0.2)', padding: '10px', borderRadius: '12px' }}>📅</span>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>Próximos Dias</h3>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Planejamento Semanal</span>
+                                    <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#fff' }}>Previsão 7 Dias</h3>
+                                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>Tendência Semanal</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                        {/* Widget de Previsão */}
+                        <div style={{ borderRadius: '16px', overflow: 'hidden', height: '100%' }}>
                             <a
                                 className="weatherwidget-io"
                                 href="https://forecast7.com/pt/n11d86n55d51/sinop/"
@@ -231,6 +249,10 @@ export default function WeatherSection() {
                                 data-basecolor="rgba(0,0,0,0)"
                                 data-accent="#38bdf8"
                                 data-textcolor="#e2e8f0"
+                                style={{
+                                    height: '350px', // Altura fixa para preencher o card visualmente
+                                    display: 'block'
+                                }}
                             >SINOP FUTURO</a>
                         </div>
                     </div>
@@ -249,6 +271,34 @@ export default function WeatherSection() {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
+        </div>
+    );
+}
+
+// Componente auxiliar para os blocos de detalhes
+function DetailBlock({ icon, label, value }) {
+    return (
+        <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            padding: '16px',
+            borderRadius: '16px',
+            textAlign: 'center',
+            border: '1px solid rgba(255,255,255,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'background 0.2s',
+            cursor: 'default'
+        }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+        >
+            <span style={{ fontSize: '24px' }}>{icon}</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</span>
+                <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{value}</span>
+            </div>
         </div>
     );
 }
