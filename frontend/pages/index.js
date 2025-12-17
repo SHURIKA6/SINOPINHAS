@@ -34,6 +34,7 @@ const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
 const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
+const CurrencyConverter = dynamic(() => import('../components/CurrencyConverter'), { ssr: false });
 
 
 
@@ -354,6 +355,10 @@ export default function Home({ initialVideo }) {
 
           {activeTab === 'weather' && (
             <WeatherSection />
+          )}
+
+          {activeTab === 'currency' && (
+            <CurrencyConverter />
           )}
 
           {activeTab === 'inbox' && user && (
