@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getDeviceFingerprint } from '../lib/fingerprint';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandodasilvaribeiro.workers.dev';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
 const api = axios.create({
     baseURL: API

@@ -32,15 +32,16 @@ const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandodasilvaribeiro.workers.dev';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
+/*
 export async function getServerSideProps(context) {
   const { v } = context.query;
   let initialVideo = null;
 
   if (v) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandodasilvaribeiro.workers.dev'; // Fixed fallback
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
       const res = await fetch(`${apiUrl}/api/videos/${v}`);
       if (res.ok) {
         initialVideo = await res.json();
@@ -56,6 +57,7 @@ export async function getServerSideProps(context) {
     }
   };
 }
+*/
 
 export default function Home({ initialVideo }) {
   const [mounted, setMounted] = useState(false);
