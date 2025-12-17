@@ -34,12 +34,7 @@ const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed')); // SSR Enabled
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed')); // SSR Enabled
 
-/*
-export async function getServerSideProps(context) {
-  // Desativado para evitar erro 500 no Vercel
-  return { props: { initialVideo: null } };
-}
-*/
+
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
