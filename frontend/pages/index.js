@@ -89,6 +89,7 @@ export default function Home({ initialVideo }) {
   const {
     user,
     isAdmin,
+    adminPassword,
     unreadCount,
     handleAuthSuccess,
     handleAdminAuthSuccess,
@@ -102,7 +103,6 @@ export default function Home({ initialVideo }) {
 
   // States moved up to prevent TDZ (ReferenceError: ne)
   const [newComment, setNewComment] = useState("");
-  const adminPassword = "";
 
   /* Hook de Comentários */
   const {

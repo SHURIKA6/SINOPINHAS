@@ -5,6 +5,7 @@ export function useAuth(showToast) {
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [adminPassword, setAdminPassword] = useState('');
 
     // Initial check
     useEffect(() => {
@@ -52,6 +53,7 @@ export function useAuth(showToast) {
     const handleAdminAuthSuccess = (password) => {
         // We do NOT save password to localStorage anymore.
         setIsAdmin(true);
+        setAdminPassword(password);
         // Token is already saved by api.loginAdmin
         showToast('Modo Admin Ativado', 'success');
     };
@@ -66,6 +68,7 @@ export function useAuth(showToast) {
 
     const logoutAdmin = () => {
         setIsAdmin(false);
+        setAdminPassword('');
         // If we strictly rely on one token, logoutAdmin implies reverting to a User Token?
         // Or just stripping Admin privileges valid for UI?
         // Ideally, we should re-login as user if they were user.
@@ -77,6 +80,7 @@ export function useAuth(showToast) {
     return {
         user,
         isAdmin,
+        adminPassword,
         unreadCount,
         handleAuthSuccess,
         handleAdminAuthSuccess,
