@@ -2,25 +2,17 @@ import React, { useEffect } from 'react';
 
 export default function WeatherSection() {
     useEffect(() => {
-        // Function to reload the widget script
         const loadWidget = () => {
             const id = 'weatherwidget-io-js';
             const existingScript = document.getElementById(id);
+            if (existingScript) existingScript.remove();
 
-            // Remove existing script if it exists to force reload
-            if (existingScript) {
-                existingScript.remove();
-            }
-
-            // Create and append new script
             const script = document.createElement('script');
             script.id = id;
             script.src = 'https://weatherwidget.io/js/widget.min.js';
             script.async = true;
             document.body.appendChild(script);
         };
-
-        // Small delay to ensure DOM is ready for double widget injection
         setTimeout(loadWidget, 100);
     }, []);
 
@@ -31,157 +23,223 @@ export default function WeatherSection() {
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
-            padding: '40px 20px',
+            padding: '60px 20px',
             color: '#fff',
             position: 'relative',
+            background: 'transparent',
+            minHeight: '80vh',
+            fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
         }}>
-            {/* Background Decorativo */}
+
+            {/* Background com Animação Suave - Efeito Aurora */}
             <div style={{
                 position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'radial-gradient(circle at 50% 30%, rgba(141, 106, 255, 0.15) 0%, rgba(0,0,0,0) 70%)',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '100%',
+                height: '100%',
+                maxWidth: '1200px',
+                background: `
+                    radial-gradient(circle at 20% 30%, rgba(141, 106, 255, 0.4) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.3) 0%, transparent 60%)
+                `,
+                filter: 'blur(80px)',
+                zIndex: 0,
                 pointerEvents: 'none',
-                zIndex: 0
+                animation: 'pulseAurora 8s ease-in-out infinite alternate'
             }} />
 
+            {/* Container Principal */}
             <div style={{
                 position: 'relative',
                 zIndex: 1,
                 width: '100%',
-                maxWidth: '800px',
-                background: 'rgba(33, 33, 33, 0.6)',
-                backdropFilter: 'blur(12px)',
-                borderRadius: '24px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '40px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                maxWidth: '900px',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                gap: '40px'
             }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '30px'
-                }}>
-                    <span style={{ fontSize: '32px' }}>🌦️</span>
+
+                {/* Header Section */}
+                <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                     <h2 style={{
-                        margin: 0,
-                        fontSize: '32px',
+                        fontSize: '48px',
                         fontWeight: '800',
-                        background: 'linear-gradient(135deg, #fff 0%, #a5b4fc 100%)',
+                        marginBottom: '10px',
+                        background: 'linear-gradient(to right, #ffffff, #c4b5fd)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        letterSpacing: '-0.5px'
+                        textShadow: '0 4px 20px rgba(141, 106, 255, 0.3)'
                     }}>
-                        Previsão do Tempo
+                        Sinop Weather
                     </h2>
-                </div>
-
-                {/* HOJE (Current) */}
-                <div style={{
-                    width: '100%',
-                    marginBottom: '20px'
-                }}>
-                    <div style={{
-                        marginBottom: '10px',
+                    <p style={{
                         fontSize: '18px',
-                        fontWeight: '600',
-                        color: '#fcd34d',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
+                        color: '#94a3b8',
+                        fontWeight: '500'
                     }}>
-                        <span>☀️</span> Hoje em Sinop
-                    </div>
-                    <div style={{
-                        width: '100%',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                        background: '#1e293b'
-                    }}>
-                        <a
-                            className="weatherwidget-io"
-                            href="https://forecast7.com/pt/n11d86n55d51/sinop/"
-                            data-label_1="SINOP"
-                            data-label_2="AGORA"
-                            data-font="Roboto"
-                            data-icons="Climacons Animated"
-                            data-mode="Current"
-                            data-days="3"
-                            data-theme="weather_one"
-                            data-basecolor="#1e293b"
-                            data-accent="#8d6aff"
-                            data-textcolor="#ffffff"
-                            data-highcolor="#fcd34d"
-                            data-lowcolor="#94a3b8"
-                        >
-                            SINOP HOJE
-                        </a>
-                    </div>
+                        Monitoramento climático em tempo real
+                    </p>
                 </div>
 
-                {/* PROXIMOS DIAS (List) */}
+                {/* Grid de Cards */}
                 <div style={{
-                    width: '100%',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '24px',
                 }}>
+
+                    {/* Card: HOJE */}
                     <div style={{
-                        marginBottom: '10px',
-                        fontSize: '18px',
-                        fontWeight: '600',
-                        color: '#60a5fa',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}>
-                        <span>📅</span> Próximos 7 Dias
+                        background: 'rgba(30, 41, 59, 0.7)',
+                        backdropFilter: 'blur(20px)',
+                        borderRadius: '24px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        padding: '24px',
+                        boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        animation: 'fadeInUp 0.6s ease-out'
+                    }}
+                        onMouseOver={e => {
+                            e.currentTarget.style.transform = 'translateY(-5px)';
+                            e.currentTarget.style.boxShadow = '0 25px 60px -12px rgba(141, 106, 255, 0.25)';
+                        }}
+                        onMouseOut={e => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 20px 50px -12px rgba(0, 0, 0, 0.5)';
+                        }}
+                    >
+                        <div style={{
+                            marginBottom: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            paddingBottom: '15px'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '24px', background: 'rgba(252, 211, 77, 0.2)', padding: '8px', borderRadius: '12px' }}>☀️</span>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>Agora</h3>
+                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Tempo Real</span>
+                                </div>
+                            </div>
+                            <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold', background: 'rgba(74, 222, 128, 0.1)', padding: '4px 10px', borderRadius: '20px' }}>• Online</span>
+                        </div>
+
+                        <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                            <a
+                                className="weatherwidget-io"
+                                href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                                data-label_1="SINOP"
+                                data-label_2="AGORA"
+                                data-font="Roboto"
+                                data-icons="Climacons Animated"
+                                data-mode="Current"
+                                data-theme="weather_one"
+                                data-basecolor="rgba(0,0,0,0)"
+                                data-accent="#c4b5fd"
+                                data-textcolor="#ffffff"
+                                data-highcolor="#fcd34d"
+                                data-lowcolor="#94a3b8"
+                            >SINOP HOJE</a>
+                        </div>
                     </div>
+
+                    {/* Card: PREVISÃO */}
                     <div style={{
-                        width: '100%',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                        background: '#1e293b'
-                    }}>
-                        <a
-                            className="weatherwidget-io"
-                            href="https://forecast7.com/pt/n11d86n55d51/sinop/"
-                            data-label_1="SINOP"
-                            data-label_2="FUTURO"
-                            data-font="Roboto"
-                            data-icons="Climacons Animated"
-                            data-mode="Forecast"
-                            data-days="7"
-                            data-theme="weather_one"
-                            data-basecolor="#0f172a"
-                            data-accent="#8d6aff"
-                            data-textcolor="#e2e8f0"
-                        >
-                            SINOP FUTURO
-                        </a>
+                        background: 'rgba(30, 41, 59, 0.7)',
+                        backdropFilter: 'blur(20px)',
+                        borderRadius: '24px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        padding: '24px',
+                        boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        animation: 'fadeInUp 0.8s ease-out'
+                    }}
+                        onMouseOver={e => {
+                            e.currentTarget.style.transform = 'translateY(-5px)';
+                            e.currentTarget.style.boxShadow = '0 25px 60px -12px rgba(56, 189, 248, 0.25)';
+                        }}
+                        onMouseOut={e => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 20px 50px -12px rgba(0, 0, 0, 0.5)';
+                        }}
+                    >
+                        <div style={{
+                            marginBottom: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            paddingBottom: '15px'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '24px', background: 'rgba(56, 189, 248, 0.2)', padding: '8px', borderRadius: '12px' }}>📅</span>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>Próximos Dias</h3>
+                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>Planejamento Semanal</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                            <a
+                                className="weatherwidget-io"
+                                href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                                data-label_1="SINOP"
+                                data-label_2="7 DIAS"
+                                data-font="Roboto"
+                                data-icons="Climacons Animated"
+                                data-mode="Forecast"
+                                data-days="7"
+                                data-theme="weather_one"
+                                data-basecolor="rgba(0,0,0,0)"
+                                data-accent="#38bdf8"
+                                data-textcolor="#e2e8f0"
+                            >SINOP FUTURO</a>
+                        </div>
                     </div>
+
                 </div>
 
+                {/* Footer Decorativo */}
                 <div style={{
-                    marginTop: '30px',
+                    textAlign: 'center',
+                    marginTop: '20px',
+                    color: '#64748b',
+                    fontSize: '14px',
                     display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '20px',
-                    fontSize: '13px',
-                    color: '#64748b'
+                    padding: '20px',
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: '50px',
+                    width: 'fit-content',
+                    alignSelf: 'center',
+                    backdropFilter: 'blur(5px)'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>📍</span> Sinop - MT
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>📡</span> Dados via Forecast7
-                    </div>
+                    <span>🌱 Agricultura</span>
+                    <span>•</span>
+                    <span>💧 Umidade</span>
+                    <span>•</span>
+                    <span>🌬️ Ventos</span>
                 </div>
+
             </div>
+
+            <style jsx>{`
+                @keyframes pulseAurora {
+                    0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); }
+                    100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+                }
+                @keyframes fadeInUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 }
