@@ -38,6 +38,22 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     }
   };
 
+  const markMessagesAsRead = async () => {
+    if (!selectedUser || !user) return;
+    try {
+      await api.post(`/api/conversations/${selectedUser.id}/read`, { userId: user.id });
+      if (onMessageRead) onMessageRead(); // Atualiza contador global
+    } catch (err) {
+      console.error("Erro ao marcar como lido:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedUser) {
+      markMessagesAsRead();
+    }
+  }, [selectedUser]);
+
   // --- Carregamento de Mensagens ---
   const loadMessages = async () => {
     if (!user) return;
@@ -50,7 +66,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         res = await api.get(`/api/inbox/${user.id}`);
       }
       setMessages(res.data);
-      if (onMessageRead) onMessageRead();
+      // Removed onMessageRead call from here to avoid weird loops or premature clears
     } catch (err) {
       console.error('Erro ao carregar mensagens:', err);
     } finally {

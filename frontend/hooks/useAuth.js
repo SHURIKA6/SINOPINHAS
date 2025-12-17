@@ -92,6 +92,7 @@ export function useAuth(showToast) {
         handleAuthSuccess,
         handleAdminAuthSuccess,
         logout,
-        logoutAdmin
+        logoutAdmin,
+        loadNotifications // Exporting this so components can refresh counters
     };
 }

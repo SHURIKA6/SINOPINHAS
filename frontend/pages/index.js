@@ -95,7 +95,8 @@ export default function Home({ initialVideo }) {
     handleAuthSuccess,
     handleAdminAuthSuccess,
     logout,
-    logoutAdmin
+    logoutAdmin,
+    loadNotifications // Get the refresher function
   } = useAuth(showToast);
 
   const [activeTab, setActiveTab] = useState('videos');
@@ -370,6 +371,7 @@ export default function Home({ initialVideo }) {
               API={API}
               isAdmin={isAdmin}
               adminPassword={adminPassword}
+              onMessageRead={() => loadNotifications(user.id)}
             />
           )}
 
