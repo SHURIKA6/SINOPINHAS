@@ -38,6 +38,7 @@ const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr:
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
+/*
 export async function getServerSideProps(context) {
   const { v } = context.query;
   let initialVideo = null;
@@ -60,6 +61,7 @@ export async function getServerSideProps(context) {
     }
   };
 }
+*/
 
 export default function Home({ initialVideo }) {
   const [mounted, setMounted] = useState(false);
