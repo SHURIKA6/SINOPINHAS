@@ -167,28 +167,34 @@ export default function Header({
             </header>
 
             <div style={{ background: '#212121', padding: '0 24px', display: 'flex', gap: 24, borderBottom: '2px solid #303030', overflowX: 'auto' }}>
-                {['videos', 'photos', 'weather', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+                {['videos', 'photos', 'news', 'weather', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                        padding: '14px 20px', background: 'none', border: 'none',
+                        padding: '14px 18px', background: 'none', border: 'none',
                         borderBottom: activeTab === tab ? '3px solid #8d6aff' : '3px solid transparent',
                         color: activeTab === tab ? '#fff' : '#aaa', fontSize: 16,
                         fontWeight: activeTab === tab ? 600 : 400, cursor: 'pointer',
                         transition: 'all 0.3s', position: 'relative', whiteSpace: 'nowrap'
                     }}>
-                        {tab === 'videos' ? 'Vídeos' : tab === 'photos' ? 'Fotos' : tab === 'weather' ? 'Clima ⛅' : tab === 'upload' ? 'Upload' : tab === 'admin' ? 'Admin' : tab === 'inbox' ? (
-                            <>
-                                Mensagens
-                                {unreadCount > 0 && (
-                                    <span style={{
-                                        position: 'absolute', top: 8, right: 8,
-                                        background: '#ef4444', borderRadius: '50%',
-                                        width: 20, height: 20, display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center',
-                                        fontSize: 11, fontWeight: 'bold'
-                                    }}>{unreadCount}</span>
-                                )}
-                            </>
-                        ) : 'SAFADEZA'}
+                        {tab === 'videos' ? 'Vídeos' :
+                            tab === 'photos' ? 'Fotos' :
+                                tab === 'news' ? 'Notícias 📰' :
+                                    tab === 'weather' ? 'Clima ⛅' :
+                                        tab === 'upload' ? 'Upload' :
+                                            tab === 'admin' ? 'Admin' :
+                                                tab === 'inbox' ? (
+                                                    <>
+                                                        Mensagens
+                                                        {unreadCount > 0 && (
+                                                            <span style={{
+                                                                position: 'absolute', top: 8, right: 8,
+                                                                background: '#ef4444', borderRadius: '50%',
+                                                                width: 18, height: 18, display: 'flex',
+                                                                alignItems: 'center', justifyContent: 'center',
+                                                                fontSize: 11, fontWeight: 'bold'
+                                                            }}>{unreadCount}</span>
+                                                        )}
+                                                    </>
+                                                ) : 'SAFADEZA'}
                     </button>
                 ))}
             </div>

@@ -7,6 +7,7 @@ import videoRoutes from './src/routes/video.js';
 import socialRoutes from './src/routes/social.js';
 import debugRoutes from './src/routes/debug.js';
 import healthRoutes from './src/routes/health.js';
+import newsRoutes from './src/routes/news.js';
 
 const app = new Hono();
 
@@ -17,6 +18,7 @@ app.route('/api', authRoutes);
 app.route('/api', adminRoutes);
 app.route('/api', videoRoutes);
 app.route('/api', socialRoutes);
+app.route('/api', newsRoutes); // News Route
 app.route('/api/debug', debugRoutes);
 app.route('/api/health', healthRoutes);
 

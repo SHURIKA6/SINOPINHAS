@@ -126,6 +126,10 @@ export const updateUserProfile = (userId, updates) => {
     return api.put(`/api/users/${userId}`, updates);
 };
 
+// --- News ---
+export const fetchNews = () => api.get('/api/news').then(res => res.data);
+
+// --- Comments ---
 export const fetchComments = async (videoId) => {
     const res = await api.get(`/api/comments/${videoId}`);
     return res.data;
