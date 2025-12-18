@@ -40,12 +40,11 @@ api.interceptors.response.use(
         // Detecção de falhas críticas ou erros de CORS/Banco
         // Só substitui se o backend não enviou um erro tratado
         if (backendError) {
-            // Backend enviou erro estruturado
+            // Se for erro interno, mostra mensagem genérica
             if (backendError === 'INTERNAL_ERROR') {
                 customMessage = "O servidor encontrou um erro interno. Tente novamente mais tarde.";
-            } else {
-                customMessage = backendError;
             }
+            // Caso contrário, tenta manter a mensagem descritiva que já veio do backend
         }
 
         // Erros de Rede ou Crash do Servidor
