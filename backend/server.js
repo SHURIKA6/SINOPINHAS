@@ -14,6 +14,7 @@ import { initDatabase } from './src/db/index.js';
 const app = new Hono();
 
 // Aplicar Middleware de CORS Centralizado
+app.use('*', corsMiddleware);
 
 // Montagem das Rotas do Sistema
 app.route('/api', authRoutes);

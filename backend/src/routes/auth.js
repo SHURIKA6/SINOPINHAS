@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { blockVPN } from '../middleware/vpn.js';
 import { validate } from '../middleware/validate.js';
+import { authMiddleware, requireAuth } from '../middleware/auth.js';
 import * as schemas from '../schemas/auth.js';
 import * as authController from '../controllers/authController.js';
 import { limiter } from '../middleware/rateLimit.js';
@@ -19,6 +20,6 @@ app.post('/login',
     validate(schemas.loginSchema),
     authController.login
 );
-app.put('/users/:id', validate(schemas.updateProfileSchema), authController.updateProfile);
+app.put('/users/:id', authMiddleware, requireAuth, validate(schemas.updateProfileSchema), authController.updateProfile);
 
 export default app;

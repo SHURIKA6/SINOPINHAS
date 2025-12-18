@@ -113,8 +113,16 @@ export const login = async (c) => {
 export const updateProfile = async (c) => {
     const userId = c.req.param("id");
     const env = c.env;
+    const payload = c.get('jwtPayload');
+
     try {
-        const { password, currentPassword, avatar, bio } = await c.req.json();
+        // Verificar se o usuário autenticado é o dono do perfil ou um admin
+        if (!payload || (payload.id != userId && payload.role !== 'admin')) {
+            return createErrorResponse(c, "FORBIDDEN", "Você não tem permissão para editar este perfil.", 403);
+        }
+
+        const body = await c.req.json();
+        const { password, currentPassword, avatar, bio } = body;
 
         // Se estiver tentando mudar a senha, precisamos validar a senha atual
         if (password) {
