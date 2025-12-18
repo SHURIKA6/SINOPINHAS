@@ -227,9 +227,9 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS - A Rede Social oficial de Sinop'}</title>
+        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS by SHURA'}</title>
         {/* eu amo muito a anna julia assinado _Riad777 */}
-        <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista aos melhores vídeos de Sinop no SINOPINHAS! Conteúdo local, clima, notícias e muito mais."} />
+        <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista a videos que pessoas de Sinop gostam! Conteúdo local, clima, notícias e muito mais."} />
 
         {/* Metadados Open Graph / Redes Sociais */}
         <meta property="og:type" content="video.other" />
