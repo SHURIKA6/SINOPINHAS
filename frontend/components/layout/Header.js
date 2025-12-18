@@ -192,7 +192,7 @@ export default function Header({
 
 
             <nav className="tab-container">
-                {['videos', 'photos', 'upload', 'news', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+                {['videos', 'photos', 'upload', 'news', 'lugares', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -201,17 +201,18 @@ export default function Header({
                         {tab === 'videos' ? '🎬 Vídeos' :
                             tab === 'photos' ? '📷 Fotos' :
                                 tab === 'news' ? '📰 Notícias' :
-                                    tab === 'weather' ? '⛅ Clima' :
-                                        tab === 'upload' ? '📤 Upload' :
-                                            tab === 'admin' ? '⚙️ Admin' :
-                                                tab === 'inbox' ? (
-                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        💬 Mensagens
-                                                        {unreadCount > 0 && (
-                                                            <span className="badge">{unreadCount}</span>
-                                                        )}
-                                                    </span>
-                                                ) : '🔒 Secreto'}
+                                    tab === 'lugares' ? '📍 Lugares' :
+                                        tab === 'weather' ? '⛅ Clima' :
+                                            tab === 'upload' ? '📤 Upload' :
+                                                tab === 'admin' ? '⚙️ Admin' :
+                                                    tab === 'inbox' ? (
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            💬 Mensagens
+                                                            {unreadCount > 0 && (
+                                                                <span className="badge">{unreadCount}</span>
+                                                            )}
+                                                        </span>
+                                                    ) : '🔒 Secreto'}
                     </button>
                 ))}
             </nav>

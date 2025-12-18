@@ -19,6 +19,7 @@ const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: fal
 const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
 const NewsFeed = dynamic(() => import('../components/feed/NewsFeed'), { ssr: false });
 const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
+const PlacesSection = dynamic(() => import('../components/PlacesSection'), { ssr: false });
 
 import {
   logTermsAcceptance,
@@ -233,6 +234,7 @@ export default function Home({ initialVideo }) {
           {activeTab === 'photos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="photo" />}
           {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} />}
           {activeTab === 'news' && <NewsFeed />}
+          {activeTab === 'lugares' && <PlacesSection />}
           {activeTab === 'upload' && <UploadSection user={user} setShowAuth={setShowAuth} showToast={showToast} setActiveTab={setActiveTab} />}
           {activeTab === 'weather' && <WeatherSection />}
           {activeTab === 'inbox' && user && <Inbox user={user} API={API} isAdmin={isAdmin} adminPassword={adminPassword} onMessageRead={() => loadNotifications(user.id)} />}

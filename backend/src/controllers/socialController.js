@@ -232,11 +232,53 @@ export const sendMessage = async (c) => {
                     to_id INTEGER NOT NULL,
                     msg TEXT NOT NULL,
                     is_admin BOOLEAN DEFAULT FALSE,
-                    read BOOLEAN DEFAULT FALSE,
+                    is_read BOOLEAN DEFAULT FALSE,
                     created_at TIMESTAMP DEFAULT NOW()
                 )
              `, [], env);
             return createErrorResponse(c, "TABLE_CREATED", "Tabela criada. Tente novamente.", 500);
+        }
+        throw err;
+    }
+};
+
+// Marcar como lido
+export const markAsRead = async (c) => {
+    const fromId = c.req.param("id");
+    const env = c.env;
+    try {
+        const { userId } = await c.req.json();
+        await queryDB(
+            "UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2 AND is_read = FALSE",
+            [fromId, userId],
+            env
+        );
+        return createResponse(c, { success: true });
+    } catch (err) {
+        // Tabela não existe
+        if (err.code === '42P01') {
+            await queryDB(`
+                CREATE TABLE IF NOT EXISTS messages (
+                    id SERIAL PRIMARY KEY,
+                    from_id INTEGER NOT NULL,
+                    to_id INTEGER NOT NULL,
+                    msg TEXT NOT NULL,
+                    is_admin BOOLEAN DEFAULT FALSE,
+                    is_read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+             `, [], env);
+            return createResponse(c, { success: true, repaired: true });
+        }
+        // Coluna 'is_read' não existe (pode estar como 'read')
+        if (err.code === '42703') {
+            try {
+                await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE", [], env);
+                await queryDB("UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2", [fromId, userId], env);
+                return createResponse(c, { success: true, repaired_column: true });
+            } catch (alterErr) {
+                return createErrorResponse(c, "DB_ERROR", "Falha ao atualizar esquema de mensagens", 500);
+            }
         }
         throw err;
     }
