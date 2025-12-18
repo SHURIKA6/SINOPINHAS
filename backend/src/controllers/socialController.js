@@ -3,7 +3,7 @@ import { logAudit } from '../middleware/audit.js';
 import { sanitize } from '../utils/sanitize.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
-// --- Interações Sociais (Curtidas, Visualizações) ---
+// Curtir vídeo
 export const likeVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -31,9 +31,7 @@ export const likeVideo = async (c) => {
 
         return createResponse(c, { success: true });
     } catch (err) {
-        // Auto-Repair Table: likes (42P01 = Undefined Table)
         if (err.code === '42P01') {
-            console.log("⚠️ Tabela 'likes' inexistente. Criando agora...");
             await queryDB(`
                 CREATE TABLE IF NOT EXISTS likes (
                     id SERIAL PRIMARY KEY,
@@ -45,17 +43,15 @@ export const likeVideo = async (c) => {
             `, [], env);
 
             if (userId) {
-                // Retry operation
                 await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
                 return createResponse(c, { success: true, repaired: true });
             }
         }
-
-        console.error("❌ Erro ao curtir vídeo:", err);
         throw err;
     }
 };
 
+// Visualizar vídeo
 export const viewVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -68,9 +64,7 @@ export const viewVideo = async (c) => {
         await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
         return createResponse(c, { success: true });
     } catch (err) {
-        // Auto-Repair Table: views
         if (err.code === '42P01') {
-            console.log("⚠️ Tabela 'views' inexistente. Criando agora...");
             await queryDB(`
                 CREATE TABLE IF NOT EXISTS views (
                     id SERIAL PRIMARY KEY,
@@ -85,19 +79,15 @@ export const viewVideo = async (c) => {
                 return createResponse(c, { success: true, repaired: true });
             }
         }
-
-        console.error("❌ Erro ao registrar view:", err);
         throw err;
     }
 };
 
-// --- Seção de Comentários ---
+// Postar comentário
 export const postComment = async (c) => {
     const env = c.env;
     try {
         const { video_id, user_id, comment } = await c.req.json();
-
-        // Prevent XSS
         const cleanComment = sanitize(comment);
 
         if (!cleanComment || !cleanComment.trim()) {
@@ -122,7 +112,6 @@ export const postComment = async (c) => {
 
         return createResponse(c, { success: true });
     } catch (err) {
-        // Auto-Repair Table
         if (err.code === '42P01') {
             await queryDB(`
                 CREATE TABLE IF NOT EXISTS comments (
@@ -140,12 +129,11 @@ export const postComment = async (c) => {
             );
             return createResponse(c, { success: true, repaired: true });
         }
-
-        console.error("❌ Erro ao adicionar comentário:", err);
         throw err;
     }
 };
 
+// Buscar comentários
 export const getComments = async (c) => {
     const videoId = c.req.param("videoId");
     const env = c.env;
@@ -159,17 +147,14 @@ export const getComments = async (c) => {
             [videoId],
             env
         );
-
-        console.log(`✅ Listados ${rows.length} comentários do vídeo ${videoId}`);
         return createResponse(c, rows);
     } catch (err) {
         if (err.code === '42P01') return createResponse(c, []);
-
-        console.error("❌ Erro ao buscar comentários:", err);
         throw err;
     }
 };
 
+// Deletar comentário
 export const deleteComment = async (c) => {
     const commentId = c.req.param("id");
     const env = c.env;
@@ -179,22 +164,19 @@ export const deleteComment = async (c) => {
 
         if (!isAdmin) {
             const { rows } = await queryDB("SELECT user_id FROM comments WHERE id = $1", [commentId], env);
-
             if (rows.length === 0 || rows[0].user_id !== user_id) {
                 return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
             }
         }
 
         await queryDB("DELETE FROM comments WHERE id = $1", [commentId], env);
-
         return createResponse(c, { success: true });
     } catch (err) {
-        console.error("❌ Erro ao deletar comentário:", err);
         throw err;
     }
 };
 
-// --- Notificações e Mensagens ---
+// Buscar notificações
 export const getNotifications = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
@@ -206,14 +188,13 @@ export const getNotifications = async (c) => {
             [userId],
             env
         );
-
         return createResponse(c, rows);
     } catch (err) {
-        console.error("❌ Erro ao buscar notificações:", err);
         throw err;
     }
 };
 
+// Listar usuários
 export const listAllUsers = async (c) => {
     const env = c.env;
     try {
@@ -222,37 +203,28 @@ export const listAllUsers = async (c) => {
             [],
             env
         );
-
         return createResponse(c, rows);
     } catch (err) {
-        console.error("❌ Erro ao listar usuários:", err);
-        // Auto-recovery: Return empty list if something is wrong (e.g. missing column)
         return createResponse(c, []);
     }
 };
 
+// Enviar mensagem
 export const sendMessage = async (c) => {
     const env = c.env;
     try {
         const { from_id, to_id, msg, admin_password, is_admin } = await c.req.json();
         const cleanMsg = sanitize(msg);
-
-        let finalIsAdmin = false;
-        if (is_admin && admin_password === env.ADMIN_PASSWORD) {
-            finalIsAdmin = true;
-        }
+        let finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD);
 
         await queryDB(
             "INSERT INTO messages (from_id, to_id, msg, is_admin) VALUES ($1, $2, $3, $4)",
             [from_id, to_id, cleanMsg, finalIsAdmin],
             env
         );
-
         return createResponse(c, { success: true });
     } catch (err) {
-        // Auto-Repair: ensure messages table exists
         if (err.code === '42P01') {
-            console.log("⚠️ Tabela 'messages' inexistente. Tentando criar...");
             await queryDB(`
                 CREATE TABLE IF NOT EXISTS messages (
                     id SERIAL PRIMARY KEY,
@@ -264,15 +236,13 @@ export const sendMessage = async (c) => {
                     created_at TIMESTAMP DEFAULT NOW()
                 )
              `, [], env);
-            // Retry? For now, let user retry.
             return createErrorResponse(c, "TABLE_CREATED", "Tabela criada. Tente novamente.", 500);
         }
-
-        console.error("❌ Erro ao enviar mensagem:", err);
         throw err;
     }
 };
 
+// Buscar mensagens (Privado)
 export const getInbox = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
@@ -291,24 +261,17 @@ export const getInbox = async (c) => {
             [userId],
             env
         );
-
         return createResponse(c, rows);
     } catch (err) {
-        // Auto-Recovery
-        if (err.code === '42P01') {
-            console.log("⚠️ Tabela 'messages' inexistente. Retornando vazio.");
-            return createResponse(c, []);
-        }
-        console.error("❌ Erro ao buscar mensagens:", err);
-        return createResponse(c, []); // Fail safe
+        if (err.code === '42P01') return createResponse(c, []);
+        return createResponse(c, []);
     }
 };
 
+// Buscar todas as mensagens (Admin)
 export const getAdminInbox = async (c) => {
     const env = c.env;
     try {
-        // Auth handled by middleware
-
         const { rows } = await queryDB(
             `SELECT m.*, 
         uf.username as from_username, uf.avatar as from_avatar,
@@ -316,25 +279,23 @@ export const getAdminInbox = async (c) => {
        FROM messages m
        LEFT JOIN users uf ON m.from_id = uf.id
        LEFT JOIN users ut ON m.to_id = ut.id
-       ORDER BY m.created_at DESC LIMIT 100`, /* Show last 100 messages for admin */
+       ORDER BY m.created_at DESC LIMIT 100`,
             [],
             env
         );
-
         return createResponse(c, rows);
     } catch (err) {
-        console.error("❌ Erro ao buscar todas as mensagens:", err);
-        return createResponse(c, []); // Fail safe
+        return createResponse(c, []);
     }
 };
 
+// Log de termos
 export const logTerms = async (c) => {
     try {
         const body = await c.req.json();
         await logAudit(null, "TERMS_ACCEPTED", body, c);
         return createResponse(c, { success: true });
     } catch (err) {
-        console.error("❌ Erro ao registrar termos:", err);
         throw err;
     }
 };

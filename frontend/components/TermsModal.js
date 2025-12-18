@@ -3,11 +3,19 @@ import { useState } from 'react';
 export default function TermsModal({ onAccept, onDecline }) {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [agreedToAll, setAgreedToAll] = useState(false);
+  const [readPercentage, setReadPercentage] = useState(0);
 
   const handleScroll = (e) => {
     const element = e.target;
-    const bottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 5;
-    if (bottom) {
+
+    // Calculate reading progress
+    const winScroll = element.scrollTop;
+    const height = element.scrollHeight - element.clientHeight;
+    const scrolled = Math.min(100, Math.ceil((winScroll / height) * 100));
+    setReadPercentage(scrolled);
+
+    const bottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 40; // More lenient for mobile
+    if (bottom || scrolled > 98) {
       setHasScrolled(true);
     }
   };
@@ -21,59 +29,106 @@ export default function TermsModal({ onAccept, onDecline }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0,0,0,0.95)',
+      background: 'rgba(0,0,0,0.98)',
       zIndex: 99999,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      overflow: 'auto'
-    }}>
+      padding: '10px',
+      overflow: 'hidden'
+    }} className="modal-overlay">
       <div style={{
         background: 'var(--card-bg)',
-        borderRadius: 16,
-        padding: 32,
+        borderRadius: 20,
+        padding: '24px 20px',
         maxWidth: 750,
         width: '100%',
-        maxHeight: '90vh',
+        maxHeight: '94vh',
         display: 'flex',
         flexDirection: 'column',
         border: '2px solid var(--accent-color)',
-        boxShadow: '0 20px 60px rgba(141, 106, 255, 0.2)',
-        transition: 'background 0.3s ease, border-color 0.3s ease'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        boxShadow: '0 0 40px rgba(141, 106, 255, 0.3)',
+        transition: 'all 0.3s ease',
+        position: 'relative'
+      }} className="modal-container">
+
+        {/* Barra de Progresso de Leitura */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: 6,
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '20px 20px 0 0',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${readPercentage}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #8d6aff, #fe7d45)',
+            transition: 'width 0.2s ease'
+          }} />
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: 16, marginTop: 8 }}>
           <h1 style={{
             margin: 0,
-            fontSize: 32,
-            fontWeight: 700,
+            fontSize: 28,
+            fontWeight: 800,
             background: 'linear-gradient(90deg,#8d6aff,#fe7d45)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            marginBottom: 8
+            marginBottom: 4
           }}>
             SINOPINHAS
           </h1>
-          <h2 style={{ margin: 0, fontSize: 18, color: 'var(--secondary-text)' }}>
-            Termos de Uso, Responsabilidade e Política de Privacidade
+          <h2 style={{ margin: 0, fontSize: 16, color: 'var(--text-color)', fontWeight: 600 }}>
+            Termos e Responsabilidade
           </h2>
-          <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--secondary-text)', opacity: 0.7 }}>
-            Data de última atualização: {new Date().toLocaleDateString('pt-BR')}
-          </p>
+          <div style={{
+            fontSize: 11,
+            color: hasScrolled ? '#10b981' : '#fe7d45',
+            marginTop: 4,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6
+          }}>
+            {hasScrolled ? '✅ LEITURA CONCLUÍDA' : `📖 LEITURA: ${readPercentage}%`}
+          </div>
         </div>
 
         <div
           onScroll={handleScroll}
+          className="scroll-content"
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '0 20px',
+            padding: '0 16px',
             color: 'var(--text-color)',
-            lineHeight: 1.8,
+            lineHeight: 1.6,
             fontSize: 14,
-            marginBottom: 20
+            marginBottom: 16,
+            WebkitOverflowScrolling: 'touch'
           }}
         >
+          {/* Instrução Inicial para Celular */}
+          {!hasScrolled && readPercentage < 10 && (
+            <div style={{
+              background: 'rgba(141, 106, 255, 0.1)',
+              padding: '12px',
+              borderRadius: 8,
+              border: '1px dashed var(--accent-color)',
+              textAlign: 'center',
+              marginBottom: 20
+            }}>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--accent-color)', fontWeight: 600 }}>
+                📱 Role para baixo para ler e habilitar o botão
+              </p>
+            </div>
+          )}
 
           <div style={{ marginBottom: 24, background: 'rgba(239, 68, 68, 0.15)', padding: 16, borderRadius: 8, border: '2px solid #ef4444' }}>
             <h3 style={{ color: '#ff6b6b', fontSize: 18, marginBottom: 12, marginTop: 0 }}>
@@ -414,54 +469,59 @@ export default function TermsModal({ onAccept, onDecline }) {
         </div>
 
         {!hasScrolled && (
-          <p style={{
+          <div style={{
             textAlign: 'center',
             color: '#fbbf24',
-            fontSize: 13,
-            marginTop: 12,
-            marginBottom: 0,
-            animation: 'pulse 2s infinite'
+            fontSize: 14,
+            marginTop: 8,
+            fontWeight: 'bold',
+            animation: 'pulse 1.5s infinite',
+            background: 'rgba(251, 191, 36, 0.1)',
+            padding: '8px',
+            borderRadius: '8px'
           }}>
-            ⬇️ Role até o final do documento
-          </p>
+            ⚠️ Continue lendo para habilitar o botão ({readPercentage}%)
+          </div>
         )}
 
         {hasScrolled && !agreedToAll && (
           <p style={{
             textAlign: 'center',
             color: '#fbbf24',
-            fontSize: 13,
-            marginTop: 12,
-            marginBottom: 0
+            fontSize: 14,
+            marginTop: 8,
+            fontWeight: 'bold'
           }}>
-            ☑️ Marque a caixa de confirmação acima
+            ☑️ Agora marque a caixa de confirmação
           </p>
         )}
       </div>
 
       <style jsx>{`
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(0.98); }
         }
         
         @media (max-width: 768px) {
-          div[style*="maxWidth: 750"] {
-            padding: 20px !important;
-            max-height: 95vh !important;
+          .modal-container {
+            padding: 16px !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
           }
           
-          h1 {
-            font-size: 24px !important;
+          .scroll-content {
+            padding: 0 10px !important;
           }
-          
-          h2 {
-            font-size: 16px !important;
-          }
+
+          h1 { font-size: 22px !important; }
+          h2 { font-size: 14px !important; }
           
           button {
-            min-width: 100% !important;
-            flex: 1 1 100% !important;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
           }
         }
       `}</style>

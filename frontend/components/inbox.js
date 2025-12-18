@@ -11,7 +11,6 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
   const [usersLoading, setUsersLoading] = useState(true);
   const [localUsersList, setLocalUsersList] = useState([]);
 
-  // Estados de Admin
   const [showAdminInbox, setShowAdminInbox] = useState(false);
   const [sendAsAdmin, setSendAsAdmin] = useState(false);
 
@@ -20,8 +19,9 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       loadMessages();
       loadAllUsers();
     }
-  }, [user, showAdminInbox]); // Reload when mode changes
+  }, [user, showAdminInbox]);
 
+  // Carregar lista de usuários
   const loadAllUsers = async () => {
     try {
       setUsersLoading(true);
@@ -31,30 +31,24 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       } else {
         setLocalUsersList(usersList);
       }
-    } catch (err) {
-      console.error('Erro ao carregar usuários:', err);
-    } finally {
-      setUsersLoading(false);
-    }
+    } catch (err) { }
+    finally { setUsersLoading(false); }
   };
 
+  // Marcar como lido
   const markMessagesAsRead = async () => {
     if (!selectedUser || !user) return;
     try {
       await api.post(`/api/conversations/${selectedUser.id}/read`, { userId: user.id });
-      if (onMessageRead) onMessageRead(); // Atualiza contador global
-    } catch (err) {
-      console.error("Erro ao marcar como lido:", err);
-    }
+      if (onMessageRead) onMessageRead();
+    } catch (err) { }
   };
 
   useEffect(() => {
-    if (selectedUser) {
-      markMessagesAsRead();
-    }
+    if (selectedUser) markMessagesAsRead();
   }, [selectedUser]);
 
-  // --- Carregamento de Mensagens ---
+  // Carregar mensagens
   const loadMessages = async () => {
     if (!user) return;
     try {
@@ -66,15 +60,11 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         res = await api.get(`/api/inbox/${user.id}`);
       }
       setMessages(res.data);
-      // Removed onMessageRead call from here to avoid weird loops or premature clears
-    } catch (err) {
-      console.error('Erro ao carregar mensagens:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { }
+    finally { setLoading(false); }
   };
 
-  // --- Envio de Mensagem ---
+  // Enviar mensagem
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedUser) return;
@@ -85,16 +75,11 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         to_id: selectedUser.id,
         msg: newMessage,
         is_admin: sendAsAdmin
-        // removed admin_password
       });
       setNewMessage('');
       await loadMessages();
-    } catch (err) {
-      console.error('Erro ao enviar mensagem:', err);
-    }
+    } catch (err) { }
   };
-
-  // Lógica de Filtragem (Admin vê tudo ou filtra por usuário)
 
   const filteredMessages = selectedUser
     ? messages.filter(m =>
@@ -116,34 +101,14 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     );
   }
 
+  // Interface do Inbox
   return (
     <div style={{ display: 'flex', gap: 20, height: '70vh', flexWrap: 'wrap' }}>
-      {/* Lista de usuários */}
-      <div style={{
-        width: '300px',
-        minWidth: '280px',
-        background: 'var(--card-bg)',
-        borderRadius: 12,
-        padding: 20,
-        overflowY: 'auto',
-        flex: '0 0 300px',
-        border: '1px solid var(--border-color)'
-      }}>
+      <div style={{ width: '300px', minWidth: '280px', background: 'var(--card-bg)', borderRadius: 12, padding: 20, overflowY: 'auto', flex: '0 0 300px', border: '1px solid var(--border-color)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h3 style={{ margin: 0, color: 'var(--text-color)' }}>💬 Conversas</h3>
           {isAdmin && (
-            <button
-              onClick={() => setShowAdminInbox(!showAdminInbox)}
-              style={{
-                fontSize: 10,
-                padding: '4px 8px',
-                background: showAdminInbox ? '#ef4444' : 'var(--input-bg)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 4,
-                color: 'white',
-                cursor: 'pointer'
-              }}
-            >
+            <button onClick={() => setShowAdminInbox(!showAdminInbox)} style={{ fontSize: 10, padding: '4px 8px', background: showAdminInbox ? '#ef4444' : 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 4, color: 'white' }}>
               {showAdminInbox ? 'SAIR ADMIN' : 'ADMIN VIEW'}
             </button>
           )}
@@ -160,58 +125,13 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
           </div>
         ) : (
           usersToShow.map(u => {
-            // Calcular mensagens não lidas deste usuário para mim
-            const unreadCount = messages.filter(m =>
-              m.from_id === u.id &&
-              m.to_id === user.id &&
-              !m.is_read
-            ).length;
-
+            const unreadCount = messages.filter(m => m.from_id === u.id && m.to_id === user.id && !m.is_read).length;
             return (
-              <div
-                key={u.id}
-                onClick={() => setSelectedUser(u)}
-                style={{
-                  padding: 12,
-                  marginBottom: 8,
-                  background: selectedUser?.id === u.id ? 'var(--accent-color)' : 'var(--input-bg)',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  border: selectedUser?.id === u.id && showAdminInbox ? '2px solid #ef4444' : '1px solid var(--border-color)',
-                  position: 'relative'
-                }}
-              >
-                {u.avatar ? (
-                  <img src={u.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={u.username} />
-                ) : (
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold', color: '#fff' }}>
-                    {u.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
+              <div key={u.id} onClick={() => setSelectedUser(u)} style={{ padding: 12, marginBottom: 8, background: selectedUser?.id === u.id ? 'var(--accent-color)' : 'var(--input-bg)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, border: selectedUser?.id === u.id && showAdminInbox ? '2px solid #ef4444' : '1px solid var(--border-color)', position: 'relative' }}>
+                {u.avatar ? <img src={u.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={u.username} /> : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold', color: '#fff' }}> {u.username.charAt(0).toUpperCase()} </div>}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontWeight: 600, color: selectedUser?.id === u.id ? '#fff' : 'var(--text-color)', fontSize: 14 }}>{u.username}</div>
-                  {unreadCount > 0 && (
-                    <div style={{
-                      background: 'var(--accent-color)',
-                      color: '#fff',
-                      borderRadius: '50%',
-                      width: 20,
-                      height: 20,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 11,
-                      fontWeight: 'bold',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-                      border: '1px solid #fff'
-                    }}>
-                      {unreadCount}
-                    </div>
-                  )}
+                  {unreadCount > 0 && <div style={{ background: 'var(--accent-color)', color: '#fff', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'bold', border: '1px solid #fff' }}> {unreadCount} </div>}
                 </div>
               </div>
             );
@@ -219,101 +139,31 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         )}
       </div>
 
-      {/* Área de conversa */}
-      <div style={{
-        flex: 1,
-        minWidth: '300px',
-        background: 'var(--card-bg)',
-        borderRadius: 12,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        border: showAdminInbox ? '2px solid #ef4444' : '1px solid var(--border-color)'
-      }}>
+      <div style={{ flex: 1, minWidth: '300px', background: 'var(--card-bg)', borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden', border: showAdminInbox ? '2px solid #ef4444' : '1px solid var(--border-color)' }}>
         {selectedUser ? (
           <>
-            {/* Header da conversa */}
             <div style={{ padding: 20, borderBottom: '2px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: 12, background: showAdminInbox ? '#2a0000' : 'transparent' }}>
-              {selectedUser.avatar ? (
-                <img src={selectedUser.avatar} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} alt={selectedUser.username} />
-              ) : (
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 'bold', color: '#fff' }}>
-                  {selectedUser.username.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <h3 style={{ margin: 0, color: 'var(--text-color)' }}>{selectedUser.username} {showAdminInbox && <span style={{ fontSize: 12, color: '#ef4444' }}>(Modo Espião)</span>}</h3>
-              </div>
+              {selectedUser.avatar ? <img src={selectedUser.avatar} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} alt={selectedUser.username} /> : <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 'bold', color: '#fff' }}> {selectedUser.username.charAt(0).toUpperCase()} </div>}
+              <div><h3 style={{ margin: 0, color: 'var(--text-color)' }}>{selectedUser.username} {showAdminInbox && <span style={{ fontSize: 12, color: '#ef4444' }}>(Modo Espião)</span>}</h3></div>
             </div>
 
-            {/* Mensagens */}
             <div style={{ flex: 1, padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {loading ? (
-                <div style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ width: 40, height: 40, border: '4px solid var(--border-color)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-                </div>
+                <div style={{ textAlign: 'center', padding: 40 }}><div style={{ width: 40, height: 40, border: '4px solid var(--border-color)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div>
               ) : filteredMessages.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--secondary-text)', marginTop: 40 }}>
-                  <p>Nenhuma mensagem nesta conversa.</p>
-                </div>
+                <div style={{ textAlign: 'center', color: 'var(--secondary-text)', marginTop: 40 }}><p>Nenhuma mensagem nesta conversa.</p></div>
               ) : (
                 filteredMessages.map((msg, i) => {
                   const isFromMe = msg.from_id === user.id;
-
                   return (
-                    <div
-                      key={i}
-                      style={{
-                        alignSelf: showAdminInbox
-                          ? (msg.from_id === user.id ? 'flex-end' : 'flex-start')
-                          : (isFromMe ? 'flex-end' : 'flex-start'),
-                        maxWidth: '70%',
-                        position: 'relative'
-                      }}
-                    >
-                      {showAdminInbox && (
-                        <div style={{ fontSize: 10, color: 'var(--secondary-text)', marginBottom: 2 }}>
-                          {msg.from_username} → {msg.to_username}
-                        </div>
-                      )}
-                      <div style={{
-                        background: msg.is_admin ? '#ef4444' : (isFromMe ? 'var(--accent-color)' : 'var(--input-bg)'),
-                        padding: '10px 14px',
-                        borderRadius: '16px',
-                        color: (isFromMe || msg.is_admin) ? '#fff' : 'var(--text-color)',
-                        border: showAdminInbox && msg.from_id !== user.id && msg.to_id !== user.id ? '1px dashed var(--border-color)' : '1px solid var(--border-color)'
-                      }}>
+                    <div key={i} style={{ alignSelf: showAdminInbox ? (msg.from_id === user.id ? 'flex-end' : 'flex-start') : (isFromMe ? 'flex-end' : 'flex-start'), maxWidth: '70%', position: 'relative' }}>
+                      {showAdminInbox && <div style={{ fontSize: 10, color: 'var(--secondary-text)', marginBottom: 2 }}>{msg.from_username} → {msg.to_username}</div>}
+                      <div style={{ background: msg.is_admin ? '#ef4444' : (isFromMe ? 'var(--accent-color)' : 'var(--input-bg)'), padding: '10px 14px', borderRadius: '16px', color: (isFromMe || msg.is_admin) ? '#fff' : 'var(--text-color)', border: '1px solid var(--border-color)' }}>
                         {msg.is_admin && <strong style={{ display: 'block', fontSize: 10, color: '#ffd700', marginBottom: 4 }}>ADMIN OFICIAL</strong>}
                         <p style={{ margin: 0, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                          {msg.msg.split(/\[VIDEO_LINK:(\d+)\]/g).map((part, idx) => {
-                            if (idx % 2 === 1) { // It's a video ID capture group
-                              const videoId = part;
-                              return (
-                                <part
-                                  key={idx}
-                                  href={`/?v=${videoId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    display: 'block', margin: '8px 0', padding: '10px',
-                                    background: 'rgba(0,0,0,0.1)', borderRadius: 8,
-                                    textDecoration: 'none', color: isFromMe ? '#fff' : 'var(--accent-color)', fontWeight: 'bold',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    cursor: 'pointer'
-                                  }}
-                                  onClick={(e) => { e.preventDefault(); window.open(`/?v=${videoId}`, '_blank'); }}
-                                >
-                                  ▶️ Assistir Vídeo #{videoId}
-                                </part>
-                              );
-                              Part
-                            }
-                            return part;
-                          })}
+                          {msg.msg.split(/\[VIDEO_LINK:(\d+)\]/g).map((part, idx) => idx % 2 === 1 ? <span key={idx} style={{ display: 'block', margin: '8px 0', padding: '10px', background: 'rgba(0,0,0,0.1)', borderRadius: 8, color: isFromMe ? '#fff' : 'var(--accent-color)', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} onClick={() => window.open(`/?v=${part}`, '_blank')}>▶️ Assistir Vídeo #{part}</span> : part)}
                         </p>
-                        <div style={{ fontSize: 11, color: isFromMe ? '#e0d5ff' : 'var(--secondary-text)', marginTop: 4, textAlign: 'right' }}>
-                          {new Date(msg.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </div>
+                        <div style={{ fontSize: 11, color: isFromMe ? '#e0d5ff' : 'var(--secondary-text)', marginTop: 4, textAlign: 'right' }}> {new Date(msg.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })} </div>
                       </div>
                     </div>
                   );
@@ -321,52 +171,15 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
               )}
             </div>
 
-            {/* Input de mensagem */}
             <form onSubmit={sendMessage} style={{ padding: 20, borderTop: '2px solid var(--border-color)', display: 'flex', gap: 10, flexDirection: 'column' }}>
               {isAdmin && (
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: sendAsAdmin ? '#ef4444' : 'var(--secondary-text)', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={sendAsAdmin}
-                    onChange={e => setSendAsAdmin(e.target.checked)}
-                    style={{ accentColor: '#ef4444' }}
-                  />
-                  Enviar como Administrador
+                  <input type="checkbox" checked={sendAsAdmin} onChange={e => setSendAsAdmin(e.target.checked)} style={{ accentColor: '#ef4444' }} /> Enviar como Administrador
                 </label>
               )}
               <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder={sendAsAdmin ? "Enviar mensagem oficial..." : "Digite sua mensagem..."}
-                  style={{
-                    flex: 1,
-                    padding: 12,
-                    background: 'var(--input-bg)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 8,
-                    color: 'var(--text-color)',
-                    fontSize: 15,
-                    outline: 'none'
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                  style={{
-                    padding: '12px 24px',
-                    background: newMessage.trim() ? (sendAsAdmin ? '#ef4444' : 'var(--accent-color)') : '#444',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    cursor: newMessage.trim() ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  {sendAsAdmin ? 'ANUNCIAR' : 'Enviar'} 📤
-                </button>
+                <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder={sendAsAdmin ? "Enviar mensagem oficial..." : "Digite sua mensagem..."} style={{ flex: 1, padding: 12, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-color)', fontSize: 15, outline: 'none' }} />
+                <button type="submit" disabled={!newMessage.trim()} style={{ padding: '12px 24px', background: newMessage.trim() ? (sendAsAdmin ? '#ef4444' : 'var(--accent-color)') : '#444', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}> {sendAsAdmin ? 'ANUNCIAR' : 'Enviar'} 📤 </button>
               </div>
             </form>
           </>
@@ -379,6 +192,5 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         )}
       </div>
     </div>
-
   );
 }

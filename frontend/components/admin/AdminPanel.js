@@ -4,6 +4,8 @@ import { fetchUsers, fetchLogs, resetUserPassword, banUser } from '../../service
 export default function AdminPanel({ adminPassword, showToast }) {
     const [usersList, setUsersList] = useState([]);
     const [logs, setLogs] = useState([]);
+    const [loadingLogs, setLoadingLogs] = useState(false);
+    const [loadingUsers, setLoadingUsers] = useState(false);
 
     useEffect(() => {
         loadUsers();
@@ -12,6 +14,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
 
     const loadUsers = async () => {
         try {
+            setLoadingUsers(true);
             const data = await fetchUsers();
             setUsersList(data);
         } catch (err) {
@@ -20,16 +23,21 @@ export default function AdminPanel({ adminPassword, showToast }) {
             } else {
                 showToast(err.message || 'Erro ao carregar usuários', 'error');
             }
+        } finally {
+            setLoadingUsers(false);
         }
     };
 
     const loadLogs = async () => {
         try {
+            setLoadingLogs(true);
             const data = await fetchLogs();
             setLogs(data);
         } catch (err) {
             if (err.status === 401) return;
             showToast(err.message || 'Erro ao buscar registros', 'error');
+        } finally {
+            setLoadingLogs(false);
         }
     };
 
@@ -55,7 +63,29 @@ export default function AdminPanel({ adminPassword, showToast }) {
             <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>🛡️ Painel Admin</h2>
 
             <div style={{ marginBottom: 40 }}>
-                <h3 style={{ fontSize: 20, marginBottom: 16 }}>👥 Usuários Cadastrados ({usersList.length})</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 20, margin: 0 }}>👥 Usuários Cadastrados ({usersList.length})</h3>
+                    <button
+                        onClick={loadUsers}
+                        disabled={loadingUsers}
+                        style={{
+                            padding: '8px 16px',
+                            background: 'var(--input-bg)',
+                            color: 'var(--text-color)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {loadingUsers ? '⏳' : '🔃'} Atualizar Usuários
+                    </button>
+                </div>
                 <div style={{ background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
@@ -86,7 +116,29 @@ export default function AdminPanel({ adminPassword, showToast }) {
             </div>
 
             <div>
-                <h3 style={{ fontSize: 20, marginBottom: 16 }}>📊 Logs de Auditoria (últimos 100)</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 20, margin: 0 }}>📊 Logs de Auditoria (últimos 100)</h3>
+                    <button
+                        onClick={loadLogs}
+                        disabled={loadingLogs}
+                        style={{
+                            padding: '8px 16px',
+                            background: 'var(--input-bg)',
+                            color: 'var(--text-color)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {loadingLogs ? '⏳' : '🔃'} Atualizar Logs
+                    </button>
+                </div>
                 <div style={{ background: 'var(--card-bg)', borderRadius: 12, overflow: 'auto', maxHeight: 600, border: '1px solid var(--border-color)' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                         <thead style={{ position: 'sticky', top: 0, background: 'var(--input-bg)', zIndex: 1 }}>

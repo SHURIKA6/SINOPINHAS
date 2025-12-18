@@ -1,4 +1,5 @@
 
+// Cabeçalho
 export default function Header({
     user,
     isAdmin,
@@ -191,7 +192,7 @@ export default function Header({
 
 
             <nav className="tab-container">
-                {['videos', 'photos', 'news', 'weather', 'upload', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+                {['videos', 'photos', 'upload', 'news', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -225,8 +226,6 @@ export default function Header({
                     border-bottom: 1px solid var(--border-color);
                     margin-bottom: 1px;
                     transition: background 0.3s ease, border-color 0.3s ease;
-                    
-                    /* Hide scrollbar */
                     scrollbar-width: none;
                     -ms-overflow-style: none;
                 }
@@ -236,7 +235,7 @@ export default function Header({
 
                 .tab-btn {
                     padding: 10px 20px;
-                    border-radius: 99px; /* Pill Shape */
+                    border-radius: 99px;
                     border: 1px solid var(--border-color);
                     background: var(--input-bg);
                     color: var(--secondary-text);
@@ -251,7 +250,6 @@ export default function Header({
                     outline: none;
                 }
 
-                /* Hover State */
                 .tab-btn:hover {
                     background: var(--accent-color);
                     color: #fff;
@@ -259,7 +257,6 @@ export default function Header({
                     border-color: transparent;
                 }
 
-                /* Active State */
                 .tab-btn.active {
                     background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
                     color: #fff;

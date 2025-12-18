@@ -1,25 +1,10 @@
 import dynamic from 'next/dynamic';
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useComments } from "../hooks/useComments";
 import Head from "next/head";
 
-// Componentes
-// Serviços
-import {
-  logTermsAcceptance,
-  fetchNotifications,
-  fetchVideos,
-  fetchSecretVideos,
-  likeVideo,
-  fetchComments,
-  viewVideo,
-  postComment,
-  deleteComment,
-  removeVideo
-} from '../services/api';
-
-// Componentes Dinâmicos (Client-Side Only para evitar 500 Error)
+// Componentes Dinâmicos
 const VideoCard = dynamic(() => import('../components/VideoCard'), { ssr: false });
 const Header = dynamic(() => import('../components/layout/Header'), { ssr: false });
 const UploadSection = dynamic(() => import('../components/UploadSection'), { ssr: false });
@@ -28,7 +13,6 @@ const AuthModal = dynamic(() => import('../components/auth/AuthModal'), { ssr: f
 const AdminAuthModal = dynamic(() => import('../components/auth/AdminAuthModal'), { ssr: false });
 const SecretAuthModal = dynamic(() => import('../components/auth/SecretAuthModal'), { ssr: false });
 const ProfileModal = dynamic(() => import('../components/auth/ProfileModal'), { ssr: false });
-
 const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
 const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
 const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
@@ -36,10 +20,14 @@ const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr:
 const NewsFeed = dynamic(() => import('../components/feed/NewsFeed'), { ssr: false });
 const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
 
-
+import {
+  logTermsAcceptance,
+  viewVideo
+} from '../services/api';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
+// SEO e Dados Iniciais
 export async function getServerSideProps(context) {
   const { v } = context.query;
   let initialVideo = null;
@@ -48,42 +36,30 @@ export async function getServerSideProps(context) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
       const res = await fetch(`${apiUrl}/api/videos/${v}`);
-      if (res.ok) {
-        initialVideo = await res.json();
-      }
-    } catch (err) {
-      console.error('Error fetching video for SEO:', err);
-    }
+      if (res.ok) initialVideo = await res.json();
+    } catch (err) { }
   }
 
-  return {
-    props: {
-      initialVideo
-    }
-  };
+  return { props: { initialVideo } };
 }
 
+// Componente Principal
 export default function Home({ initialVideo }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [toast, setToast] = useState(null); // Restored
+  const [toast, setToast] = useState(null);
 
-  // --- Estados de Autenticação e Modais ---
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
-
-
   const [theme, setTheme] = useState('dark');
 
+  // Troca de Tema
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
@@ -91,15 +67,15 @@ export default function Home({ initialVideo }) {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
+  // Carregar Tema e Recado
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
-
-    // Recado Especial / Special Message
     console.log("%ceu amo muito a anna julia assinado _Riad777", "color: #ff6b9d; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);");
   }, []);
 
+  // Sistema de Toast
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -107,6 +83,7 @@ export default function Home({ initialVideo }) {
 
   const {
     user,
+    setUser,
     isAdmin,
     adminPassword,
     unreadCount,
@@ -114,17 +91,14 @@ export default function Home({ initialVideo }) {
     handleAdminAuthSuccess,
     logout,
     logoutAdmin,
-    loadNotifications // Get the refresher function
+    loadNotifications
   } = useAuth(showToast);
 
   const [activeTab, setActiveTab] = useState('videos');
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
-
-  // States moved up to prevent TDZ (ReferenceError: ne)
   const [newComment, setNewComment] = useState("");
 
-  /* Hook de Comentários */
   const {
     comments: videoComments,
     loadComments,
@@ -132,16 +106,13 @@ export default function Home({ initialVideo }) {
     removeComment
   } = useComments(showToast, user, isAdmin, adminPassword);
 
-  /* Lógica de Termos e Logout (Preservada) */
   useEffect(() => {
     const accepted = localStorage.getItem('terms_accepted');
-    if (accepted) {
-      setTermsAccepted(true);
-    } else {
-      setShowTerms(true);
-    }
+    if (accepted) setTermsAccepted(true);
+    else setShowTerms(true);
   }, []);
 
+  // Aceitar Termos
   const handleAcceptTerms = async (locationData) => {
     setTermsAccepted(true);
     setShowTerms(false);
@@ -152,95 +123,75 @@ export default function Home({ initialVideo }) {
         user_agent: navigator.userAgent,
         ...locationData
       });
-    } catch (err) {
-      console.error("Erro ao registrar termos:", err);
-    }
+    } catch (err) { }
   };
 
+  // Recusar Termos
   const handleDeclineTerms = () => {
     alert("Você precisa aceitar os termos para usar a plataforma.");
   };
 
+  // Logout
   const handleLogout = () => {
     logout();
     setActiveTab('videos');
   };
 
-
-
-  // Funções de interação (Delegam para o Hook)
-
+  // Abrir Comentários
   const openComments = useCallback(async (video) => {
     setCurrentVideo(video);
     setShowCommentsModal(true);
     await loadComments(video.id);
     if (user) {
-      try {
-        await viewVideo(video.id, user.id);
-      } catch (e) { console.error(e); }
+      try { await viewVideo(video.id, user.id); } catch (e) { }
     }
   }, [loadComments, user]);
 
+  // Enviar Comentário
   const sendComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
     const success = await addComment(currentVideo.id, newComment);
     if (success) setNewComment("");
   };
 
+  // Deletar Comentário
   const handleDeleteComment = async (commentId) => {
     await removeComment(commentId, currentVideo.id);
   };
 
-  // canDelete and deleteVideo logic moved to Feed, but canDelete helper kept for props if needed?
-  // Actually canDelete is useful to pass down. I removed it in the chunk above by accident! 
-  // I need to RESTORE canDelete.
-
+  // Permissão para Deletar
   const canDelete = useCallback((ownerId) => {
     return isAdmin || (user && user.id.toString() === ownerId);
   }, [isAdmin, user]);
 
-  /* Logic moved to useAuth */
-
-  /* Logic removed */
-
-  if (!mounted) return null; // Prevent SSR crashes
+  if (!mounted) return null;
 
   if (!termsAccepted) {
     return (
       <>
         <Head>
           <title>SINOPINHAS - Termos de Uso</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         </Head>
         {showTerms && (
-          <TermsModal
-            onAccept={handleAcceptTerms}
-            onDecline={handleDeclineTerms}
-          />
+          <TermsModal onAccept={handleAcceptTerms} onDecline={handleDeclineTerms} />
         )}
       </>
     );
   }
 
+  // Estrutura da Página
   return (
     <>
       <Head>
         <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS by SHURA'}</title>
-        {/* eu amo muito a anna julia assinado _Riad777 */}
         <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista a videos que pessoas de Sinop gostam! Conteúdo local, clima, notícias e muito mais."} />
-
-        {/* Metadados Open Graph / Redes Sociais */}
         <meta property="og:type" content="video.other" />
         <meta property="og:title" content={currentVideo?.title || initialVideo?.title || "SINOPINHAS"} />
         <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Assista aos melhores vídeos exclusivos na Sinopinhas."} />
         <meta property="og:image" content="https://sinopinhas.vercel.app/og-default.jpg" />
-        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : 'https://sinopinhas.vercel.app'} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="theme-color" content="#18142a" />
-        <link rel="preconnect" href={API} />
-        <link rel="dns-prefetch" href={API} />
         <link rel="icon" href="/favicon.ico" />
         {(activeTab === 'videos' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
           <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
@@ -248,19 +199,15 @@ export default function Home({ initialVideo }) {
       </Head>
 
       <div style={{
-        minHeight: '100vh',
-        background: 'var(--bg-gradient)',
-        color: 'var(--text-color)',
-        fontFamily: 'Arial, sans-serif',
-        transition: 'background 0.3s ease, color 0.3s ease'
+        minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-color)',
+        fontFamily: 'Arial, sans-serif', transition: 'background 0.3s ease, color 0.3s ease'
       }}>
         {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
             background: toast.type === 'success' ? '#10b981' : '#ef4444',
             color: '#fff', padding: '16px 24px', borderRadius: 12,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            animation: 'slideIn 0.3s ease-out'
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', animation: 'slideIn 0.3s ease-out'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20 }}>{toast.type === 'success' ? '✓' : '✕'}</span>
@@ -270,197 +217,52 @@ export default function Home({ initialVideo }) {
         )}
 
         <Header
-          user={user}
-          isAdmin={isAdmin}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          setShowAuth={setShowAuth}
-          setShowSecretAuth={setShowSecretAuth}
-          setShowAdminAuth={setShowAdminAuth}
-          showSecretTab={showSecretTab}
-          unreadCount={unreadCount}
-          setShowProfile={setShowProfile}
-          logout={handleLogout}
-          logoutAdmin={logoutAdmin}
-          theme={theme}
-          toggleTheme={toggleTheme}
+          user={user} isAdmin={isAdmin} activeTab={activeTab} setActiveTab={setActiveTab}
+          setShowAuth={setShowAuth} setShowSecretAuth={setShowSecretAuth} setShowAdminAuth={setShowAdminAuth}
+          showSecretTab={showSecretTab} unreadCount={unreadCount} setShowProfile={setShowProfile}
+          logout={handleLogout} logoutAdmin={logoutAdmin} theme={theme} toggleTheme={toggleTheme}
         />
 
-        {showAuth && (
-          <AuthModal
-            onClose={() => setShowAuth(false)}
-            onAuthSuccess={handleAuthSuccess}
-            showToast={showToast}
-          />
-        )}
-
-        {showProfile && (
-          <ProfileModal
-            user={user}
-            setUser={setUser}
-            onClose={() => setShowProfile(false)}
-            showToast={showToast}
-          />
-        )}
-
-        {showAdminAuth && (
-          <AdminAuthModal
-            onClose={() => setShowAdminAuth(false)}
-            onAdminAuthSuccess={handleAdminAuthSuccess}
-            showToast={showToast}
-          />
-        )}
-
-        {showSecretAuth && (
-          <SecretAuthModal
-            onClose={() => setShowSecretAuth(false)}
-            onSecretAuthSuccess={() => {
-              setShowSecretTab(true);
-              setActiveTab('secret');
-            }}
-            showToast={showToast}
-          />
-        )}
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuthSuccess={handleAuthSuccess} showToast={showToast} />}
+        {showProfile && <ProfileModal user={user} setUser={setUser} onClose={() => setShowProfile(false)} showToast={showToast} />}
+        {showAdminAuth && <AdminAuthModal onClose={() => setShowAdminAuth(false)} onAdminAuthSuccess={handleAdminAuthSuccess} showToast={showToast} />}
+        {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
 
         <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-
-
-          {/* Seções de Feed */}
-          {activeTab === 'videos' && (
-            <HomeFeed
-              user={user}
-              isAdmin={isAdmin}
-              adminPassword={adminPassword}
-              onVideoClick={openComments}
-              showToast={showToast}
-              canDelete={canDelete}
-              filterType="video"
-            />
-          )}
-
-          {activeTab === 'photos' && (
-            <HomeFeed
-              user={user}
-              isAdmin={isAdmin}
-              adminPassword={adminPassword}
-              onVideoClick={openComments}
-              showToast={showToast}
-              canDelete={canDelete}
-              filterType="photo"
-            />
-          )}
-
-          {activeTab === 'secret' && (
-            <SecretFeed
-              user={user}
-              isAdmin={isAdmin}
-              adminPassword={adminPassword}
-              onVideoClick={openComments}
-              showToast={showToast}
-              canDelete={canDelete}
-            />
-          )}
-
-          {activeTab === 'news' && (
-            <NewsFeed />
-          )}
-
-          {/* Seções Legadas (Upload/Admin/Inbox) */}
-
-
-
-
-
-          {activeTab === 'upload' && (
-            <UploadSection
-              user={user}
-              setShowAuth={setShowAuth}
-              showToast={showToast}
-              // loadVideos prop removed
-              setActiveTab={setActiveTab}
-            />
-          )}
-
-          {activeTab === 'weather' && (
-            <WeatherSection />
-          )}
-
-
-
-          {activeTab === 'inbox' && user && (
-            <Inbox
-              user={user}
-              API={API}
-              isAdmin={isAdmin}
-              adminPassword={adminPassword}
-              onMessageRead={() => loadNotifications(user.id)}
-            />
-          )}
-
-          {activeTab === 'admin' && isAdmin && (
-            <AdminPanel
-              adminPassword={adminPassword}
-              showToast={showToast}
-            />
-          )}
-
+          {activeTab === 'videos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="video" />}
+          {activeTab === 'photos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="photo" />}
+          {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} />}
+          {activeTab === 'news' && <NewsFeed />}
+          {activeTab === 'upload' && <UploadSection user={user} setShowAuth={setShowAuth} showToast={showToast} setActiveTab={setActiveTab} />}
+          {activeTab === 'weather' && <WeatherSection />}
+          {activeTab === 'inbox' && user && <Inbox user={user} API={API} isAdmin={isAdmin} adminPassword={adminPassword} onMessageRead={() => loadNotifications(user.id)} />}
+          {activeTab === 'admin' && isAdmin && <AdminPanel adminPassword={adminPassword} showToast={showToast} />}
         </div>
 
         {showCommentsModal && currentVideo && (
           <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.9)', zIndex: 9998, display: 'flex',
-            alignItems: 'center', justifyContent: 'center', padding: 20,
-            overflowY: 'auto'
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)',
+            zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflowY: 'auto'
           }} onClick={() => setShowCommentsModal(false)}>
-
             <div style={{
-              background: 'var(--card-bg)', borderRadius: 16, padding: 32,
-              maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto',
-              color: 'var(--text-color)',
-              border: '1px solid var(--border-color)'
+              background: 'var(--card-bg)', borderRadius: 16, padding: 32, maxWidth: 600, width: '100%',
+              maxHeight: '90vh', overflowY: 'auto', color: 'var(--text-color)', border: '1px solid var(--border-color)'
             }} onClick={e => e.stopPropagation()}>
               <h2 style={{ margin: '0 0 24px', fontSize: 22 }}>💬 Comentários - {currentVideo.title}</h2>
-
               <div style={{ marginBottom: 24 }}>
                 {videoComments.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#666', padding: 20 }}>Seja o primeiro a comentar!</p>
                 ) : (
                   videoComments.map((c, i) => (
-                    <div key={i} style={{
-                      background: 'var(--input-bg)',
-                      padding: 16,
-                      borderRadius: 10,
-                      marginBottom: 12,
-                      position: 'relative',
-                      border: '1px solid var(--border-color)'
-                    }}>
+                    <div key={i} style={{ background: 'var(--input-bg)', padding: 16, borderRadius: 10, marginBottom: 12, position: 'relative', border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        {c.avatar && (
-                          <img src={c.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={c.username} />
-                        )}
+                        {c.avatar && <img src={c.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={c.username} />}
                         <strong style={{ fontSize: 15 }}>{c.username}</strong>
                         <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleString('pt-BR')}</span>
                       </div>
                       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{c.comment}</p>
                       {(user?.id === c.user_id || isAdmin) && (
-                        <button
-                          onClick={() => handleDeleteComment(c.id)}
-                          style={{
-                            position: 'absolute',
-                            top: 12,
-                            right: 12,
-                            background: '#ef4444',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '4px 8px',
-                            color: '#fff',
-                            fontSize: 12,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Deletar
-                        </button>
+                        <button onClick={() => handleDeleteComment(c.id)} style={{ position: 'absolute', top: 12, right: 12, background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 12, cursor: 'pointer' }} > Deletar </button>
                       )}
                     </div>
                   ))
@@ -468,36 +270,8 @@ export default function Home({ initialVideo }) {
               </div>
               {user && (
                 <form onSubmit={sendComment}>
-                  <textarea
-                    placeholder="Escreva um comentário..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows="3"
-                    style={{
-                      width: '100%',
-                      padding: 12,
-                      background: 'var(--input-bg)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 10,
-                      color: 'var(--text-color)',
-                      fontSize: 15,
-                      resize: 'vertical',
-                      marginBottom: 12
-                    }}
-                  />
-                  <button type="submit" style={{
-                    width: '100%',
-                    padding: 12,
-                    background: '#8d6aff',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 10,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}>
-                    Enviar Comentário
-                  </button>
+                  <textarea placeholder="Escreva um comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} rows="3" style={{ width: '100%', padding: 12, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 15, resize: 'vertical', marginBottom: 12 }} />
+                  <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}> Enviar Comentário </button>
                 </form>
               )}
             </div>
@@ -506,10 +280,6 @@ export default function Home({ initialVideo }) {
       </div>
 
       <style jsx global>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
         @keyframes slideIn {
           from { transform: translateX(400px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
