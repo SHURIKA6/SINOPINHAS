@@ -8,11 +8,12 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('recent');
-    const [page, setPage] = useState(1);
-    const VIDEOS_PER_PAGE = 12;
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const LIMIT = 12;
     const loadMoreRef = useRef(null);
 
-    // Derived State (Moved to top)
+    // Derived State
     const sortedVideos = useMemo(() => {
         let list = [...videos];
         if (searchQuery) {
@@ -26,30 +27,39 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         return list;
     }, [videos, sortBy, searchQuery]);
 
-    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
-    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
-
     // Infinite Scroll Intersection Observer
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && hasMoreVideos && !loading) {
-                setPage(prev => prev + 1);
+            if (entries[0].isIntersecting && hasMore && !loading) {
+                setOffset(prev => prev + LIMIT);
             }
-        }, { threshold: 0.1, rootMargin: '100px' });
+        }, { threshold: 0.1, rootMargin: '200px' });
 
         if (loadMoreRef.current) observer.observe(loadMoreRef.current);
         return () => observer.disconnect();
-    }, [hasMoreVideos, loading]);
+    }, [hasMore, loading]);
 
+    // Reset on sortBy change
     useEffect(() => {
-        loadVideos();
+        setVideos([]);
+        setOffset(0);
+        setHasMore(true);
+        loadVideos(0, true);
     }, [sortBy]);
 
-    const loadVideos = async () => {
+    // Increment offset
+    useEffect(() => {
+        if (offset > 0) {
+            loadVideos(offset, false);
+        }
+    }, [offset]);
+
+    const loadVideos = async (currentOffset, reset = false) => {
         setLoading(true);
         try {
-            const data = await fetchSecretVideos(user?.id);
-            setVideos(data);
+            const data = await fetchSecretVideos(user?.id, LIMIT, currentOffset);
+            if (data.length < LIMIT) setHasMore(false);
+            setVideos(prev => reset ? data : [...prev, ...data]);
         } catch (error) {
             console.error("Erro ao carregar vídeos secretos:", error);
             showToast('error', 'Erro ao carregar vídeos secretos');
@@ -138,17 +148,17 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
 
                 {/* Header */}
                 <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#ff6b9d' }}>
-                    🔒 CONTEÚDO RESTRITO ({sortedVideos.length})
+                    🔒 CONTEÚDO RESTRITO ({videos.length})
                 </h2>
 
                 {/* Grid */}
-                {loading ? (
+                {loading && videos.length === 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                         {[...Array(8)].map((_, i) => (
                             <SkeletonVideoCard key={i} />
                         ))}
                     </div>
-                ) : sortedVideos.length === 0 ? (
+                ) : videos.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 64, background: 'var(--card-bg)', borderRadius: 16, color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
                         <div style={{ fontSize: 41, marginBottom: 18 }}>🔒</div>
                         <p style={{ fontSize: 19, margin: 0 }}>Nenhum conteúdo restrito encontrado</p>
@@ -158,7 +168,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
 
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
-                            {paginatedVideos.map((v) => (
+                            {sortedVideos.map((v) => (
                                 <VideoCard
                                     key={v.id}
                                     video={v}
@@ -171,7 +181,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                             ))}
                         </div>
 
-                        {hasMoreVideos && (
+                        {hasMore && (
                             <div
                                 ref={loadMoreRef}
                                 style={{

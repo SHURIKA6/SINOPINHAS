@@ -101,15 +101,21 @@ export const fetchNotifications = async (userId) => {
     return res.data;
 };
 
-export const fetchVideos = async (userId = null) => {
-    const query = userId ? `?user_id=${userId}` : '';
-    const res = await api.get(`/api/videos${query}`);
+export const fetchVideos = async (userId = null, limit = 12, offset = 0) => {
+    const params = new URLSearchParams();
+    if (userId) params.set('user_id', userId);
+    params.set('limit', limit);
+    params.set('offset', offset);
+    const res = await api.get(`/api/videos?${params.toString()}`);
     return res.data;
 };
 
-export const fetchSecretVideos = async (userId = null) => {
-    const query = userId ? `?user_id=${userId}` : '';
-    const res = await api.get(`/api/secret-videos${query}`);
+export const fetchSecretVideos = async (userId = null, limit = 12, offset = 0) => {
+    const params = new URLSearchParams();
+    if (userId) params.set('user_id', userId);
+    params.set('limit', limit);
+    params.set('offset', offset);
+    const res = await api.get(`/api/secret-videos?${params.toString()}`);
     return res.data;
 };
 

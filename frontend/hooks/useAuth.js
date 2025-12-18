@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { logTermsAcceptance, fetchNotifications } from '../services/api';
 
 export function useAuth(showToast) {
@@ -40,11 +40,29 @@ export function useAuth(showToast) {
         checkAuth();
     }, []);
 
+    // Polling para Notificações (Simulação de Real-time)
+    useEffect(() => {
+        if (!user) return;
+
+        const interval = setInterval(() => {
+            loadNotifications(user.id);
+        }, 15000); // 15 segundos é um bom equilíbrio
+
+        return () => clearInterval(interval);
+    }, [user?.id]);
+
     const loadNotifications = async (userId) => {
         try {
             const data = await fetchNotifications(userId);
             const unread = data.filter(n => !n.is_read).length;
+
+            if (unread > prevUnreadRef.current) {
+                showToast(`Você tem ${unread} novas mensagens!`, 'success');
+                // Play sound? Maybe too much, just toast.
+            }
+
             setUnreadCount(unread);
+            prevUnreadRef.current = unread;
         } catch (err) {
             console.error('Erro ao carregar notificações:', err);
         }

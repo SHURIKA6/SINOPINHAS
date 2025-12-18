@@ -8,10 +8,20 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('recent');
-    const [page, setPage] = useState(1);
-    const VIDEOS_PER_PAGE = 12;
-    const loadMoreRef = useRef(null); // Infinite Scroll Ref
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const LIMIT = 12;
+
+    // Debounce Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+    const loadMoreRef = useRef(null);
 
     const [videoToShare, setVideoToShare] = useState(null);
 
@@ -25,48 +35,57 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         return list;
     }, [videos, sortBy]);
 
-    const paginatedVideos = sortedVideos.slice(0, page * VIDEOS_PER_PAGE);
-    const hasMoreVideos = paginatedVideos.length < sortedVideos.length;
-
-    // Infinite Scroll Intersection Observer
+    // Observer para Scroll Infinito
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && hasMoreVideos && !loading) {
-                setPage(prev => prev + 1);
+            if (entries[0].isIntersecting && hasMore && !loading) {
+                setOffset(prev => prev + LIMIT);
             }
-        }, { threshold: 0.1, rootMargin: '100px' });
+        }, { threshold: 0.1, rootMargin: '200px' });
 
         if (loadMoreRef.current) observer.observe(loadMoreRef.current);
         return () => observer.disconnect();
-    }, [hasMoreVideos, loading]);
+    }, [hasMore, loading]);
 
+    // Reset quando filtros mudam
     useEffect(() => {
-        loadVideos();
-    }, [searchQuery, sortBy, filterType]); // Reload when search/sort/filter changes
+        setVideos([]);
+        setOffset(0);
+        setHasMore(true);
+        loadVideos(0, true);
+    }, [debouncedSearchQuery, sortBy, filterType]);
 
-    const loadVideos = async () => {
+    // Carga incremental
+    useEffect(() => {
+        if (offset > 0) {
+            loadVideos(offset, false);
+        }
+    }, [offset]);
+
+    const loadVideos = async (currentOffset, reset = false) => {
         setLoading(true);
         try {
             let data = [];
-            if (searchQuery.trim().length > 2) {
-                // Use Backend Search
-                data = await searchVideos(searchQuery);
+            if (debouncedSearchQuery.trim().length > 2) {
+                data = await searchVideos(debouncedSearchQuery);
+                // Busca por texto geralmente não é paginada facilmente ou retorna tudo, 
+                // então forçamos hasMore false para busca simples
+                setHasMore(false);
             } else {
-                data = await fetchVideos(user?.id);
+                data = await fetchVideos(user?.id, LIMIT, currentOffset);
+                if (data.length < LIMIT) setHasMore(false);
             }
 
-            // Filter by type
+            // Aplicar filtros de tipo no frontend
             if (filterType === 'photo') {
                 data = data.filter(v => v.type === 'photo');
             } else {
-                // Video: include 'video' AND legacy (undefined/null)
                 data = data.filter(v => !v.type || v.type === 'video');
             }
 
-            setVideos(data);
+            setVideos(prev => reset ? data : [...prev, ...data]);
         } catch (error) {
-            console.error("Erro ao carregar vídeos:", error);
-            showToast('error', 'Erro ao carregar conteúdo');
+            showToast('Erro ao carregar conteúdo', 'error');
         } finally {
             setLoading(false);
         }
@@ -157,7 +176,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
                 {/* Header */}
                 <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: 'var(--text-color)' }}>
-                    {loading ? 'Carregando...' : `${sortedVideos.length} ${label}${sortedVideos.length !== 1 ? 's' : ''}`}
+                    {loading && videos.length === 0 ? 'Carregando' : `${videos.length} ${label}${videos.length !== 1 ? 's' : ''}`}
                 </h2>
 
                 <div style={{ background: 'var(--card-bg)', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid var(--border-color)' }}>
@@ -168,13 +187,13 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 </div>
 
                 {/* Grid */}
-                {loading ? (
+                {loading && videos.length === 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                         {[...Array(8)].map((_, i) => (
                             <SkeletonVideoCard key={i} />
                         ))}
                     </div>
-                ) : sortedVideos.length === 0 ? (
+                ) : videos.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 64, background: 'var(--card-bg)', borderRadius: 16, color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
                         <div style={{ fontSize: 41, marginBottom: 18 }}>{filterType === 'photo' ? '🖼️' : '📹'}</div>
                         <p style={{ fontSize: 19, margin: 0 }}>Nenhum {label} encontrado</p>
@@ -183,7 +202,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                            {paginatedVideos.map((v) => (
+                            {sortedVideos.map((v) => (
                                 <VideoCard
                                     key={v.id}
                                     video={v}
@@ -206,7 +225,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                             />
                         )}
 
-                        {hasMoreVideos && (
+                        {hasMore && (
                             <div
                                 ref={loadMoreRef}
                                 style={{

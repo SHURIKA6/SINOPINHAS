@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useComments } from "../hooks/useComments";
 import Head from "next/head";
+import { useRouter } from 'next/router';
 
 // Componentes Dinâmicos
 const VideoCard = dynamic(() => import('../components/VideoCard'), { ssr: false });
@@ -21,6 +22,7 @@ const NewsFeed = dynamic(() => import('../components/feed/NewsFeed'), { ssr: fal
 const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
 const PlacesSection = dynamic(() => import('../components/PlacesSection'), { ssr: false });
 const SupportModal = dynamic(() => import('../components/SupportModal'), { ssr: false });
+const BottomNav = dynamic(() => import('../components/layout/BottomNav'), { ssr: false });
 
 import {
   logTermsAcceptance,
@@ -57,6 +59,46 @@ export default function Home({ initialVideo }) {
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const router = useRouter();
+  const [activeTab, setActiveTabState] = useState('videos');
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    });
+  }, []);
+
+  const installApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBtn(false);
+    }
+    setDeferredPrompt(null);
+  };
+
+  // Sincroniza estado com a URL
+  useEffect(() => {
+    if (router.isReady) {
+      const tab = router.query.tab;
+      if (tab && ['videos', 'photos', 'upload', 'news', 'lugares', 'weather', 'admin', 'inbox', 'secret'].includes(tab)) {
+        setActiveTabState(tab);
+      }
+    }
+  }, [router.isReady, router.query.tab]);
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    router.push({
+      pathname: '/',
+      query: { ...router.query, tab: tab }
+    }, undefined, { shallow: true });
+  };
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
@@ -97,7 +139,6 @@ export default function Home({ initialVideo }) {
     loadNotifications
   } = useAuth(showToast);
 
-  const [activeTab, setActiveTab] = useState('videos');
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -285,10 +326,58 @@ export default function Home({ initialVideo }) {
         )}
       </div>
 
+      {showInstallBtn && (
+        <div style={{
+          position: 'fixed',
+          bottom: 85,
+          left: 16,
+          right: 16,
+          background: 'linear-gradient(135deg, #8d6aff 0%, #6040e6 100%)',
+          padding: '12px 20px',
+          borderRadius: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          zIndex: 9999,
+          animation: 'slideUp 0.5s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 24 }}>📲</span>
+            <div>
+              <strong style={{ display: 'block', color: '#fff', fontSize: 14 }}>Instalar SINOPINHAS</strong>
+              <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>Acesso rápido na tela inicial</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setShowInstallBtn(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', padding: '8px' }}>Depois</button>
+            <button onClick={installApp} style={{ background: '#fff', border: 'none', color: '#8d6aff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Instalar</button>
+          </div>
+        </div>
+      )}
+
+      {mounted && (
+        <BottomNav
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          unreadCount={unreadCount}
+          isAdmin={isAdmin}
+        />
+      )}
+
       <style jsx global>{`
+        @media (max-width: 768px) {
+          body {
+            padding-bottom: 70px;
+          }
+        }
         @keyframes slideIn {
           from { transform: translateX(400px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
       `}
       </style>

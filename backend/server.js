@@ -8,6 +8,7 @@ import socialRoutes from './src/routes/social.js';
 import debugRoutes from './src/routes/debug.js';
 import healthRoutes from './src/routes/health.js';
 import newsRoutes from './src/routes/news.js';
+import { initDatabase } from './src/db/index.js';
 
 const app = new Hono();
 
@@ -52,7 +53,10 @@ const honoFetch = app.fetch;
 export default {
   async fetch(request, env, ctx) {
     try {
-      // Verificação de preflight OPTIONS Global (Salvaguarda manual antes de roteamento)
+      // Inicializar banco de dados se necessário
+      await initDatabase(env);
+
+      // Verificação de preflight OPTIONS Global
       if (request.method === 'OPTIONS') {
         return new Response(null, {
           status: 204,

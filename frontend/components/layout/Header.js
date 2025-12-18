@@ -246,6 +246,11 @@ export default function Header({
                     scrollbar-width: none;
                     -ms-overflow-style: none;
                 }
+                @media (max-width: 768px) {
+                    .tab-container {
+                        display: none;
+                    }
+                }
                 .tab-container::-webkit-scrollbar {
                     display: none;
                 }

@@ -62,8 +62,11 @@ export const uploadVideo = async (c) => {
 export const listVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
+    const limit = parseInt(c.req.query("limit") || "12");
+    const offset = parseInt(c.req.query("offset") || "0");
 
-    if (!userId) {
+    // Só usar cache na primeira página sem filtro de usuário
+    if (!userId && offset === 0 && limit === 12) {
         try {
             const cached = await env.MURAL_STORE.get('videos_public', { type: 'json' });
             if (cached) return createResponse(c, cached);
@@ -71,31 +74,37 @@ export const listVideos = async (c) => {
     }
 
     try {
-        let query = `
+        let sql = `
       SELECT v.*, u.username,
       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
       (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
     `;
 
+        const params = [];
+        let paramCount = 1;
+
         if (userId) {
-            query += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $1) as user_liked`;
+            sql += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $${paramCount++}) as user_liked`;
+            params.push(userId);
         }
 
-        query += `
+        sql += `
       FROM videos v
       LEFT JOIN users u ON v.user_id = u.id
       WHERE v.is_restricted = false
       ORDER BY v.created_at DESC
+      LIMIT $${paramCount++} OFFSET $${paramCount++}
     `;
+        params.push(limit, offset);
 
-        const { rows } = await queryDB(query, userId ? [userId] : [], env);
+        const { rows } = await queryDB(sql, params, env);
 
         const videosWithUrl = rows.map(v => ({
             ...v,
             video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
         }));
 
-        if (!userId) {
+        if (!userId && offset === 0 && limit === 12) {
             c.executionCtx.waitUntil(
                 env.MURAL_STORE.put('videos_public', JSON.stringify(videosWithUrl), { expirationTtl: 60 })
             );
@@ -111,8 +120,10 @@ export const listVideos = async (c) => {
 export const listSecretVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
+    const limit = parseInt(c.req.query("limit") || "12");
+    const offset = parseInt(c.req.query("offset") || "0");
 
-    if (!userId) {
+    if (!userId && offset === 0 && limit === 12) {
         try {
             const cached = await env.MURAL_STORE.get('videos_secret', { type: 'json' });
             if (cached) return createResponse(c, cached);
@@ -120,31 +131,37 @@ export const listSecretVideos = async (c) => {
     }
 
     try {
-        let query = `
+        let sql = `
       SELECT v.*, u.username,
       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
       (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
     `;
 
+        const params = [];
+        let paramCount = 1;
+
         if (userId) {
-            query += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $1) as user_liked`;
+            sql += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $${paramCount++}) as user_liked`;
+            params.push(userId);
         }
 
-        query += `
+        sql += `
       FROM videos v
       LEFT JOIN users u ON v.user_id = u.id
       WHERE v.is_restricted = true
       ORDER BY v.created_at DESC
+      LIMIT $${paramCount++} OFFSET $${paramCount++}
     `;
+        params.push(limit, offset);
 
-        const { rows } = await queryDB(query, userId ? [userId] : [], env);
+        const { rows } = await queryDB(sql, params, env);
 
         const videosWithUrl = rows.map(v => ({
             ...v,
             video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
         }));
 
-        if (!userId) {
+        if (!userId && offset === 0 && limit === 12) {
             c.executionCtx.waitUntil(
                 env.MURAL_STORE.put('videos_secret', JSON.stringify(videosWithUrl), { expirationTtl: 60 })
             );
