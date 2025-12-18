@@ -4,44 +4,44 @@ const RECOMMENDATIONS = [
     {
         title: "Parque Florestal de Sinop",
         category: "Natureza",
-        description: "Um dos principais atrativos naturais da cidade, com mata nativa, animais silvestres e um grande lago.",
-        image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=500&q=80",
-        link: "https://www.tripadvisor.com.br/Attraction_Review-g1162319-d4508492-Reviews-Parque_Florestal_de_Sinop-Sinop_State_of_Mato_Grosso.html"
+        description: "Um dos principais atrativos naturais da cidade, com mata nativa preservada, diversas espécies de animais silvestres, lago de 30 mil m² e trilhas ecológicas.",
+        image: "https://conhecasinop.com.br/storage/uploads/6475024773822-parque-florestal-sinop-mt.jpg",
+        link: "https://www.sinop.mt.gov.br/Conteudo/2/236/secretaria-de-meio-ambiente-e-desenvolvimento-sustentavel/parque-florestal-de-sinop"
     },
     {
         title: "Catedral Sagrado Coração de Jesus",
         category: "Cultura",
-        description: "Imponente estrutura religiosa com estilo moderno, ponto de contemplação e arquitetura.",
-        image: "https://images.unsplash.com/photo-1548625361-195fe6115887?auto=format&fit=crop&w=500&q=80",
-        link: "https://www.tripadvisor.com.br/Attraction_Review-g1162319-d4508491-Reviews-Catedral_Sagrado_Coracao_de_Jesus-Sinop_State_of_Mato_Grosso.html"
+        description: "Obra monumental com arquitetura moderna e vitrais artísticos, sendo o centro religioso e cultural mais importante da região.",
+        image: "https://conhecasinop.com.br/storage/uploads/6474f6760a0fb-catedral-sagrado-coracao-de-jesus-sinop-mt.jpg",
+        link: "https://conhecasinop.com.br/turismo/catedral-sagrado-coracao-de-jesus"
     },
     {
         title: "Curupy Acqua Park",
         category: "Lazer",
-        description: "Parque aquático completo com rampas, piscina de ondas e Eco Park com atividades de aventura.",
-        image: "https://images.unsplash.com/photo-1533727937480-da3a97967e95?auto=format&fit=crop&w=500&q=80",
-        link: "https://www.curupyacquapark.com.br/"
+        description: "O maior parque aquático do Norte de Mato Grosso, oferecendo praia artificial, piscina de ondas, toboáguas e Eco Park.",
+        image: "https://conhecasinop.com.br/storage/uploads/6471165a6e2e9-curupy-acqua-park-sinop-mt.jpg",
+        link: "https://curupyacquapark.com.br/"
     },
     {
-        title: "Restaurantes no TripAdvisor",
+        title: "Gastronomia em Sinop",
         category: "Gastronomia",
-        description: "Confira a lista dos melhores restaurantes e onde comer bem em Sinop.",
-        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80",
+        description: "Experimente pratos típicos como Matrinxã Assada e o melhor churrasco mato-grossense nos melhores restaurantes da cidade.",
+        image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80",
         link: "https://www.tripadvisor.com.br/Restaurants-g1162319-Sinop_State_of_Mato_Grosso.html"
     },
     {
         title: "Só Notícias - Guia Local",
         category: "Notícias",
-        description: "Fique por dentro do que acontece na cidade e descubra novos eventos.",
-        image: "https://images.unsplash.com/photo-1504711432863-7448ca19767c?auto=format&fit=crop&w=500&q=80",
+        description: "O portal de notícias mais acessado da região, com guias, eventos e tudo o que acontece em Sinop e no Nortão.",
+        image: "https://www.sonoticias.com.br/wp-content/uploads/2021/04/sonoticias-destaque.jpg",
         link: "https://www.sonoticias.com.br/"
     },
     {
         title: "Shopping Sinop",
         category: "Compras",
-        description: "O maior centro de compras, lazer e gastronomia do Nortão, com cinema Moviecom e as melhores lojas.",
-        image: "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=500&q=80",
-        link: "https://shoppingsinop.com"
+        description: "O maior e mais moderno shopping center da região, com dezenas de lojas nacionais, praça de alimentação completa e cinema.",
+        image: "https://shoppingsinop.com.br/wp-content/uploads/2021/10/fachada-shopping-sinop.jpg",
+        link: "https://shoppingsinop.com.br/"
     }
 ];
 
