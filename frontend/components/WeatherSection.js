@@ -50,7 +50,12 @@ export default function WeatherSection() {
             "overcast": "Encoberto",
             "fog": "Nevoeiro",
             "light rain": "Chuva fraca",
-            "moderate rain": "Chuva moderada"
+            "moderate rain": "Chuva moderada",
+            "heavy rain": "Chuva forte",
+            "scattered clouds": "Nuvens esparsas",
+            "broken clouds": "Nublado",
+            "few clouds": "Poucas nuvens",
+            "thunderstorm": "Tempestade"
         };
         const low = val.toLowerCase();
         return map[low] || val;
@@ -95,8 +100,34 @@ export default function WeatherSection() {
                 gap: isMobile ? '10px' : '20px'
             }}>
 
-                {/* Header Compacto - REMOVIDO "SINOPINHAS WEATHER" */}
-                <div style={{ textAlign: 'left', marginBottom: '10px', display: 'flex', alignItems: 'flex-end', gap: 12, padding: '10px' }}>
+                {/* Titulo que é o charme */}
+                <div style={{ textAlign: 'center', marginBottom: isMobile ? '5px' : '15px' }}>
+                    <h2 style={{
+                        fontSize: isMobile ? '32px' : '58px',
+                        fontWeight: '900',
+                        margin: 0,
+                        background: 'linear-gradient(90deg, #8d6aff, #fe7d45)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        textShadow: '0 4px 15px rgba(141, 106, 255, 0.2)',
+                        letterSpacing: '-2px',
+                        textTransform: 'uppercase'
+                    }}>
+                        SINOPINHAS WEATHER
+                    </h2>
+                </div>
+
+                {/* Header Section Compacta */}
+                <div style={{
+                    textAlign: isMobile ? 'center' : 'left',
+                    marginBottom: '10px',
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'center' : 'flex-end',
+                    gap: isMobile ? 5 : 12,
+                    padding: '10px',
+                    justifyContent: isMobile ? 'center' : 'flex-start'
+                }}>
                     <div style={{
                         fontSize: isMobile ? '36px' : '52px',
                         fontWeight: '900',
@@ -107,7 +138,7 @@ export default function WeatherSection() {
                     }}>
                         {realData ? `${realData.temp}°C` : '--°C'}
                     </div>
-                    <div style={{ paddingBottom: 4 }}>
+                    <div style={{ paddingBottom: isMobile ? 0 : 4, textAlign: isMobile ? 'center' : 'left' }}>
                         <div style={{
                             fontSize: isMobile ? '16px' : '22px',
                             color: 'var(--text-color)',
