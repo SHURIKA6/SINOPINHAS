@@ -6,6 +6,7 @@ export function useAuth(showToast) {
     const [isAdmin, setIsAdmin] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [adminPassword, setAdminPassword] = useState('');
+    const prevUnreadRef = useRef(0);
 
     // Initial check
     useEffect(() => {

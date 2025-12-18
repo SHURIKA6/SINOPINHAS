@@ -33,54 +33,46 @@ app.get('/health', async (c) => {
 app.get('/fix-db', async (c) => {
     const env = c.env;
     try {
-        const queries = [
-            `CREATE TABLE IF NOT EXISTS comments (
-                id SERIAL PRIMARY KEY,
-                video_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                comment TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW()
-            )`,
-            `CREATE TABLE IF NOT EXISTS likes (
-                id SERIAL PRIMARY KEY,
-                video_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW()
-            )`,
-            `CREATE TABLE IF NOT EXISTS views (
-                id SERIAL PRIMARY KEY,
-                video_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW()
-            )`,
-            `CREATE TABLE IF NOT EXISTS notifications (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                type TEXT NOT NULL,
-                related_id INTEGER,
-                message TEXT,
-                read BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT NOW()
-            )`,
-            `CREATE TABLE IF NOT EXISTS messages (
-                id SERIAL PRIMARY KEY,
-                from_id INTEGER NOT NULL,
-                to_id INTEGER NOT NULL,
-                msg TEXT NOT NULL,
-                is_admin BOOLEAN DEFAULT FALSE,
-                read BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT NOW()
-            )`,
-            `ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'`,
-            `ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`,
-            `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`
+        const migrations = [
+            // Fix Notifications
+            "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id INTEGER",
+            "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT",
+            "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS user_id INTEGER",
+
+            // Fix Messages
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS from_id INTEGER",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS to_id INTEGER",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS msg TEXT",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE",
+
+            // Sync data if old columns exist (ignoring errors if columns don't exist)
+            "UPDATE notifications SET is_read = read WHERE is_read IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='notifications' AND column_name='read')",
+            "UPDATE messages SET from_id = sender_id WHERE from_id IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='messages' AND column_name='sender_id')",
+            "UPDATE messages SET to_id = recipient_id WHERE to_id IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='messages' AND column_name='recipient_id')",
+            "UPDATE messages SET msg = content WHERE msg IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='messages' AND column_name='content')",
+
+            // Videos/Users
+            "ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'",
+            "ALTER TABLE videos ADD COLUMN IF NOT EXISTS is_secret BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT"
         ];
 
         const results = [];
-        for (const q of queries) {
-            await queryDB(q, [], env);
-            results.push("Executed: " + q.substring(0, 50) + "...");
+        for (const q of migrations) {
+            try {
+                await queryDB(q, [], env);
+                results.push(`✅ ${q.substring(0, 40)}...`);
+            } catch (err) {
+                results.push(`❌ ${q.substring(0, 40)}...: ${err.message}`);
+            }
         }
+
+        // Run full init too
+        await initDatabase(env);
+        results.push("Database Init Executed");
 
         return createResponse(c, { success: true, actions: results });
     } catch (err) {

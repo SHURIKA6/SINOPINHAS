@@ -54,16 +54,18 @@ export const SCHEMA_QUERIES = [
         message TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
         type TEXT,
+        related_id INTEGER,
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
     // Tabela de Mensagens/Chat
     `CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
-        sender_id INTEGER REFERENCES users(id),
-        recipient_id INTEGER REFERENCES users(id),
-        content TEXT NOT NULL,
+        from_id INTEGER REFERENCES users(id),
+        to_id INTEGER REFERENCES users(id),
+        msg TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
+        is_admin BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
@@ -91,7 +93,7 @@ export const SCHEMA_QUERIES = [
     // Índices
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)",
-    "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(sender_id, recipient_id)",
+    "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(from_id, to_id)",
     "CREATE INDEX IF NOT EXISTS idx_likes_video_user ON likes(video_id, user_id)",
     "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)"
