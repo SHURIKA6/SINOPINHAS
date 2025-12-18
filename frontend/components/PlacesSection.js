@@ -5,42 +5,42 @@ const RECOMMENDATIONS = [
         title: "Parque Florestal de Sinop",
         category: "Natureza",
         description: "Um dos principais atrativos naturais da cidade, com mata nativa preservada, diversas espécies de animais silvestres, lago de 30 mil m² e trilhas ecológicas.",
-        image: "https://conhecasinop.com.br/storage/uploads/6475024773822-parque-florestal-sinop-mt.jpg",
+        image: "https://www.sinop.mt.gov.br/fotos/8b73bd49749cc14626b6631d945a90c2.jpg",
         link: "https://www.sinop.mt.gov.br/Conteudo/2/236/secretaria-de-meio-ambiente-e-desenvolvimento-sustentavel/parque-florestal-de-sinop"
     },
     {
         title: "Catedral Sagrado Coração de Jesus",
         category: "Cultura",
-        description: "Obra monumental com arquitetura moderna e vitrais artísticos, sendo o centro religioso e cultural mais importante da região.",
-        image: "https://conhecasinop.com.br/storage/uploads/6474f6760a0fb-catedral-sagrado-coracao-de-jesus-sinop-mt.jpg",
+        description: "Obra monumental com arquitetura moderna e vitrais artísticos, localizada no coração da cidade, com detalhes em pedras naturais.",
+        image: "https://static.wixstatic.com/media/eef14d_88a921473671452f9bd1ef5fc4668ed8~mv2.jpg/v1/fill/w_774,h_370,al_c,lg_1,q_80,enc_avif,quality_auto/catedralsinop.jpg",
         link: "https://conhecasinop.com.br/turismo/catedral-sagrado-coracao-de-jesus"
     },
     {
         title: "Curupy Acqua Park",
         category: "Lazer",
-        description: "O maior parque aquático do Norte de Mato Grosso, oferecendo praia artificial, piscina de ondas, toboáguas e Eco Park.",
-        image: "https://conhecasinop.com.br/storage/uploads/6471165a6e2e9-curupy-acqua-park-sinop-mt.jpg",
+        description: "O maior parque aquático do Mato Grosso, oferecendo praia artificial, piscina de ondas, toboáguas e Eco Park completo.",
+        image: "https://curupy.com.br/gallery/190056422.Atracoes/1067063056.jpg",
         link: "https://curupyacquapark.com.br/"
     },
     {
         title: "Gastronomia em Sinop",
         category: "Gastronomia",
-        description: "Experimente pratos típicos como Matrinxã Assada e o melhor churrasco mato-grossense nos melhores restaurantes da cidade.",
-        image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80",
+        description: "Descubra o sabor local com Matrinxã Assada e o melhor churrasco mato-grossense nos diversos restaurantes da Capital do Nortão.",
+        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
         link: "https://www.tripadvisor.com.br/Restaurants-g1162319-Sinop_State_of_Mato_Grosso.html"
     },
     {
         title: "Só Notícias - Guia Local",
         category: "Notícias",
-        description: "O portal de notícias mais acessado da região, com guias, eventos e tudo o que acontece em Sinop e no Nortão.",
-        image: "https://www.sonoticias.com.br/wp-content/uploads/2021/04/sonoticias-destaque.jpg",
+        description: "Portal líder de notícias com guias de eventos, utilidade pública e tudo o que acontece em Sinop e região.",
+        image: "https://images.unsplash.com/photo-1585829365234-781fca5ddecf?auto=format&fit=crop&w=800&q=80",
         link: "https://www.sonoticias.com.br/"
     },
     {
         title: "Shopping Sinop",
         category: "Compras",
-        description: "O maior e mais moderno shopping center da região, com dezenas de lojas nacionais, praça de alimentação completa e cinema.",
-        image: "https://shoppingsinop.com.br/wp-content/uploads/2021/10/fachada-shopping-sinop.jpg",
+        description: "Centro comercial moderno com 110 lojas, praça de alimentação com 18 operações, cinemas Moviecom e 1.200 vagas de estacionamento.",
+        image: "https://upload.madnezz.com.br/e654acabdcd7409f4aed889845a36f81",
         link: "https://shoppingsinop.com.br/"
     }
 ];
