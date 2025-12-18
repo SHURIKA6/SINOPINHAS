@@ -11,6 +11,7 @@ app.get('/health', async (c) => {
         env: {
             DATABASE_URL: env.DATABASE_URL ? "Defined (Starts with " + env.DATABASE_URL.substring(0, 10) + "...)" : "UNDEFINED ❌",
             ADMIN_PASSWORD: env.ADMIN_PASSWORD ? "Defined (Length " + env.ADMIN_PASSWORD.length + ")" : "UNDEFINED ❌",
+            JWT_SECRET: env.JWT_SECRET ? "Defined ✅" : "UNDEFINED ❌",
         },
         db_connection: "Testing..."
     };
@@ -57,7 +58,8 @@ app.get('/fix-db', async (c) => {
             "ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'",
             "ALTER TABLE videos ADD COLUMN IF NOT EXISTS is_secret BOOLEAN DEFAULT FALSE",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT"
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT",
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT"
         ];
 
         const results = [];

@@ -87,6 +87,7 @@ export const SCHEMA_QUERIES = [
         action TEXT NOT NULL,
         details JSONB,
         ip_address TEXT,
+        user_agent TEXT,
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 

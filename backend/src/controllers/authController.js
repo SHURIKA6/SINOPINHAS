@@ -23,7 +23,7 @@ export const register = async (c) => {
         );
 
         if (existing.length > 0) {
-            await logAudit(null, "REGISTER_FAILED_USERNAME_EXISTS", { username, ...body }, c);
+            await logAudit(null, "REGISTER_FAILED_USERNAME_EXISTS", { username }, c);
             return createErrorResponse(c, "USER_EXISTS", "Usuário já existe", 400);
         }
 
@@ -61,7 +61,7 @@ export const login = async (c) => {
         const password = body.password;
 
         if (!username || !password) {
-            await logAudit(null, "LOGIN_FAILED_MISSING_FIELDS", body, c);
+            await logAudit(null, "LOGIN_FAILED_MISSING_FIELDS", { username }, c);
             return createErrorResponse(c, "INVALID_INPUT", "Preencha todos os campos", 400);
         }
 
@@ -72,7 +72,7 @@ export const login = async (c) => {
         );
 
         if (rows.length === 0) {
-            await logAudit(null, "LOGIN_FAILED_USER_NOT_FOUND", { username, ...body }, c);
+            await logAudit(null, "LOGIN_FAILED_USER_NOT_FOUND", { username }, c);
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
@@ -80,12 +80,12 @@ export const login = async (c) => {
         const validPassword = await compare(password, user.password);
 
         if (!validPassword) {
-            await logAudit(user.id, "LOGIN_FAILED_WRONG_PASSWORD", { username, ...body }, c);
+            await logAudit(user.id, "LOGIN_FAILED_WRONG_PASSWORD", { username }, c);
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
         try {
-            await logAudit(user.id, "USER_LOGIN_SUCCESS", body, c);
+            await logAudit(user.id, "USER_LOGIN_SUCCESS", { username }, c);
         } catch (logErr) { }
 
         const token = await sign({
