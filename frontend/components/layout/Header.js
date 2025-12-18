@@ -15,7 +15,8 @@ export default function Header({
     logoutAdmin,
     setShowProfileModal,
     theme,
-    toggleTheme
+    toggleTheme,
+    setShowSupport
 }) {
     return (
         <>
@@ -84,6 +85,21 @@ export default function Header({
                         flexShrink: 0
                     }}>
                         🔒 Restrito
+                    </button>
+
+                    <button onClick={() => setShowSupport(true)} style={{
+                        padding: '7px 12px',
+                        background: '#3182ce',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                    }}>
+                        🆘 Suporte
                     </button>
 
                     {isAdmin && (

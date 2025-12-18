@@ -22,5 +22,6 @@ app.post('/send-message', validate(schemas.sendMessageSchema), socialController.
 app.get('/inbox/:userId', socialController.getInbox);
 app.post('/conversations/:id/read', socialController.markAsRead);
 app.get('/admin/inbox', authMiddleware, requireAdmin, socialController.getAdminInbox);
+app.post('/support', socialController.createSupportTicket);
 
 export default app;

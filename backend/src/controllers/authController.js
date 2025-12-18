@@ -114,7 +114,26 @@ export const updateProfile = async (c) => {
     const userId = c.req.param("id");
     const env = c.env;
     try {
-        const { password, avatar, bio } = await c.req.json();
+        const { password, currentPassword, avatar, bio } = await c.req.json();
+
+        // Se estiver tentando mudar a senha, precisamos validar a senha atual
+        if (password) {
+            const { rows: userRows } = await queryDB("SELECT password FROM users WHERE id = $1", [userId], env);
+            if (userRows.length === 0) {
+                return createErrorResponse(c, "NOT_FOUND", "Usuário não encontrado", 404);
+            }
+
+            if (!currentPassword) {
+                return createErrorResponse(c, "REQUIRED_FIELD", "Senha atual é necessária para definir uma nova senha", 400);
+            }
+
+            const isMatch = await compare(currentPassword, userRows[0].password);
+            if (!isMatch) {
+                await logAudit(userId, "PASSWORD_UPDATE_FAILED_WRONG_CURRENT", {}, c);
+                return createErrorResponse(c, "AUTH_ERROR", "Senha atual incorreta", 401);
+            }
+        }
+
         const updates = [];
         const values = [];
         let paramCount = 1;
@@ -144,7 +163,12 @@ export const updateProfile = async (c) => {
             env
         );
 
-        await logAudit(userId, "USER_PROFILE_UPDATED", { updates: updates.join(", ") }, c);
+        await logAudit(userId, "USER_PROFILE_UPDATED", {
+            avatar_changed: avatar !== undefined,
+            bio_changed: bio !== undefined,
+            password_changed: !!password
+        }, c);
+
         return createResponse(c, rows[0]);
     } catch (err) {
         throw err;

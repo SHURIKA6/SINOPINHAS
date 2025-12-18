@@ -20,6 +20,7 @@ const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr:
 const NewsFeed = dynamic(() => import('../components/feed/NewsFeed'), { ssr: false });
 const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
 const PlacesSection = dynamic(() => import('../components/PlacesSection'), { ssr: false });
+const SupportModal = dynamic(() => import('../components/SupportModal'), { ssr: false });
 
 import {
   logTermsAcceptance,
@@ -57,6 +58,7 @@ export default function Home({ initialVideo }) {
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showSecretAuth, setShowSecretAuth] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
   const [theme, setTheme] = useState('dark');
 
@@ -222,12 +224,14 @@ export default function Home({ initialVideo }) {
           setShowAuth={setShowAuth} setShowSecretAuth={setShowSecretAuth} setShowAdminAuth={setShowAdminAuth}
           showSecretTab={showSecretTab} unreadCount={unreadCount} setShowProfile={setShowProfile}
           logout={handleLogout} logoutAdmin={logoutAdmin} theme={theme} toggleTheme={toggleTheme}
+          setShowSupport={setShowSupport}
         />
 
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuthSuccess={handleAuthSuccess} showToast={showToast} />}
         {showProfile && <ProfileModal user={user} setUser={setUser} onClose={() => setShowProfile(false)} showToast={showToast} />}
         {showAdminAuth && <AdminAuthModal onClose={() => setShowAdminAuth(false)} onAdminAuthSuccess={handleAdminAuthSuccess} showToast={showToast} />}
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
+        {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
 
         <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
           {activeTab === 'videos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="video" />}

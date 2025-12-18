@@ -331,6 +331,39 @@ export const getAdminInbox = async (c) => {
     }
 };
 
+// Criar chamado de suporte
+export const createSupportTicket = async (c) => {
+    const env = c.env;
+    try {
+        const { user_id, username, reason, message } = await c.req.json();
+
+        // Garantir que a tabela existe
+        await queryDB(`
+            CREATE TABLE IF NOT EXISTS support_tickets (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                username TEXT,
+                reason TEXT,
+                message TEXT,
+                status TEXT DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        `, [], env);
+
+        const { rows } = await queryDB(
+            "INSERT INTO support_tickets (user_id, username, reason, message) VALUES ($1, $2, $3, $4) RETURNING id",
+            [user_id || 0, username || 'Anônimo', reason, message],
+            env
+        );
+
+        await logAudit(user_id || null, "SUPPORT_TICKET_CREATED", { reason, message_length: message.length }, c);
+
+        return createResponse(c, { id: rows[0].id });
+    } catch (err) {
+        return createErrorResponse(c, "DB_ERROR", err.message, 500);
+    }
+};
+
 // Log de termos
 export const logTerms = async (c) => {
     try {
