@@ -24,6 +24,12 @@ export default function WeatherSection() {
                 const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
                 const res = await fetch(`${apiBase}/api/weather`);
                 const data = await res.json();
+
+                if (data.error) {
+                    console.warn("Weather API error:", data.message);
+                    return;
+                }
+
                 setRealData(data);
             } catch (error) {
                 console.error("Failed to fetch weather data", error);
@@ -167,7 +173,7 @@ export default function WeatherSection() {
                         <div style={{ borderRadius: '20px', overflow: 'hidden', marginBottom: '10px' }}>
                             <a
                                 className="weatherwidget-io"
-                                href="https://forecast7.com/pt/s11d86w55d51/sinop/"
+                                href="https://forecast7.com/pt/n11d86n55d51/sinop/"
                                 data-label_1="SINOP"
                                 data-label_2="AGORA"
                                 data-font="Roboto"
@@ -262,7 +268,7 @@ export default function WeatherSection() {
                             <div style={{ borderRadius: '20px', overflow: 'hidden' }}>
                                 <a
                                     className="weatherwidget-io"
-                                    href="https://forecast7.com/pt/s11d86w55d51/sinop/"
+                                    href="https://forecast7.com/pt/n11d86n55d51/sinop/"
                                     data-label_1="SINOP"
                                     data-label_2="7 DIAS"
                                     data-font="Roboto"
