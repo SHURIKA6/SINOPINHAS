@@ -2,8 +2,13 @@ import React, { useEffect, useState } from 'react';
 
 export default function WeatherSection() {
     const [realData, setRealData] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
         // Load the visual widget script
         const loadWidget = () => {
             const id = 'weatherwidget-io-js';
@@ -37,6 +42,7 @@ export default function WeatherSection() {
         };
 
         fetchRealData();
+        return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     return (
@@ -46,13 +52,14 @@ export default function WeatherSection() {
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
-            padding: '40px 20px',
+            padding: isMobile ? '20px 10px' : '40px 20px',
             color: 'var(--text-color)',
             position: 'relative',
             background: 'transparent',
             minHeight: '80vh',
             fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-            transition: 'color 0.3s ease'
+            transition: 'color 0.3s ease',
+            overflow: 'hidden'
         }}>
 
             {/* Background com Animação Suave - Efeito Aurora */}
@@ -82,38 +89,39 @@ export default function WeatherSection() {
                 maxWidth: '1100px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '40px'
+                gap: isMobile ? '20px' : '40px'
             }}>
 
                 {/* Header Section */}
-                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <div style={{ textAlign: 'center', marginBottom: isMobile ? '10px' : '20px' }}>
                     <h2 style={{
-                        fontSize: '64px',
+                        fontSize: isMobile ? '38px' : '64px',
                         fontWeight: '800',
                         marginBottom: '10px',
                         background: 'linear-gradient(to right, var(--text-color), var(--accent-color))',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        textShadow: '0 4px 30px rgba(141, 106, 255, 0.2)',
-                        letterSpacing: '-2px'
+                        textShadow: '0 4px 15px rgba(141, 106, 255, 0.3)',
+                        letterSpacing: '-1px'
                     }}>
-                        {realData ? `${realData.temp}°C` : 'Clima em Sinop'}
+                        SINOPINHAS WEATHER
                     </h2>
                     <p style={{
-                        fontSize: '20px',
-                        color: 'var(--secondary-text)',
-                        fontWeight: '500',
-                        marginTop: '0'
+                        fontSize: isMobile ? '18px' : '24px',
+                        color: 'var(--text-color)',
+                        fontWeight: '700',
+                        marginTop: '0',
+                        opacity: 0.9
                     }}>
-                        {realData ? realData.description : 'Monitoramento climático da nossa SINOPINHA!'}
+                        {realData ? `${realData.temp}°C - ${realData.description}` : 'Sincronizando clima...'}
                     </p>
                 </div>
 
                 {/* Grid de Cards Principal */}
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                    gap: '30px',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))',
+                    gap: isMobile ? '20px' : '30px',
                     width: '100%',
                     alignItems: 'start'
                 }}>
@@ -124,7 +132,7 @@ export default function WeatherSection() {
                         backdropFilter: 'blur(20px)',
                         borderRadius: '32px',
                         border: '1px solid var(--border-color)',
-                        padding: '32px',
+                        padding: isMobile ? '20px' : '32px',
                         boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
                         display: 'flex',
                         flexDirection: 'column',
@@ -170,7 +178,14 @@ export default function WeatherSection() {
                         </div>
 
                         {/* Widget Visual (Iframe) */}
-                        <div style={{ borderRadius: '20px', overflow: 'hidden', marginBottom: '10px' }}>
+                        <div style={{
+                            borderRadius: '20px',
+                            overflow: 'hidden',
+                            marginBottom: '10px',
+                            minHeight: isMobile ? '120px' : '150px',
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid var(--border-color)'
+                        }}>
                             <a
                                 className="weatherwidget-io"
                                 href="https://forecast7.com/pt/n11d86n55d51/sinop/"
@@ -191,8 +206,8 @@ export default function WeatherSection() {
                         {/* REAL DATA GRID */}
                         <div style={{
                             display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: '16px'
+                            gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(140px, 1fr))' : '1fr 1fr',
+                            gap: isMobile ? '12px' : '16px'
                         }}>
                             <DetailBlock
                                 icon="🌬️"
@@ -234,7 +249,7 @@ export default function WeatherSection() {
                             backdropFilter: 'blur(20px)',
                             borderRadius: '32px',
                             border: '1px solid var(--border-color)',
-                            padding: '32px',
+                            padding: isMobile ? '20px' : '32px',
                             boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
                             transition: 'background 0.3s ease, border-color 0.3s ease'
                         }}>
@@ -265,7 +280,13 @@ export default function WeatherSection() {
                                 </div>
                             </div>
 
-                            <div style={{ borderRadius: '20px', overflow: 'hidden' }}>
+                            <div style={{
+                                borderRadius: '20px',
+                                overflow: 'hidden',
+                                minHeight: isMobile ? '280px' : '340px',
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid var(--border-color)'
+                            }}>
                                 <a
                                     className="weatherwidget-io"
                                     href="https://forecast7.com/pt/n11d86n55d51/sinop/"
@@ -293,9 +314,9 @@ export default function WeatherSection() {
                             backdropFilter: 'blur(20px)',
                             borderRadius: '32px',
                             border: '1px solid var(--border-color)',
-                            padding: '25px',
+                            padding: isMobile ? '15px' : '25px',
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(130px, 1fr))' : 'repeat(3, 1fr)',
                             gap: '15px',
                             boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
                             transition: 'background 0.3s ease, border-color 0.3s ease'

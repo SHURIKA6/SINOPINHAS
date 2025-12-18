@@ -1,10 +1,34 @@
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
+const getWmoLabel = (code) => {
+    const table = {
+        0: "Céu Limpo",
+        1: "Principalmente Limpo",
+        2: "Parcialmente Nublado",
+        3: "Nublado",
+        45: "Nevoeiro",
+        48: "Nevoeiro com Geada",
+        51: "Garoa Leve",
+        53: "Garoa Moderada",
+        55: "Garoa Densa",
+        61: "Chuva Fraca",
+        63: "Chuva Moderada",
+        65: "Chuva Forte",
+        80: "Pancadas de Chuva Leves",
+        81: "Pancadas de Chuva",
+        82: "Pancadas de Chuva Fortes",
+        95: "Trovoada",
+        96: "Trovoada com Granizo Fraco",
+        99: "Trovoada com Granizo Forte"
+    };
+    return table[code] || "Tempo Instável";
+};
+
 export const getWeather = async (c) => {
     const env = c.env;
-    const cacheKey = 'weather_data_sinop_v5';
+    const cacheKey = 'weather_data_sinop_v7_final';
 
-    // 1. Tentar Cache primeiro
+    // 1. Tentar Cache
     if (env?.MURAL_STORE) {
         try {
             const cached = await env.MURAL_STORE.get(cacheKey);
@@ -25,7 +49,7 @@ export const getWeather = async (c) => {
 
     let weatherData = null;
 
-    // 2. Fonte Primária: HG Brasil
+    // 2. Fonte Primária: HG Brasil (Corrigido WOEID)
     try {
         const res = await tryFetch(`https://api.hgbrasil.com/weather?woeid=455928`);
         if (res.ok) {
@@ -36,20 +60,20 @@ export const getWeather = async (c) => {
         }
     } catch (e) { console.warn("HG Brasil failed:", e.message); }
 
-    // 3. Fallback 1: Open-Meteo
+    // 3. Fallback 1: Open-Meteo (Mapeamento de Códigos)
     if (!weatherData) {
         try {
-            const res = await tryFetch('https://api.open-meteo.com/v1/forecast?latitude=-11.8641&longitude=-55.5031&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m&daily=sunrise,sunset,uv_index_max&wind_speed_unit=kmh&timezone=America%2FCuiaba');
+            const res = await tryFetch('https://api.open-meteo.com/v1/forecast?latitude=-11.8641&longitude=-55.5031&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&daily=sunrise,sunset,uv_index_max&wind_speed_unit=kmh&timezone=America%2FCuiaba');
             if (res.ok) {
                 const data = await res.json();
                 if (data?.current) {
                     weatherData = {
                         temp: Math.round(data.current.temperature_2m || 0),
-                        description: "Tempo Estável",
+                        description: getWmoLabel(data.current.weather_code),
                         humidity: data.current.relative_humidity_2m || 0,
-                        wind_speedy: `${data.current.wind_speed_10m || 0} km/h`,
-                        sunrise: data.daily?.sunrise?.[0]?.split('T')?.[1] || "--:--",
-                        sunset: data.daily?.sunset?.[0]?.split('T')?.[1] || "--:--",
+                        wind_speedy: `${Math.round(data.current.wind_speed_10m || 0)} km/h`,
+                        sunrise: data.daily?.sunrise?.[0]?.split('T')?.[1] || "06:00",
+                        sunset: data.daily?.sunset?.[0]?.split('T')?.[1] || "18:30",
                         moon_phase: "N/A",
                         date: new Date().toLocaleDateString('pt-BR'),
                         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -60,10 +84,10 @@ export const getWeather = async (c) => {
         } catch (e) { console.warn("Open-Meteo failed:", e.message); }
     }
 
-    // 4. Fallback 2: wttr.in
+    // 4. Fallback 2: wttr.in (Localização Específica)
     if (!weatherData) {
         try {
-            const res = await tryFetch('https://wttr.in/Sinop?format=j1');
+            const res = await tryFetch('https://wttr.in/Sinop,Brazil?format=j1');
             if (res.ok) {
                 const data = await res.json();
                 const current = data.current_condition?.[0];

@@ -36,11 +36,25 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 <span className="label">Mensagens</span>
             </button>
             <button
+                onClick={() => setActiveTab('news')}
+                className={`nav-item ${activeTab === 'news' ? 'active' : ''}`}
+            >
+                <span className="icon">📰</span>
+                <span className="label">Notícias</span>
+            </button>
+            <button
                 onClick={() => setActiveTab('lugares')}
                 className={`nav-item ${activeTab === 'lugares' ? 'active' : ''}`}
             >
                 <span className="icon">📍</span>
                 <span className="label">Lugares</span>
+            </button>
+            <button
+                onClick={() => setActiveTab('weather')}
+                className={`nav-item ${activeTab === 'weather' ? 'active' : ''}`}
+            >
+                <span className="icon">⛅</span>
+                <span className="label">Clima</span>
             </button>
 
             <style jsx>{`
@@ -84,12 +98,13 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .icon {
-                    font-size: 20px;
+                    font-size: 18px;
                 }
 
                 .label {
-                    font-size: 10px;
+                    font-size: 9px;
                     font-weight: 600;
+                    letter-spacing: -0.2px;
                 }
 
                 .upload-btn {
