@@ -33,7 +33,7 @@ const RECOMMENDATIONS = [
         title: "Só Notícias - Guia Local",
         category: "Notícias",
         description: "Portal líder de notícias com guias de eventos, utilidade pública e tudo o que acontece em Sinop e região.",
-        image: "https://images.unsplash.com/photo-1585829365234-781fca5ddecf?auto=format&fit=crop&w=800&q=80",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmITjMV0L8KX5HAWhj15UNPELMUTTWwFetYA&s",
         link: "https://www.sonoticias.com.br/"
     },
     {
