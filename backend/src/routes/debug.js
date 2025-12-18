@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { queryDB, ensureIndexes } from '../db/index.js';
+import { queryDB, initDatabase } from '../db/index.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
 const app = new Hono();
@@ -90,8 +90,8 @@ app.get('/fix-db', async (c) => {
 
 app.post('/setup-db', async (c) => {
     try {
-        await ensureIndexes(c.env);
-        return createResponse(c, { success: true, message: 'Indexes verified/created' });
+        await initDatabase(c.env);
+        return createResponse(c, { success: true, message: 'Database initialized' });
     } catch (err) {
         return createErrorResponse(c, "SETUP_FAILED", err.message, 500);
     }

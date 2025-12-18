@@ -1,28 +1,26 @@
-import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useComments } from "../hooks/useComments";
 import Head from "next/head";
 import { useRouter } from 'next/router';
 
-// Componentes Dinâmicos
-const VideoCard = dynamic(() => import('../components/VideoCard'), { ssr: false });
-const Header = dynamic(() => import('../components/layout/Header'), { ssr: false });
-const UploadSection = dynamic(() => import('../components/UploadSection'), { ssr: false });
-const AdminPanel = dynamic(() => import('../components/admin/AdminPanel'), { ssr: false });
-const AuthModal = dynamic(() => import('../components/auth/AuthModal'), { ssr: false });
-const AdminAuthModal = dynamic(() => import('../components/auth/AdminAuthModal'), { ssr: false });
-const SecretAuthModal = dynamic(() => import('../components/auth/SecretAuthModal'), { ssr: false });
-const ProfileModal = dynamic(() => import('../components/auth/ProfileModal'), { ssr: false });
-const TermsModal = dynamic(() => import('../components/TermsModal'), { ssr: false });
-const Inbox = dynamic(() => import('../components/inbox'), { ssr: false });
-const HomeFeed = dynamic(() => import('../components/feed/HomeFeed'), { ssr: false });
-const SecretFeed = dynamic(() => import('../components/feed/SecretFeed'), { ssr: false });
-const NewsFeed = dynamic(() => import('../components/feed/NewsFeed'), { ssr: false });
-const WeatherSection = dynamic(() => import('../components/WeatherSection'), { ssr: false });
-const PlacesSection = dynamic(() => import('../components/PlacesSection'), { ssr: false });
-const SupportModal = dynamic(() => import('../components/SupportModal'), { ssr: false });
-const BottomNav = dynamic(() => import('../components/layout/BottomNav'), { ssr: false });
+import VideoCard from '../components/VideoCard';
+import Header from '../components/layout/Header';
+import UploadSection from '../components/UploadSection';
+import AdminPanel from '../components/admin/AdminPanel';
+import AuthModal from '../components/auth/AuthModal';
+import AdminAuthModal from '../components/auth/AdminAuthModal';
+import SecretAuthModal from '../components/auth/SecretAuthModal';
+import ProfileModal from '../components/auth/ProfileModal';
+import TermsModal from '../components/TermsModal';
+import Inbox from '../components/inbox';
+import HomeFeed from '../components/feed/HomeFeed';
+import SecretFeed from '../components/feed/SecretFeed';
+import NewsFeed from '../components/feed/NewsFeed';
+import WeatherSection from '../components/WeatherSection';
+import PlacesSection from '../components/PlacesSection';
+import SupportModal from '../components/SupportModal';
+import BottomNav from '../components/layout/BottomNav';
 
 import {
   logTermsAcceptance,

@@ -135,7 +135,6 @@ export default function Header({
                                 {user.avatar && (
                                     <img
                                         src={user.avatar}
-                                        loading="lazy"
                                         style={{
                                             width: 20,
                                             height: 20,

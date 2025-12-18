@@ -42,14 +42,12 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     <img
                         src={video.video_url}
                         alt={video.title}
-                        loading="lazy"
                         style={{ width: "100%", height: "100%", objectFit: 'contain' }}
                     />
                 ) : video.video_url ? (
                     <video
                         src={video.video_url}
                         controls
-                        preload="none"
                         style={{ width: "100%", height: "100%", objectFit: 'contain' }}
                         poster={video.thumbnail || null}
                     />
