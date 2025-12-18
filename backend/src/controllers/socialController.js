@@ -7,22 +7,50 @@ import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 export const likeVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
+    let userId = null;
+
     try {
+        const body = await c.req.json();
+        userId = body.user_id;
+
+        if (!userId) {
+            return createErrorResponse(c, "REQUIRED_USER", "Identificação do usuário necessária", 400);
+        }
 
         const { rows: existing } = await queryDB(
             "SELECT * FROM likes WHERE video_id = $1 AND user_id = $2",
-            [videoId, user_id],
+            [videoId, userId],
             env
         );
 
         if (existing.length > 0) {
-            await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, user_id], env);
+            await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, userId], env);
         } else {
-            await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
+            await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
         }
 
         return createResponse(c, { success: true });
     } catch (err) {
+        // Auto-Repair Table: likes (42P01 = Undefined Table)
+        if (err.code === '42P01') {
+            console.log("⚠️ Tabela 'likes' inexistente. Criando agora...");
+            await queryDB(`
+                CREATE TABLE IF NOT EXISTS likes (
+                    id SERIAL PRIMARY KEY,
+                    video_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(video_id, user_id)
+                )
+            `, [], env);
+
+            if (userId) {
+                // Retry operation
+                await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
+                return createResponse(c, { success: true, repaired: true });
+            }
+        }
+
         console.error("❌ Erro ao curtir vídeo:", err);
         throw err;
     }
@@ -31,12 +59,33 @@ export const likeVideo = async (c) => {
 export const viewVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
-    try {
-        const { user_id } = await c.req.json();
+    let userId = null;
 
-        await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, user_id], env);
+    try {
+        const body = await c.req.json();
+        userId = body.user_id;
+
+        await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
         return createResponse(c, { success: true });
     } catch (err) {
+        // Auto-Repair Table: views
+        if (err.code === '42P01') {
+            console.log("⚠️ Tabela 'views' inexistente. Criando agora...");
+            await queryDB(`
+                CREATE TABLE IF NOT EXISTS views (
+                    id SERIAL PRIMARY KEY,
+                    video_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            `, [], env);
+
+            if (userId) {
+                await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
+                return createResponse(c, { success: true, repaired: true });
+            }
+        }
+
         console.error("❌ Erro ao registrar view:", err);
         throw err;
     }
