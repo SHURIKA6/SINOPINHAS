@@ -9,7 +9,6 @@ export default function WeatherSection() {
         checkMobile();
         window.addEventListener('resize', checkMobile);
 
-        // Load the visual widget script
         const loadWidget = () => {
             const id = 'weatherwidget-io-js';
             const existingScript = document.getElementById(id);
@@ -23,18 +22,12 @@ export default function WeatherSection() {
         };
         setTimeout(loadWidget, 100);
 
-        // Fetch data from OUR backend (which uses HG Brasil)
         const fetchRealData = async () => {
             try {
                 const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
                 const res = await fetch(`${apiBase}/api/weather`);
                 const data = await res.json();
-
-                if (data.error) {
-                    console.warn("Weather API error:", data.message);
-                    return;
-                }
-
+                if (data.error) return;
                 setRealData(data);
             } catch (error) {
                 console.error("Failed to fetch weather data", error);
@@ -45,43 +38,53 @@ export default function WeatherSection() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    const translate = (val) => {
+        if (!val) return val;
+        const map = {
+            "light drizzle": "Garoa leve",
+            "drizzle": "Garoa",
+            "clear sky": "Céu limpo",
+            "mainly clear": "Predominantemente limpo",
+            "partly cloudy": "Parcialmente nublado",
+            "cloudy": "Nublado",
+            "overcast": "Encoberto",
+            "fog": "Nevoeiro",
+            "light rain": "Chuva fraca",
+            "moderate rain": "Chuva moderada"
+        };
+        const low = val.toLowerCase();
+        return map[low] || val;
+    };
+
     return (
         <div style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
             width: '100%',
-            padding: isMobile ? '20px 10px' : '40px 20px',
+            padding: isMobile ? '10px' : '20px',
             color: 'var(--text-color)',
             position: 'relative',
-            background: 'transparent',
             minHeight: '80vh',
             fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-            transition: 'color 0.3s ease',
             overflow: 'hidden'
         }}>
 
-            {/* Background com Animação Suave - Efeito Aurora */}
             <div style={{
                 position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
+                top: 0,
+                left: 0,
                 width: '100%',
                 height: '100%',
-                maxWidth: '1400px',
                 background: `
-                    radial-gradient(circle at 20% 30%, rgba(141, 106, 255, 0.2) 0%, transparent 60%),
-                    radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.2) 0%, transparent 60%)
+                    radial-gradient(circle at 20% 30%, rgba(141, 106, 255, 0.1) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.1) 0%, transparent 60%)
                 `,
                 filter: 'blur(80px)',
                 zIndex: 0,
-                pointerEvents: 'none',
-                animation: 'pulseAurora 8s ease-in-out infinite alternate'
+                pointerEvents: 'none'
             }} />
 
-            {/* Container Principal */}
             <div style={{
                 position: 'relative',
                 zIndex: 1,
@@ -89,334 +92,135 @@ export default function WeatherSection() {
                 maxWidth: '1100px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: isMobile ? '20px' : '40px'
+                gap: isMobile ? '10px' : '20px'
             }}>
 
-                {/* Header Section */}
-                <div style={{ textAlign: 'center', marginBottom: isMobile ? '10px' : '20px' }}>
-                    <h2 style={{
-                        fontSize: isMobile ? '38px' : '64px',
-                        fontWeight: '800',
-                        marginBottom: '10px',
+                {/* Header Compacto - REMOVIDO "SINOPINHAS WEATHER" */}
+                <div style={{ textAlign: 'left', marginBottom: '10px', display: 'flex', alignItems: 'flex-end', gap: 12, padding: '10px' }}>
+                    <div style={{
+                        fontSize: isMobile ? '36px' : '52px',
+                        fontWeight: '900',
+                        lineHeight: 1,
                         background: 'linear-gradient(to right, var(--text-color), var(--accent-color))',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        textShadow: '0 4px 15px rgba(141, 106, 255, 0.3)',
-                        letterSpacing: '-1px'
                     }}>
-                        SINOPINHAS WEATHER
-                    </h2>
-                    <p style={{
-                        fontSize: isMobile ? '18px' : '24px',
-                        color: 'var(--text-color)',
-                        fontWeight: '700',
-                        marginTop: '0',
-                        opacity: 0.9
-                    }}>
-                        {realData ? `${realData.temp}°C - ${realData.description}` : 'Sincronizando clima...'}
-                    </p>
+                        {realData ? `${realData.temp}°C` : '--°C'}
+                    </div>
+                    <div style={{ paddingBottom: 4 }}>
+                        <div style={{
+                            fontSize: isMobile ? '16px' : '22px',
+                            color: 'var(--text-color)',
+                            fontWeight: '700',
+                            opacity: 0.9,
+                            textTransform: 'capitalize'
+                        }}>
+                            {realData ? translate(realData.description) : 'Carregando...'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--secondary-text)', fontWeight: '600' }}>Sinop, MT</div>
+                    </div>
                 </div>
 
                 {/* Grid de Cards Principal */}
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))',
-                    gap: isMobile ? '20px' : '30px',
+                    gap: isMobile ? '15px' : '30px',
                     width: '100%',
                     alignItems: 'start'
                 }}>
 
-                    {/* LEFTSIDE: CARD HOJE */}
+                    {/* CARD AGORA */}
                     <div style={{
                         background: 'var(--card-bg)',
                         backdropFilter: 'blur(20px)',
-                        borderRadius: '32px',
+                        borderRadius: '24px',
                         border: '1px solid var(--border-color)',
-                        padding: isMobile ? '20px' : '32px',
-                        boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
+                        padding: isMobile ? '16px' : '24px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '24px',
-                        transition: 'background 0.3s ease, border-color 0.3s ease'
+                        gap: '20px'
                     }}>
-                        {/* Header do Card */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            borderBottom: '1px solid var(--border-color)',
-                            paddingBottom: '20px'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div style={{
-                                    fontSize: '28px',
-                                    background: 'linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%)',
-                                    width: '50px',
-                                    height: '50px',
-                                    borderRadius: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 8px 16px rgba(251, 191, 36, 0.2)'
-                                }}>
-                                    ☀️
-                                </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ fontSize: '24px', background: 'rgba(252, 211, 77, 0.2)', padding: 10, borderRadius: 12 }}>☀️</div>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-color)' }}>Agora</h3>
-                                    <span style={{ fontSize: '14px', color: 'var(--secondary-text)' }}>Condições atuais</span>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>Agora</h3>
+                                    <span style={{ fontSize: '12px', color: 'var(--secondary-text)' }}>Condições em tempo real</span>
                                 </div>
                             </div>
-                            <span style={{
-                                fontSize: '12px',
-                                color: '#4ade80',
-                                fontWeight: 'bold',
-                                background: 'rgba(74, 222, 128, 0.1)',
-                                padding: '6px 12px',
-                                borderRadius: '20px',
-                                border: '1px solid rgba(74, 222, 128, 0.2)'
-                            }}>• Online</span>
+                            <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: 'bold', background: 'rgba(74, 222, 128, 0.1)', padding: '4px 10px', borderRadius: 20 }}>• Online</span>
                         </div>
 
-                        {/* Widget Visual (Iframe) */}
-                        <div style={{
-                            borderRadius: '20px',
-                            overflow: 'hidden',
-                            marginBottom: '10px',
-                            minHeight: isMobile ? '120px' : '150px',
-                            background: 'rgba(255,255,255,0.03)',
-                            border: '1px solid var(--border-color)'
-                        }}>
-                            <a
-                                className="weatherwidget-io"
-                                href="https://forecast7.com/pt/n11d86n55d51/sinop/"
-                                data-label_1="SINOP"
-                                data-label_2="AGORA"
-                                data-font="Roboto"
-                                data-icons="Climacons Animated"
-                                data-mode="Current"
-                                data-theme="weather_one"
-                                data-basecolor="rgba(0,0,0,0)"
-                                data-accent="#c4b5fd"
-                                data-textcolor="var(--text-color)"
-                                data-highcolor="#fcd34d"
-                                data-lowcolor="#94a3b8"
-                            >SINOP HOJE</a>
+                        {/* Widget Mini */}
+                        <div style={{ borderRadius: '16px', overflow: 'hidden', minHeight: '120px', background: 'rgba(0,0,0,0.1)' }}>
+                            <a className="weatherwidget-io" href="https://forecast7.com/pt/n11d86n55d51/sinop/" data-mode="Current" data-theme="weather_one" data-basecolor="rgba(0,0,0,0)" data-textcolor="var(--text-color)" >SINOP AGORA</a>
                         </div>
 
-                        {/* REAL DATA GRID */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(140px, 1fr))' : '1fr 1fr',
-                            gap: isMobile ? '12px' : '16px'
-                        }}>
-                            <DetailBlock
-                                icon="🌬️"
-                                label="Vento"
-                                value={realData ? realData.wind_speedy : '--'}
-                                color="#60a5fa"
-                            />
-                            <DetailBlock
-                                icon="💧"
-                                label="Umidade"
-                                value={realData ? `${realData.humidity}%` : '--'}
-                                color="#38bdf8"
-                            />
-                            <DetailBlock
-                                icon="☁️"
-                                label="Condição"
-                                value={realData ? realData.description : '--'}
-                                color="#f87171"
-                            />
-                            <DetailBlock
-                                icon="📅"
-                                label="Data"
-                                value={realData ? realData.date : '--'}
-                                subValue={realData ? realData.time : ''}
-                                color="#a78bfa"
-                            />
+                        {/* Dados Detalhados */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <DetailBlock icon="🌬️" label="Vento" value={realData ? realData.wind_speedy : '--'} />
+                            <DetailBlock icon="💧" label="Umidade" value={realData ? `${realData.humidity}%` : '--'} />
+                            <DetailBlock icon="☁️" label="Clima" value={realData ? translate(realData.description) : '--'} />
+                            <DetailBlock icon="📅" label="Atualizado" value={realData ? realData.time : '--'} />
                         </div>
                     </div>
 
-                    {/* RIGHTSIDE: PREVISÃO & ASTRONOMIA */}
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '30px'
-                    }}>
+                    {/* COLUNA DIREITA */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {/* Weekly Forecast Card */}
                         <div style={{
                             background: 'var(--card-bg)',
-                            backdropFilter: 'blur(20px)',
-                            borderRadius: '32px',
+                            borderRadius: '24px',
                             border: '1px solid var(--border-color)',
-                            padding: isMobile ? '20px' : '32px',
-                            boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
-                            transition: 'background 0.3s ease, border-color 0.3s ease'
+                            padding: isMobile ? '16px' : '24px'
                         }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '16px',
-                                marginBottom: '24px',
-                                borderBottom: '1px solid var(--border-color)',
-                                paddingBottom: '20px'
-                            }}>
-                                <div style={{
-                                    fontSize: '28px',
-                                    background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-                                    width: '50px',
-                                    height: '50px',
-                                    borderRadius: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.2)'
-                                }}>
-                                    📅
-                                </div>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-color)' }}>Previsão 7 Dias</h3>
-                                    <span style={{ fontSize: '14px', color: 'var(--secondary-text)' }}>Tendência da semana</span>
-                                </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                <div style={{ fontSize: '24px', background: 'rgba(59, 130, 246, 0.2)', padding: 10, borderRadius: 12 }}>📅</div>
+                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700' }}>Próximos Dias</h3>
                             </div>
-
-                            <div style={{
-                                borderRadius: '20px',
-                                overflow: 'hidden',
-                                minHeight: isMobile ? '280px' : '340px',
-                                background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid var(--border-color)'
-                            }}>
-                                <a
-                                    className="weatherwidget-io"
-                                    href="https://forecast7.com/pt/n11d86n55d51/sinop/"
-                                    data-label_1="SINOP"
-                                    data-label_2="7 DIAS"
-                                    data-font="Roboto"
-                                    data-icons="Climacons Animated"
-                                    data-mode="Forecast"
-                                    data-days="7"
-                                    data-theme="weather_one"
-                                    data-basecolor="rgba(0,0,0,0)"
-                                    data-accent="#38bdf8"
-                                    data-textcolor="var(--text-color)"
-                                    style={{
-                                        display: 'block',
-                                        height: '340px'
-                                    }}
-                                >SINOP FUTURO</a>
+                            <div style={{ borderRadius: '16px', overflow: 'hidden', minHeight: '260px', background: 'rgba(0,0,0,0.1)' }}>
+                                <a className="weatherwidget-io" href="https://forecast7.com/pt/n11d86n55d51/sinop/" data-mode="Forecast" data-days="7" data-theme="weather_one" data-basecolor="rgba(0,0,0,0)" data-textcolor="var(--text-color)" >SINOP 7 DIAS</a>
                             </div>
                         </div>
 
-                        {/* Astronomy & UV Card (New to fill space) */}
+                        {/* Astro Details */}
                         <div style={{
                             background: 'var(--card-bg)',
-                            backdropFilter: 'blur(20px)',
-                            borderRadius: '32px',
+                            borderRadius: '24px',
                             border: '1px solid var(--border-color)',
-                            padding: isMobile ? '15px' : '25px',
+                            padding: '20px',
                             display: 'grid',
-                            gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(130px, 1fr))' : 'repeat(3, 1fr)',
-                            gap: '15px',
-                            boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
-                            transition: 'background 0.3s ease, border-color 0.3s ease'
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '10px'
                         }}>
-                            <AstroBlock
-                                icon="🌅"
-                                label="Nascer do Sol"
-                                value={realData ? realData.sunrise : '--:--'}
-                            />
-                            <AstroBlock
-                                icon="🌇"
-                                label="Pôr do Sol"
-                                value={realData ? realData.sunset : '--:--'}
-                            />
-                            <AstroBlock
-                                icon="🌑"
-                                label="Fase da Lua"
-                                value={realData ? realData.moon_phase : '--'}
-                            />
+                            <AstroBlock icon="🌅" label="Nascer" value={realData ? realData.sunrise : '--'} />
+                            <AstroBlock icon="🌇" label="Ocaso" value={realData ? realData.sunset : '--'} />
+                            <AstroBlock icon="🌑" label="Lua" value={realData ? realData.moon_phase : '--'} />
                         </div>
-
                     </div>
                 </div>
-
             </div>
-
-
-            <style jsx>{`
-                @keyframes pulseAurora {
-                    0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); }
-                    100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
-                }
-            `}</style>
         </div>
     );
 }
 
-// Block for technical details (wind, humidity, etc)
-function DetailBlock({ icon, label, value, subValue, color }) {
+function DetailBlock({ icon, label, value }) {
     return (
-        <div style={{
-            background: 'var(--input-bg)',
-            padding: '20px',
-            borderRadius: '24px',
-            textAlign: 'center',
-            border: '1px solid var(--border-color)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '10px',
-            transition: 'all 0.3s ease',
-            cursor: 'default',
-            position: 'relative',
-            overflow: 'hidden'
-        }}
-            onMouseOver={e => {
-                e.currentTarget.style.background = 'var(--accent-color)';
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.borderColor = color + '40'; // add subtle color border
-            }}
-            onMouseOut={e => {
-                e.currentTarget.style.background = 'var(--input-bg)';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'var(--border-color)';
-            }}
-        >
-            <span style={{ fontSize: '28px', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }}>{icon}</span>
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                <span style={{ fontSize: '12px', color: 'var(--secondary-text)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</span>
-                <span style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-color)' }}>{value}</span>
-                {subValue && <span style={{ fontSize: '11px', color: 'var(--text-color)', marginTop: '4px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px', width: 'fit-content', alignSelf: 'center' }}>{subValue}</span>}
-            </div>
+        <div style={{ background: 'var(--input-bg)', padding: '12px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: '20px', marginBottom: 4 }}>{icon}</span>
+            <span style={{ fontSize: '10px', color: 'var(--secondary-text)', textTransform: 'uppercase', fontWeight: 600 }}>{label}</span>
+            <span style={{ fontSize: '14px', fontWeight: '800' }}>{value}</span>
         </div>
     );
 }
 
-// Block for Astronomy details
-function AstroBlock({ icon, label, value, isIndex }) {
+function AstroBlock({ icon, label, value }) {
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '5px',
-            textAlign: 'center'
-        }}>
-            <span style={{ fontSize: '24px' }}>{icon}</span>
-            <div>
-                <span style={{ display: 'block', fontSize: '11px', color: 'var(--secondary-text)', textTransform: 'uppercase' }}>{label}</span>
-                <span style={{
-                    display: 'block',
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    color: isIndex ? (value > 8 ? '#f43f5e' : value > 5 ? '#f59e0b' : '#10b981') : 'var(--text-color)'
-                }}>
-                    {value}
-                </span>
-            </div>
+        <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: '20px', display: 'block' }}>{icon}</span>
+            <span style={{ fontSize: '9px', color: 'var(--secondary-text)', textTransform: 'uppercase' }}>{label}</span>
+            <span style={{ fontSize: '13px', fontWeight: '700', display: 'block' }}>{value}</span>
         </div>
     );
 }
-

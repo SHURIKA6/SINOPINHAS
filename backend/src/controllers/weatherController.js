@@ -1,5 +1,32 @@
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
+const translateDescription = (desc) => {
+    if (!desc) return "Nublado";
+    const d = desc.toLowerCase();
+    const map = {
+        "clear sky": "Céu Limpo",
+        "mainly clear": "Predominantemente Limpo",
+        "partly cloudy": "Parcialmente Nublado",
+        "cloudy": "Nublado",
+        "overcast": "Encoberto",
+        "fog": "Nevoeiro",
+        "drizzle": "Garoa",
+        "light drizzle": "Garoa Leve",
+        "moderate drizzle": "Garoa Moderada",
+        "dense drizzle": "Garoa Densa",
+        "light rain": "Chuva Fraca",
+        "moderate rain": "Chuva Moderada",
+        "heavy rain": "Chuva Forte",
+        "showers": "Pancadas de Chuva",
+        "thunderstorm": "Trovoada",
+        "storm": "Tempestade"
+    };
+    for (const [eng, pt] of Object.entries(map)) {
+        if (d.includes(eng)) return pt;
+    }
+    return desc; // Return original if no match
+};
+
 const getWmoLabel = (code) => {
     const table = {
         0: "Céu Limpo",
@@ -26,7 +53,7 @@ const getWmoLabel = (code) => {
 
 export const getWeather = async (c) => {
     const env = c.env;
-    const cacheKey = 'weather_data_sinop_v7_final';
+    const cacheKey = 'weather_data_sinop_v8_final';
 
     // 1. Tentar Cache
     if (env?.MURAL_STORE) {
@@ -55,7 +82,11 @@ export const getWeather = async (c) => {
         if (res.ok) {
             const data = await res.json();
             if (data?.results) {
-                weatherData = { ...data.results, source: 'hgbrasil' };
+                weatherData = {
+                    ...data.results,
+                    description: translateDescription(data.results.description),
+                    source: 'hgbrasil'
+                };
             }
         }
     } catch (e) { console.warn("HG Brasil failed:", e.message); }
@@ -94,7 +125,7 @@ export const getWeather = async (c) => {
                 if (current) {
                     weatherData = {
                         temp: current.temp_C || 0,
-                        description: current.lang_pt?.[0]?.value || current.weatherDesc?.[0]?.value || "Nublado",
+                        description: translateDescription(current.lang_pt?.[0]?.value || current.weatherDesc?.[0]?.value || "Nublado"),
                         humidity: current.humidity || 0,
                         wind_speedy: `${current.windspeedKmph || 0} km/h`,
                         sunrise: data.weather?.[0]?.astronomy?.[0]?.sunrise || "--:--",
