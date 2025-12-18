@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 export default function WeatherSection() {
     const [realData, setRealData] = useState(null);
-    const [dailyData, setDailyData] = useState(null);
 
     useEffect(() => {
         // Load the visual widget script
@@ -19,28 +18,20 @@ export default function WeatherSection() {
         };
         setTimeout(loadWidget, 100);
 
-        // Fetch REAL data from Open-Meteo API
+        // Fetch data from OUR backend (which uses HG Brasil)
         const fetchRealData = async () => {
             try {
-                // Coordinates for Sinop, MT: -11.8641, -55.5031
-                // Added daily params: sunrise, sunset, uv_index_max
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-11.8641&longitude=-55.5031&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m,wind_gusts_10m&daily=sunrise,sunset,uv_index_max&wind_speed_unit=kmh&timezone=America%2FCuiaba');
+                const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
+                const res = await fetch(`${apiBase}/api/weather`);
                 const data = await res.json();
-                setRealData(data.current);
-                setDailyData(data.daily);
+                setRealData(data);
             } catch (error) {
-                console.error("Failed to fetch real weather data", error);
+                console.error("Failed to fetch weather data", error);
             }
         };
 
         fetchRealData();
     }, []);
-
-    // Helper to format time (e.g. "2023-12-17T05:30" -> "05:30")
-    const formatTime = (isoString) => {
-        if (!isoString) return '--:--';
-        return isoString.split('T')[1];
-    };
 
     return (
         <div style={{
@@ -100,7 +91,7 @@ export default function WeatherSection() {
                         textShadow: '0 4px 30px rgba(141, 106, 255, 0.2)',
                         letterSpacing: '-2px'
                     }}>
-                        Sinop Weather
+                        {realData ? `${realData.temp}°C` : 'Clima em Sinop'}
                     </h2>
                     <p style={{
                         fontSize: '20px',
@@ -108,7 +99,7 @@ export default function WeatherSection() {
                         fontWeight: '500',
                         marginTop: '0'
                     }}>
-                        Monitoramento climático da nossa SINOPINHAS!
+                        {realData ? realData.description : 'Monitoramento climático da nossa SINOPINHA!'}
                     </p>
                 </div>
 
@@ -176,7 +167,7 @@ export default function WeatherSection() {
                         <div style={{ borderRadius: '20px', overflow: 'hidden', marginBottom: '10px' }}>
                             <a
                                 className="weatherwidget-io"
-                                href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                                href="https://forecast7.com/pt/s11d86w55d51/sinop/"
                                 data-label_1="SINOP"
                                 data-label_2="AGORA"
                                 data-font="Roboto"
@@ -200,26 +191,26 @@ export default function WeatherSection() {
                             <DetailBlock
                                 icon="🌬️"
                                 label="Vento"
-                                value={realData ? `${realData.wind_speed_10m} km/h` : '--'}
-                                subValue={realData ? `Rajadas: ${realData.wind_gusts_10m} km/h` : ''}
+                                value={realData ? realData.wind_speedy : '--'}
                                 color="#60a5fa"
                             />
                             <DetailBlock
                                 icon="💧"
                                 label="Umidade"
-                                value={realData ? `${realData.relative_humidity_2m}%` : '--'}
+                                value={realData ? `${realData.humidity}%` : '--'}
                                 color="#38bdf8"
                             />
                             <DetailBlock
-                                icon="🌡️"
-                                label="Sensação"
-                                value={realData ? `${realData.apparent_temperature}°C` : '--'}
+                                icon="☁️"
+                                label="Condição"
+                                value={realData ? realData.description : '--'}
                                 color="#f87171"
                             />
                             <DetailBlock
-                                icon="⏲️"
-                                label="Pressão"
-                                value={realData ? `${realData.surface_pressure} hPa` : '--'}
+                                icon="📅"
+                                label="Data"
+                                value={realData ? realData.date : '--'}
+                                subValue={realData ? realData.time : ''}
                                 color="#a78bfa"
                             />
                         </div>
@@ -271,7 +262,7 @@ export default function WeatherSection() {
                             <div style={{ borderRadius: '20px', overflow: 'hidden' }}>
                                 <a
                                     className="weatherwidget-io"
-                                    href="https://forecast7.com/pt/n11d86n55d51/sinop/"
+                                    href="https://forecast7.com/pt/s11d86w55d51/sinop/"
                                     data-label_1="SINOP"
                                     data-label_2="7 DIAS"
                                     data-font="Roboto"
@@ -306,18 +297,17 @@ export default function WeatherSection() {
                             <AstroBlock
                                 icon="🌅"
                                 label="Nascer do Sol"
-                                value={dailyData ? formatTime(dailyData.sunrise[0]) : '--:--'}
+                                value={realData ? realData.sunrise : '--:--'}
                             />
                             <AstroBlock
                                 icon="🌇"
                                 label="Pôr do Sol"
-                                value={dailyData ? formatTime(dailyData.sunset[0]) : '--:--'}
+                                value={realData ? realData.sunset : '--:--'}
                             />
                             <AstroBlock
-                                icon="☀️"
-                                label="Índice UV"
-                                value={dailyData ? dailyData.uv_index_max[0] : '--'}
-                                isIndex={true}
+                                icon="🌑"
+                                label="Fase da Lua"
+                                value={realData ? realData.moon_phase : '--'}
                             />
                         </div>
 
