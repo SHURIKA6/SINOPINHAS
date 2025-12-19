@@ -36,6 +36,13 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 <span className="label">Mensagens</span>
             </button>
             <button
+                onClick={() => setActiveTab('eventos')}
+                className={`nav-item ${activeTab === 'eventos' ? 'active' : ''}`}
+            >
+                <span className="icon">📅</span>
+                <span className="label">Eventos</span>
+            </button>
+            <button
                 onClick={() => setActiveTab('news')}
                 className={`nav-item ${activeTab === 'news' ? 'active' : ''}`}
             >

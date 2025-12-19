@@ -20,29 +20,38 @@ export default function Header({
 }) {
     return (
         <>
-            <header style={{
-                background: 'var(--header-bg)',
-                padding: '12px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderBottom: '2px solid var(--border-color)',
-                flexWrap: 'wrap',
-                gap: '12px',
-                position: 'relative',
-                transition: 'background 0.3s ease, border-color 0.3s ease'
-            }}>
-                <h1 style={{
-                    margin: 0,
-                    fontSize: 24,
-                    fontWeight: 700,
-                    letterSpacing: "2px",
-                    background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    minWidth: '180px',
-                    flexShrink: 0
-                }}>SINOPINHAS</h1>
+            <header
+                className="glass"
+                style={{
+                    padding: '12px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid var(--border-color)',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1000,
+                    transition: 'all 0.3s ease'
+                }}
+            >
+                <h1
+                    onClick={() => setActiveTab('videos')}
+                    style={{
+                        margin: 0,
+                        fontSize: 24,
+                        fontWeight: 1000,
+                        letterSpacing: "-1px",
+                        background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        minWidth: '180px',
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                    }}
+                >SINOPINHAS</h1>
 
                 <div style={{
                     display: 'flex',
@@ -207,7 +216,7 @@ export default function Header({
 
 
             <nav className="tab-container">
-                {['videos', 'photos', 'upload', 'news', 'lugares', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+                {['videos', 'photos', 'upload', 'eventos', 'news', 'lugares', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -219,15 +228,16 @@ export default function Header({
                                     tab === 'lugares' ? '📍 Lugares' :
                                         tab === 'weather' ? '⛅ Clima' :
                                             tab === 'upload' ? '📤 Upload' :
-                                                tab === 'admin' ? '⚙️ Admin' :
-                                                    tab === 'inbox' ? (
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                            💬 Mensagens
-                                                            {unreadCount > 0 && (
-                                                                <span className="badge">{unreadCount}</span>
-                                                            )}
-                                                        </span>
-                                                    ) : '🔒 Secreto'}
+                                                tab === 'eventos' ? '📅 Eventos' :
+                                                    tab === 'admin' ? '⚙️ Admin' :
+                                                        tab === 'inbox' ? (
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                💬 Mensagens
+                                                                {unreadCount > 0 && (
+                                                                    <span className="badge">{unreadCount}</span>
+                                                                )}
+                                                            </span>
+                                                        ) : '🔒 Secreto'}
                     </button>
                 ))}
             </nav>

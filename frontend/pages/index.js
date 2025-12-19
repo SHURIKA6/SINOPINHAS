@@ -19,6 +19,7 @@ import SecretFeed from '../components/feed/SecretFeed';
 import NewsFeed from '../components/feed/NewsFeed';
 import WeatherSection from '../components/WeatherSection';
 import PlacesSection from '../components/PlacesSection';
+import EventsSection from '../components/EventsSection';
 import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/layout/BottomNav';
 
@@ -84,7 +85,7 @@ export default function Home({ initialVideo }) {
   useEffect(() => {
     if (router.isReady) {
       const tab = router.query.tab;
-      if (tab && ['videos', 'photos', 'upload', 'news', 'lugares', 'weather', 'admin', 'inbox', 'secret'].includes(tab)) {
+      if (tab && ['videos', 'photos', 'upload', 'eventos', 'news', 'lugares', 'weather', 'admin', 'inbox', 'secret'].includes(tab)) {
         setActiveTabState(tab);
       }
     }
@@ -226,14 +227,14 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS by SHURA'}</title>
-        <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista a videos que pessoas de Sinop gostam! Conteúdo local, clima, notícias e muito mais."} />
+        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS - O Guia Premium de Sua Cidade'}</title>
+        <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista a vídeos exclusivos, confira o clima em tempo real, as últimas notícias e os melhores eventos de Sinop, MT."} />
         <meta property="og:type" content="video.other" />
         <meta property="og:title" content={currentVideo?.title || initialVideo?.title || "SINOPINHAS"} />
-        <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Assista aos melhores vídeos exclusivos na Sinopinhas."} />
+        <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Acompanhe tudo o que acontece em Sinop: Vídeos, Fotos, Clima e Eventos locais."} />
         <meta property="og:image" content="https://sinopinhas.vercel.app/og-default.jpg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta name="theme-color" content="#18142a" />
+        <meta name="theme-color" content="#0f172a" />
         <link rel="icon" href="/favicon.ico" />
         {(activeTab === 'videos' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
           <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
@@ -277,6 +278,7 @@ export default function Home({ initialVideo }) {
           {activeTab === 'photos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="photo" />}
           {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} />}
           {activeTab === 'news' && <NewsFeed />}
+          {activeTab === 'eventos' && <EventsSection />}
           {activeTab === 'lugares' && <PlacesSection />}
           {activeTab === 'upload' && <UploadSection user={user} setShowAuth={setShowAuth} showToast={showToast} setActiveTab={setActiveTab} />}
           {activeTab === 'weather' && <WeatherSection />}

@@ -9,6 +9,8 @@ import debugRoutes from './src/routes/debug.js';
 import healthRoutes from './src/routes/health.js';
 import newsRoutes from './src/routes/news.js';
 import weatherRoutes from './src/routes/weather.js';
+import eventsRoutes from './src/routes/events.js';
+import placesRoutes from './src/routes/places.js';
 import { initDatabase } from './src/db/index.js';
 
 const app = new Hono();
@@ -22,6 +24,8 @@ app.route('/api', adminRoutes);
 app.route('/api', videoRoutes);
 app.route('/api', socialRoutes);
 app.route('/api', newsRoutes); // News Route
+app.route('/api', eventsRoutes); // Events Route
+app.route('/api', placesRoutes); // Places Route
 app.route('/api/weather', weatherRoutes);
 app.route('/api/debug', debugRoutes);
 app.route('/api/health', healthRoutes);

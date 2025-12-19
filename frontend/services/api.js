@@ -134,6 +134,12 @@ export const updateUserProfile = (userId, updates) => {
 // --- News ---
 export const fetchNews = () => api.get('/api/news').then(res => res.data);
 
+// --- Events ---
+export const fetchEvents = () => api.get('/api/events').then(res => res.data);
+
+// --- Places ---
+export const fetchPlaces = () => api.get('/api/places').then(res => res.data);
+
 // --- Comments ---
 export const fetchComments = async (videoId) => {
     const res = await api.get(`/api/comments/${videoId}`);

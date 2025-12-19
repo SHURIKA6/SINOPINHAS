@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchPlaces } from '../services/api';
 
 const RECOMMENDATIONS = [
     {
@@ -46,10 +47,32 @@ const RECOMMENDATIONS = [
 ];
 
 export default function PlacesSection() {
+    const [places, setPlaces] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadPlaces = async () => {
+            try {
+                const data = await fetchPlaces();
+                if (data && data.length > 0) {
+                    setPlaces(data);
+                } else {
+                    setPlaces(RECOMMENDATIONS);
+                }
+            } catch (err) {
+                console.error("Failed to fetch places", err);
+                setPlaces(RECOMMENDATIONS);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadPlaces();
+    }, []);
+
     return (
         <div style={{ padding: '20px 0', animation: 'fadeIn 0.5s ease' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h2 style={{ fontSize: 32, fontWeight: 800, marginBottom: 12, background: 'linear-gradient(90deg, #8d6aff, #fe7d45)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <h2 style={{ fontSize: 32, fontWeight: 1000, marginBottom: 12, background: 'linear-gradient(90deg, #8d6aff, #fe7d45)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase', letterSpacing: '-1px' }}>
                     Guia Local Sinop
                 </h2>
                 <p style={{ color: 'var(--secondary-text)', fontSize: 16, maxWidth: 600, margin: '0 auto' }}>
@@ -62,7 +85,7 @@ export default function PlacesSection() {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                 gap: 24
             }}>
-                {RECOMMENDATIONS.map((place, index) => (
+                {places.map((place, index) => (
                     <a
                         key={index}
                         href={place.link}

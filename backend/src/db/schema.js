@@ -91,11 +91,38 @@ export const SCHEMA_QUERIES = [
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
+    // Tabela de Eventos
+    `CREATE TABLE IF NOT EXISTS events (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        date DATE NOT NULL,
+        time TEXT,
+        location TEXT,
+        category TEXT,
+        image TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Lugares (Guia Local)
+    `CREATE TABLE IF NOT EXISTS places (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        category TEXT,
+        image TEXT,
+        link TEXT,
+        rating FLOAT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
     // Índices
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(from_id, to_id)",
     "CREATE INDEX IF NOT EXISTS idx_likes_video_user ON likes(video_id, user_id)",
     "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
-    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)"
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)",
+    "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)"
 ];
