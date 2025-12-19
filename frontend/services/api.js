@@ -135,10 +135,10 @@ export const updateUserProfile = (userId, updates) => {
 export const fetchNews = () => api.get('/api/news').then(res => res.data);
 
 // --- Events ---
-export const fetchEvents = () => api.get('/api/events').then(res => res.data);
+export const fetchEvents = () => api.get('/api/local-agenda').then(res => res.data);
 
 // --- Places ---
-export const fetchPlaces = () => api.get('/api/places').then(res => res.data);
+export const fetchPlaces = () => api.get('/api/local-guide').then(res => res.data);
 
 // --- Comments ---
 export const fetchComments = async (videoId) => {
