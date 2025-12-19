@@ -4,16 +4,38 @@ import { updateUserProfile } from '../../services/api';
 export default function ProfileModal({ user, setUser, onClose, showToast }) {
     const [newAvatar, setNewAvatar] = useState(user.avatar || '');
     const [newBio, setNewBio] = useState(user.bio || '');
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(user.avatar || '');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setAvatarFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
     const updateProfile = async (e) => {
         e.preventDefault();
         try {
-            const updates = {};
-            if (newAvatar !== user.avatar) updates.avatar = newAvatar;
-            if (newBio !== user.bio) updates.bio = newBio;
+            const formData = new FormData();
+            let hasChanges = false;
+
+            if (avatarFile) {
+                formData.append('avatarFile', avatarFile);
+                hasChanges = true;
+            } else if (newAvatar !== user.avatar) {
+                formData.append('avatar', newAvatar);
+                hasChanges = true;
+            }
+
+            if (newBio !== user.bio) {
+                formData.append('bio', newBio);
+                hasChanges = true;
+            }
 
             if (newPassword) {
                 if (newPassword !== confirmPassword) {
@@ -25,15 +47,16 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                 if (!currentPassword) {
                     return showToast('Digite sua senha atual para autorizar a mudança', 'error');
                 }
-                updates.password = newPassword;
-                updates.currentPassword = currentPassword;
+                formData.append('password', newPassword);
+                formData.append('currentPassword', currentPassword);
+                hasChanges = true;
             }
 
-            if (Object.keys(updates).length === 0) {
+            if (!hasChanges) {
                 return showToast('Nenhuma alteração feita', 'error');
             }
 
-            const res = await updateUserProfile(user.id, updates);
+            const res = await updateUserProfile(user.id, formData);
             const updatedUser = { ...user, ...res.data };
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -42,6 +65,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
+            setAvatarFile(null);
 
             onClose();
             showToast('Perfil atualizado!', 'success');
@@ -84,10 +108,33 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                 </div>
 
                 <form onSubmit={updateProfile}>
-                    <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Avatar (URL)</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+                        <div style={{ position: 'relative', width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--accent-color)', marginBottom: 12 }}>
+                            <img src={previewUrl || 'https://via.placeholder.com/80'} alt="Avatar Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <label style={{
+                            padding: '8px 16px',
+                            background: 'var(--glass-bg)',
+                            border: '1px solid var(--glass-border)',
+                            borderRadius: 12,
+                            cursor: 'pointer',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: 'var(--accent-color)',
+                            transition: 'all 0.2s ease'
+                        }}>
+                            📸 Trocar Foto
+                            <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                        </label>
+                    </div>
+
+                    <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Avatar (URL ou ID)</label>
                     <input
                         type="text" placeholder="https://..."
-                        value={newAvatar} onChange={e => setNewAvatar(e.target.value)}
+                        value={newAvatar} onChange={e => {
+                            setNewAvatar(e.target.value);
+                            if (!avatarFile) setPreviewUrl(e.target.value);
+                        }}
                         style={{ width: '100%', padding: 12, marginBottom: 16, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 12, color: 'var(--text-color)', fontSize: 16, outline: 'none' }}
                     />
 

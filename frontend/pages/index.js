@@ -227,14 +227,14 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS - O Guia Premium de Sua Cidade'}</title>
+        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS by SHURA'}</title>
         <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista a vídeos exclusivos, confira o clima em tempo real, as últimas notícias e os melhores eventos de Sinop, MT."} />
         <meta property="og:type" content="video.other" />
         <meta property="og:title" content={currentVideo?.title || initialVideo?.title || "SINOPINHAS"} />
         <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Acompanhe tudo o que acontece em Sinop: Vídeos, Fotos, Clima e Eventos locais."} />
         <meta property="og:image" content="https://sinopinhas.vercel.app/og-default.jpg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta name="theme-color" content="#0f172a" />
+        <meta name="theme-color" content="#1a1625" />
         <link rel="icon" href="/favicon.ico" />
         {(activeTab === 'videos' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
           <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>

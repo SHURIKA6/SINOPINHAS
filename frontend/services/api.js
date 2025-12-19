@@ -128,6 +128,7 @@ export const likeVideo = (videoId, userId) => {
 };
 
 export const updateUserProfile = (userId, updates) => {
+    // Se for FormData, o axios cuida do Content-Type automaticamente
     return api.put(`/api/users/${userId}`, updates);
 };
 

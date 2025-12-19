@@ -1,13 +1,13 @@
 :root {
-  --bg-color: #0f172a;
-  --bg-gradient: radial-gradient(circle at 0% 0%, #1e1b4b 0%, #0f172a 100%);
+  --bg-color: #1a1625;
+  --bg-gradient: radial-gradient(circle at 0% 0%, #2d244a 0%, #1a1625 100%);
   --text-color: #f8fafc;
-  --header-bg: rgba(15, 23, 42, 0.8);
-  --card-bg: rgba(30, 41, 59, 0.5);
-  --input-bg: rgba(15, 23, 42, 0.6);
+  --header-bg: rgba(26, 22, 37, 0.85);
+  --card-bg: rgba(45, 36, 74, 0.4);
+  --input-bg: rgba(26, 22, 37, 0.6);
   --border-color: rgba(255, 255, 255, 0.1);
   --accent-color: #8d6aff;
-  --secondary-text: #94a3b8;
+  --secondary-text: #a78bfa;
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
 }
@@ -54,27 +54,41 @@ button {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--bg-color);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-color);
 }
-

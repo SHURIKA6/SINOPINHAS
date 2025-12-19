@@ -121,8 +121,38 @@ export const updateProfile = async (c) => {
             return createErrorResponse(c, "FORBIDDEN", "Você não tem permissão para editar este perfil.", 403);
         }
 
-        const body = await c.req.json();
-        const { password, currentPassword, avatar, bio } = body;
+        const contentType = c.req.header('content-type');
+        let password, currentPassword, avatar, bio, avatarFile;
+
+        if (contentType && contentType.includes('multipart/form-data')) {
+            const formData = await c.req.formData();
+            password = formData.get('password');
+            currentPassword = formData.get('currentPassword');
+            avatar = formData.get('avatar');
+            bio = formData.get('bio');
+            avatarFile = formData.get('avatarFile');
+        } else {
+            const body = await c.req.json();
+            password = body.password;
+            currentPassword = body.currentPassword;
+            avatar = body.avatar;
+            bio = body.bio;
+        }
+
+        // Se houver um arquivo de avatar, fazer o upload para o R2
+        if (avatarFile && avatarFile instanceof File) {
+            const timestamp = Date.now();
+            const randomStr = Math.random().toString(36).substring(2, 10);
+            const extension = avatarFile.name.split('.').pop() || 'jpg';
+            const r2Key = `avatars/${userId}-${timestamp}-${randomStr}.${extension}`;
+
+            await env.VIDEO_BUCKET.put(r2Key, avatarFile.stream(), {
+                httpMetadata: { contentType: avatarFile.type },
+            });
+
+            // A URL final será baseada no domínio público do R2
+            avatar = `${env.R2_PUBLIC_DOMAIN}/${r2Key}`;
+        }
 
         // Se estiver tentando mudar a senha, precisamos validar a senha atual
         if (password) {
@@ -151,11 +181,11 @@ export const updateProfile = async (c) => {
             updates.push(`password = $${paramCount++}`);
             values.push(hashedPassword);
         }
-        if (avatar !== undefined) {
+        if (avatar !== null && avatar !== undefined) {
             updates.push(`avatar = $${paramCount++}`);
             values.push(avatar);
         }
-        if (bio !== undefined) {
+        if (bio !== null && bio !== undefined) {
             updates.push(`bio = $${paramCount++}`);
             values.push(bio);
         }
@@ -174,11 +204,13 @@ export const updateProfile = async (c) => {
         await logAudit(userId, "USER_PROFILE_UPDATED", {
             avatar_changed: avatar !== undefined,
             bio_changed: bio !== undefined,
-            password_changed: !!password
+            password_changed: !!password,
+            avatar_uploaded: !!avatarFile
         }, c);
 
         return createResponse(c, rows[0]);
     } catch (err) {
+        console.error("Error updating profile:", err);
         throw err;
     }
 };
