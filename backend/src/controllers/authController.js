@@ -3,6 +3,7 @@ import { hash, compare } from '../utils/hash.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
+import { updateProfileSchema } from '../schemas/auth.js';
 
 // Registrar usuário
 export const register = async (c) => {
@@ -144,8 +145,13 @@ export const updateProfile = async (c) => {
         }
 
         // Validação adicional com Zod
-        const { updateProfileSchema } = await import('../schemas/auth.js');
-        const validationResult = updateProfileSchema.safeParse({ password, avatar, bio });
+        // FormData pode retornar null para campos ausentes, Zod .optional() espera undefined
+        const validationResult = updateProfileSchema.safeParse({
+            password: password || undefined,
+            avatar: (typeof avatar === 'string' ? avatar : undefined),
+            bio: (typeof bio === 'string' ? bio : undefined)
+        });
+
         if (!validationResult.success) {
             const errors = validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(", ");
             return createErrorResponse(c, "INVALID_INPUT", errors, 400);
@@ -159,8 +165,9 @@ export const updateProfile = async (c) => {
             const extension = avatarFile.name.split('.').pop() || 'jpg';
             const r2Key = `avatars/${userId}-${timestamp}-${randomStr}.${extension}`;
 
-            await env.VIDEO_BUCKET.put(r2Key, avatarFile.stream(), {
-                httpMetadata: { contentType: avatarFile.type },
+            // O objeto File/Blob pode ser passado diretamente para o R2 no Cloudflare Workers
+            await env.VIDEO_BUCKET.put(r2Key, avatarFile, {
+                httpMetadata: { contentType: avatarFile.type || 'image/jpeg' },
             });
 
             // A URL final será baseada no domínio público do R2
