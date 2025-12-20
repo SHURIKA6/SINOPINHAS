@@ -23,6 +23,15 @@ import EventsSection from '../components/EventsSection';
 import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/layout/BottomNav';
 
+// Componente para persistir o estado das abas sem lazy loading
+function TabPane({ active, children }) {
+  return (
+    <div style={{ display: active ? 'block' : 'none', animation: active ? 'fadeIn 0.4s ease' : 'none' }}>
+      {children}
+    </div>
+  );
+}
+
 import {
   logTermsAcceptance,
   viewVideo
@@ -274,14 +283,36 @@ export default function Home({ initialVideo }) {
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
 
         <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-          {activeTab === 'videos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="video" />}
-          {activeTab === 'photos' && <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="photo" />}
+          {/* Aba de Vídeos (Sempre montada para performance) */}
+          <TabPane active={activeTab === 'videos'}>
+            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="video" />
+          </TabPane>
+
+          {/* Aba de Fotos (Sempre montada) */}
+          <TabPane active={activeTab === 'photos'}>
+            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="photo" />
+          </TabPane>
+
+          {/* Outras abas montadas sob demanda mas persistentes */}
+          <TabPane active={activeTab === 'news'}>
+            <NewsFeed />
+          </TabPane>
+
+          <TabPane active={activeTab === 'eventos'}>
+            <EventsSection />
+          </TabPane>
+
+          <TabPane active={activeTab === 'lugares'}>
+            <PlacesSection />
+          </TabPane>
+
+          <TabPane active={activeTab === 'weather'}>
+            <WeatherSection />
+          </TabPane>
+
+          {/* Abas que podem ser montadas/desmontadas (formulários ou privadas) */}
           {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} />}
-          {activeTab === 'news' && <NewsFeed />}
-          {activeTab === 'eventos' && <EventsSection />}
-          {activeTab === 'lugares' && <PlacesSection />}
           {activeTab === 'upload' && <UploadSection user={user} setShowAuth={setShowAuth} showToast={showToast} setActiveTab={setActiveTab} />}
-          {activeTab === 'weather' && <WeatherSection />}
           {activeTab === 'inbox' && user && <Inbox user={user} API={API} isAdmin={isAdmin} adminPassword={adminPassword} onMessageRead={() => loadNotifications(user.id)} />}
           {activeTab === 'admin' && isAdmin && <AdminPanel adminPassword={adminPassword} showToast={showToast} />}
         </div>
