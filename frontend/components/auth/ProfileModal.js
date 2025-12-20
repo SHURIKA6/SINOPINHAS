@@ -146,7 +146,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                                 max={3}
                                 step={0.1}
                                 aria-labelledby="Zoom"
-                                onChange={(e) => setZoom(e.target.value)}
+                                onChange={(e) => setZoom(Number(e.target.value))}
                                 style={{ width: '100%' }}
                             />
                             <div style={{ display: 'flex', gap: 10 }}>
