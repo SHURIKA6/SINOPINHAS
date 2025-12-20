@@ -57,16 +57,27 @@ export default function WeatherSection() {
             'clear sky': 'Céu limpo',
             'mainly clear': 'Predom. limpo',
             'partly cloudy': 'Parc. nublado',
-            cloudy: 'Nublado',
-            overcast: 'Encoberto',
-            fog: 'Nevoeiro',
+            'cloudy': 'Nublado',
+            'overcast': 'Encoberto',
+            'fog': 'Nevoeiro',
             'light rain': 'Chuva fraca',
             'moderate rain': 'Chuva mod.',
             'heavy rain': 'Chuva forte',
             'scattered clouds': 'Nuvens esparsas',
             'broken clouds': 'Nublado',
             'few clouds': 'Poucas nuvens',
-            thunderstorm: 'Tempestade'
+            'thunderstorm': 'Tempestade',
+            'storm': 'Tempestade',
+            'rain': 'Chuva',
+            'mist': 'Névoa',
+            'smoke': 'Fumaça',
+            'haze': 'Névoa seca',
+            'dust': 'Poeira',
+            'sand': 'Areia',
+            'ash': 'Cinza vulcânica',
+            'squall': 'Rajada',
+            'tornado': 'Tornado',
+            'clear': 'Limpo'
         };
         const low = val.toLowerCase();
         return map[low] || val;
@@ -305,7 +316,7 @@ export default function WeatherSection() {
                                 data-mode="Current"
                                 data-theme="weather_one"
                                 data-basecolor="rgba(0,0,0,0)"
-                                data-textcolor="var(--text-color)"
+                                data-language="PT"
                             >
                                 SINOP AGORA
                             </a>
@@ -414,6 +425,7 @@ export default function WeatherSection() {
                                     data-theme="weather_one"
                                     data-basecolor="rgba(0,0,0,0)"
                                     data-textcolor="var(--text-color)"
+                                    data-language="PT"
                                     style={{ height: '100%' }}
                                 >
                                     SINOP 7 DIAS
