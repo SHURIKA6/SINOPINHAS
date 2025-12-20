@@ -123,6 +123,8 @@ export const SCHEMA_QUERIES = [
     "CREATE INDEX IF NOT EXISTS idx_likes_video_user ON likes(video_id, user_id)",
     "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_is_restricted_type ON videos(is_restricted, type)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_created_at_desc ON videos(created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)",
     "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)"
 ];

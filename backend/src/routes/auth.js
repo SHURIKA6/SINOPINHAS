@@ -20,6 +20,6 @@ app.post('/login',
     validate(schemas.loginSchema),
     authController.login
 );
-app.put('/users/:id', authMiddleware, requireAuth, validate(schemas.updateProfileSchema), authController.updateProfile);
+app.put('/users/:id', authMiddleware, requireAuth, authController.updateProfile);
 
 export default app;

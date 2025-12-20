@@ -68,19 +68,11 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             let data = [];
             if (debouncedSearchQuery.trim().length > 2) {
                 data = await searchVideos(debouncedSearchQuery);
-                // Busca por texto geralmente não é paginada facilmente ou retorna tudo, 
-                // então forçamos hasMore false para busca simples
                 setHasMore(false);
             } else {
-                data = await fetchVideos(user?.id, LIMIT, currentOffset);
+                // Now passing filterType to backend for optimized fetching
+                data = await fetchVideos(user?.id, LIMIT, currentOffset, filterType === 'photo' ? 'photo' : 'video');
                 if (data.length < LIMIT) setHasMore(false);
-            }
-
-            // Aplicar filtros de tipo no frontend
-            if (filterType === 'photo') {
-                data = data.filter(v => v.type === 'photo');
-            } else {
-                data = data.filter(v => !v.type || v.type === 'video');
             }
 
             setVideos(prev => reset ? data : [...prev, ...data]);

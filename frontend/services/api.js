@@ -100,18 +100,20 @@ export const fetchNotifications = async (userId) => {
     return res.data;
 };
 
-export const fetchVideos = async (userId = null, limit = 12, offset = 0) => {
+export const fetchVideos = async (userId = null, limit = 12, offset = 0, type = null) => {
     const params = new URLSearchParams();
     if (userId) params.set('user_id', userId);
+    if (type) params.set('type', type);
     params.set('limit', limit);
     params.set('offset', offset);
     const res = await api.get(`/api/videos?${params.toString()}`);
     return res.data;
 };
 
-export const fetchSecretVideos = async (userId = null, limit = 12, offset = 0) => {
+export const fetchSecretVideos = async (userId = null, limit = 12, offset = 0, type = null) => {
     const params = new URLSearchParams();
     if (userId) params.set('user_id', userId);
+    if (type) params.set('type', type);
     params.set('limit', limit);
     params.set('offset', offset);
     const res = await api.get(`/api/secret-videos?${params.toString()}`);

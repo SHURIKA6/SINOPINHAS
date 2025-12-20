@@ -132,15 +132,28 @@ export const updateProfile = async (c) => {
             bio = formData.get('bio');
             avatarFile = formData.get('avatarFile');
         } else {
-            const body = await c.req.json();
-            password = body.password;
-            currentPassword = body.currentPassword;
-            avatar = body.avatar;
-            bio = body.bio;
+            try {
+                const body = await c.req.json();
+                password = body.password;
+                currentPassword = body.currentPassword;
+                avatar = body.avatar;
+                bio = body.bio;
+            } catch (e) {
+                // If body is empty or not JSON, we just continue with what we have
+            }
+        }
+
+        // Validação adicional com Zod
+        const { updateProfileSchema } = await import('../schemas/auth.js');
+        const validationResult = updateProfileSchema.safeParse({ password, avatar, bio });
+        if (!validationResult.success) {
+            const errors = validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(", ");
+            return createErrorResponse(c, "INVALID_INPUT", errors, 400);
         }
 
         // Se houver um arquivo de avatar, fazer o upload para o R2
-        if (avatarFile && avatarFile instanceof File) {
+        // Usamos uma verificação mais robusta do que instanceof File
+        if (avatarFile && typeof avatarFile === 'object' && (avatarFile.name || avatarFile.type)) {
             const timestamp = Date.now();
             const randomStr = Math.random().toString(36).substring(2, 10);
             const extension = avatarFile.name.split('.').pop() || 'jpg';

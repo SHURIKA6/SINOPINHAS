@@ -57,6 +57,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
     const loadVideos = async (currentOffset, reset = false) => {
         setLoading(true);
         try {
+            // Secret feed can also benefit from server-side filtering if you eventually add it
             const data = await fetchSecretVideos(user?.id, LIMIT, currentOffset);
             if (data.length < LIMIT) setHasMore(false);
             setVideos(prev => reset ? data : [...prev, ...data]);

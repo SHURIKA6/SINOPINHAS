@@ -55,7 +55,7 @@ export const getNews = async (c) => {
         });
 
         const jsonResponse = createResponse(c, news);
-        jsonResponse.headers.set('Cache-Control', 'public, max-age=900, s-maxage=900');
+        jsonResponse.headers.set('Cache-Control', 'public, max-age=900, s-maxage=900, stale-while-revalidate=1800');
         c.executionCtx.waitUntil(cache.put(cacheKey, jsonResponse.clone()));
 
         return jsonResponse;

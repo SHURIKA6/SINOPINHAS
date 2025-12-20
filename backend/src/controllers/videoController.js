@@ -33,11 +33,20 @@ export const uploadVideo = async (c) => {
         const extension = file.name.split('.').pop();
         const r2Key = `${timestamp}-${randomStr}.${extension}`;
 
-        await env.VIDEO_BUCKET.put(r2Key, file.stream(), {
-            httpMetadata: {
-                contentType: file.type,
-            },
-        });
+        if (video.type === 'photo') {
+            await env.VIDEO_BUCKET.put(r2Key, file.stream(), {
+                httpMetadata: {
+                    contentType: file.type,
+                    cacheControl: 'public, max-age=604800, immutable'
+                },
+            });
+        } else {
+            await env.VIDEO_BUCKET.put(r2Key, file.stream(), {
+                httpMetadata: {
+                    contentType: file.type,
+                },
+            });
+        }
 
         await queryDB(
             "INSERT INTO videos (title, description, bunny_id, user_id, is_restricted, type) VALUES ($1, $2, $3, $4, $5, $6)",
@@ -49,7 +58,11 @@ export const uploadVideo = async (c) => {
 
         c.executionCtx.waitUntil(Promise.all([
             env.MURAL_STORE.delete('videos_public'),
-            env.MURAL_STORE.delete('videos_secret')
+            env.MURAL_STORE.delete('videos_secret'),
+            env.MURAL_STORE.delete('videos_public_photo'),
+            env.MURAL_STORE.delete('videos_public_video'),
+            env.MURAL_STORE.delete('videos_secret_photo'),
+            env.MURAL_STORE.delete('videos_secret_video')
         ]));
 
         return createResponse(c, { success: true, bunny_id: r2Key });
@@ -58,122 +71,7 @@ export const uploadVideo = async (c) => {
     }
 };
 
-// Listar vídeos públicos
-export const listVideos = async (c) => {
-    const env = c.env;
-    const userId = c.req.query("user_id");
-    const limit = parseInt(c.req.query("limit") || "12");
-    const offset = parseInt(c.req.query("offset") || "0");
-
-    // Só usar cache na primeira página sem filtro de usuário
-    if (!userId && offset === 0 && limit === 12) {
-        try {
-            const cached = await env.MURAL_STORE.get('videos_public', { type: 'json' });
-            if (cached) return createResponse(c, cached);
-        } catch (e) { }
-    }
-
-    try {
-        let sql = `
-      SELECT v.*, u.username,
-      (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
-      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
-    `;
-
-        const params = [];
-        let paramCount = 1;
-
-        if (userId) {
-            sql += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $${paramCount++}) as user_liked`;
-            params.push(userId);
-        }
-
-        sql += `
-      FROM videos v
-      LEFT JOIN users u ON v.user_id = u.id
-      WHERE v.is_restricted = false
-      ORDER BY v.created_at DESC
-      LIMIT $${paramCount++} OFFSET $${paramCount++}
-    `;
-        params.push(limit, offset);
-
-        const { rows } = await queryDB(sql, params, env);
-
-        const videosWithUrl = rows.map(v => ({
-            ...v,
-            video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
-        }));
-
-        if (!userId && offset === 0 && limit === 12) {
-            c.executionCtx.waitUntil(
-                env.MURAL_STORE.put('videos_public', JSON.stringify(videosWithUrl), { expirationTtl: 60 })
-            );
-        }
-
-        return createResponse(c, videosWithUrl);
-    } catch (err) {
-        throw err;
-    }
-};
-
-// Listar vídeos restritos
-export const listSecretVideos = async (c) => {
-    const env = c.env;
-    const userId = c.req.query("user_id");
-    const limit = parseInt(c.req.query("limit") || "12");
-    const offset = parseInt(c.req.query("offset") || "0");
-
-    if (!userId && offset === 0 && limit === 12) {
-        try {
-            const cached = await env.MURAL_STORE.get('videos_secret', { type: 'json' });
-            if (cached) return createResponse(c, cached);
-        } catch (e) { }
-    }
-
-    try {
-        let sql = `
-      SELECT v.*, u.username,
-      (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
-      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
-    `;
-
-        const params = [];
-        let paramCount = 1;
-
-        if (userId) {
-            sql += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $${paramCount++}) as user_liked`;
-            params.push(userId);
-        }
-
-        sql += `
-      FROM videos v
-      LEFT JOIN users u ON v.user_id = u.id
-      WHERE v.is_restricted = true
-      ORDER BY v.created_at DESC
-      LIMIT $${paramCount++} OFFSET $${paramCount++}
-    `;
-        params.push(limit, offset);
-
-        const { rows } = await queryDB(sql, params, env);
-
-        const videosWithUrl = rows.map(v => ({
-            ...v,
-            video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
-        }));
-
-        if (!userId && offset === 0 && limit === 12) {
-            c.executionCtx.waitUntil(
-                env.MURAL_STORE.put('videos_secret', JSON.stringify(videosWithUrl), { expirationTtl: 60 })
-            );
-        }
-
-        return createResponse(c, videosWithUrl);
-    } catch (err) {
-        throw err;
-    }
-};
-
-// Deletar vídeo
+// 5. Deletar vídeo
 export const deleteVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -209,10 +107,153 @@ export const deleteVideo = async (c) => {
 
         c.executionCtx.waitUntil(Promise.all([
             env.MURAL_STORE.delete('videos_public'),
-            env.MURAL_STORE.delete('videos_secret')
+            env.MURAL_STORE.delete('videos_secret'),
+            env.MURAL_STORE.delete('videos_public_photo'),
+            env.MURAL_STORE.delete('videos_public_video'),
+            env.MURAL_STORE.delete('videos_secret_photo'),
+            env.MURAL_STORE.delete('videos_secret_video')
         ]));
 
         return createResponse(c, { success: true });
+    } catch (err) {
+        throw err;
+    }
+};
+
+// Listar vídeos públicos
+export const listVideos = async (c) => {
+    const env = c.env;
+    const userId = c.req.query("user_id");
+    const limit = parseInt(c.req.query("limit") || "12");
+    const offset = parseInt(c.req.query("offset") || "0");
+    const type = c.req.query("type"); // New: Filter by 'video' or 'photo'
+
+    const cacheKey = `videos_public_${type || 'all'}`;
+
+    // Só usar cache na primeira página sem filtro de usuário
+    if (!userId && offset === 0 && limit === 12) {
+        try {
+            const cached = await env.MURAL_STORE.get(cacheKey, { type: 'json' });
+            if (cached) return createResponse(c, cached);
+        } catch (e) { }
+    }
+
+    try {
+        let sql = `
+      SELECT v.*, u.username,
+      (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
+      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+    `;
+
+        const params = [];
+        let paramCount = 1;
+
+        if (userId) {
+            sql += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $${paramCount++}) as user_liked`;
+            params.push(userId);
+        }
+
+        sql += `
+      FROM videos v
+      LEFT JOIN users u ON v.user_id = u.id
+      WHERE v.is_restricted = false
+    `;
+
+        if (type === 'photo') {
+            sql += ` AND v.type = 'photo'`;
+        } else if (type === 'video') {
+            sql += ` AND (v.type = 'video' OR v.type IS NULL)`;
+        }
+
+        sql += `
+      ORDER BY v.created_at DESC
+      LIMIT $${paramCount++} OFFSET $${paramCount++}
+    `;
+        params.push(limit, offset);
+
+        const { rows } = await queryDB(sql, params, env);
+
+        const videosWithUrl = rows.map(v => ({
+            ...v,
+            video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
+        }));
+
+        if (!userId && offset === 0 && limit === 12) {
+            c.executionCtx.waitUntil(
+                env.MURAL_STORE.put(cacheKey, JSON.stringify(videosWithUrl), { expirationTtl: 60 })
+            );
+        }
+
+        return createResponse(c, videosWithUrl);
+    } catch (err) {
+        throw err;
+    }
+};
+
+// Listar vídeos restritos
+export const listSecretVideos = async (c) => {
+    const env = c.env;
+    const userId = c.req.query("user_id");
+    const limit = parseInt(c.req.query("limit") || "12");
+    const offset = parseInt(c.req.query("offset") || "0");
+    const type = c.req.query("type");
+
+    const cacheKey = `videos_secret_${type || 'all'}`;
+
+    if (!userId && offset === 0 && limit === 12) {
+        try {
+            const cached = await env.MURAL_STORE.get(cacheKey, { type: 'json' });
+            if (cached) return createResponse(c, cached);
+        } catch (e) { }
+    }
+
+    try {
+        let sql = `
+      SELECT v.*, u.username,
+      (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
+      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+    `;
+
+        const params = [];
+        let paramCount = 1;
+
+        if (userId) {
+            sql += `, EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $${paramCount++}) as user_liked`;
+            params.push(userId);
+        }
+
+        sql += `
+      FROM videos v
+      LEFT JOIN users u ON v.user_id = u.id
+      WHERE v.is_restricted = true
+    `;
+
+        if (type === 'photo') {
+            sql += ` AND v.type = 'photo'`;
+        } else if (type === 'video') {
+            sql += ` AND (v.type = 'video' OR v.type IS NULL)`;
+        }
+
+        sql += `
+      ORDER BY v.created_at DESC
+      LIMIT $${paramCount++} OFFSET $${paramCount++}
+    `;
+        params.push(limit, offset);
+
+        const { rows } = await queryDB(sql, params, env);
+
+        const videosWithUrl = rows.map(v => ({
+            ...v,
+            video_url: v.bunny_id ? `${env.R2_PUBLIC_DOMAIN}/${v.bunny_id}` : null
+        }));
+
+        if (!userId && offset === 0 && limit === 12) {
+            c.executionCtx.waitUntil(
+                env.MURAL_STORE.put(cacheKey, JSON.stringify(videosWithUrl), { expirationTtl: 60 })
+            );
+        }
+
+        return createResponse(c, videosWithUrl);
     } catch (err) {
         throw err;
     }
