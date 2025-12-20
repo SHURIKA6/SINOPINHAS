@@ -37,6 +37,7 @@ const MOCK_EVENTS = [
 export default function EventsSection() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
         const loadEvents = async () => {
@@ -150,23 +151,125 @@ export default function EventsSection() {
                             <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>
                                 {event.description}
                             </p>
-                            <button style={{
-                                marginTop: 20,
-                                padding: '12px',
-                                background: 'var(--input-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: 12,
-                                color: 'var(--text-color)',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                            }} className="details-btn">
+                            <button
+                                onClick={() => setSelectedEvent(event)}
+                                style={{
+                                    marginTop: 20,
+                                    padding: '12px',
+                                    background: 'var(--input-bg)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 12,
+                                    color: 'var(--text-color)',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }} className="details-btn">
                                 Ver Detalhes
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {selectedEvent && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', padding: '20px',
+                    backdropFilter: 'blur(8px)', animation: 'fadeIn 0.3s ease'
+                }} onClick={() => setSelectedEvent(null)}>
+                    <div
+                        style={{
+                            background: 'var(--card-bg)',
+                            borderRadius: 32,
+                            padding: 0,
+                            maxWidth: 600,
+                            width: '100%',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            color: 'var(--text-color)',
+                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                            border: '1px solid var(--border-color)',
+                            position: 'relative',
+                            animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setSelectedEvent(null)}
+                            style={{
+                                position: 'absolute', top: 20, right: 20,
+                                background: 'rgba(255,255,255,0.1)', border: 'none',
+                                color: '#fff', width: 36, height: 36, borderRadius: '50%',
+                                cursor: 'pointer', zIndex: 10, display: 'flex',
+                                alignItems: 'center', justifyContent: 'center',
+                                backdropFilter: 'blur(10px)'
+                            }}
+                        >✕</button>
+
+                        <div style={{ height: 300, position: 'relative' }}>
+                            <img
+                                src={selectedEvent.image}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                alt={selectedEvent.title}
+                            />
+                            <div style={{
+                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                height: '50%', background: 'linear-gradient(to top, var(--card-bg), transparent)'
+                            }} />
+                        </div>
+
+                        <div style={{ padding: 40, marginTop: -60, position: 'relative' }}>
+                            <div style={{
+                                background: 'var(--accent-color)', color: '#fff',
+                                padding: '6px 16px', borderRadius: 99, fontSize: 13,
+                                fontWeight: 800, display: 'inline-block', marginBottom: 16,
+                                textTransform: 'uppercase', letterSpacing: '1px'
+                            }}>
+                                {selectedEvent.category}
+                            </div>
+                            <h2 style={{ fontSize: 32, fontWeight: 1000, margin: '0 0 16px', lineHeight: 1.2 }}>
+                                {selectedEvent.title}
+                            </h2>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 32 }}>
+                                <div style={{ background: 'var(--input-bg)', padding: 16, borderRadius: 20, border: '1px solid var(--border-color)' }}>
+                                    <div style={{ fontSize: 12, color: 'var(--secondary-text)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase' }}>📅 Data e Hora</div>
+                                    <div style={{ fontWeight: 800, fontSize: 16 }}>
+                                        {new Date(selectedEvent.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        <br />
+                                        às {selectedEvent.time}
+                                    </div>
+                                </div>
+                                <div style={{ background: 'var(--input-bg)', padding: 16, borderRadius: 20, border: '1px solid var(--border-color)' }}>
+                                    <div style={{ fontSize: 12, color: 'var(--secondary-text)', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase' }}>📍 Localização</div>
+                                    <div style={{ fontWeight: 800, fontSize: 16 }}>{selectedEvent.location}</div>
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: 32 }}>
+                                <h4 style={{ fontSize: 14, color: 'var(--secondary-text)', fontWeight: 800, margin: '0 0 12px', textTransform: 'uppercase' }}>Sobre o Evento</h4>
+                                <p style={{ fontSize: 16, lineHeight: 1.8, color: 'var(--text-color)', opacity: 0.9 }}>
+                                    {selectedEvent.description}
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => setSelectedEvent(null)}
+                                style={{
+                                    width: '100%', padding: '18px',
+                                    background: 'linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%)',
+                                    color: '#fff', border: 'none', borderRadius: 20,
+                                    fontSize: 18, fontWeight: 800, cursor: 'pointer',
+                                    boxShadow: '0 10px 30px rgba(141, 106, 255, 0.4)'
+                                }}
+                            >
+                                Adicionar à Agenda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 .event-card:hover {
@@ -182,6 +285,10 @@ export default function EventsSection() {
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(50px) scale(0.9); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
                 }
             `}</style>
         </div>
