@@ -1,63 +1,48 @@
-import { useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+    LayoutGrid, Newspaper, Calendar,
+    Plus, MessageCircle, MapPin, CloudSun
+} from 'lucide-react';
 
 export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin }) {
+    const navItems = [
+        { id: 'feed', label: 'Explorar', icon: <LayoutGrid size={22} /> },
+        { id: 'news', label: 'Notícias', icon: <Newspaper size={22} /> },
+        { id: 'eventos', label: 'Eventos', icon: <Calendar size={22} /> },
+        { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
+        { id: 'inbox', label: 'Chat', icon: <MessageCircle size={22} />, badge: unreadCount },
+        { id: 'lugares', label: 'Lugares', icon: <MapPin size={22} /> },
+        { id: 'weather', label: 'Clima', icon: <CloudSun size={22} /> },
+    ];
+
     return (
         <nav className="bottom-nav">
-            <button
-                onClick={() => setActiveTab('feed')}
-                className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`}
-            >
-                <span className="icon">🎨</span>
-                <span className="label">Explorar</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('news')}
-                className={`nav-item ${activeTab === 'news' ? 'active' : ''}`}
-            >
-                <span className="icon">📰</span>
-                <span className="label">Notícias</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('eventos')}
-                className={`nav-item ${activeTab === 'eventos' ? 'active' : ''}`}
-            >
-                <span className="icon">📅</span>
-                <span className="label">Eventos</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('upload')}
-                className={`nav-item ${activeTab === 'upload' ? 'active' : ''}`}
-            >
-                <div className="upload-btn-container">
-                    <div className="upload-btn">
-                        <span className="icon-plus">+</span>
-                    </div>
-                </div>
-            </button>
-            <button
-                onClick={() => setActiveTab('inbox')}
-                className={`nav-item ${activeTab === 'inbox' ? 'active' : ''}`}
-            >
-                <div style={{ position: 'relative' }}>
-                    <span className="icon">💬</span>
-                    {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-                </div>
-                <span className="label">Mensagens</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('lugares')}
-                className={`nav-item ${activeTab === 'lugares' ? 'active' : ''}`}
-            >
-                <span className="icon">📍</span>
-                <span className="label">Lugares</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('weather')}
-                className={`nav-item ${activeTab === 'weather' ? 'active' : ''}`}
-            >
-                <span className="icon">⛅</span>
-                <span className="label">Clima</span>
-            </button>
+            {navItems.map((item) => (
+                <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`nav-item ${activeTab === item.id ? 'active' : ''} ${item.isCenter ? 'center-item' : ''}`}
+                >
+                    {item.isCenter ? (
+                        <motion.div
+                            whileTap={{ scale: 0.9 }}
+                            className="center-button-wrapper"
+                        >
+                            <div className="center-button">
+                                {item.icon}
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <>
+                            <div className="icon-container">
+                                {item.icon}
+                                {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
+                            </div>
+                            <span className="label">{item.label}</span>
+                        </>
+                    )}
+                </button>
+            ))}
 
             <style jsx>{`
                 .bottom-nav {
@@ -68,11 +53,11 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     background: var(--header-bg);
                     display: none;
                     justify-content: space-around;
-                    align-items: center;
-                    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+                    align-items: flex-end;
+                    padding: 8px 4px calc(12px + env(safe-area-inset-bottom));
                     border-top: 1px solid var(--border-color);
                     z-index: 9000;
-                    backdrop-filter: blur(10px);
+                    backdrop-filter: blur(20px);
                 }
 
                 @media (max-width: 768px) {
@@ -88,78 +73,78 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 4px;
+                    gap: 5px;
                     color: var(--secondary-text);
                     cursor: pointer;
                     flex: 1;
                     transition: all 0.2s ease;
                     outline: none;
-                    height: 100%;
-                    padding: 0;
+                    padding-bottom: 4px;
                 }
 
                 .nav-item.active {
                     color: var(--accent-color);
                 }
 
-                .icon {
-                    font-size: 20px;
+                .icon-container {
+                    position: relative;
+                    display: flex;
+                    transition: transform 0.2s ease;
+                }
+
+                .nav-item.active .icon-container {
+                    transform: translateY(-2px);
                 }
 
                 .label {
-                    font-size: 9px;
-                    font-weight: 600;
+                    font-size: 10px;
+                    font-weight: 700;
                     letter-spacing: -0.2px;
+                    opacity: 0.8;
                 }
 
-                .upload-btn-container {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100%;
-                    width: 100%;
+                .nav-item.active .label {
+                    opacity: 1;
                 }
 
-                .upload-btn {
-                    width: 44px;
-                    height: 44px;
+                .center-item {
+                    padding-bottom: 12px;
+                }
+
+                .center-button-wrapper {
+                    position: relative;
+                    margin-top: -24px;
+                }
+
+                .center-button {
+                    width: 54px;
+                    height: 54px;
                     background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
-                    border-radius: 14px;
+                    border-radius: 18px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 4px 12px rgba(141, 106, 255, 0.4);
-                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+                    color: white;
+                    border: 4px solid var(--bg-color);
                 }
 
-                .icon-plus {
-                    font-size: 28px;
-                    color: #fff;
-                    font-weight: 500;
-                    line-height: 1;
-                    margin-bottom: 2px;
-                }
-
-                .nav-item:active .upload-btn {
-                    transform: scale(0.9);
-                }
-
-                .badge {
+                .nav-badge {
                     position: absolute;
-                    top: -6px;
-                    right: -6px;
+                    top: -4px;
+                    right: -8px;
                     background: #ff4757;
                     color: white;
                     border-radius: 50%;
-                    padding: 2px 5px;
+                    padding: 2px;
                     min-width: 16px;
                     height: 16px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-size: 10px;
-                    font-weight: bold;
-                    border: 2px solid var(--header-bg);
+                    font-weight: 800;
+                    border: 2px solid var(--bg-color);
                 }
             `}</style>
         </nav>

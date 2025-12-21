@@ -94,7 +94,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     };
 
     const toggleLike = async (videoId, e) => {
-        if (!user) return showToast('error', 'Faça login para curtir!');
+        if (!user) return showToast('Faça login para curtir!', 'error');
 
         if (e) spawnHeart(e);
 
@@ -113,7 +113,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         try {
             await likeVideo(videoId, user.id);
         } catch (err) {
-            showToast('error', 'Erro ao curtir');
+            showToast('Erro ao curtir', 'error');
             loadVideos();
         }
     };
@@ -127,7 +127,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             showToast('success', 'Removido com sucesso!');
         } catch (err) {
             console.error(err);
-            showToast('error', 'Erro ao excluir');
+            showToast('Erro ao excluir', 'error');
         }
     };
 
