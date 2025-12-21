@@ -15,11 +15,14 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
   const [sendAsAdmin, setSendAsAdmin] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user || isAdmin) {
+      if (isAdmin && !user) {
+        setShowAdminInbox(true);
+      }
       loadMessages();
       loadAllUsers();
     }
-  }, [user, showAdminInbox]);
+  }, [user, isAdmin, showAdminInbox]);
 
   // Carregar lista de usuários
   const loadAllUsers = async () => {
@@ -50,14 +53,16 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
 
   // Carregar mensagens
   const loadMessages = async () => {
-    if (!user) return;
+    if (!user && !isAdmin) return;
     try {
       setLoading(true);
       let res;
       if (showAdminInbox && isAdmin) {
         res = await api.get(`/api/admin/inbox`);
-      } else {
+      } else if (user) {
         res = await api.get(`/api/inbox/${user.id}`);
+      } else {
+        return; // Caso admin mas sem modo admin view ativo e sem usuário
       }
       setMessages(res.data);
     } catch (err) { }
@@ -69,9 +74,14 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     e.preventDefault();
     if (!newMessage.trim() || !selectedUser) return;
 
+    if (!user && !sendAsAdmin) {
+      alert("Para enviar mensagens normais, você precisa estar logado como usuário.");
+      return;
+    }
+
     try {
       await api.post(`/api/send-message`, {
-        from_id: user.id,
+        from_id: user?.id || 0,
         to_id: selectedUser.id,
         msg: newMessage,
         is_admin: sendAsAdmin
@@ -85,7 +95,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     ? messages.filter(m =>
       showAdminInbox
         ? (m.from_id === selectedUser.id || m.to_id === selectedUser.id)
-        : ((m.from_id === user.id && m.to_id === selectedUser.id) || (m.from_id === selectedUser.id && m.to_id === user.id))
+        : (user && ((m.from_id === user.id && m.to_id === selectedUser.id) || (m.from_id === selectedUser.id && m.to_id === user.id)))
     )
     : [];
 
@@ -100,7 +110,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
 
   const usersToShow = localUsersList.filter(u => u.id !== user?.id);
 
-  if (!user) {
+  if (!user && !isAdmin) {
     return (
       <div style={{ textAlign: 'center', padding: isMobile ? '40px 20px' : 80, background: 'var(--card-bg)', borderRadius: 16, border: '1px solid var(--border-color)' }}>
         <div style={{ fontSize: 48, marginBottom: 20 }}>🔒</div>
@@ -176,7 +186,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
                 </div>
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontWeight: 600, color: selectedUser?.id === u.id ? '#fff' : 'var(--text-color)', fontSize: 15 }}>{u.username}</div>
-                  {unreadCount > 0 && <div style={{ background: '#ef4444', color: '#fff', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'bold', border: '2px solid var(--card-bg)' }}> {unreadCount} </div>}
+                  {user && unreadCount > 0 && <div style={{ background: '#ef4444', color: '#fff', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'bold', border: '2px solid var(--card-bg)' }}> {unreadCount} </div>}
                 </div>
               </div>
             );
@@ -217,7 +227,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
                 <div style={{ textAlign: 'center', color: 'var(--secondary-text)', marginTop: 40, background: 'var(--card-bg)', padding: 20, borderRadius: 12 }}><p>Inicie uma conversa com {selectedUser.username}</p></div>
               ) : (
                 filteredMessages.map((msg, i) => {
-                  const isFromMe = msg.from_id === user.id;
+                  const isFromMe = user && msg.from_id === user.id;
                   return (
                     <div key={i} style={{ alignSelf: isFromMe ? 'flex-end' : 'flex-start', maxWidth: isMobile ? '85%' : '75%', position: 'relative' }}>
                       <div style={{
