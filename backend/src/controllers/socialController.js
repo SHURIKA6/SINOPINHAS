@@ -122,20 +122,35 @@ export const postComment = async (c) => {
         return createResponse(c, { success: true });
     } catch (err) {
         if (err.code === '42P01') {
-            await queryDB(`
-                CREATE TABLE IF NOT EXISTS comments (
-                    id SERIAL PRIMARY KEY,
-                    video_id INTEGER NOT NULL,
-                    user_id INTEGER NOT NULL,
-                    comment TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
-            `, [], env);
-            await queryDB(
-                "INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
-                [video_id, user_id, sanitize(comment)],
-                env
-            );
+            const table = err.message.includes('comments') ? 'comments' : 'notifications';
+            if (table === 'comments') {
+                await queryDB(`
+                    CREATE TABLE IF NOT EXISTS comments (
+                        id SERIAL PRIMARY KEY,
+                        video_id INTEGER NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        comment TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `, [], env);
+                await queryDB(
+                    "INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3)",
+                    [video_id, user_id, sanitize(comment)],
+                    env
+                );
+            } else {
+                await queryDB(`
+                    CREATE TABLE IF NOT EXISTS notifications (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        message TEXT NOT NULL,
+                        is_read BOOLEAN DEFAULT FALSE,
+                        type TEXT,
+                        related_id INTEGER,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `, [], env);
+            }
             return createResponse(c, { success: true, repaired: true });
         }
         throw err;
@@ -199,6 +214,20 @@ export const getNotifications = async (c) => {
         );
         return createResponse(c, rows);
     } catch (err) {
+        if (err.code === '42P01') {
+            await queryDB(`
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    message TEXT NOT NULL,
+                    is_read BOOLEAN DEFAULT FALSE,
+                    type TEXT,
+                    related_id INTEGER,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            `, [], env);
+            return createResponse(c, []);
+        }
         throw err;
     }
 };
@@ -265,7 +294,13 @@ export const markAsRead = async (c) => {
     const fromId = c.req.param("id");
     const env = c.env;
     try {
-        const { userId } = await c.req.json();
+        const body = await c.req.json();
+        const userId = body.userId;
+
+        if (!userId) {
+            return createErrorResponse(c, "INVALID_PARAM", "userId não fornecido no corpo da requisição", 400);
+        }
+
         await queryDB(
             "UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2 AND is_read = FALSE",
             [fromId, userId],
@@ -273,6 +308,11 @@ export const markAsRead = async (c) => {
         );
         return createResponse(c, { success: true });
     } catch (err) {
+        // Erro no parsing do JSON ou corpo vazio
+        if (err instanceof SyntaxError || err.message?.includes('json')) {
+            return createErrorResponse(c, "INVALID_JSON", "Corpo da requisição inválido ou vazio", 400);
+        }
+
         // Tabela não existe
         if (err.code === '42P01') {
             await queryDB(`
@@ -292,10 +332,15 @@ export const markAsRead = async (c) => {
         if (err.code === '42703') {
             try {
                 await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE", [], env);
-                await queryDB("UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2", [fromId, userId], env);
+                // Tenta extrair userId novamente de forma segura
+                const body = await c.req.json().catch(() => ({}));
+                const userId = body.userId;
+                if (userId) {
+                    await queryDB("UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2", [fromId, userId], env);
+                }
                 return createResponse(c, { success: true, repaired_column: true });
             } catch (alterErr) {
-                return createErrorResponse(c, "DB_ERROR", "Falha ao atualizar esquema de mensagens", 500);
+                return createErrorResponse(c, "DB_ERROR", "Falha ao atualizar esquema de mensagens: " + alterErr.message, 500);
             }
         }
         throw err;
