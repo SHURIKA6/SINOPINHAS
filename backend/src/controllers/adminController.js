@@ -83,15 +83,32 @@ export const getLogs = async (c) => {
     try {
         const { rows } = await queryDB(
             `SELECT a.*, u.username 
-       FROM audit_logs a 
-       LEFT JOIN users u ON a.user_id = u.id 
-       ORDER BY a.created_at DESC 
-       LIMIT 100`,
+             FROM audit_logs a 
+             LEFT JOIN users u ON a.user_id = u.id 
+             ORDER BY a.created_at DESC 
+             LIMIT 150`,
             [],
             env
         );
-        return createResponse(c, rows);
+
+        // Achata o campo JSONB 'details' para facilitar o uso no frontend
+        const flattenedLogs = rows.map(log => {
+            let details = {};
+            try {
+                details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+            } catch (e) { }
+
+            return {
+                ...log,
+                ...details,
+                // Garante que o IP principal do banco seja usado se o detalhes não tiver
+                ip: details.ip || log.ip_address || 'unknown'
+            };
+        });
+
+        return createResponse(c, flattenedLogs);
     } catch (err) {
+        console.error("Erro ao buscar logs:", err);
         return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao buscar logs", 500);
     }
 };

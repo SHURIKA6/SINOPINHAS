@@ -13,12 +13,14 @@ export const SCHEMA_QUERIES = [
     `CREATE TABLE IF NOT EXISTS videos (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
-        url TEXT NOT NULL,
+        description TEXT,
+        bunny_id TEXT,
+        url TEXT,
         thumbnail TEXT,
         user_id INTEGER REFERENCES users(id),
         category TEXT,
         type TEXT DEFAULT 'video',
-        is_secret BOOLEAN DEFAULT FALSE,
+        is_restricted BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
