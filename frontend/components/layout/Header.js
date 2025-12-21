@@ -277,24 +277,29 @@ export default function Header({
                 }
 
                 .action-btn {
-                    padding: 8px 16px;
-                    border-radius: 12px;
+                    padding: 8px 18px;
+                    border-radius: 14px;
                     font-size: 14px;
-                    font-weight: 600;
+                    font-weight: 700;
                     display: flex;
                     align-items: center;
                     gap: 8px;
                     border: none;
                     color: white;
                     cursor: pointer;
-                    transition: all 0.2s ease;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
                 }
 
-                .restricted-btn { background: #ef4444; }
-                .support-btn { background: #3b82f6; }
-                .login-btn { background: var(--accent-color); }
+                .restricted-btn { background: rgba(239, 68, 68, 0.9); }
+                .support-btn { background: rgba(59, 130, 246, 0.9); }
                 
-                .icon-btn {
+                .login-btn { 
+                    background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
+                    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+                }
+                
+                .icon-btn, .admin-trigger-btn, .admin-logout-btn {
                     width: 40px;
                     height: 40px;
                     border-radius: 12px;
@@ -305,6 +310,26 @@ export default function Header({
                     border: 1px solid var(--border-color);
                     color: var(--text-color);
                     cursor: pointer;
+                    transition: all 0.2s ease;
+                    outline: none;
+                }
+
+                .action-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+                    filter: brightness(1.1);
+                }
+
+                .admin-trigger-btn:hover, .admin-logout-btn:hover {
+                    background: var(--glass-bg);
+                    border-color: var(--accent-color);
+                    color: var(--accent-color);
+                }
+
+                .admin-logout-btn {
+                    background: rgba(239, 68, 68, 0.1);
+                    color: #ef4444;
+                    border-color: rgba(239, 68, 68, 0.2);
                 }
 
                 .admin-status {
