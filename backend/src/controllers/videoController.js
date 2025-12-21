@@ -57,10 +57,10 @@ export const uploadVideo = async (c) => {
         await logAudit(userId, "VIDEO_UPLOADED_R2", { title, r2_key: r2Key, is_restricted: isRestricted }, c);
 
         c.executionCtx.waitUntil(Promise.all([
-            env.MURAL_STORE.delete('videos_public'),
-            env.MURAL_STORE.delete('videos_secret'),
+            env.MURAL_STORE.delete('videos_public_all'),
             env.MURAL_STORE.delete('videos_public_photo'),
             env.MURAL_STORE.delete('videos_public_video'),
+            env.MURAL_STORE.delete('videos_secret_all'),
             env.MURAL_STORE.delete('videos_secret_photo'),
             env.MURAL_STORE.delete('videos_secret_video')
         ]));
@@ -106,10 +106,10 @@ export const deleteVideo = async (c) => {
         await logAudit(requesterId, "VIDEO_DELETED", { video_id: videoId, is_admin: isAdmin }, c);
 
         c.executionCtx.waitUntil(Promise.all([
-            env.MURAL_STORE.delete('videos_public'),
-            env.MURAL_STORE.delete('videos_secret'),
+            env.MURAL_STORE.delete('videos_public_all'),
             env.MURAL_STORE.delete('videos_public_photo'),
             env.MURAL_STORE.delete('videos_public_video'),
+            env.MURAL_STORE.delete('videos_secret_all'),
             env.MURAL_STORE.delete('videos_secret_photo'),
             env.MURAL_STORE.delete('videos_secret_video')
         ]));
@@ -134,7 +134,10 @@ export const listVideos = async (c) => {
     if (!userId && offset === 0 && limit === 12) {
         try {
             const cached = await env.MURAL_STORE.get(cacheKey, { type: 'json' });
-            if (cached) return createResponse(c, cached);
+            if (cached) {
+                c.header('Cache-Control', 'public, max-age=30');
+                return createResponse(c, cached);
+            }
         } catch (e) { }
     }
 
@@ -180,8 +183,9 @@ export const listVideos = async (c) => {
 
         if (!userId && offset === 0 && limit === 12) {
             c.executionCtx.waitUntil(
-                env.MURAL_STORE.put(cacheKey, JSON.stringify(videosWithUrl), { expirationTtl: 60 })
+                env.MURAL_STORE.put(cacheKey, JSON.stringify(videosWithUrl), { expirationTtl: 300 })
             );
+            c.header('Cache-Control', 'public, max-age=30');
         }
 
         return createResponse(c, videosWithUrl);

@@ -1,17 +1,39 @@
-import { memo } from "react";
+import { memo, useState, useEffect, useRef } from "react";
 
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret, onShare }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const cardRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                setIsVisible(true);
+                observer.disconnect();
+            }
+        }, { threshold: 0.05, rootMargin: '100px' });
+
+        if (cardRef.current) observer.observe(cardRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <div style={{
-            background: isSecret ? "#3d1a1a" : "var(--card-bg)",
-            borderRadius: 14,
-            overflow: "hidden",
-            position: "relative",
-            boxShadow: isSecret ? "0 4px 28px rgba(229, 62, 62, 0.3)" : "0 4px 28px rgba(0, 0, 0, 0.2)",
-            paddingBottom: 6,
-            border: isSecret ? '2px solid #e53e3e' : '1px solid var(--border-color)',
-            transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease'
-        }}>
+        <div
+            ref={cardRef}
+            style={{
+                background: isSecret ? "#3d1a1a" : "var(--card-bg)",
+                borderRadius: 14,
+                overflow: "hidden",
+                position: "relative",
+                boxShadow: isSecret ? "0 4px 28px rgba(229, 62, 62, 0.3)" : "0 4px 28px rgba(0, 0, 0, 0.2)",
+                paddingBottom: 6,
+                border: isSecret ? '2px solid #e53e3e' : '1px solid var(--border-color)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'translateY(0)' : 'translateY(20px)'
+            }}
+            className="card-hover"
+        >
             {canDelete && (
                 <button
                     onClick={() => onDelete(video.id, video.user_id)}
@@ -37,34 +59,76 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                 </button>
             )}
 
-            <div style={{ width: "100%", aspectRatio: "16/9", background: isSecret ? "#1a0c0c" : "#130c23", position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {video.type === 'photo' ? (
-                    <img
-                        src={video.video_url}
-                        alt={video.title}
-                        style={{ width: "100%", height: "100%", objectFit: 'contain' }}
-                    />
-                ) : video.video_url ? (
-                    <video
-                        src={video.video_url}
-                        controls
-                        style={{ width: "100%", height: "100%", objectFit: 'contain' }}
-                        poster={video.thumbnail || null}
-                    />
-                ) : video.gdrive_id ? (
-                    <iframe
-                        src={`https://drive.google.com/file/d/${video.gdrive_id}/preview`}
-                        style={{ width: "100%", height: "100%", border: 'none' }}
-                        allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                        allowFullScreen
-                    />
-                ) : video.bunny_id ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#aaa', flexDirection: 'column', gap: 10 }}>
-                        <span>⚠️ Conteúdo indisponível</span>
-                    </div>
+            <div style={{
+                width: "100%",
+                aspectRatio: "16/9",
+                background: isSecret ? "#1a0c0c" : "#130c23",
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+            }}>
+                {isVisible ? (
+                    video.type === 'photo' ? (
+                        <>
+                            {!isLoaded && (
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    background: 'linear-gradient(45deg, #130c23, #1e1432)',
+                                    animation: 'pulse 1.5s infinite'
+                                }} />
+                            )}
+                            <img
+                                src={video.video_url}
+                                alt={video.title}
+                                onLoad={() => setIsLoaded(true)}
+                                loading="lazy"
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: 'contain',
+                                    transition: 'opacity 0.6s ease',
+                                    opacity: isLoaded ? 1 : 0
+                                }}
+                            />
+                        </>
+                    ) : video.video_url ? (
+                        <video
+                            src={video.video_url}
+                            controls
+                            preload="metadata"
+                            loading="lazy"
+                            style={{ width: "100%", height: "100%", objectFit: 'contain' }}
+                            poster={video.thumbnail || null}
+                        />
+                    ) : video.gdrive_id ? (
+                        <iframe
+                            src={`https://drive.google.com/file/d/${video.gdrive_id}/preview`}
+                            style={{ width: "100%", height: "100%", border: 'none' }}
+                            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                            allowFullScreen
+                            loading="lazy"
+                        />
+                    ) : video.bunny_id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#aaa', flexDirection: 'column', gap: 10 }}>
+                            <span>⚠️ Conteúdo indisponível</span>
+                        </div>
+                    ) : (
+                        <div style={{ width: "100%", height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                            Sem conteúdo
+                        </div>
+                    )
                 ) : (
-                    <div style={{ width: "100%", height: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-                        Sem conteúdo
+                    <div style={{
+                        width: "100%",
+                        height: "100%",
+                        background: 'linear-gradient(45deg, #0d0221, #130c23)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <span style={{ opacity: 0.2, fontSize: 32 }}>🎬</span>
                     </div>
                 )}
             </div>

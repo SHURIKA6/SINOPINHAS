@@ -51,9 +51,10 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     // Reset quando filtros mudam
     useEffect(() => {
-        setVideos([]);
         setOffset(0);
         setHasMore(true);
+        // Não limpamos videos[] aqui para evitar tela branca;
+        // loadVideos cuidará do reset se reset=true
         loadVideos(0, true);
     }, [debouncedSearchQuery, sortBy, filterType]);
 
@@ -65,7 +66,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     }, [offset]);
 
     const loadVideos = async (currentOffset, reset = false) => {
-        setLoading(true);
+        if (reset) setLoading(true); // Só mostra skeleton grande no primeiro carregamento ou reset total
         try {
             let data = [];
             if (debouncedSearchQuery.trim().length > 2) {
