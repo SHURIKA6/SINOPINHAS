@@ -250,20 +250,35 @@ export const listAllUsers = async (c) => {
 // Enviar mensagem
 export const sendMessage = async (c) => {
     const env = c.env;
+    let body;
     try {
-        const { from_id, to_id, msg, admin_password, is_admin } = await c.req.json();
-        const cleanMsg = sanitize(msg);
-        let finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD);
+        body = await c.req.json();
+    } catch (e) {
+        return createErrorResponse(c, "INVALID_JSON", "Corpo da requisição inválido", 400);
+    }
 
-        await queryDB(
+    const { from_id, to_id, msg, admin_password, is_admin } = body;
+    const cleanMsg = sanitize(msg);
+    const finalIsAdmin = !!(is_admin && admin_password === env.ADMIN_PASSWORD);
+
+    // Garantir que IDs sejam números para o Postgres
+    const fId = parseInt(from_id);
+    const tId = parseInt(to_id);
+
+    const executeInsert = async () => {
+        return await queryDB(
             "INSERT INTO messages (from_id, to_id, msg, is_admin) VALUES ($1, $2, $3, $4)",
-            [from_id, to_id, cleanMsg, finalIsAdmin],
+            [fId, tId, cleanMsg, finalIsAdmin],
             env
         );
+    };
+
+    try {
+        await executeInsert();
 
         // Notificação Push para o destinatário
         c.executionCtx.waitUntil(notifyUser(
-            to_id,
+            tId,
             "Nova Mensagem! ✉️",
             "Você recebeu uma nova mensagem privada.",
             env
@@ -271,19 +286,28 @@ export const sendMessage = async (c) => {
 
         return createResponse(c, { success: true });
     } catch (err) {
+        console.error("🔥 Error in sendMessage:", err.code, err.message);
+
+        // Tabela não existe
         if (err.code === '42P01') {
-            await queryDB(`
-                CREATE TABLE IF NOT EXISTS messages (
-                    id SERIAL PRIMARY KEY,
-                    from_id INTEGER NOT NULL,
-                    to_id INTEGER NOT NULL,
-                    msg TEXT NOT NULL,
-                    is_admin BOOLEAN DEFAULT FALSE,
-                    is_read BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
-             `, [], env);
-            return createErrorResponse(c, "TABLE_CREATED", "Tabela criada. Tente novamente.", 500);
+            try {
+                await queryDB(`
+                    CREATE TABLE IF NOT EXISTS messages (
+                        id SERIAL PRIMARY KEY,
+                        from_id INTEGER NOT NULL,
+                        to_id INTEGER NOT NULL,
+                        msg TEXT NOT NULL,
+                        is_admin BOOLEAN DEFAULT FALSE,
+                        is_read BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `, [], env);
+                // Tenta novamente após criar a tabela
+                await executeInsert();
+                return createResponse(c, { success: true, repaired_table: true });
+            } catch (retryErr) {
+                return createErrorResponse(c, "DB_ERROR", "Falha ao criar/inserir após erro de tabela: " + retryErr.message, 500);
+            }
         }
 
         // Coluna ausente (is_admin ou is_read)
@@ -291,11 +315,14 @@ export const sendMessage = async (c) => {
             try {
                 await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE", [], env);
                 await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE", [], env);
-                return createErrorResponse(c, "COLUMN_REPAIRED", "Estrutura do banco atualizada. Tente novamente.", 500);
-            } catch (repairErr) {
-                console.error("Erro ao reparar colunas de messages:", repairErr);
+                // Tenta novamente após adicionar as colunas
+                await executeInsert();
+                return createResponse(c, { success: true, repaired_columns: true });
+            } catch (retryErr) {
+                return createErrorResponse(c, "DB_ERROR", "Falha ao atualizar colunas/inserir: " + retryErr.message, 500);
             }
         }
+
         throw err;
     }
 };
