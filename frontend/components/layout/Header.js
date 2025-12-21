@@ -105,7 +105,7 @@ export default function Header({
                                 </button>
                             </div>
                         ) : (
-                            <button onClick={() => setShowAuth(true)} className="login-btn">
+                            <button onClick={() => setShowAuth(true)} className="action-btn login-btn">
                                 <User size={16} />
                                 <span>Entrar</span>
                             </button>
@@ -291,12 +291,17 @@ export default function Header({
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
                 }
 
-                .restricted-btn { background: rgba(239, 68, 68, 0.9); }
-                .support-btn { background: rgba(59, 130, 246, 0.9); }
+                .restricted-btn { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+                .support-btn { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
                 
                 .login-btn { 
-                    background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
-                    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+                    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+                    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+                    color: white !important;
+                }
+
+                .login-btn span {
+                    color: white;
                 }
                 
                 .icon-btn, .admin-trigger-btn, .admin-logout-btn {
