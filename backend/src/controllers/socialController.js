@@ -285,6 +285,17 @@ export const sendMessage = async (c) => {
              `, [], env);
             return createErrorResponse(c, "TABLE_CREATED", "Tabela criada. Tente novamente.", 500);
         }
+
+        // Coluna ausente (is_admin ou is_read)
+        if (err.code === '42703') {
+            try {
+                await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE", [], env);
+                await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE", [], env);
+                return createErrorResponse(c, "COLUMN_REPAIRED", "Estrutura do banco atualizada. Tente novamente.", 500);
+            } catch (repairErr) {
+                console.error("Erro ao reparar colunas de messages:", repairErr);
+            }
+        }
         throw err;
     }
 };
