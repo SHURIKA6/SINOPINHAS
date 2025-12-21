@@ -249,6 +249,12 @@ export default function Header({
                     flex: 1;
                 }
 
+                .desktop-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
                 .action-btn {
                     padding: 8px 12px;
                     border-radius: 10px;
