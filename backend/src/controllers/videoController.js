@@ -9,6 +9,12 @@ export const uploadVideo = async (c) => {
     try {
         const formData = await c.req.formData();
         const file = formData.get("file");
+        const userId = formData.get("user_id");
+
+        if (!file || !userId) {
+            return createErrorResponse(c, "INVALID_INPUT", "Arquivo e ID de usuário são obrigatórios", 400);
+        }
+
         const validationResult = videoMetadataSchema.safeParse({
             title: formData.get("title"),
             description: formData.get("description"),
@@ -22,28 +28,26 @@ export const uploadVideo = async (c) => {
         }
 
         const { title, description, is_restricted: isRestricted, type } = validationResult.data;
-        const userId = formData.get("user_id");
-
-        if (!file || !userId) {
-            return createErrorResponse(c, "INVALID_INPUT", "Arquivo e ID de usuário são obrigatórios", 400);
-        }
 
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 10);
-        const extension = file.name.split('.').pop();
+        const fileName = (typeof file === 'string') ? 'file' : file.name || 'file';
+        const extension = fileName.split('.').pop();
         const r2Key = `${timestamp}-${randomStr}.${extension}`;
 
-        if (video.type === 'photo') {
-            await env.VIDEO_BUCKET.put(r2Key, file.stream(), {
+        const blob = (typeof file === 'string') ? null : file;
+
+        if (type === 'photo') {
+            await env.VIDEO_BUCKET.put(r2Key, blob.stream(), {
                 httpMetadata: {
-                    contentType: file.type,
+                    contentType: blob.type,
                     cacheControl: 'public, max-age=604800, immutable'
                 },
             });
         } else {
-            await env.VIDEO_BUCKET.put(r2Key, file.stream(), {
+            await env.VIDEO_BUCKET.put(r2Key, blob.stream(), {
                 httpMetadata: {
-                    contentType: file.type,
+                    contentType: blob.type,
                 },
             });
         }
@@ -67,6 +71,7 @@ export const uploadVideo = async (c) => {
 
         return createResponse(c, { success: true, bunny_id: r2Key });
     } catch (err) {
+        console.error("Upload error:", err);
         throw err;
     }
 };
@@ -144,9 +149,19 @@ export const listVideos = async (c) => {
     try {
         let sql = `
       SELECT v.*, u.username,
-      (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
-      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+      (SELECT count_likes(v.id)) as likes,
+      (SELECT count_views(v.id)) as views
     `;
+
+        // If helper functions don't exist, we'll use inline counts
+        // But for performance it's better to have them or use a join.
+        // Actually, our schema doesn't have these functions yet. Let's stick to inline or joins.
+
+        sql = `
+          SELECT v.*, u.username,
+          (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
+          (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+        `;
 
         const params = [];
         let paramCount = 1;

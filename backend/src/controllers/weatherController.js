@@ -9,7 +9,7 @@ const translateDescription = (desc) => {
         "partly cloudy": "Parcialmente Nublado",
         "cloudy": "Nublado",
         "overcast": "Encoberto",
-        "fog": "Nevoeiro",
+        "fog": "Nublado",
         "drizzle": "Garoa",
         "light drizzle": "Garoa Leve",
         "moderate drizzle": "Garoa Moderada",
@@ -33,8 +33,8 @@ const getWmoLabel = (code) => {
         1: "Principalmente Limpo",
         2: "Parcialmente Nublado",
         3: "Nublado",
-        45: "Nevoeiro",
-        48: "Nevoeiro com Geada",
+        45: "Nublado",
+        48: "Nublado",
         51: "Garoa Leve",
         53: "Garoa Moderada",
         55: "Garoa Densa",
@@ -53,7 +53,7 @@ const getWmoLabel = (code) => {
 
 export const getWeather = async (c) => {
     const env = c.env;
-    const cacheKey = 'weather_data_sinop_v9'; // Increment cache version
+    const cacheKey = 'weather_data_sinop_v10'; // Increment cache version
 
     // 1. Tentar Cache
     if (env?.MURAL_STORE) {

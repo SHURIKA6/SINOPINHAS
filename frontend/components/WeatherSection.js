@@ -48,7 +48,7 @@ export default function WeatherSection() {
         const map = {
             'clear sky': 'Céu limpo', 'partly cloudy': 'Parcialmente nublado', 'cloudy': 'Nublado',
             'overcast': 'Encoberto', 'light rain': 'Chuva fraca', 'moderate rain': 'Chuva moderada',
-            'thunderstorm': 'Tempestade', 'rain': 'Chuva', 'clear': 'Limpo'
+            'thunderstorm': 'Tempestade', 'rain': 'Chuva', 'clear': 'Limpo', 'fog': 'Nublado'
         };
         return map[val?.toLowerCase()] || val;
     };
@@ -65,7 +65,7 @@ export default function WeatherSection() {
 
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <h2 style={{ fontSize: 32, fontWeight: 1000, margin: 0, background: 'linear-gradient(90deg, #8d6aff, #fe7d45)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-1px' }}>
-                    Clima em Sinop
+                    SINOPINHAS WEATHER
                 </h2>
                 <p style={{ color: 'var(--secondary-text)', fontWeight: 700 }}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
             </div>
