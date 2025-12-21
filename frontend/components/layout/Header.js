@@ -37,7 +37,7 @@ export default function Header({
                 }}
             >
                 <h1
-                    onClick={() => setActiveTab('videos')}
+                    onClick={() => setActiveTab('feed')}
                     style={{
                         margin: 0,
                         fontSize: 24,
@@ -216,28 +216,27 @@ export default function Header({
 
 
             <nav className="tab-container">
-                {['videos', 'photos', 'upload', 'eventos', 'news', 'lugares', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
+                {['feed', 'upload', 'eventos', 'news', 'lugares', 'weather', isAdmin ? 'admin' : null, 'inbox', showSecretTab ? 'secret' : null].filter(Boolean).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
                     >
-                        {tab === 'videos' ? '🎬 Vídeos' :
-                            tab === 'photos' ? '📷 Fotos' :
-                                tab === 'news' ? '📰 Notícias' :
-                                    tab === 'lugares' ? '📍 Lugares' :
-                                        tab === 'weather' ? '⛅ Clima' :
-                                            tab === 'upload' ? '📤 Upload' :
-                                                tab === 'eventos' ? '📅 Eventos' :
-                                                    tab === 'admin' ? '⚙️ Admin' :
-                                                        tab === 'inbox' ? (
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                                💬 Mensagens
-                                                                {unreadCount > 0 && (
-                                                                    <span className="badge">{unreadCount}</span>
-                                                                )}
-                                                            </span>
-                                                        ) : '🔒 Secreto'}
+                        {tab === 'feed' ? '🎨 Explorar' :
+                            tab === 'news' ? '📰 Notícias' :
+                                tab === 'lugares' ? '📍 Lugares' :
+                                    tab === 'weather' ? '⛅ Clima' :
+                                        tab === 'upload' ? '📤 Upload' :
+                                            tab === 'eventos' ? '📅 Eventos' :
+                                                tab === 'admin' ? '⚙️ Admin' :
+                                                    tab === 'inbox' ? (
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            💬 Mensagens
+                                                            {unreadCount > 0 && (
+                                                                <span className="badge">{unreadCount}</span>
+                                                            )}
+                                                        </span>
+                                                    ) : '🔒 Secreto'}
                     </button>
                 ))}
             </nav>

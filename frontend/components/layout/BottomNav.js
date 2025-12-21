@@ -4,18 +4,11 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
     return (
         <nav className="bottom-nav">
             <button
-                onClick={() => setActiveTab('videos')}
-                className={`nav-item ${activeTab === 'videos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('feed')}
+                className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`}
             >
-                <span className="icon">🎬</span>
-                <span className="label">Vídeos</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('photos')}
-                className={`nav-item ${activeTab === 'photos' ? 'active' : ''}`}
-            >
-                <span className="icon">📷</span>
-                <span className="label">Fotos</span>
+                <span className="icon">🎨</span>
+                <span className="label">Explorar</span>
             </button>
             <button
                 onClick={() => setActiveTab('upload')}

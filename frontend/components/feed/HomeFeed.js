@@ -4,15 +4,18 @@ import SkeletonVideoCard from '../SkeletonVideoCard';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 
-export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType = 'video' }) {
+export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('recent');
+    const [filterType, setFilterType] = useState(initialFilterType);
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const LIMIT = 12;
+
+    const [hearts, setHearts] = useState([]);
 
     // Debounce Search
     useEffect(() => {
@@ -30,7 +33,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         let list = [...videos];
         if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
         else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
-        // 'recent' is default from DB usually, but we sort again just in case
         else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         return list;
     }, [videos, sortBy]);
@@ -70,8 +72,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 data = await searchVideos(debouncedSearchQuery);
                 setHasMore(false);
             } else {
-                // Now passing filterType to backend for optimized fetching
-                data = await fetchVideos(user?.id, LIMIT, currentOffset, filterType === 'photo' ? 'photo' : 'video');
+                data = await fetchVideos(user?.id, LIMIT, currentOffset, filterType === 'all' ? null : filterType);
                 if (data.length < LIMIT) setHasMore(false);
             }
 
@@ -83,10 +84,21 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         }
     };
 
-    const toggleLike = async (videoId) => {
+    const spawnHeart = (e) => {
+        const id = Date.now();
+        const x = e.clientX;
+        const y = e.clientY;
+        setHearts(prev => [...prev, { id, x, y }]);
+        setTimeout(() => {
+            setHearts(prev => prev.filter(h => h.id !== id));
+        }, 1000);
+    };
+
+    const toggleLike = async (videoId, e) => {
         if (!user) return showToast('error', 'Faça login para curtir!');
 
-        // Update UI immediately (optimistic)
+        if (e) spawnHeart(e);
+
         setVideos(prev => prev.map(v => {
             if (v.id === videoId) {
                 const isLiked = !v.user_liked;
@@ -103,7 +115,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             await likeVideo(videoId, user.id);
         } catch (err) {
             showToast('error', 'Erro ao curtir');
-            loadVideos(); // Revert on error
+            loadVideos();
         }
     };
 
@@ -120,80 +132,118 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         }
     };
 
-
-    const label = filterType === 'photo' ? 'foto' : 'vídeo';
-    const Label = filterType === 'photo' ? 'Foto' : 'Vídeo';
-
     return (
-        <div>
+        <div style={{ position: 'relative' }}>
+            {/* Efeito de Corações */}
+            {hearts.map(h => (
+                <div key={h.id} style={{
+                    position: 'fixed', left: h.x, top: h.y,
+                    pointerEvents: 'none', zIndex: 10001,
+                    fontSize: 24, animation: 'floatHeart 1s ease-out forwards'
+                }}>❤️</div>
+            ))}
+
             <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-                {/* Search and Sort */}
-                <div style={{ marginBottom: 20, display: 'flex', gap: 15, flexWrap: 'wrap' }}>
-                    <input
-                        type="text"
-                        placeholder={`🔍 Buscar ${label}s...`}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            flex: 1,
-                            minWidth: '200px',
-                            padding: '12px 20px',
-                            background: 'var(--input-bg)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: 10,
-                            color: 'var(--text-color)',
-                            fontSize: 16
-                        }}
-                    />
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        style={{
-                            padding: '12px 20px',
-                            background: 'var(--input-bg)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: 10,
-                            color: 'var(--text-color)',
-                            fontSize: 16,
-                            cursor: 'pointer',
-                            minWidth: '150px',
-                            flex: 1
-                        }}
-                    >
-                        <option value="recent">📅 Mais Recentes</option>
-                        <option value="popular">🔥 Mais Visualizados</option>
-                        <option value="liked">❤️ Mais Curtidos</option>
-                    </select>
-                </div>
 
-                {/* Header */}
-                <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: 'var(--text-color)' }}>
-                    {loading && videos.length === 0 ? 'Carregando' : `${videos.length} ${label}${videos.length !== 1 ? 's' : ''}`}
-                </h2>
+                {/* Search and Filters Header */}
+                <div style={{
+                    background: 'var(--card-bg)',
+                    padding: '24px',
+                    borderRadius: '24px',
+                    border: '1px solid var(--border-color)',
+                    marginBottom: '32px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                }}>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px' }}>
+                        <div style={{ position: 'relative', flex: 2, minWidth: '280px' }}>
+                            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                            <input
+                                type="text"
+                                placeholder={`O que você quer ver hoje em Sinop?`}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '14px 20px 14px 45px',
+                                    background: 'var(--input-bg)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '16px',
+                                    color: 'var(--text-color)',
+                                    fontSize: '16px',
+                                    transition: 'all 0.3s ease',
+                                    outline: 'none'
+                                }}
+                                className="search-input"
+                            />
+                        </div>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            style={{
+                                flex: 1,
+                                padding: '14px 20px',
+                                background: 'var(--input-bg)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '16px',
+                                color: 'var(--text-color)',
+                                fontSize: '16px',
+                                cursor: 'pointer',
+                                minWidth: '180px'
+                            }}
+                        >
+                            <option value="recent">📅 Mais Recentes</option>
+                            <option value="popular">🔥 Mais Visualizados</option>
+                            <option value="liked">❤️ Mais Curtidos</option>
+                        </select>
+                    </div>
 
-                <div style={{ background: 'var(--card-bg)', padding: 16, borderRadius: 16, marginBottom: 24, border: '1px solid var(--border-color)' }}>
-                    <h3 style={{ marginTop: 0, fontSize: 22, color: 'var(--text-color)' }}>🔥 Últimos Lançamentos do SINOPINHAS</h3>
-                    <p style={{ color: 'var(--secondary-text)', lineHeight: '1.6', fontSize: 16 }}>
-                        Bem-vindo à comunidade oficial de Sinop! Aqui você encontra os melhores conteúdos locais.
-                    </p>
+                    {/* Sub-Tabs de Filtro */}
+                    <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+                        {['all', 'video', 'photo'].map(type => (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                style={{
+                                    padding: '10px 24px',
+                                    borderRadius: '12px',
+                                    border: '1px solid',
+                                    borderColor: filterType === type ? 'var(--accent-color)' : 'var(--border-color)',
+                                    background: filterType === type ? 'var(--accent-color)' : 'transparent',
+                                    color: filterType === type ? '#fff' : 'var(--text-color)',
+                                    fontWeight: 700,
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    whiteSpace: 'nowrap',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                {type === 'all' && '🔥 Todos'}
+                                {type === 'video' && '📹 Vídeos'}
+                                {type === 'photo' && '📷 Fotos'}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Grid */}
                 {loading && videos.length === 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                         {[...Array(8)].map((_, i) => (
                             <SkeletonVideoCard key={i} />
                         ))}
                     </div>
                 ) : videos.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 64, background: 'var(--card-bg)', borderRadius: 16, color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
-                        <div style={{ fontSize: 41, marginBottom: 18 }}>{filterType === 'photo' ? '🖼️' : '📹'}</div>
-                        <p style={{ fontSize: 19, margin: 0 }}>Nenhum {label} encontrado</p>
+                    <div style={{ textAlign: 'center', padding: '80px 20px', background: 'var(--card-bg)', borderRadius: '24px', color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '64px', marginBottom: '24px' }}>🏜️</div>
+                        <h3 style={{ fontSize: '24px', color: 'var(--text-color)', margin: '0 0 8px' }}>Nada por aqui ainda</h3>
+                        <p style={{ fontSize: '16px', margin: 0 }}>Seja o primeiro a compartilhar algo legal em Sinop!</p>
                     </div>
                 ) : (
-
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                             {sortedVideos.map((v) => (
                                 <VideoCard
                                     key={v.id}
@@ -222,18 +272,35 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                 ref={loadMoreRef}
                                 style={{
                                     textAlign: 'center',
-                                    marginTop: 30,
-                                    padding: '20px',
-                                    color: '#8d6aff',
-                                    opacity: 0.7
+                                    marginTop: '48px',
+                                    padding: '24px',
+                                    color: 'var(--accent-color)',
+                                    fontWeight: '700'
                                 }}
                             >
-                                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⏳</span> Carregando mais...
+                                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite', marginRight: '10px' }}>⏳</span>
+                                Carregando mais descobertas...
                             </div>
                         )}
                     </>
                 )}
             </div>
+
+            <style jsx global>{`
+                @keyframes floatHeart {
+                    0% { transform: translateY(0) scale(1); opacity: 1; }
+                    100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .search-input:focus {
+                    border-color: var(--accent-color) !important;
+                    box-shadow: 0 0 0 4px rgba(141, 106, 255, 0.1);
+                    background: var(--card-bg) !important;
+                }
+            `}</style>
         </div>
     );
 }

@@ -81,7 +81,8 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                 </p>
                 <div style={{ marginTop: 12, fontSize: 15, color: isSecret ? "#ffb3b3" : "var(--accent-color)", display: 'flex', gap: 15 }}>
                     <button
-                        onClick={() => onLike(video.id)}
+                        onClick={(e) => onLike(video.id, e)}
+                        className={`like-btn ${video.user_liked ? 'liked' : ''}`}
                         style={{
                             background: 'none',
                             border: 'none',
@@ -90,13 +91,29 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                             fontSize: 15,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 5
+                            gap: 5,
+                            transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                         }}
                     >
-                        {video.user_liked ? '❤️' : '🤍'} {video.likes || 0}
+                        <span style={{ fontSize: 18 }}>{video.user_liked ? '❤️' : '🤍'}</span>
+                        <span style={{ fontWeight: 800 }}>{video.likes || 0}</span>
                     </button>
-                    <span>👁️ {video.views || 0}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>👁️ <span style={{ fontWeight: 800 }}>{video.views || 0}</span></span>
                 </div>
+
+                <style jsx>{`
+                    .like-btn:active {
+                        transform: scale(0.8);
+                    }
+                    .like-btn.liked span:first-child {
+                        animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    }
+                    @keyframes heartPop {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.5); }
+                        100% { transform: scale(1); }
+                    }
+                `}</style>
                 <button
                     onClick={() => onShare && onShare(video)}
                     style={{

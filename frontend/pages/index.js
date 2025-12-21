@@ -68,7 +68,7 @@ export default function Home({ initialVideo }) {
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const router = useRouter();
-  const [activeTab, setActiveTabState] = useState('videos');
+  const [activeTab, setActiveTabState] = useState('feed');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
 
@@ -94,7 +94,7 @@ export default function Home({ initialVideo }) {
   useEffect(() => {
     if (router.isReady) {
       const tab = router.query.tab;
-      if (tab && ['videos', 'photos', 'upload', 'eventos', 'news', 'lugares', 'weather', 'admin', 'inbox', 'secret'].includes(tab)) {
+      if (tab && ['feed', 'upload', 'eventos', 'news', 'lugares', 'weather', 'admin', 'inbox', 'secret'].includes(tab)) {
         setActiveTabState(tab);
       }
     }
@@ -283,14 +283,9 @@ export default function Home({ initialVideo }) {
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
 
         <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-          {/* Aba de Vídeos (Sempre montada para performance) */}
-          <TabPane active={activeTab === 'videos'}>
-            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="video" />
-          </TabPane>
-
-          {/* Aba de Fotos (Sempre montada) */}
-          <TabPane active={activeTab === 'photos'}>
-            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="photo" />
+          {/* Aba Explorar (Feed Unificado) */}
+          <TabPane active={activeTab === 'feed'}>
+            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" />
           </TabPane>
 
           {/* Outras abas montadas sob demanda mas persistentes */}

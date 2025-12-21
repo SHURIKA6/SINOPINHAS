@@ -66,7 +66,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
             if (isRestricted) {
                 setActiveTab('secret');
             } else {
-                setActiveTab('videos');
+                setActiveTab('feed');
             }
         } catch (err) {
             showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
