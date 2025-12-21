@@ -261,9 +261,17 @@ export const sendMessage = async (c) => {
     const cleanMsg = sanitize(msg);
     const finalIsAdmin = !!(is_admin && admin_password === env.ADMIN_PASSWORD);
 
-    // Garantir que IDs sejam números para o Postgres
+    // Garantir que IDs sejam números para o Postgres e evitar NaN
     const fId = parseInt(from_id);
     const tId = parseInt(to_id);
+
+    if (isNaN(fId) || isNaN(tId)) {
+        return createErrorResponse(c, "INVALID_PARAM", `IDs inválidos: from=${from_id}, to=${to_id}`, 400);
+    }
+
+    if (!cleanMsg) {
+        return createErrorResponse(c, "INVALID_PARAM", "Mensagem vazia ou inválida", 400);
+    }
 
     const executeInsert = async () => {
         return await queryDB(
@@ -276,13 +284,15 @@ export const sendMessage = async (c) => {
     try {
         await executeInsert();
 
-        // Notificação Push para o destinatário
-        c.executionCtx.waitUntil(notifyUser(
-            tId,
-            "Nova Mensagem! ✉️",
-            "Você recebeu uma nova mensagem privada.",
-            env
-        ));
+        // Notificação Push para o destinatário (apenas se for usuário real e não admin purista)
+        if (tId > 0) {
+            c.executionCtx.waitUntil(notifyUser(
+                tId,
+                "Nova Mensagem! ✉️",
+                "Você recebeu uma nova mensagem privada.",
+                env
+            ));
+        }
 
         return createResponse(c, { success: true });
     } catch (err) {
@@ -302,11 +312,10 @@ export const sendMessage = async (c) => {
                         created_at TIMESTAMP DEFAULT NOW()
                     )
                 `, [], env);
-                // Tenta novamente após criar a tabela
                 await executeInsert();
                 return createResponse(c, { success: true, repaired_table: true });
             } catch (retryErr) {
-                return createErrorResponse(c, "DB_ERROR", "Falha ao criar/inserir após erro de tabela: " + retryErr.message, 500);
+                return createErrorResponse(c, "DB_ERROR", "Falha ao criar/inserir após erro de tabela", 500, retryErr.message);
             }
         }
 
@@ -315,15 +324,15 @@ export const sendMessage = async (c) => {
             try {
                 await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE", [], env);
                 await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE", [], env);
-                // Tenta novamente após adicionar as colunas
                 await executeInsert();
                 return createResponse(c, { success: true, repaired_columns: true });
             } catch (retryErr) {
-                return createErrorResponse(c, "DB_ERROR", "Falha ao atualizar colunas/inserir: " + retryErr.message, 500);
+                return createErrorResponse(c, "DB_ERROR", "Falha ao atualizar colunas/inserir", 500, retryErr.message);
             }
         }
 
-        throw err;
+        // Qualquer outro erro do banco - Retorna com Detalhes para Debug
+        return createErrorResponse(c, "DB_QUERY_ERROR", "Erro ao processar mensagem no banco", 500, err.message);
     }
 };
 
