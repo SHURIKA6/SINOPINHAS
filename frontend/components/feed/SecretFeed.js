@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import VideoCard from '../VideoCard';
 import SkeletonVideoCard from '../SkeletonVideoCard';
+import ShareModal from '../ShareModal';
 import { fetchSecretVideos, likeVideo, removeVideo } from '../../services/api';
 
 export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete }) {
@@ -12,6 +13,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
     const [hasMore, setHasMore] = useState(true);
     const LIMIT = 12;
     const loadMoreRef = useRef(null);
+    const [videoToShare, setVideoToShare] = useState(null);
 
     // Derived State
     const sortedVideos = useMemo(() => {
@@ -57,7 +59,6 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
     const loadVideos = async (currentOffset, reset = false) => {
         setLoading(true);
         try {
-            // Secret feed can also benefit from server-side filtering if you eventually add it
             const data = await fetchSecretVideos(user?.id, LIMIT, currentOffset);
             if (data.length < LIMIT) setHasMore(false);
             setVideos(prev => reset ? data : [...prev, ...data]);
@@ -120,7 +121,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                             minWidth: '200px',
                             padding: '12px 20px',
                             background: 'var(--input-bg)',
-                            border: '1px solid #e53e3e', // Keep red border for secret flavor
+                            border: '1px solid #e53e3e',
                             borderRadius: 10,
                             color: 'var(--text-color)',
                             fontSize: 16
@@ -147,12 +148,10 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                     </select>
                 </div>
 
-                {/* Header */}
                 <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20, color: '#ff6b9d' }}>
                     🔒 CONTEÚDO RESTRITO ({videos.length})
                 </h2>
 
-                {/* Grid */}
                 {loading && videos.length === 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                         {[...Array(8)].map((_, i) => (
@@ -166,7 +165,6 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                         <p style={{ fontSize: 14, marginTop: 8 }}>Use o checkbox "Tornar vídeo privado" ao enviar</p>
                     </div>
                 ) : (
-
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 28 }}>
                             {sortedVideos.map((v) => (
@@ -178,9 +176,19 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                                     onOpenComments={onVideoClick}
                                     canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
                                     isSecret={true}
+                                    onShare={(video) => setVideoToShare(video)}
                                 />
                             ))}
                         </div>
+
+                        {videoToShare && (
+                            <ShareModal
+                                video={videoToShare}
+                                user={user}
+                                onClose={() => setVideoToShare(null)}
+                                showToast={showToast}
+                            />
+                        )}
 
                         {hasMore && (
                             <div

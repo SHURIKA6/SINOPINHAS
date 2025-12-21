@@ -28,6 +28,14 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
         lastTap.current = now;
     };
 
+    const handleShareClick = () => {
+        if (onShare) {
+            onShare(video);
+        } else {
+            handleNativeShare();
+        }
+    };
+
     const handleNativeShare = async () => {
         if (navigator.share) {
             try {
@@ -37,8 +45,6 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     url: window.location.href + `?v=${video.id}`,
                 });
             } catch (err) { }
-        } else {
-            onShare && onShare(video);
         }
     };
 
@@ -154,7 +160,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     >💬 {video.views || 0}</button>
 
                     <button
-                        onClick={(e) => { e.stopPropagation(); handleNativeShare(); }}
+                        onClick={(e) => { e.stopPropagation(); handleShareClick(); }}
                         style={{
                             width: 40, height: 40, borderRadius: 12, background: 'var(--input-bg)',
                             border: '1px solid var(--border-color)', display: 'flex',
