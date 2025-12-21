@@ -83,90 +83,105 @@ export default function EventsSection() {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
                 gap: 24
             }}>
-                {events.map((event) => (
-                    <div
-                        key={event.id}
-                        style={{
-                            background: 'var(--card-bg)',
-                            borderRadius: 24,
-                            overflow: 'hidden',
-                            border: '1px solid var(--border-color)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            position: 'relative'
-                        }}
-                        className="card-hover"
-                    >
-                        <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
-                            <img
-                                src={event.image}
-                                alt={event.title}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                            <div style={{
-                                position: 'absolute',
-                                top: 16,
-                                right: 16,
-                                background: 'rgba(255, 255, 255, 0.9)',
-                                color: '#1a1a1a',
-                                padding: '8px 16px',
-                                borderRadius: 12,
-                                textAlign: 'center',
-                                fontWeight: 800,
-                                backdropFilter: 'blur(4px)',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                            }}>
-                                <div style={{ fontSize: 18, lineHeight: 1 }}>{event.date.split('-')[2]}</div>
-                                <div style={{ fontSize: 10, textTransform: 'uppercase' }}>
-                                    {new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' })}
+                {loading ? (
+                    [...Array(3)].map((_, i) => (
+                        <div key={i} style={{ background: 'var(--card-bg)', borderRadius: 24, border: '1px solid var(--border-color)', overflow: 'hidden', height: 420 }}>
+                            <div className="skeleton" style={{ height: 220, width: '100%', borderRadius: 0 }} />
+                            <div style={{ padding: 24 }}>
+                                <div className="skeleton" style={{ height: 24, width: '70%', marginBottom: 12 }} />
+                                <div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 16 }} />
+                                <div className="skeleton" style={{ height: 16, width: '90%', marginBottom: 8 }} />
+                                <div className="skeleton" style={{ height: 16, width: '60%', marginBottom: 24 }} />
+                                <div className="skeleton" style={{ height: 44, width: '100%', borderRadius: 12 }} />
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    events.map((event) => (
+                        <div
+                            key={event.id}
+                            style={{
+                                background: 'var(--card-bg)',
+                                borderRadius: 24,
+                                overflow: 'hidden',
+                                border: '1px solid var(--border-color)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                position: 'relative'
+                            }}
+                            className="card-hover"
+                        >
+                            <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
+                                <img
+                                    src={event.image}
+                                    alt={event.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 16,
+                                    right: 16,
+                                    background: 'rgba(255, 255, 255, 0.9)',
+                                    color: '#1a1a1a',
+                                    padding: '8px 16px',
+                                    borderRadius: 12,
+                                    textAlign: 'center',
+                                    fontWeight: 800,
+                                    backdropFilter: 'blur(4px)',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                }}>
+                                    <div style={{ fontSize: 18, lineHeight: 1 }}>{event.date.split('-')[2]}</div>
+                                    <div style={{ fontSize: 10, textTransform: 'uppercase' }}>
+                                        {new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' })}
+                                    </div>
+                                </div>
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: 12,
+                                    left: 12,
+                                    background: 'var(--accent-color)',
+                                    color: '#fff',
+                                    padding: '4px 12px',
+                                    borderRadius: 99,
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {event.category}
                                 </div>
                             </div>
-                            <div style={{
-                                position: 'absolute',
-                                bottom: 12,
-                                left: 12,
-                                background: 'var(--accent-color)',
-                                color: '#fff',
-                                padding: '4px 12px',
-                                borderRadius: 99,
-                                fontSize: 11,
-                                fontWeight: 700,
-                                textTransform: 'uppercase'
-                            }}>
-                                {event.category}
-                            </div>
-                        </div>
 
-                        <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: 'var(--text-color)' }}>
-                                {event.title}
-                            </h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--secondary-text)', fontSize: 13, marginBottom: 12 }}>
-                                <span>📍 {event.location}</span>
-                                <span>•</span>
-                                <span>🕒 {event.time}</span>
+                            <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: 'var(--text-color)' }}>
+                                    {event.title}
+                                </h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--secondary-text)', fontSize: 13, marginBottom: 12 }}>
+                                    <span>📍 {event.location}</span>
+                                    <span>•</span>
+                                    <span>🕒 {event.time}</span>
+                                </div>
+                                <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>
+                                    {event.description}
+                                </p>
+                                <button
+                                    onClick={() => setSelectedEvent(event)}
+                                    style={{
+                                        marginTop: 20,
+                                        padding: '12px',
+                                        background: 'var(--input-bg)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: 12,
+                                        color: 'var(--text-color)',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }} className="details-btn">
+                                    Ver Detalhes
+                                </button>
                             </div>
-                            <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>
-                                {event.description}
-                            </p>
-                            <button
-                                onClick={() => setSelectedEvent(event)}
-                                style={{
-                                    marginTop: 20,
-                                    padding: '12px',
-                                    background: 'var(--input-bg)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: 12,
-                                    color: 'var(--text-color)',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease'
-                                }} className="details-btn">
-                                Ver Detalhes
-                            </button>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {selectedEvent && (

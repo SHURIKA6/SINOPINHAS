@@ -30,9 +30,16 @@ export default function NewsFeed() {
             </h2>
 
             {loading ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
                     {[...Array(6)].map((_, i) => (
-                        <div key={i} style={{ height: 300, background: 'var(--input-bg)', borderRadius: 16, animation: 'pulse 1.5s infinite' }}></div>
+                        <div key={i} style={{ height: 320, background: 'var(--card-bg)', borderRadius: 24, border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                            <div className="skeleton" style={{ height: 180, width: '100%' }} />
+                            <div style={{ padding: 16 }}>
+                                <div className="skeleton" style={{ height: 12, width: '40%', marginBottom: 16 }} />
+                                <div className="skeleton" style={{ height: 18, width: '90%', marginBottom: 8 }} />
+                                <div className="skeleton" style={{ height: 18, width: '60%' }} />
+                            </div>
+                        </div>
                     ))}
                 </div>
             ) : error ? (
@@ -86,13 +93,7 @@ export default function NewsFeed() {
             )}
 
 
-            <style jsx>{`
-                @keyframes pulse {
-                    0% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                    100% { opacity: 0.6; }
-                }
-            `}</style>
+
         </div>
     );
 }

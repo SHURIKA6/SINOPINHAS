@@ -85,70 +85,84 @@ export default function PlacesSection() {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                 gap: 24
             }}>
-                {places.map((place, index) => (
-                    <a
-                        key={index}
-                        href={place.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            textDecoration: 'none',
-                            color: 'inherit',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            background: 'var(--card-bg)',
-                            borderRadius: 24,
-                            overflow: 'hidden',
-                            border: '1px solid var(--border-color)',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                            cursor: 'pointer'
-                        }}
-                        className="card-hover"
-                    >
-                        <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
-                            <img
-                                src={place.image}
-                                alt={place.title}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
-                                className="place-img"
-                            />
-                            <div style={{
-                                position: 'absolute',
-                                top: 12,
-                                left: 12,
-                                background: 'rgba(141, 106, 255, 0.9)',
-                                color: '#fff',
-                                padding: '4px 12px',
-                                borderRadius: 99,
-                                fontSize: 12,
-                                fontWeight: 600,
-                                backdropFilter: 'blur(4px)'
-                            }}>
-                                {place.category}
+                {loading ? (
+                    [...Array(6)].map((_, i) => (
+                        <div key={i} style={{ background: 'var(--card-bg)', borderRadius: 24, border: '1px solid var(--border-color)', overflow: 'hidden', height: 400 }}>
+                            <div className="skeleton" style={{ height: 200, width: '100%', borderRadius: 0 }} />
+                            <div style={{ padding: 24 }}>
+                                <div className="skeleton" style={{ height: 20, width: '60%', marginBottom: 12 }} />
+                                <div className="skeleton" style={{ height: 14, width: '90%', marginBottom: 8 }} />
+                                <div className="skeleton" style={{ height: 14, width: '50%', marginBottom: 20 }} />
+                                <div className="skeleton" style={{ height: 20, width: '30%' }} />
                             </div>
                         </div>
-
-                        <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: 'var(--text-color)' }}>
-                                {place.title}
-                            </h3>
-                            <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>
-                                {place.description}
-                            </p>
-                            <div style={{
-                                marginTop: 20,
+                    ))
+                ) : (
+                    places.map((place, index) => (
+                        <a
+                            key={index}
+                            href={place.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                textDecoration: 'none',
+                                color: 'inherit',
                                 display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                color: 'var(--accent-color)',
-                                fontSize: 14,
-                                fontWeight: 600
-                            }}>
-                                Visitar Site ↗
+                                flexDirection: 'column',
+                                background: 'var(--card-bg)',
+                                borderRadius: 24,
+                                overflow: 'hidden',
+                                border: '1px solid var(--border-color)',
+                                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                                cursor: 'pointer'
+                            }}
+                            className="card-hover"
+                        >
+                            <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
+                                <img
+                                    src={place.image}
+                                    alt={place.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                                    className="place-img"
+                                />
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 12,
+                                    left: 12,
+                                    background: 'rgba(141, 106, 255, 0.9)',
+                                    color: '#fff',
+                                    padding: '4px 12px',
+                                    borderRadius: 99,
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    backdropFilter: 'blur(4px)'
+                                }}>
+                                    {place.category}
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                ))}
+
+                            <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: 'var(--text-color)' }}>
+                                    {place.title}
+                                </h3>
+                                <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>
+                                    {place.description}
+                                </p>
+                                <div style={{
+                                    marginTop: 20,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    color: 'var(--accent-color)',
+                                    fontSize: 14,
+                                    fontWeight: 600
+                                }}>
+                                    Visitar Site ↗
+                                </div>
+                            </div>
+                        </a>
+                    ))
+                )}
             </div>
 
             <style jsx>{`

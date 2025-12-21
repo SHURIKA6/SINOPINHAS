@@ -125,10 +125,38 @@ export default function Home({ initialVideo }) {
       query: { ...router.query, tab: tab }
     }, undefined, { shallow: true });
   };
+
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const [swipeStartX, setSwipeStartX] = useState(null);
+
+  // Sistema de Swipe para Abas
+  const handleTouchStart = (e) => {
+    setSwipeStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (swipeStartX === null) return;
+    const endX = e.changedTouches[0].clientX;
+    const diff = swipeStartX - endX;
+
+    // Lista de abas principais
+    const tabs = ['feed', 'news', 'eventos', 'lugares', 'weather'];
+    const currentIndex = tabs.indexOf(activeTab);
+
+    if (Math.abs(diff) > 80) { // Sensibilidade do swipe
+      if (diff > 0 && currentIndex < tabs.length - 1) {
+        // Swipe Esquerda -> Próxima Aba
+        setActiveTab(tabs[currentIndex + 1]);
+      } else if (diff < 0 && currentIndex > 0) {
+        // Swipe Direita -> Aba Anterior
+        setActiveTab(tabs[currentIndex - 1]);
+      }
+    }
+    setSwipeStartX(null);
+  };
 
   // Troca de Tema
   const toggleTheme = () => {
@@ -287,10 +315,14 @@ export default function Home({ initialVideo }) {
         )}
       </Head>
 
-      <div style={{
-        minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-color)',
-        fontFamily: 'Arial, sans-serif', transition: 'background 0.3s ease, color 0.3s ease'
-      }}>
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          minHeight: '100vh', background: 'var(--bg-gradient)', color: 'var(--text-color)',
+          fontFamily: 'Arial, sans-serif', transition: 'background 0.3s ease, color 0.3s ease'
+        }}
+      >
         {toast && (
           <div style={{
             position: 'fixed', top: 24, right: 24, zIndex: 9999,
@@ -349,43 +381,61 @@ export default function Home({ initialVideo }) {
           {activeTab === 'admin' && isAdmin && <AdminPanel adminPassword={adminPassword} showToast={showToast} />}
         </div>
 
-        {showCommentsModal && currentVideo && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)',
-            zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflowY: 'auto'
-          }} onClick={() => setShowCommentsModal(false)}>
-            <div style={{
-              background: 'var(--card-bg)', borderRadius: 16, padding: 32, maxWidth: 600, width: '100%',
-              maxHeight: '90vh', overflowY: 'auto', color: 'var(--text-color)', border: '1px solid var(--border-color)'
-            }} onClick={e => e.stopPropagation()}>
-              <h2 style={{ margin: '0 0 24px', fontSize: 22 }}>💬 Comentários - {currentVideo.title}</h2>
-              <div style={{ marginBottom: 24 }}>
-                {videoComments.length === 0 ? (
-                  <p style={{ textAlign: 'center', color: '#666', padding: 20 }}>Seja o primeiro a comentar!</p>
-                ) : (
-                  videoComments.map((c, i) => (
-                    <div key={i} style={{ background: 'var(--input-bg)', padding: 16, borderRadius: 10, marginBottom: 12, position: 'relative', border: '1px solid var(--border-color)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        {c.avatar && <img src={c.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} alt={c.username} />}
-                        <strong style={{ fontSize: 15 }}>{c.username}</strong>
-                        <span style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleString('pt-BR')}</span>
-                      </div>
-                      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{c.comment}</p>
-                      {(user?.id === c.user_id || isAdmin) && (
-                        <button onClick={() => handleDeleteComment(c.id)} style={{ position: 'absolute', top: 12, right: 12, background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 12, cursor: 'pointer' }} > Deletar </button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-              {user && (
-                <form onSubmit={sendComment}>
-                  <textarea placeholder="Escreva um comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} rows="3" style={{ width: '100%', padding: 12, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 15, resize: 'vertical', marginBottom: 12 }} />
-                  <button type="submit" style={{ width: '100%', padding: 12, background: '#8d6aff', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}> Enviar Comentário </button>
-                </form>
-              )}
-            </div>
+        {/* Comment Drawer (Slide-up) */}
+        <div className={`drawer-container ${showCommentsModal ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
+          <div className="drawer-header" onClick={() => setShowCommentsModal(false)}>
+            <div className="drawer-handle" />
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
+              💬 Comentários {currentVideo && `- ${currentVideo.title}`}
+            </h2>
           </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 100px' }}>
+            {videoComments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', opacity: 0.5 }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
+                <p>Ninguém comentou ainda. Seja o primeiro!</p>
+              </div>
+            ) : (
+              videoComments.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+                  <img src={c.avatar || '/favicon.ico'} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', background: 'var(--input-bg)' }} alt="" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <strong style={{ fontSize: 14 }}>{c.username}</strong>
+                      <span style={{ fontSize: 10, opacity: 0.5 }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: 'var(--text-color)', opacity: 0.9 }}>{c.comment}</p>
+                    {canDelete(c.user_id?.toString()) && (
+                      <button onClick={() => handleDeleteComment(c.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 11, padding: '4px 0', cursor: 'pointer', fontWeight: 700 }}>Remover</button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {user && (
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px env(safe-area-inset-bottom, 20px)', background: 'var(--bg-color)', borderTop: '1px solid var(--border-color)' }}>
+              <form onSubmit={sendComment} style={{ display: 'flex', gap: 10 }}>
+                <input
+                  placeholder="Diga algo legal..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  style={{ flex: 1, padding: '12px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 24, color: 'var(--text-color)', fontSize: 14 }}
+                />
+                <button type="submit" style={{ width: 44, height: 44, background: 'var(--accent-color)', color: '#fff', border: 'none', borderRadius: '50%', fontSize: 18 }}>➜</button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Backdrop for Drawer */}
+        {showCommentsModal && (
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowCommentsModal(false)}
+          />
         )}
       </div>
 

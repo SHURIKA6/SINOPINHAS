@@ -4,61 +4,47 @@ const SkeletonVideoCard = () => {
     return (
         <div style={{
             background: 'var(--card-bg)',
-            borderRadius: 16,
+            borderRadius: 24,
             overflow: 'hidden',
-            marginBottom: 24,
             border: '1px solid var(--border-color)',
-            animation: 'pulse 1.5s infinite ease-in-out',
-            transition: 'background 0.3s ease, border-color 0.3s ease'
+            transition: 'all 0.3s ease'
         }}>
             {/* Video Placeholder */}
-            <div style={{
+            <div className="skeleton" style={{
                 width: '100%',
-                paddingTop: '56.25%', // 16:9 Aspect Ratio
-                background: 'var(--input-bg)'
+                paddingTop: '177%', // 9:16 Aspect Ratio to match the new feed style
+                borderRadius: 0
             }} />
 
             {/* Content Placeholder */}
             <div style={{ padding: 16 }}>
                 {/* Title */}
-                <div style={{
+                <div className="skeleton" style={{
                     height: 24,
-                    background: 'var(--input-bg)',
                     borderRadius: 4,
                     width: '70%',
                     marginBottom: 12
                 }} />
 
                 {/* Description Lines */}
-                <div style={{
+                <div className="skeleton" style={{
                     height: 16,
-                    background: 'var(--input-bg)',
                     borderRadius: 4,
                     width: '90%',
                     marginBottom: 8
                 }} />
-                <div style={{
+                <div className="skeleton" style={{
                     height: 16,
-                    background: 'var(--input-bg)',
                     borderRadius: 4,
                     width: '50%'
                 }} />
 
-                {/* Action Buttons Placeholder */}
-                <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
-                    <div style={{ width: 80, height: 36, background: 'var(--input-bg)', borderRadius: 8 }} />
-                    <div style={{ width: 80, height: 36, background: 'var(--input-bg)', borderRadius: 8 }} />
+                {/* Footer Placeholder */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, alignItems: 'center' }}>
+                    <div className="skeleton" style={{ width: 80, height: 28, borderRadius: 20 }} />
+                    <div className="skeleton" style={{ width: 40, height: 40, borderRadius: '50%' }} />
                 </div>
             </div>
-
-
-            <style jsx>{`
-        @keyframes pulse {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; }
-          100% { opacity: 0.6; }
-        }
-      `}</style>
         </div>
     );
 };
