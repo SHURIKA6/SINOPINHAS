@@ -96,7 +96,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       showAdminInbox
         ? (m.from_id === selectedUser.id || m.to_id === selectedUser.id)
         : (user && ((m.from_id === user.id && m.to_id === selectedUser.id) || (m.from_id === selectedUser.id && m.to_id === user.id)))
-    )
+    ).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) // Garante ordem cronológica
     : [];
 
   const [isMobile, setIsMobile] = useState(false);
@@ -228,13 +228,25 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
               ) : (
                 filteredMessages.map((msg, i) => {
                   const isFromMe = user && msg.from_id === user.id;
+                  const isFromSelectedUser = selectedUser && msg.from_id === selectedUser.id;
+
+                  // No modo Admin/Espião, alinhamos o usuário "espionado" à direita para facilitar leitura
+                  const alignRight = showAdminInbox ? isFromSelectedUser : isFromMe;
+                  const senderName = msg.from_username || `Usuário ${msg.from_id}`;
+                  const receiverName = msg.to_username || `Usuário ${msg.to_id}`;
+
                   return (
-                    <div key={i} style={{ alignSelf: isFromMe ? 'flex-end' : 'flex-start', maxWidth: isMobile ? '85%' : '75%', position: 'relative' }}>
+                    <div key={i} style={{ alignSelf: alignRight ? 'flex-end' : 'flex-start', maxWidth: isMobile ? '85%' : '75%', position: 'relative' }}>
+                      {showAdminInbox && (
+                        <div style={{ fontSize: 9, marginBottom: 2, opacity: 0.6, textAlign: alignRight ? 'right' : 'left', color: 'var(--text-color)' }}>
+                          {alignRight ? `Para: ${receiverName}` : `De: ${senderName}`}
+                        </div>
+                      )}
                       <div style={{
-                        background: msg.is_admin ? 'linear-gradient(135deg, #ef4444 0%, #991b1b 100%)' : (isFromMe ? 'var(--accent-color)' : 'var(--card-bg)'),
+                        background: msg.is_admin ? 'linear-gradient(135deg, #ef4444 0%, #991b1b 100%)' : (alignRight ? 'var(--accent-color)' : 'var(--card-bg)'),
                         padding: '10px 14px',
-                        borderRadius: isFromMe ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
-                        color: (isFromMe || msg.is_admin) ? '#fff' : 'var(--text-color)',
+                        borderRadius: alignRight ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
+                        color: (alignRight || msg.is_admin) ? '#fff' : 'var(--text-color)',
                         border: '1px solid var(--border-color)',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}>
