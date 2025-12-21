@@ -15,7 +15,7 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-  /* Weather Themes */
+  /* Temas de Clima */
   --weather-bg: var(--bg-color);
   --weather-overlay: transparent;
 }
@@ -111,7 +111,7 @@ button:active {
   }
 }
 
-/* Custom Scrollbar */
+/* Barra de Rolagem Personalizada */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -135,7 +135,7 @@ button:active {
   border-color: var(--accent-color) !important;
 }
 
-/* Skeleton Loading */
+/* Efeito de Carregamento (Skeleton) */
 .skeleton {
   background: var(--input-bg);
   background: linear-gradient(90deg,
@@ -157,7 +157,7 @@ button:active {
   }
 }
 
-/* Custom Player Controls */
+/* Controles do Player Personalizados */
 .video-container {
   position: relative;
   width: 100%;
@@ -191,7 +191,7 @@ button:active {
   opacity: 1;
 }
 
-/* Drawer / Bottom Sheet */
+/* Gaveta / Painel Inferior */
 .drawer-container {
   position: fixed;
   bottom: 0;
@@ -229,4 +229,60 @@ button:active {
   border-radius: 2px;
   position: absolute;
   top: 12px;
+}
+
+/* Utilitários Responsivos Globais */
+.section-header {
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    padding: 16px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-wrapper .icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.search-input-global {
+  width: 100%;
+  padding: 14px 20px 14px 45px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  color: var(--text-color);
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-input-global:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 4px rgba(141, 106, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .search-input-global {
+    padding: 12px 16px 12px 42px;
+    font-size: 14px;
+  }
 }

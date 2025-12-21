@@ -38,178 +38,55 @@ export default function Header({
             >
                 <h1
                     onClick={() => setActiveTab('feed')}
-                    style={{
-                        margin: 0,
-                        fontSize: 24,
-                        fontWeight: 1000,
-                        letterSpacing: "-1px",
-                        background: "linear-gradient(90deg,#8d6aff,#fe7d45 60%)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        minWidth: '180px',
-                        flexShrink: 0,
-                        cursor: 'pointer',
-                        userSelect: 'none'
-                    }}
+                    className="logo"
                 >SINOPINHAS</h1>
 
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    flexWrap: 'wrap',
-                    justifyContent: 'flex-end',
-                    flex: 1
-                }}>
+                <div className="header-actions">
                     <button
                         onClick={toggleTheme}
-                        style={{
-                            padding: '7px 10px',
-                            background: 'var(--input-bg)',
-                            color: 'var(--text-color)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: 8,
-                            fontSize: 18,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.3s ease'
-                        }}
+                        className="action-btn theme-toggle"
                         title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
                     >
                         {theme === 'dark' ? '☀️' : '🌙'}
                     </button>
 
-                    <button onClick={() => setShowSecretAuth(true)} style={{
-                        padding: '7px 12px',
-                        background: '#e53e3e',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 8,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0
-                    }}>
-                        🔒 Restrito
+                    <button onClick={() => setShowSecretAuth(true)} className="action-btn restricted-btn" title="Área Restrita">
+                        <span className="btn-icon">🔒</span>
+                        <span className="btn-text">Restrito</span>
                     </button>
 
-                    <button onClick={() => setShowSupport(true)} style={{
-                        padding: '7px 12px',
-                        background: '#3182ce',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 8,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0
-                    }}>
-                        🆘 Suporte
+                    <button onClick={() => setShowSupport(true)} className="action-btn support-btn" title="Suporte">
+                        <span className="btn-icon">🆘</span>
+                        <span className="btn-text">Suporte</span>
                     </button>
 
                     {isAdmin && (
-                        <span style={{
-                            padding: '5px 10px',
-                            background: '#10b981',
-                            borderRadius: 8,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: "#fff",
-                            flexShrink: 0
-                        }}>
-                            ADMIN
-                        </span>
+                        <span className="admin-badge">ADMIN</span>
                     )}
 
                     {user ? (
-                        <>
-                            <button onClick={() => setShowProfile(true)} style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '6px 10px',
-                                background: 'var(--input-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: 8,
-                                cursor: 'pointer',
-                                color: 'var(--text-color)',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '120px',
-                                flexShrink: 0
-                            }}>
+                        <div className="user-section">
+                            <button onClick={() => setShowProfile(true)} className="profile-btn">
                                 {user.avatar && (
                                     <img
                                         src={user.avatar}
-                                        style={{
-                                            width: 20,
-                                            height: 20,
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            flexShrink: 0
-                                        }}
+                                        className="user-avatar"
                                         alt={user.username}
                                     />
                                 )}
-                                <strong style={{
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    fontSize: 13
-                                }}>{user.username}</strong>
+                                <strong className="username">{user.username}</strong>
                             </button>
 
-                            <button onClick={logout} style={{
-                                padding: '7px 12px',
-                                background: 'var(--input-bg)',
-                                color: 'var(--text-color)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: 8,
-                                cursor: 'pointer',
-                                fontSize: 13,
-                                flexShrink: 0
-                            }}>Sair</button>
-                        </>
+                            <button onClick={logout} className="action-btn logout-btn">Sair</button>
+                        </div>
                     ) : (
-                        <button onClick={() => setShowAuth(true)} style={{
-                            padding: '7px 14px',
-                            background: '#8d6aff',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 8,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 13,
-                            flexShrink: 0
-                        }}>Login</button>
+                        <button onClick={() => setShowAuth(true)} className="action-btn login-btn">Login</button>
                     )}
 
                     {!isAdmin ? (
-                        <button onClick={() => setShowAdminAuth(true)} style={{
-                            padding: '7px 12px',
-                            background: '#10b981',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 8,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: 13,
-                            flexShrink: 0
-                        }}>Admin</button>
+                        <button onClick={() => setShowAdminAuth(true)} className="action-btn admin-login-btn">Admin</button>
                     ) : (
-                        <button onClick={logoutAdmin} style={{
-                            padding: '7px 12px',
-                            background: '#ef4444',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 8,
-                            cursor: 'pointer',
-                            fontSize: 13,
-                            flexShrink: 0
-                        }}>Sair Admin</button>
+                        <button onClick={logoutAdmin} className="action-btn admin-logout-btn">Sair Admin</button>
                     )}
                 </div>
             </header>
@@ -242,6 +119,158 @@ export default function Header({
             </nav>
 
             <style jsx>{`
+                .logo {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 1000;
+                    letter-spacing: -1px;
+                    background: linear-gradient(90deg, #8d6aff, #fe7d45 60%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    cursor: pointer;
+                    user-select: none;
+                    flex-shrink: 0;
+                    min-width: 180px;
+                }
+
+                header {
+                    padding: 12px 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    border-bottom: 1px solid var(--border-color);
+                    position: sticky;
+                    top: 0;
+                    z-index: 1000;
+                    transition: all 0.3s ease;
+                }
+
+                .header-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    justify-content: flex-end;
+                    flex: 1;
+                }
+
+                .action-btn {
+                    padding: 8px 12px;
+                    border-radius: 10px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    border: none;
+                    color: #fff;
+                    transition: transform 0.2s ease, opacity 0.2s ease;
+                }
+
+                .theme-toggle {
+                    background: var(--input-bg);
+                    border: 1px solid var(--border-color);
+                    color: var(--text-color);
+                    padding: 8px !important;
+                    font-size: 18px;
+                }
+
+                .restricted-btn { background: #e53e3e; }
+                .support-btn { background: #3182ce; }
+                .login-btn { background: var(--accent-color); padding: 8px 16px; }
+                .admin-login-btn { background: #10b981; }
+                .admin-logout-btn { background: #ef4444; }
+                .logout-btn { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-color); }
+
+                .admin-badge {
+                    padding: 5px 10px;
+                    background: #10b981;
+                    border-radius: 8px;
+                    fontSize: 11px;
+                    fontWeight: 600;
+                    color: #fff;
+                }
+
+                .user-section {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .profile-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 12px;
+                    background: var(--input-bg);
+                    border: 1px solid var(--border-color);
+                    border-radius: 10px;
+                    cursor: pointer;
+                    color: var(--text-color);
+                    max-width: 150px;
+                }
+
+                .user-avatar {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                .username {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 13px;
+                }
+
+                @media (max-width: 768px) {
+                    header {
+                        padding: 10px 16px;
+                    }
+                    .logo {
+                        font-size: 20px;
+                        min-width: 120px;
+                    }
+
+                    .btn-text, .logout-btn, .admin-login-btn, .admin-logout-btn {
+                        display: none;
+                    }
+
+                    .action-btn {
+                        padding: 10px;
+                        border-radius: 12px;
+                        font-size: 18px;
+                    }
+
+                    .restricted-btn, .support-btn {
+                        width: 42px;
+                        height: 42px;
+                    }
+
+                    .profile-btn {
+                        padding: 4px;
+                        border-radius: 50%;
+                        width: 42px;
+                        height: 42px;
+                        justify-content: center;
+                        background: var(--accent-color);
+                        border: none;
+                    }
+
+                    .username {
+                        display: none;
+                    }
+
+                    .user-avatar {
+                        width: 34px;
+                        height: 34px;
+                        margin: 0;
+                    }
+                }
+
                 .tab-container {
                     background: var(--header-bg);
                     padding: 16px 24px;

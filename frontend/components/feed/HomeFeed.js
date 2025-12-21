@@ -17,7 +17,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     const [hearts, setHearts] = useState([]);
 
-    // Debounce Search
+    // Debounce da busca
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchQuery(searchQuery);
@@ -28,7 +28,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     const [videoToShare, setVideoToShare] = useState(null);
 
-    // Derived State
+    // Estados derivados para ordenação
     const sortedVideos = useMemo(() => {
         let list = [...videos];
         if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
@@ -37,7 +37,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         return list;
     }, [videos, sortBy]);
 
-    // Observer para Scroll Infinito
+    // Observador para rolagem infinita
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && hasMore && !loading) {
@@ -49,12 +49,10 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         return () => observer.disconnect();
     }, [hasMore, loading]);
 
-    // Reset quando filtros mudam
+    // Reinicia o offset quando os filtros mudam
     useEffect(() => {
         setOffset(0);
         setHasMore(true);
-        // Não limpamos videos[] aqui para evitar tela branca;
-        // loadVideos cuidará do reset se reset=true
         loadVideos(0, true);
     }, [debouncedSearchQuery, sortBy, filterType]);
 
@@ -66,7 +64,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     }, [offset]);
 
     const loadVideos = async (currentOffset, reset = false) => {
-        if (reset) setLoading(true); // Só mostra skeleton grande no primeiro carregamento ou reset total
+        if (reset) setLoading(true); // Skeleton apenas no carregamento inicial ou reset
         try {
             let data = [];
             if (debouncedSearchQuery.trim().length > 2) {
@@ -146,80 +144,37 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
             <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
-                {/* Search and Filters Header */}
-                <div style={{
-                    background: 'var(--card-bg)',
-                    padding: '24px',
-                    borderRadius: '24px',
-                    border: '1px solid var(--border-color)',
-                    marginBottom: '32px',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-                }}>
-                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '20px' }}>
-                        <div style={{ position: 'relative', flex: 2, minWidth: '280px' }}>
-                            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                {/* Cabeçalho de Busca e Filtros */}
+                <div className="section-header">
+                    <div className="search-row">
+                        <div className="search-wrapper">
+                            <span className="icon">🔍</span>
                             <input
                                 type="text"
                                 placeholder={`O que você quer ver hoje em Sinop?`}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '14px 20px 14px 45px',
-                                    background: 'var(--input-bg)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: '16px',
-                                    color: 'var(--text-color)',
-                                    fontSize: '16px',
-                                    transition: 'all 0.3s ease',
-                                    outline: 'none'
-                                }}
-                                className="search-input"
+                                className="search-input-global"
                             />
                         </div>
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            style={{
-                                flex: 1,
-                                padding: '14px 20px',
-                                background: 'var(--input-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '16px',
-                                color: 'var(--text-color)',
-                                fontSize: '16px',
-                                cursor: 'pointer',
-                                minWidth: '180px'
-                            }}
+                            className="sort-select"
                         >
-                            <option value="recent">📅 Mais Recentes</option>
-                            <option value="popular">🔥 Mais Visualizados</option>
-                            <option value="liked">❤️ Mais Curtidos</option>
+                            <option value="recent">📅 Recentes</option>
+                            <option value="popular">🔥 Populares</option>
+                            <option value="liked">❤️ Curtidos</option>
                         </select>
                     </div>
 
                     {/* Sub-Tabs de Filtro */}
-                    <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+                    <div className="filter-tabs">
                         {['all', 'video', 'photo'].map(type => (
                             <button
                                 key={type}
                                 onClick={() => setFilterType(type)}
-                                style={{
-                                    padding: '10px 24px',
-                                    borderRadius: '12px',
-                                    border: '1px solid',
-                                    borderColor: filterType === type ? 'var(--accent-color)' : 'var(--border-color)',
-                                    background: filterType === type ? 'var(--accent-color)' : 'transparent',
-                                    color: filterType === type ? '#fff' : 'var(--text-color)',
-                                    fontWeight: 700,
-                                    fontSize: '14px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    whiteSpace: 'nowrap',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
+                                className={`filter-btn ${filterType === type ? 'active' : ''}`}
                             >
                                 {type === 'all' && '🔥 Todos'}
                                 {type === 'video' && '📹 Vídeos'}
@@ -229,7 +184,81 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                     </div>
                 </div>
 
-                {/* Grid */}
+                <style jsx>{`
+                    .search-row {
+                        display: flex;
+                        gap: 16px;
+                        align-items: center;
+                        margin-bottom: 20px;
+                    }
+
+                    .sort-select {
+                        flex: 1;
+                        padding: 14px 20px;
+                        background: var(--input-bg);
+                        border: 1px solid var(--border-color);
+                        border-radius: 16px;
+                        color: var(--text-color);
+                        font-size: 16px;
+                        cursor: pointer;
+                        min-width: 180px;
+                    }
+
+                    .filter-tabs {
+                        display: flex;
+                        gap: 10px;
+                        overflow-x: auto;
+                        padding-bottom: 4px;
+                        scrollbar-width: none;
+                    }
+
+                    .filter-tabs::-webkit-scrollbar {
+                        display: none;
+                    }
+
+                    .filter-btn {
+                        padding: 10px 24px;
+                        border-radius: 12px;
+                        border: 1px solid var(--border-color);
+                        background: transparent;
+                        color: var(--text-color);
+                        font-weight: 700;
+                        font-size: 14px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        white-space: nowrap;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+
+                    .filter-btn.active {
+                        background: var(--accent-color);
+                        color: #fff;
+                        border-color: var(--accent-color);
+                    }
+
+                    @media (max-width: 768px) {
+                        .search-row {
+                            flex-direction: column;
+                            gap: 12px;
+                        }
+
+                        .sort-select {
+                            width: 100%;
+                            min-width: 0;
+                            font-size: 14px;
+                            padding: 12px 16px;
+                        }
+
+                        .filter-btn {
+                            padding: 8px 16px;
+                            font-size: 13px;
+                        }
+                    }
+                `}</style>
+
+                {/* Grade de Vídeos */}
                 {loading && videos.length === 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                         {[...Array(8)].map((_, i) => (

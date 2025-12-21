@@ -288,7 +288,7 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS - O App de Sinop-MT'}</title>
+        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS by SHURA'}</title>
         <meta name="description" content={currentVideo?.description || initialVideo?.description || "A maior plataforma de vídeos, notícias e guia de Sinop. Tudo sobre o Mato Grosso em um só lugar."} />
 
         {/* Open Graph / Facebook */}
@@ -381,7 +381,7 @@ export default function Home({ initialVideo }) {
           {activeTab === 'admin' && isAdmin && <AdminPanel adminPassword={adminPassword} showToast={showToast} />}
         </div>
 
-        {/* Comment Drawer (Slide-up) */}
+        {/* Gaveta de Comentários (Slide-up) */}
         <div className={`drawer-container ${showCommentsModal ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
           <div className="drawer-header" onClick={() => setShowCommentsModal(false)}>
             <div className="drawer-handle" />
@@ -430,7 +430,7 @@ export default function Home({ initialVideo }) {
           )}
         </div>
 
-        {/* Backdrop for Drawer */}
+        {/* Fundo escuro para a Gaveta */}
         {showCommentsModal && (
           <div
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, backdropFilter: 'blur(4px)' }}

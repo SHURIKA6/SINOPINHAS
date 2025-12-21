@@ -24,7 +24,7 @@ const translateDescription = (desc) => {
     for (const [eng, pt] of Object.entries(map)) {
         if (d.includes(eng)) return pt;
     }
-    return desc; // Return original if no match
+    return desc; // Retorna o original se não houver correspondência
 };
 
 const getWmoLabel = (code) => {
@@ -53,7 +53,7 @@ const getWmoLabel = (code) => {
 
 export const getWeather = async (c) => {
     const env = c.env;
-    const cacheKey = 'weather_data_sinop_v15'; // Increment cache version
+    const cacheKey = 'weather_data_sinop_v15'; // Incrementa a versão do cache
 
     // 1. Tentar Cache
     if (env?.MURAL_STORE) {

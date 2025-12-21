@@ -4,14 +4,14 @@ import api from '../services/api';
 export default function ShareModal({ video, user, onClose, showToast }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [sending, setSending] = useState(null); // userID being sent to
+    const [sending, setSending] = useState(null); // ID do usuário destino
     const [filter, setFilter] = useState("");
 
     useEffect(() => {
         const loadUsers = async () => {
             try {
                 const res = await api.get('/api/users/all');
-                setUsers(res.data.filter(u => u.id !== user?.id)); // Remove self
+                setUsers(res.data.filter(u => u.id !== user?.id)); // Remove o próprio usuário
             } catch (err) {
                 console.error("Failed to load users for sharing", err);
             } finally {
@@ -40,8 +40,7 @@ export default function ShareModal({ video, user, onClose, showToast }) {
 
             showToast("Enviado com sucesso!", "success");
             setSending(null);
-            // Don't close immediately so they can share with more people if they want?
-            // Actually, usually it closes. Let's close it.
+            // Fecha o modal após enviar
             onClose();
         } catch (err) {
             showToast("Erro ao enviar.", "error");

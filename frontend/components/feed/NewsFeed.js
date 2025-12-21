@@ -46,36 +46,18 @@ export default function NewsFeed() {
         <div style={{ padding: '0px 0px 48px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
             {/* Search Header */}
-            <div style={{
-                background: 'var(--card-bg)',
-                padding: '24px',
-                borderRadius: '24px',
-                border: '1px solid var(--border-color)',
-                marginBottom: '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px'
-            }}>
-                <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--text-color)' }}>
+            <div className="section-header">
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 16px', color: 'var(--text-color)' }}>
                     📰 Jornal Sinop
                 </h2>
-                <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                <div className="search-wrapper">
+                    <span className="icon">🔍</span>
                     <input
                         type="text"
                         placeholder="Pesquisar notícias de Sinop..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '14px 20px 14px 45px',
-                            background: 'var(--input-bg)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '16px',
-                            color: 'var(--text-color)',
-                            fontSize: '16px',
-                            outline: 'none'
-                        }}
+                        className="search-input-global"
                     />
                 </div>
             </div>

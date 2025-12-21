@@ -70,34 +70,19 @@ export default function EventsSection() {
     return (
         <div style={{ padding: '0px 0px 48px', animation: 'fadeIn 0.5s ease' }}>
 
-            {/* Search Header */}
-            <div style={{
-                background: 'var(--card-bg)',
-                padding: '24px',
-                borderRadius: '24px',
-                border: '1px solid var(--border-color)',
-                marginBottom: '40px'
-            }}>
+            {/* Cabeçalho de Busca */}
+            <div className="section-header">
                 <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 16px', color: 'var(--text-color)' }}>
                     📅 Agenda Sinop
                 </h2>
-                <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                <div className="search-wrapper">
+                    <span className="icon">🔍</span>
                     <input
                         type="text"
                         placeholder="O que está acontecendo em Sinop?"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '14px 20px 14px 45px',
-                            background: 'var(--input-bg)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '16px',
-                            color: 'var(--text-color)',
-                            fontSize: '16px',
-                            outline: 'none'
-                        }}
+                        className="search-input-global"
                     />
                 </div>
             </div>

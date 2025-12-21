@@ -40,7 +40,7 @@ export default function WeatherSection() {
 
         return () => {
             window.removeEventListener('resize', checkMobile);
-            document.documentElement.removeAttribute('data-weather'); // Cleanup theme
+            document.documentElement.removeAttribute('data-weather'); // Limpa o tema
         };
     }, []);
 
@@ -63,14 +63,12 @@ export default function WeatherSection() {
                 transition: 'all 2s ease'
             }} />
 
-            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <h2 style={{ fontSize: 32, fontWeight: 1000, margin: 0, background: 'linear-gradient(90deg, #8d6aff, #fe7d45)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-1px' }}>
-                    SINOPINHAS WEATHER
-                </h2>
+            <div className="weather-header">
+                <h2 className="weather-title">SINOPINHAS WEATHER</h2>
                 <p style={{ color: 'var(--secondary-text)', fontWeight: 700 }}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, padding: '0 16px' }}>
+            <div className="weather-grid">
                 {/* Card Principal */}
                 <div style={{ background: 'var(--card-bg)', borderRadius: 24, padding: 32, border: '1px solid var(--border-color)', textAlign: 'center' }} className="card-hover">
                     <div style={{ fontSize: 64, marginBottom: 16 }}>
@@ -97,6 +95,37 @@ export default function WeatherSection() {
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                .weather-header {
+                    text-align: center;
+                    margin-bottom: 32px;
+                }
+                .weather-title {
+                    font-size: 32px;
+                    font-weight: 1000;
+                    margin: 0;
+                    background: linear-gradient(90deg, #8d6aff, #fe7d45);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    letter-spacing: -1px;
+                }
+                .weather-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 24px;
+                    padding: 0 16px;
+                }
+                @media (max-width: 768px) {
+                    .weather-title {
+                        font-size: 24px;
+                    }
+                    .weather-grid {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
