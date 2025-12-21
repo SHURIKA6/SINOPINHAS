@@ -1,3 +1,4 @@
+import { useState } from 'react';
 
 // Cabeçalho
 export default function Header({
