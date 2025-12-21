@@ -53,7 +53,7 @@ const getWmoLabel = (code) => {
 
 export const getWeather = async (c) => {
     const env = c.env;
-    const cacheKey = 'weather_data_sinop_v11'; // Increment cache version
+    const cacheKey = 'weather_data_sinop_v12'; // Increment cache version
 
     // 1. Tentar Cache
     if (env?.MURAL_STORE) {
