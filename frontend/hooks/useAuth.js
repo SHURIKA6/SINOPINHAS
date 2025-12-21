@@ -11,7 +11,8 @@ export function useAuth(showToast) {
     // Initial check
     useEffect(() => {
         const checkAuth = async () => {
-            // Admin Auth restoration
+            // Admin Auth restoration - REMOVED for security (Admin must re-login on reload as requested)
+            /*
             const token = localStorage.getItem('token');
             if (token) {
                 try {
@@ -23,6 +24,7 @@ export function useAuth(showToast) {
                     console.error("Failed to parse token for admin check", e);
                 }
             }
+            */
 
             // User Auth
             const savedUser = localStorage.getItem('user');
@@ -95,12 +97,8 @@ export function useAuth(showToast) {
     const logoutAdmin = () => {
         setIsAdmin(false);
         setAdminPassword('');
-        // If we strictly rely on one token, logoutAdmin implies reverting to a User Token?
-        // Or just stripping Admin privileges valid for UI?
-        // Ideally, we should re-login as user if they were user.
-        // For simplicity:
+        localStorage.removeItem('token'); // Clear token to prevent auto-restore
         showToast('Saiu do modo admin', 'success');
-        // Note: Real security depends on the backend verification of the token.
     };
 
     const subscribeToNotifications = async () => {
