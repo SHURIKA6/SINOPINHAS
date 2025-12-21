@@ -164,7 +164,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
           </div>
         ) : (
           usersToShow.map(u => {
-            const unreadCount = messages.filter(m => m.from_id === u.id && m.to_id === user.id && !m.is_read).length;
+            const unreadCount = messages.filter(m => m.from_id === u.id && m.to_id === user?.id && !m.is_read).length;
             return (
               <div key={u.id} onClick={() => setSelectedUser(u)} style={{
                 padding: '14px 12px',
