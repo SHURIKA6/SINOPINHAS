@@ -331,6 +331,21 @@ export const sendMessage = async (c) => {
             }
         }
 
+        // Restrição de Chave Estrangeira (Erro 23503)
+        // Ocorre quando tentamos usar ID 0 (Admin) mas a tabela exige um usuário real
+        if (err.code === '23503') {
+            try {
+                console.log("🔓 Relaxando restrições de messages para permitir Admin (ID 0)...");
+                await queryDB("ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_from_id_fkey", [], env);
+                await queryDB("ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_to_id_fkey", [], env);
+                // Tenta novamente após remover a trava
+                await executeInsert();
+                return createResponse(c, { success: true, relaxed_constraints: true });
+            } catch (repairErr) {
+                return createErrorResponse(c, "DB_ERROR", "Falha ao relaxar restrições do banco", 500, repairErr.message);
+            }
+        }
+
         // Qualquer outro erro do banco - Retorna com Detalhes para Debug
         return createErrorResponse(c, "DB_QUERY_ERROR", "Erro ao processar mensagem no banco", 500, err.message);
     }
