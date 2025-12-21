@@ -188,8 +188,8 @@ export default function Header({
                     padding: 5px 10px;
                     background: #10b981;
                     border-radius: 8px;
-                    fontSize: 11px;
-                    fontWeight: 600;
+                    font-size: 11px;
+                    font-weight: 600;
                     color: #fff;
                 }
 

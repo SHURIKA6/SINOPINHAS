@@ -151,7 +151,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                             <span className="icon">🔍</span>
                             <input
                                 type="text"
-                                placeholder={`O que você quer ver hoje em Sinop?`}
+                                placeholder="O que você quer ver hoje em Sinop?"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="search-input-global"
@@ -316,21 +316,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 )}
             </div>
 
-            <style jsx global>{`
-                @keyframes floatHeart {
-                    0% { transform: translateY(0) scale(1); opacity: 1; }
-                    100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                .search-input:focus {
-                    border-color: var(--accent-color) !important;
-                    box-shadow: 0 0 0 4px rgba(141, 106, 255, 0.1);
-                    background: var(--card-bg) !important;
-                }
-            `}</style>
         </div>
     );
 }
