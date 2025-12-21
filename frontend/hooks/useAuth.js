@@ -121,7 +121,7 @@ export function useAuth(showToast) {
                     userVisibleOnly: true,
                     // ESTA CHAVE DEVE SER GERADA (VAPID PUBLIC KEY)
                     // Exemplo: npx web-push generate-vapid-keys
-                    applicationServerKey: 'BEwvYAs_xS25OwUs9bOu7qomHH8O_FUPAowrLPauz1dtY6aNdIIEX7G9Ygk9CDqWwQhvcTteVGn7SkSqHDEudVY'
+                    applicationServerKey: 'BM0Z72h-hiwvQg9kWtYpxsYYQncXlyVpEuxpZBrQdlZIkL8_9p-9NltrTH0Uy2GtBaWNoDwLq-gS8xsiVQIO_wA'
                 });
             }
 
