@@ -60,7 +60,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     backdrop-filter: blur(20px);
                 }
 
-                @media (max-width: 768px) {
+                @media (max-width: 1024px) {
                     .bottom-nav {
                         display: flex;
                     }

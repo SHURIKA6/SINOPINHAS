@@ -256,6 +256,7 @@ export default function Header({
                     background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
+                    color: #a855f7;
                     cursor: pointer;
                     user-select: none;
                 }
