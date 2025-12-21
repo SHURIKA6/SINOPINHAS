@@ -230,4 +230,12 @@ export const removeVideo = (videoId, userId, adminPassword = null) => {
     return api.delete(`/api/videos/${videoId}`, { data: deleteData });
 };
 
+export const savePushSubscription = (subscription, deviceInfo) => {
+    return api.post('/api/push/subscribe', { subscription, deviceInfo });
+};
+
+export const removePushSubscription = (subscription) => {
+    return api.post('/api/push/unsubscribe', { subscription });
+};
+
 export default api;

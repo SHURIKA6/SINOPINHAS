@@ -128,5 +128,15 @@ export const SCHEMA_QUERIES = [
     "CREATE INDEX IF NOT EXISTS idx_videos_is_restricted_type ON videos(is_restricted, type)",
     "CREATE INDEX IF NOT EXISTS idx_videos_created_at_desc ON videos(created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)",
-    "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)"
+    "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)",
+
+    // Tabela de Subscrições Push
+    `CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        subscription JSONB NOT NULL,
+        device_info JSONB,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, subscription)
+    )`
 ];

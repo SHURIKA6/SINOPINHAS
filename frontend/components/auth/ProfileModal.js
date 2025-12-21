@@ -216,6 +216,26 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                             />
 
                             <div style={{ height: 1, background: 'var(--border-color)', margin: '24px 0 16px' }} />
+                            <p style={{ fontSize: 13, color: 'var(--secondary-text)', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>📱 Notificações</p>
+
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    if (window.subscribeToPush) await window.subscribeToPush();
+                                    else showToast('Funcionalidade sendo preparada...', 'info');
+                                }}
+                                style={{
+                                    width: '100%', padding: '12px', background: 'var(--input-bg)',
+                                    color: 'var(--text-color)', border: '1px solid var(--border-color)',
+                                    borderRadius: 12, cursor: 'pointer', fontWeight: 600,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                                    marginBottom: 24
+                                }}
+                            >
+                                🔔 Ativar Notificações Push
+                            </button>
+
+                            <div style={{ height: 1, background: 'var(--border-color)', margin: '24px 0 16px' }} />
                             <p style={{ fontSize: 13, color: 'var(--secondary-text)', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>🛡️ Segurança</p>
 
                             <input

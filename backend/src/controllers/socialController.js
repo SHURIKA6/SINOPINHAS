@@ -2,6 +2,7 @@ import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
 import { sanitize } from '../utils/sanitize.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+import { notifyUser } from '../utils/push-utils.js';
 
 // Curtir vídeo
 export const likeVideo = async (c) => {
@@ -108,6 +109,14 @@ export const postComment = async (c) => {
                 [video[0].user_id, "comment", video_id, "Novo comentário no seu vídeo"],
                 env
             );
+
+            // Notificação Push em Segundo Plano
+            c.executionCtx.waitUntil(notifyUser(
+                video[0].user_id,
+                "Novo Comentário! 💬",
+                "Alguém comentou no seu vídeo no SINOPINHAS.",
+                env
+            ));
         }
 
         return createResponse(c, { success: true });
@@ -222,6 +231,15 @@ export const sendMessage = async (c) => {
             [from_id, to_id, cleanMsg, finalIsAdmin],
             env
         );
+
+        // Notificação Push para o destinatário
+        c.executionCtx.waitUntil(notifyUser(
+            to_id,
+            "Nova Mensagem! ✉️",
+            "Você recebeu uma nova mensagem privada.",
+            env
+        ));
+
         return createResponse(c, { success: true });
     } catch (err) {
         if (err.code === '42P01') {

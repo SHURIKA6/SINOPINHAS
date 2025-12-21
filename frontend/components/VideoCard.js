@@ -84,6 +84,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                                 alt={video.title}
                                 onLoad={() => setIsLoaded(true)}
                                 loading="lazy"
+                                decoding="async"
                                 style={{
                                     width: "100%",
                                     height: "100%",
@@ -97,10 +98,12 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                         <video
                             src={video.video_url}
                             controls
+                            muted
+                            loop
+                            playsInline
                             preload="metadata"
-                            loading="lazy"
-                            style={{ width: "100%", height: "100%", objectFit: 'contain' }}
-                            poster={video.thumbnail || null}
+                            className="video-player"
+                            style={{ width: "100%", borderRadius: "12px", background: "#000" }}
                         />
                     ) : video.gdrive_id ? (
                         <iframe

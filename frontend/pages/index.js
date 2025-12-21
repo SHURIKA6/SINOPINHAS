@@ -24,10 +24,28 @@ import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/layout/BottomNav';
 
 // Componente para persistir o estado das abas sem lazy loading
-function TabPane({ active, children }) {
+function TabPane({ active, children, direction = 'forward' }) {
   return (
-    <div style={{ display: active ? 'block' : 'none', animation: active ? 'fadeIn 0.4s ease' : 'none' }}>
+    <div className={`tab-pane ${active ? 'active' : ''} ${direction}`}>
       {children}
+      <style jsx>{`
+        .tab-pane {
+          display: none;
+          opacity: 0;
+          transform: translateY(10px);
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .tab-pane.active {
+          display: block;
+          opacity: 1;
+          transform: translateY(0);
+          animation: slideInUp 0.5s ease-out;
+        }
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -144,8 +162,14 @@ export default function Home({ initialVideo }) {
     handleAdminAuthSuccess,
     logout,
     logoutAdmin,
-    loadNotifications
+    loadNotifications,
+    subscribeToNotifications
   } = useAuth(showToast);
+
+  // Expoe para o window facilitar o acesso em modais profundos
+  useEffect(() => {
+    window.subscribeToPush = subscribeToNotifications;
+  }, [subscribeToNotifications]);
 
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -236,16 +260,29 @@ export default function Home({ initialVideo }) {
   return (
     <>
       <Head>
-        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS by SHURA'}</title>
-        <meta name="description" content={currentVideo?.description || initialVideo?.description || "Assista a vídeos exclusivos, confira o clima em tempo real, as últimas notícias e os melhores eventos de Sinop, MT."} />
-        <meta property="og:type" content="video.other" />
+        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS - O App de Sinop-MT'}</title>
+        <meta name="description" content={currentVideo?.description || initialVideo?.description || "A maior plataforma de vídeos, notícias e guia de Sinop. Tudo sobre o Mato Grosso em um só lugar."} />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://sinopinhas.vercel.app/" />
         <meta property="og:title" content={currentVideo?.title || initialVideo?.title || "SINOPINHAS"} />
-        <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Acompanhe tudo o que acontece em Sinop: Vídeos, Fotos, Clima e Eventos locais."} />
-        <meta property="og:image" content="https://sinopinhas.vercel.app/og-default.jpg" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta name="theme-color" content="#1a1625" />
+        <meta property="og:description" content={currentVideo?.description || initialVideo?.description || "Veja vídeos, fotos, notícias e muito mais de Sinop!"} />
+        <meta property="og:image" content={currentVideo?.thumbnail || initialVideo?.thumbnail || "https://sinopinhas.vercel.app/og-default.jpg"} />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:title" content={currentVideo?.title || initialVideo?.title || "SINOPINHAS"} />
+        <meta property="twitter:description" content={currentVideo?.description || initialVideo?.description || "Veja vídeos, fotos, notícias e muito mais de Sinop!"} />
+        <meta property="twitter:image" content={currentVideo?.thumbnail || initialVideo?.thumbnail || "https://sinopinhas.vercel.app/og-default.jpg"} />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="theme-color" content="#0f0d15" />
         <link rel="icon" href="/favicon.ico" />
-        {(activeTab === 'videos' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
+        {(activeTab === 'feed' || activeTab === 'secret') && !showAuth && !showAdminAuth && !showSecretAuth && !showProfile && (
           <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3444303701607983" crossOrigin="anonymous"></script>
         )}
       </Head>

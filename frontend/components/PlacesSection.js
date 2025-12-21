@@ -97,14 +97,13 @@ export default function PlacesSection() {
                             display: 'flex',
                             flexDirection: 'column',
                             background: 'var(--card-bg)',
-                            borderRadius: 20,
+                            borderRadius: 24,
                             overflow: 'hidden',
                             border: '1px solid var(--border-color)',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
                             cursor: 'pointer'
                         }}
-                        className="place-card"
+                        className="card-hover"
                     >
                         <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
                             <img
@@ -153,12 +152,7 @@ export default function PlacesSection() {
             </div>
 
             <style jsx>{`
-        .place-card:hover {
-          transform: translateY(-8px);
-          border-color: var(--accent-color);
-          box-shadow: 0 12px 30px rgba(141, 106, 255, 0.2);
-        }
-        .place-card:hover .place-img {
+        .card-hover:hover .place-img {
           transform: scale(1.1);
         }
         @keyframes fadeIn {

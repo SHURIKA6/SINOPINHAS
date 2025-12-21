@@ -91,13 +91,11 @@ export default function EventsSection() {
                             borderRadius: 24,
                             overflow: 'hidden',
                             border: '1px solid var(--border-color)',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             display: 'flex',
                             flexDirection: 'column',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
                             position: 'relative'
                         }}
-                        className="event-card"
+                        className="card-hover"
                     >
                         <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
                             <img

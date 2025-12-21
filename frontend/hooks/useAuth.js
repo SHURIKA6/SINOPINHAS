@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { logTermsAcceptance, fetchNotifications } from '../services/api';
+import { logTermsAcceptance, fetchNotifications, savePushSubscription, sendFingerprint } from '../services/api';
 
 export function useAuth(showToast) {
     const [user, setUser] = useState(null);
@@ -103,6 +103,39 @@ export function useAuth(showToast) {
         // Note: Real security depends on the backend verification of the token.
     };
 
+    const subscribeToNotifications = async () => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            showToast('Navegador não suporta notificações', 'error');
+            return;
+        }
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+
+            // Tenta obter subscrição existente
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                // Se não houver, pede permissão e cria
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    // ESTA CHAVE DEVE SER GERADA (VAPID PUBLIC KEY)
+                    // Exemplo: npx web-push generate-vapid-keys
+                    applicationServerKey: 'BEwvYAs_xS25OwUs9bOu7qomHH8O_FUPAowrLPauz1dtY6aNdIIEX7G9Ygk9CDqWwQhvcTteVGn7SkSqHDEudVY'
+                });
+            }
+
+            const deviceInfo = await sendFingerprint('PUSH_SUBSCRIBE');
+            await savePushSubscription(subscription, deviceInfo);
+
+            showToast('Notificações ativadas!', 'success');
+            return subscription;
+        } catch (err) {
+            console.error('Push error:', err);
+            showToast('Sem permissão para notificações', 'error');
+        }
+    };
+
     return {
         user,
         isAdmin,
@@ -113,6 +146,7 @@ export function useAuth(showToast) {
         logout,
         logoutAdmin,
         loadNotifications,
-        setUser
+        setUser,
+        subscribeToNotifications
     };
 }

@@ -232,14 +232,16 @@ export default function WeatherSection() {
                             background:
                                 'linear-gradient(145deg, rgba(20,20,30,0.4), rgba(15,15,25,0.4))',
                             backdropFilter: 'blur(20px)',
-                            borderRadius: '12px',
+                            borderRadius: 24,
                             border: '1px solid var(--border-color)',
                             padding: sp.s,
                             display: 'flex',
                             flexDirection: 'column',
                             gap: sp.m,
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                            transition: 'all 0.3s ease',
                         }}
+                        className="card-hover"
                     >
                         <div
                             style={{
@@ -370,15 +372,17 @@ export default function WeatherSection() {
                             style={{
                                 background:
                                     'linear-gradient(145deg, rgba(20,20,30,0.4), rgba(15,15,25,0.4))',
-                                borderRadius: '12px',
+                                borderRadius: 24,
                                 border: '1px solid var(--border-color)',
                                 padding: sp.s,
                                 flex: 1,
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: sp.m,
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                transition: 'all 0.3s ease',
                             }}
+                            className="card-hover"
                         >
                             <div
                                 style={{
@@ -438,14 +442,16 @@ export default function WeatherSection() {
                             style={{
                                 background:
                                     'linear-gradient(145deg, rgba(20,20,30,0.4), rgba(15,15,25,0.4))',
-                                borderRadius: '12px',
+                                borderRadius: 24,
                                 border: '1px solid var(--border-color)',
                                 padding: `${sp.m} ${sp.s}`,
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(3, 1fr)',
                                 gap: sp.n,
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                transition: 'all 0.3s ease',
                             }}
+                            className="card-hover"
                         >
                             <AstroBlock
                                 icon="🌅"
