@@ -1,10 +1,11 @@
 import { memo, useState, useEffect, useRef } from "react";
+import { useFavorites } from "../hooks/useFavorites";
 
 const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, isSecret, onShare }) => {
     const [isVisible, setIsVisible] = useState(false);
-    const [isLoaded, setIsLoaded] = useState(false);
     const cardRef = useRef(null);
     const lastTap = useRef(0);
+    const { toggleFavorite, isFavorite } = useFavorites();
 
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
@@ -18,7 +19,6 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
         return () => observer.disconnect();
     }, []);
 
-    // Mantemos a vibração e o double tap, mas com o player nativo por baixo
     const handleDoubleTap = (e) => {
         const now = Date.now();
         if (now - lastTap.current < 300) {
@@ -42,13 +42,19 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
         }
     };
 
+    const handleFavorite = (e) => {
+        e.stopPropagation();
+        toggleFavorite('videos', video);
+        if ('vibrate' in navigator) navigator.vibrate(30);
+    };
+
     return (
         <div
             ref={cardRef}
             onClick={handleDoubleTap}
             style={{
                 background: isSecret ? "#3d1a1a" : "var(--card-bg)",
-                borderRadius: 24, // Mantendo o radius premium
+                borderRadius: 24,
                 overflow: "hidden",
                 position: "relative",
                 boxShadow: isSecret ? "0 4px 28px rgba(229, 62, 62, 0.3)" : "var(--shadow-lg)",
@@ -60,17 +66,30 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
             }}
             className="card-hover"
         >
-            {canDelete && (
+            <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, display: 'flex', gap: 8 }}>
                 <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(video.id, video.user_id); }}
+                    onClick={handleFavorite}
                     style={{
-                        position: 'absolute', top: 12, right: 12, zIndex: 10,
-                        background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
+                        background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%',
                         width: 36, height: 36, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', cursor: 'pointer', color: '#fff'
+                        justifyContent: 'center', cursor: 'pointer', color: '#fff',
+                        backdropFilter: 'blur(8px)'
                     }}
-                >🗑️</button>
-            )}
+                >
+                    {isFavorite('videos', video) ? '⭐' : '☆'}
+                </button>
+                {canDelete && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(video.id, video.user_id); }}
+                        style={{
+                            background: 'rgba(255, 68, 68, 0.6)', border: 'none', borderRadius: '50%',
+                            width: 36, height: 36, display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', cursor: 'pointer', color: '#fff',
+                            backdropFilter: 'blur(8px)'
+                        }}
+                    >🗑️</button>
+                )}
+            </div>
 
             <div style={{
                 width: "100%",
@@ -93,7 +112,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                     ) : (
                         <video
                             src={video.video_url}
-                            controls // VOLTOU O CONTROLE NATIVO
+                            controls
                             muted
                             loop
                             playsInline

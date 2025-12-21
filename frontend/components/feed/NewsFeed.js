@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { fetchNews } from '../../services/api';
+import { useFavorites } from '../../hooks/useFavorites';
 
 export default function NewsFeed() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const { toggleFavorite, isFavorite } = useFavorites();
 
     useEffect(() => {
         loadNews();
@@ -23,11 +26,59 @@ export default function NewsFeed() {
         }
     };
 
+    const filteredNews = useMemo(() => {
+        if (!searchQuery.trim()) return news;
+        const q = searchQuery.toLowerCase();
+        return news.filter(item =>
+            item.title.toLowerCase().includes(q) ||
+            item.description.toLowerCase().includes(q)
+        );
+    }, [news, searchQuery]);
+
+    const handleToggleFavorite = (e, item) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite('news', item);
+        if ('vibrate' in navigator) navigator.vibrate(30);
+    };
+
     return (
-        <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-            <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-                📰 Notícias de Sinop - Só Notícias
-            </h2>
+        <div style={{ padding: '0px 0px 48px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+
+            {/* Search Header */}
+            <div style={{
+                background: 'var(--card-bg)',
+                padding: '24px',
+                borderRadius: '24px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '32px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px'
+            }}>
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--text-color)' }}>
+                    📰 Jornal Sinop
+                </h2>
+                <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Pesquisar notícias de Sinop..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '14px 20px 14px 45px',
+                            background: 'var(--input-bg)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '16px',
+                            color: 'var(--text-color)',
+                            fontSize: '16px',
+                            outline: 'none'
+                        }}
+                    />
+                </div>
+            </div>
 
             {loading ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
@@ -47,9 +98,14 @@ export default function NewsFeed() {
                     <h3>{error}</h3>
                     <button onClick={loadNews} style={{ padding: '10px 20px', marginTop: 10, cursor: 'pointer', background: 'var(--accent-color)', color: '#fff', border: 'none', borderRadius: 8 }}>Tentar Novamente</button>
                 </div>
+            ) : filteredNews.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--secondary-text)' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧐</div>
+                    <p>Nenhuma notícia encontrada para sua busca.</p>
+                </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
-                    {news.map((item, index) => (
+                    {filteredNews.map((item, index) => (
                         <a
                             key={index}
                             href={item.link}
@@ -66,20 +122,31 @@ export default function NewsFeed() {
                                 overflow: 'hidden',
                                 border: '1px solid var(--border-color)',
                                 height: '100%',
-                                color: 'var(--text-color)',
                                 position: 'relative'
                             }}
                         >
-                            <div style={{ height: 180, width: '100%', overflow: 'hidden', background: '#000' }}>
+                            <div style={{ height: 180, width: '100%', overflow: 'hidden', background: '#000', position: 'relative' }}>
                                 <img
                                     src={item.image}
                                     alt={item.title}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     loading="lazy"
                                 />
+                                <button
+                                    onClick={(e) => handleToggleFavorite(e, item)}
+                                    style={{
+                                        position: 'absolute', top: 12, right: 12,
+                                        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+                                        border: 'none', borderRadius: '50%', width: 36, height: 36,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', fontSize: 16, zIndex: 10
+                                    }}
+                                >
+                                    {isFavorite('news', item) ? '⭐' : '☆'}
+                                </button>
                             </div>
                             <div style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: 11, color: 'var(--accent-color)', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <span style={{ fontSize: 11, color: 'var(--accent-color)', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase' }}>
                                     {new Date(item.pubDate).toLocaleDateString('pt-BR')} • {item.source}
                                 </span>
                                 <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700, lineHeight: 1.4, color: 'var(--text-color)' }}>{item.title}</h3>
@@ -91,9 +158,6 @@ export default function NewsFeed() {
                     ))}
                 </div>
             )}
-
-
-
         </div>
     );
 }

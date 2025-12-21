@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { fetchPlaces } from '../services/api';
+import { useFavorites } from '../hooks/useFavorites';
 
 const RECOMMENDATIONS = [
     {
@@ -22,33 +23,14 @@ const RECOMMENDATIONS = [
         description: "O maior parque aquático do Mato Grosso, oferecendo praia artificial, piscina de ondas, toboáguas e Eco Park completo.",
         image: "https://curupy.com.br/gallery/190056422.Atracoes/1067063056.jpg",
         link: "https://curupyacquapark.com.br/"
-    },
-    {
-        title: "Gastronomia em Sinop",
-        category: "Gastronomia",
-        description: "Descubra o sabor local com Matrinxã Assada e o melhor churrasco mato-grossense nos diversos restaurantes da Capital do Nortão.",
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
-        link: "https://www.tripadvisor.com.br/Restaurants-g1162319-Sinop_State_of_Mato_Grosso.html"
-    },
-    {
-        title: "Só Notícias - Guia Local",
-        category: "Notícias",
-        description: "Portal líder de notícias com guias de eventos, utilidade pública e tudo o que acontece em Sinop e região.",
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmITjMV0L8KX5HAWhj15UNPELMUTTWwFetYA&s",
-        link: "https://www.sonoticias.com.br/"
-    },
-    {
-        title: "Shopping Sinop",
-        category: "Compras",
-        description: "Centro comercial moderno com 110 lojas, praça de alimentação com 18 operações, cinemas Moviecom e 1.200 vagas de estacionamento.",
-        image: "https://upload.madnezz.com.br/e654acabdcd7409f4aed889845a36f81",
-        link: "https://shoppingsinop.com.br/"
     }
 ];
 
 export default function PlacesSection() {
     const [places, setPlaces] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const { toggleFavorite, isFavorite } = useFavorites();
 
     useEffect(() => {
         const loadPlaces = async () => {
@@ -60,7 +42,6 @@ export default function PlacesSection() {
                     setPlaces(RECOMMENDATIONS);
                 }
             } catch (err) {
-                console.error("Failed to fetch places", err);
                 setPlaces(RECOMMENDATIONS);
             } finally {
                 setLoading(false);
@@ -69,22 +50,59 @@ export default function PlacesSection() {
         loadPlaces();
     }, []);
 
+    const filteredPlaces = useMemo(() => {
+        if (!searchQuery.trim()) return places;
+        const q = searchQuery.toLowerCase();
+        return places.filter(p =>
+            p.title.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.category.toLowerCase().includes(q)
+        );
+    }, [places, searchQuery]);
+
+    const handleToggleFavorite = (e, item) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite('places', item);
+        if ('vibrate' in navigator) navigator.vibrate(30);
+    };
+
     return (
-        <div style={{ padding: '20px 0', animation: 'fadeIn 0.5s ease' }}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h2 style={{ fontSize: 32, fontWeight: 1000, marginBottom: 12, background: 'linear-gradient(90deg, #8d6aff, #fe7d45)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase', letterSpacing: '-1px' }}>
-                    Guia Local Sinop
+        <div style={{ padding: '0px 0px 48px', animation: 'fadeIn 0.5s ease' }}>
+
+            {/* Search Header */}
+            <div style={{
+                background: 'var(--card-bg)',
+                padding: '24px',
+                borderRadius: '24px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '40px'
+            }}>
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 16px', color: 'var(--text-color)' }}>
+                    📍 Guia Sinop
                 </h2>
-                <p style={{ color: 'var(--secondary-text)', fontSize: 16, maxWidth: 600, margin: '0 auto' }}>
-                    Descubra os melhores lugares, passeios e recomendações selecionadas para você aproveitar o máximo da nossa cidade.
-                </p>
+                <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Onde vamos hoje em Sinop?"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '14px 20px 14px 45px',
+                            background: 'var(--input-bg)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '16px',
+                            color: 'var(--text-color)',
+                            fontSize: '16px',
+                            outline: 'none'
+                        }}
+                    />
+                </div>
             </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: 24
-            }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
                 {loading ? (
                     [...Array(6)].map((_, i) => (
                         <div key={i} style={{ background: 'var(--card-bg)', borderRadius: 24, border: '1px solid var(--border-color)', overflow: 'hidden', height: 400 }}>
@@ -97,83 +115,41 @@ export default function PlacesSection() {
                             </div>
                         </div>
                     ))
+                ) : filteredPlaces.length === 0 ? (
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: 'var(--secondary-text)' }}>
+                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗺️</div>
+                        <p>Nenhum lugar encontrado para sua busca.</p>
+                    </div>
                 ) : (
-                    places.map((place, index) => (
-                        <a
-                            key={index}
-                            href={place.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                textDecoration: 'none',
-                                color: 'inherit',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                background: 'var(--card-bg)',
-                                borderRadius: 24,
-                                overflow: 'hidden',
-                                border: '1px solid var(--border-color)',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                                cursor: 'pointer'
-                            }}
-                            className="card-hover"
-                        >
+                    filteredPlaces.map((place, index) => (
+                        <a key={index} href={place.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', background: 'var(--card-bg)', borderRadius: 24, overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', cursor: 'pointer', position: 'relative' }} className="card-hover">
                             <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
-                                <img
-                                    src={place.image}
-                                    alt={place.title}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
-                                    className="place-img"
-                                />
-                                <div style={{
-                                    position: 'absolute',
-                                    top: 12,
-                                    left: 12,
-                                    background: 'rgba(141, 106, 255, 0.9)',
-                                    color: '#fff',
-                                    padding: '4px 12px',
-                                    borderRadius: 99,
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    backdropFilter: 'blur(4px)'
-                                }}>
+                                <img src={place.image} alt={place.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} className="place-img" />
+                                <button
+                                    onClick={(e) => handleToggleFavorite(e, place)}
+                                    style={{
+                                        position: 'absolute', top: 12, right: 12,
+                                        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+                                        border: 'none', borderRadius: '50%', width: 36, height: 36,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', fontSize: 16, zIndex: 10
+                                    }}
+                                >
+                                    {isFavorite('places', place) ? '⭐' : '☆'}
+                                </button>
+                                <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(141, 106, 255, 0.9)', color: '#fff', padding: '4px 12px', borderRadius: 99, fontSize: 12, fontWeight: 600, backdropFilter: 'blur(4px)' }}>
                                     {place.category}
                                 </div>
                             </div>
-
                             <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: 'var(--text-color)' }}>
-                                    {place.title}
-                                </h3>
-                                <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>
-                                    {place.description}
-                                </p>
-                                <div style={{
-                                    marginTop: 20,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                    color: 'var(--accent-color)',
-                                    fontSize: 14,
-                                    fontWeight: 600
-                                }}>
-                                    Visitar Site ↗
-                                </div>
+                                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: 'var(--text-color)' }}>{place.title}</h3>
+                                <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>{place.description}</p>
+                                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-color)', fontSize: 14, fontWeight: 600 }}>Visitar Site ↗</div>
                             </div>
                         </a>
                     ))
                 )}
             </div>
-
-            <style jsx>{`
-        .card-hover:hover .place-img {
-          transform: scale(1.1);
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
         </div>
     );
 }
