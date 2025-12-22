@@ -34,14 +34,12 @@ PRESS ENTER TO FINALIZE...
 
         const typingInterval = setInterval(() => {
             if (i < bio.length) {
-                currentText += bio[i];
-                console.clear();
-                console.log("%c" + currentText, "color: #00ff41; font-family: 'Courier New', monospace; font-size: 12px;");
+                if (i === 0) console.log("%c [SISTEMA] Descriptografando perfil...", "color: #888");
                 i++;
             } else {
                 clearInterval(typingInterval);
+                console.log("%c" + bio, "color: #00ff41; font-family: 'Courier New', monospace;");
 
-                // Exibe a mensagem de segredo após terminar a bio
                 console.log(
                     "%c Ei curioso! %c Tem nada de especial aqui... ou será que tem? %c \n\n Digite acessarLogs() para ver a verdade ou explore os arquivos <3",
                     "background: #00ff41; color: #000; font-weight: bold; font-size: 14px; padding: 4px; border-radius: 4px;",
