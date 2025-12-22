@@ -308,9 +308,9 @@ function getAchievementList(u) {
     // 1. Sinopense (Sempre - Base)
     list.push({ type: 'sinopense', icon: '🏙️', label: 'Sinopense', color: '#10b981', desc: 'Membro oficial da nossa comunidade' });
 
-    // 2. Pioneiro (Primeiros usuários)
-    if (u.id <= 50) {
-        list.push({ type: 'pioneiro', icon: '⭐', label: 'Pioneiro', color: '#fbbf24', desc: 'Uma das primeiras 50 contas criadas no sistema' });
+    // 2. Pioneiro (As 50 contas ativas mais antigas)
+    if (u.global_rank <= 50) {
+        list.push({ type: 'pioneiro', icon: '⭐', label: 'Pioneiro', color: '#fbbf24', desc: 'Uma das 50 contas mais antigas ainda ativas' });
     }
 
     // 3. Criador / Diretor (Baseado em posts)
@@ -347,7 +347,8 @@ export const listAllUsers = async (c) => {
             (SELECT COUNT(*) FROM videos WHERE user_id = u.id) as video_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = u.id) as comment_count_made,
             (SELECT COUNT(*) FROM likes WHERE user_id = u.id) as likes_given,
-            (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = u.id) as total_likes_received
+            (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = u.id) as total_likes_received,
+            (SELECT COUNT(*) FROM users u2 WHERE u2.id <= u.id) as global_rank
             FROM users u ORDER BY u.username ASC`,
             [],
             env
@@ -375,7 +376,8 @@ export const getPublicProfile = async (c) => {
             (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
             (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
-            (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) as total_likes_received
+            (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) as total_likes_received,
+            (SELECT COUNT(*) FROM users u2 WHERE u2.id <= users.id) as global_rank
             FROM users WHERE id = $1`,
             [userId],
             env
@@ -409,7 +411,7 @@ export const getUsersByAchievement = async (c) => {
                    FROM users `;
 
         if (type === 'pioneiro') {
-            sql += " WHERE id <= 50";
+            sql += " WHERE (SELECT COUNT(*) FROM users u2 WHERE u2.id <= users.id) <= 50";
         } else if (type === 'criador') {
             sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 0";
         } else if (type === 'diretor') {
