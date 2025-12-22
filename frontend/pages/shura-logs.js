@@ -1,35 +1,38 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Terminal, Lock, Shield, Eye, Cpu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Terminal, Lock, Shield, Eye, Cpu, AlertTriangle, ChevronRight, Binary } from 'lucide-react';
 import { useRouter } from 'next/router';
 
 export default function ShuraLogs() {
     const [text, setText] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
+    const [isError, setIsError] = useState(false);
     const router = useRouter();
 
-    // Mensagem secreta que o usuário pode editar depois
     const secretContent = `
-> [SISTEMA_INICIALIZADO]
+> [SISTEMA_INICIALIZADO_V3.2]
 > ACESSO_AUTORIZADO: NIVEL_SHURA
 > DATA: ${new Date().toLocaleDateString()}
+> STATUS: ESTÁVEL
 
-Olá, explorador. Se você chegou aqui através dos comentários no console, você tem o olhar apurado.
+Olá, explorador. Se você chegou aqui através dos comandos no console, você tem o olhar apurado e a curiosidade que define um verdadeiro desenvolvedor.
 
 Aqui é onde guardamos as notas de desenvolvimento e segredos que a maioria nunca verá.
 
 -- NOTAS DE SISTEMA --
 1. A API de Push foi corrigida para usar Endpoints únicos.
-2. O banco Neon está operando em modo Serverless.
-3. O design está sendo refinado para máxima estética.
+2. O banco Neon está operando em modo Serverless para máxima escalabilidade.
+3. O design está sendo refinado para entregar uma experiência premium.
 
+-- REFLEXÕES DO DEV --
 Sabe, estou fazendo esse site para encher minha mente com algo.
 Ultimamente, não tenho muito que fazer, e pensamentos pesados vieram a minha cabeça. 
 É melhor perder tempo com um site aleatório do que perder o resto de uma vida, né?
-Sei lá se alguém vai achar isso, mas se você está aqui, talvez você é curioso pra krl.
 
+Se você está lendo isso, você é curioso pra krl. E a curiosidade é o que move a inovação.
+Continue explorando, continue questionando.
 
 -- FIM DA TRANSMISSÃO --
     `;
@@ -41,131 +44,521 @@ Sei lá se alguém vai achar isso, mas se você está aqui, talvez você é curi
                 setText(secretContent.slice(0, i));
                 i++;
                 if (i > secretContent.length) clearInterval(interval);
-            }, 30);
+            }, 25);
             return () => clearInterval(interval);
         }
     }, [isAuthenticated]);
 
     const handleLogin = (e) => {
         e.preventDefault();
-        // Um pequeno desafio de "senha" que pode ser encontrado no console ou predefinido
         if (password.toLowerCase() === 'shura' || password.toLowerCase() === 'sinopinhas') {
             setIsAuthenticated(true);
         } else {
-            alert('Acesso negado. A senha está no código? Talvez seja o nome do app...');
+            setIsError(true);
+            setTimeout(() => setIsError(false), 2000);
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0c] text-[#00ff41] p-4 md:p-12 font-mono selection:bg-[#00ff41] selection:text-black">
+        <div className="terminal-page">
             <Head>
                 <title>SECURE_SHELL // SHURA</title>
                 <meta name="robots" content="noindex, nofollow" />
             </Head>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="max-w-3xl mx-auto"
-            >
-                {!isAuthenticated ? (
-                    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
+            {/* Scanline Overlay */}
+            <div className="scanlines" />
+            <div className="noise" />
+
+            <div className="terminal-container">
+                <AnimatePresence mode="wait">
+                    {!isAuthenticated ? (
                         <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="mb-8 opacity-50"
+                            key="login"
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.05 }}
+                            className="login-card"
                         >
-                            <Shield size={64} />
+                            <div className="card-header">
+                                <Binary size={20} />
+                                <span>SINOPINHAS_OS // AUTH</span>
+                            </div>
+
+                            <div className="card-content">
+                                <motion.div
+                                    animate={isError ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                    className="security-icon"
+                                >
+                                    {isError ? <AlertTriangle size={64} color="#ef4444" /> : <Shield size={64} />}
+                                </motion.div>
+
+                                <h1>ACESSO RESTRITO</h1>
+                                <p>Insira a chave de criptografia para prosseguir.</p>
+
+                                <form onSubmit={handleLogin} className="login-form">
+                                    <div className={`input-wrapper ${isError ? 'error' : ''}`}>
+                                        <Lock size={18} className="input-icon" />
+                                        <input
+                                            type="password"
+                                            placeholder="ENCRYPT_KEY"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <button type="submit" className="login-btn">
+                                        DESCRIPTOGRAFAR_LOGS
+                                    </button>
+                                </form>
+
+                                <button
+                                    onClick={() => router.push('/')}
+                                    className="back-link"
+                                >
+                                    &lt; STATUS_ABORT &gt;
+                                </button>
+                            </div>
                         </motion.div>
-
-                        <h1 className="text-2xl font-bold mb-4 tracking-tighter">SISTEMA DE ARQUIVOS PROTEGIDO</h1>
-                        <p className="text-sm opacity-60 mb-8 max-w-sm">
-                            Esta área contém logs confidenciais. Acesso restrito a desenvolvedores autorizados.
-                        </p>
-
-                        <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full max-w-xs">
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50" size={16} />
-                                <input
-                                    type="password"
-                                    placeholder="DIGITE_CREDENCIAIS"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-black border border-[#00ff41]/30 rounded p-3 pl-10 focus:outline-none focus:border-[#00ff41] transition-all text-[#00ff41]"
-                                />
-                            </div>
-                            <button className="bg-[#00ff41]/10 border border-[#00ff41] text-[#00ff41] py-2 rounded hover:bg-[#00ff41] hover:text-black transition-all font-bold">
-                                DESCRIPTOGRAFAR
-                            </button>
-                        </form>
-
-                        <button
-                            onClick={() => router.push('/')}
-                            className="mt-12 text-xs opacity-40 hover:opacity-100 transition-all cursor-pointer"
-                        >
-                            -- VOLTAR PARA A SUPERFÍCIE --
-                        </button>
-                    </div>
-                ) : (
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b border-[#00ff41]/20 pb-4 mb-8">
-                            <div className="flex items-center gap-3">
-                                <Terminal size={20} />
-                                <span className="text-sm font-bold">TERMINAL: shura@sinopinhas_os:~/hidden_logs</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500/20" />
-                                <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
-                                <div className="w-3 h-3 rounded-full bg-green-500/40" />
-                            </div>
-                        </div>
-
-                        <div className="terminal-content whitespace-pre-wrap leading-relaxed text-sm md:text-base">
-                            {text}
-                            <motion.span
-                                animate={{ opacity: [1, 0] }}
-                                transition={{ duration: 0.8, repeat: Infinity }}
-                                className="inline-block w-2 h-5 bg-[#00ff41] ml-1 align-middle"
-                            />
-                        </div>
-
+                    ) : (
                         <motion.div
+                            key="content"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 3 }}
-                            className="pt-12 flex gap-6"
+                            className="terminal-window"
                         >
-                            <div className="bg-[#00ff41]/5 p-4 rounded border border-[#00ff41]/10 flex-1">
-                                <div className="flex items-center gap-2 mb-2 text-xs font-bold opacity-70">
-                                    <Cpu size={14} />
-                                    <span>STATUS_DA_CPU</span>
+                            <div className="window-header">
+                                <div className="header-left">
+                                    <Terminal size={16} />
+                                    <span>shura@sinopinhas_os:~/home/logs</span>
                                 </div>
-                                <div className="h-1 bg-[#00ff41]/20 rounded overflow-hidden">
-                                    <motion.div
-                                        animate={{ width: ['20%', '80%', '40%', '90%', '60%'] }}
-                                        transition={{ duration: 5, repeat: Infinity }}
-                                        className="h-full bg-[#00ff41]"
-                                    />
+                                <div className="header-tabs">
+                                    <div className="tab active">secret_notes.log</div>
+                                    <div className="tab">system_dump</div>
+                                </div>
+                                <div className="header-controls">
+                                    <div className="dot" />
+                                    <div className="dot" />
+                                    <div className="dot" />
                                 </div>
                             </div>
-                            <div className="bg-[#00ff41]/5 p-4 rounded border border-[#00ff41]/10 flex-1">
-                                <div className="flex items-center gap-2 mb-2 text-xs font-bold opacity-70">
-                                    <Eye size={14} />
-                                    <span>LOG_DE_VISUALIZAÇÃO</span>
+
+                            <div className="window-body">
+                                <div className="content-scroll">
+                                    <div className="terminal-text">
+                                        {text}
+                                        <motion.span
+                                            animate={{ opacity: [1, 0] }}
+                                            transition={{ duration: 0.8, repeat: Infinity }}
+                                            className="cursor"
+                                        />
+                                    </div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 3 }}
+                                        className="system-stats"
+                                    >
+                                        <div className="stat-card">
+                                            <div className="stat-header">
+                                                <Cpu size={14} />
+                                                <span>CPU_LOAD</span>
+                                            </div>
+                                            <div className="progress-bar">
+                                                <motion.div
+                                                    animate={{ width: ['30%', '85%', '45%', '95%', '60%'] }}
+                                                    transition={{ duration: 4, repeat: Infinity }}
+                                                    className="progress-fill"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="stat-card">
+                                            <div className="stat-header">
+                                                <Eye size={14} />
+                                                <span>WATCHER_ID</span>
+                                            </div>
+                                            <div className="stat-value">SH-XXXX-8821</div>
+                                        </div>
+                                    </motion.div>
+
+                                    <div className="terminal-footer">
+                                        <ChevronRight size={14} className="prompt-icon" />
+                                        <span className="prompt-text">Aguardando novo comando...</span>
+                                    </div>
                                 </div>
-                                <span className="text-[10px]">VISITANTE_ID: XXX-XXXX-XXX</span>
                             </div>
                         </motion.div>
-                    </div>
-                )}
-            </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             <style jsx global>{`
-                body {
-                    background-color: #0a0a0c !important;
+                @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+                :root {
+                    --neon-green: #00ff41;
+                    --neon-glow: rgba(0, 255, 65, 0.3);
+                    --dark-bg: #050505;
+                    --card-bg: rgba(15, 15, 15, 0.8);
                 }
-                .terminal-content {
-                    text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+
+                .terminal-page {
+                    background-color: var(--dark-bg);
+                    color: var(--neon-green);
+                    min-height: 100vh;
+                    font-family: 'JetBrains+Mono', 'Courier New', monospace;
+                    position: relative;
+                    overflow: hidden;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                /* Effects */
+                .scanlines {
+                    position: fixed;
+                    inset: 0;
+                    background: linear-gradient(
+                        to bottom,
+                        rgba(18, 16, 16, 0) 50%,
+                        rgba(0, 0, 0, 0.1) 50%
+                    );
+                    background-size: 100% 4px;
+                    z-index: 10;
+                    pointer-events: none;
+                }
+
+                .noise {
+                    position: fixed;
+                    inset: 0;
+                    background: url('https://grainy-gradients.vercel.app/noise.svg');
+                    opacity: 0.05;
+                    z-index: 11;
+                    pointer-events: none;
+                }
+
+                .terminal-container {
+                    position: relative;
+                    z-index: 20;
+                    width: 100%;
+                    max-width: 900px;
+                    padding: 20px;
+                }
+
+                /* Login Card */
+                .login-card {
+                    background: var(--card-bg);
+                    border: 1px solid rgba(0, 255, 65, 0.2);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 255, 65, 0.05);
+                    backdrop-filter: blur(10px);
+                    max-width: 400px;
+                    margin: 0 auto;
+                }
+
+                .card-header {
+                    background: rgba(0, 255, 65, 0.1);
+                    padding: 10px 20px;
+                    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    letter-spacing: 1px;
+                }
+
+                .card-content {
+                    padding: 40px 30px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                }
+
+                .security-icon {
+                    margin-bottom: 24px;
+                    filter: drop-shadow(0 0 10px var(--neon-glow));
+                }
+
+                .card-content h1 {
+                    font-size: 20px;
+                    margin: 0 0 8px;
+                    letter-spacing: 2px;
+                }
+
+                .card-content p {
+                    font-size: 13px;
+                    opacity: 0.6;
+                    margin-bottom: 32px;
+                }
+
+                .login-form {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+
+                .input-wrapper {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .input-icon {
+                    position: absolute;
+                    left: 12px;
+                    opacity: 0.5;
+                }
+
+                .input-wrapper input {
+                    width: 100%;
+                    background: rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(0, 255, 65, 0.3);
+                    padding: 12px 12px 12px 40px;
+                    border-radius: 4px;
+                    color: var(--neon-green);
+                    font-family: inherit;
+                    transition: all 0.2s;
+                    box-sizing: border-box;
+                }
+
+                .input-wrapper input:focus {
+                    outline: none;
+                    border-color: var(--neon-green);
+                    box-shadow: 0 0 10px var(--neon-glow);
+                }
+
+                .input-wrapper.error input {
+                    border-color: #ef4444;
+                    color: #ef4444;
+                }
+
+                .login-btn {
+                    background: var(--neon-green);
+                    color: black;
+                    border: none;
+                    padding: 14px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    font-family: inherit;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    letter-spacing: 1px;
+                }
+
+                .login-btn:hover {
+                    box-shadow: 0 0 20px var(--neon-glow);
+                    transform: translateY(-1px);
+                }
+
+                .back-link {
+                    margin-top: 32px;
+                    background: none;
+                    border: none;
+                    color: var(--neon-green);
+                    font-family: inherit;
+                    font-size: 11px;
+                    opacity: 0.4;
+                    cursor: pointer;
+                }
+
+                .back-link:hover {
+                    opacity: 1;
+                }
+
+                /* Terminal Window */
+                .terminal-window {
+                    background: var(--card-bg);
+                    border: 1px solid rgba(0, 255, 65, 0.2);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+                    height: 80vh;
+                    display: flex;
+                    flex-direction: column;
+                    backdrop-filter: blur(10px);
+                }
+
+                .window-header {
+                    background: rgba(15, 15, 15, 0.95);
+                    height: 44px;
+                    display: flex;
+                    align-items: center;
+                    padding: 0 16px;
+                    border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+                }
+
+                .header-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 12px;
+                    opacity: 0.7;
+                    width: 250px;
+                }
+
+                .header-tabs {
+                    flex: 1;
+                    display: flex;
+                    height: 100%;
+                    gap: 2px;
+                }
+
+                .tab {
+                    padding: 0 20px;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    font-size: 11px;
+                    opacity: 0.3;
+                    border-left: 1px solid rgba(255, 255, 255, 0.05);
+                    border-right: 1px solid rgba(255, 255, 255, 0.05);
+                    cursor: default;
+                }
+
+                .tab.active {
+                    opacity: 1;
+                    background: rgba(0, 255, 65, 0.05);
+                    border-bottom: 2px solid var(--neon-green);
+                }
+
+                .header-controls {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                .dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: rgba(0, 255, 65, 0.2);
+                }
+
+                .window-body {
+                    flex: 1;
+                    padding: 24px;
+                    overflow: hidden;
+                    position: relative;
+                }
+
+                .content-scroll {
+                    height: 100%;
+                    overflow-y: auto;
+                    padding-right: 10px;
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--neon-glow) transparent;
+                }
+
+                .content-scroll::-webkit-scrollbar {
+                    width: 4px;
+                }
+
+                .content-scroll::-webkit-scrollbar-thumb {
+                    background: var(--neon-glow);
+                }
+
+                .terminal-text {
+                    font-size: 14px;
+                    line-height: 1.6;
+                    white-space: pre-wrap;
+                    text-shadow: 0 0 5px var(--neon-glow);
+                }
+
+                .cursor {
+                    display: inline-block;
+                    width: 8px;
+                    height: 18px;
+                    background: var(--neon-green);
+                    vertical-align: middle;
+                    margin-left: 4px;
+                    box-shadow: 0 0 5px var(--neon-green);
+                }
+
+                .system-stats {
+                    margin-top: 40px;
+                    display: flex;
+                    gap: 20px;
+                    flex-wrap: wrap;
+                }
+
+                .stat-card {
+                    background: rgba(0, 255, 65, 0.03);
+                    border: 1px solid rgba(0, 255, 65, 0.1);
+                    padding: 16px;
+                    border-radius: 4px;
+                    flex: 1;
+                    min-width: 200px;
+                }
+
+                .stat-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 11px;
+                    font-weight: bold;
+                    margin-bottom: 12px;
+                    opacity: 0.7;
+                }
+
+                .progress-bar {
+                    height: 2px;
+                    background: rgba(0, 255, 65, 0.1);
+                    border-radius: 2px;
+                }
+
+                .progress-fill {
+                    height: 100%;
+                    background: var(--neon-green);
+                    box-shadow: 0 0 10px var(--neon-green);
+                }
+
+                .stat-value {
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+
+                .terminal-footer {
+                    margin-top: 40px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 0;
+                    border-top: 1px dashed rgba(0, 255, 65, 0.1);
+                }
+
+                .prompt-icon {
+                    animation: pulse 2s infinite;
+                }
+
+                .prompt-text {
+                    font-size: 12px;
+                    opacity: 0.5;
+                }
+
+                @keyframes pulse {
+                    0% { transform: translateX(0); opacity: 1; }
+                    50% { transform: translateX(5px); opacity: 0.5; }
+                    100% { transform: translateX(0); opacity: 1; }
+                }
+
+                @media (max-width: 640px) {
+                    .terminal-window {
+                        height: 90vh;
+                    }
+                    .header-left {
+                        width: auto;
+                    }
+                    .header-left span {
+                        display: none;
+                    }
+                    .header-tabs {
+                        justify-content: center;
+                    }
                 }
             `}</style>
         </div>

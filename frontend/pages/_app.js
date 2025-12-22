@@ -5,21 +5,27 @@ import '../styles/globals.css';
 function MyApp({ Component, pageProps }) {
     useEffect(() => {
         const bio = `
-> [PERFIL_DO_DESENVOLVEDOR]
-> Estudante: Sistemas de Informação (3º Semestre)
-> Contexto: Saúde & Tecnologia (Biomedicina Integrativa)
+[ SINOPINHAS_OS // DEV_PROFILE ]
+================================
 
-Sou um estudante de Sistemas de Informação, atualmente no terceiro semestre, começando a construir minha base na área de tecnologia. Ainda não me considero experiente, mas tenho curiosidade, vontade de aprender e gosto de usar a prática para evoluir, testando, errando e ajustando meus projetos.[1]
+> ESTUDANTE: Sistemas de Informação (3º Semestre)
+> CONTEXTO:  Saúde & Tecnologia (Biomedicina Integrativa)
+> STATUS:    Sempre aprendendo...
+
+--------------------------------------------------
+
+Sou um estudante de Sistemas de Informação, atualmente no terceiro semestre, começando a construir minha base na área de tecnologia. Ainda não me considero experiente, mas tenho curiosidade, vontade de aprender e gosto de usar a prática para evoluir, testando, errando e ajustando meus projetos.
 
 Trabalho em uma clínica de biomedicina integrativa, o que me aproxima da área da saúde e me faz enxergar como tecnologia e bem-estar podem caminhar juntos. Esse ambiente também me inspira a pensar em soluções digitais que facilitem o dia a dia de pacientes, profissionais e da própria clínica.
 
 Na faculdade de Sistemas de Informação, estou construindo os fundamentos de programação, lógica, bancos de dados e desenvolvimento de sistemas. Mesmo no início do curso, já busco aprender além da sala de aula, explorando ferramentas, tutoriais e projetos pessoais para ganhar confiança na área.
 
-Gosto de experimentar com desenvolvimento web e mobile, mexendo em layouts, scripts e pequenos sistemas, sempre tentando entender como tudo se conecta do front ao backend. Vejo cada desafio técnico como uma oportunidade de aprender algo novo que pode ser útil tanto para futuros trabalhos quanto para projetos pessoais.[2]
+Gosto de experimentar com desenvolvimento web e mobile, mexendo em layouts, scripts e pequenos sistemas, sempre tentando entender como tudo se conecta do front ao backend. Vejo cada desafio técnico como uma oportunidade de aprender algo novo que pode ser útil tanto para futuros trabalhos quanto para projetos pessoais.
 
 Mesmo não sendo experiente, tenho uma postura de crescimento: vou atrás de informação, estudo por conta própria, peço exemplos completos de código e procuro transformar teoria em prática sempre que possível. Meu objetivo é, com o tempo, unir o que aprendo na faculdade, o contato com a área de saúde na clínica e a tecnologia para construir soluções que façam diferença na vida das pessoas.
 
 --------------------------------------------------
+PRESS ENTER TO FINALIZE...
         `;
 
         let i = 0;
