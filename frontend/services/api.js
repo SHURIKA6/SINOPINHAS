@@ -171,6 +171,18 @@ export const deleteComment = (commentId, userId, adminPassword = null) => {
     });
 };
 
+export const fetchAllUsers = () => {
+    return api.get('/api/users/all');
+};
+
+export const fetchPublicProfile = (userId) => {
+    return api.get(`/api/users/${userId}`);
+};
+
+export const fetchUsersByAchievement = (type) => {
+    return api.get(`/api/achievements/${type}/users`);
+};
+
 export const fetchUsers = async () => {
     const res = await api.get(`/api/admin/users`);
     return res.data;

@@ -3,7 +3,7 @@ import api from '../services/api';
 
 const DEFAULT_API = process.env.NEXT_PUBLIC_API_URL;
 
-export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_API, isAdmin = false, adminPassword = '' }) {
+export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_API, isAdmin = false, adminPassword = '', initialUserId = null }) {
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newMessage, setNewMessage] = useState('');
@@ -23,6 +23,14 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       loadAllUsers();
     }
   }, [user, isAdmin, showAdminInbox]);
+
+  // Auto-selecionar usuário se vier por parâmetro
+  useEffect(() => {
+    if (initialUserId && localUsersList.length > 0) {
+      const u = localUsersList.find(u => u.id.toString() === initialUserId.toString());
+      if (u) setSelectedUser(u);
+    }
+  }, [initialUserId, localUsersList]);
 
   // Carregar lista de usuários
   const loadAllUsers = async () => {
@@ -214,10 +222,15 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
                   ←
                 </button>
               )}
-              {selectedUser.avatar ? <img src={selectedUser.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} alt={selectedUser.username} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold', color: '#fff' }}> {selectedUser.username.charAt(0).toUpperCase()} </div>}
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0, color: 'var(--text-color)', fontSize: 16 }}>{selectedUser.username}</h3>
-                {showAdminInbox && <span style={{ fontSize: 10, color: '#ef4444' }}>Modo Espião</span>}
+              <div
+                onClick={() => window.openPublicProfile(selectedUser.id)}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+              >
+                {selectedUser.avatar ? <img src={selectedUser.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} alt={selectedUser.username} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold', color: '#fff' }}> {selectedUser.username.charAt(0).toUpperCase()} </div>}
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: 0, color: 'var(--text-color)', fontSize: 16 }}>{selectedUser.username}</h3>
+                  {showAdminInbox && <span style={{ fontSize: 10, color: '#ef4444' }}>Modo Espião</span>}
+                </div>
               </div>
             </div>
 

@@ -26,6 +26,8 @@ import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/layout/BottomNav';
 import Toast from '../components/common/Toast';
 import CommentsDrawer from '../components/feed/CommentsDrawer';
+import PublicProfileModal from '../components/modals/PublicProfileModal';
+import AchievementUsersModal from '../components/modals/AchievementUsersModal';
 
 import {
   logTermsAcceptance,
@@ -131,6 +133,10 @@ export default function Home({ initialVideo }) {
   const [showSecretTab, setShowSecretTab] = useState(false);
   const [theme, setTheme] = useState('dark');
 
+  // Perfil Público e Conquistas
+  const [publicProfileId, setPublicProfileId] = useState(null);
+  const [achievementToList, setAchievementToList] = useState(null);
+
   // Troca de Tema
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -147,7 +153,15 @@ export default function Home({ initialVideo }) {
 
   useEffect(() => {
     window.subscribeToPush = subscribeToNotifications;
-  }, [subscribeToNotifications]);
+    window.openPublicProfile = (id) => setPublicProfileId(id);
+    window.openAchievementList = (ach) => setAchievementToList(ach);
+    window.openChatWithUser = (id) => {
+      setActiveTab('inbox');
+      // Precisa passar o ID para o componente Inbox de alguma forma, 
+      // mas como ele é um filho do TabPane, podemos usar router query.
+      router.push({ pathname: '/', query: { ...router.query, tab: 'inbox', u: id } }, undefined, { shallow: true });
+    };
+  }, [subscribeToNotifications, router]);
 
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -272,6 +286,25 @@ export default function Home({ initialVideo }) {
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
 
+        {publicProfileId && (
+          <PublicProfileModal
+            userId={publicProfileId}
+            onClose={() => setPublicProfileId(null)}
+            onAchievementClick={(ach) => setAchievementToList(ach)}
+          />
+        )}
+
+        {achievementToList && (
+          <AchievementUsersModal
+            achievement={achievementToList}
+            onClose={() => setAchievementToList(null)}
+            onUserClick={(id) => {
+              setAchievementToList(null);
+              setPublicProfileId(id);
+            }}
+          />
+        )}
+
         <main style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
           <TabPane active={activeTab === 'feed'}>
             <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" />
@@ -284,7 +317,7 @@ export default function Home({ initialVideo }) {
 
           {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} />}
           {activeTab === 'upload' && <UploadSection user={user} setShowAuth={setShowAuth} showToast={showToast} setActiveTab={setActiveTab} />}
-          {activeTab === 'inbox' && (user || isAdmin) && <Inbox user={user} API={API} isAdmin={isAdmin} adminPassword={adminPassword} onMessageRead={() => user && loadNotifications(user.id)} />}
+          {activeTab === 'inbox' && (user || isAdmin) && <Inbox user={user} API={API} isAdmin={isAdmin} adminPassword={adminPassword} onMessageRead={() => user && loadNotifications(user.id)} initialUserId={router.query.u} />}
           {activeTab === 'admin' && isAdmin && <AdminPanel adminPassword={adminPassword} showToast={showToast} />}
         </main>
 

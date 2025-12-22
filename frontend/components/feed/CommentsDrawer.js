@@ -103,19 +103,26 @@ export default function CommentsDrawer({
                                     >
                                         <img
                                             src={c.avatar || 'https://www.gravatar.com/avatar?d=mp'}
+                                            onClick={() => window.openPublicProfile(c.user_id)}
                                             style={{
                                                 width: 44,
                                                 height: 44,
                                                 borderRadius: '50%',
                                                 objectFit: 'cover',
                                                 background: 'var(--input-bg)',
-                                                border: '2px solid var(--border-color)'
+                                                border: '2px solid var(--border-color)',
+                                                cursor: 'pointer'
                                             }}
                                             alt=""
                                         />
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                                <strong style={{ fontSize: 15, fontWeight: 700 }}>{c.username}</strong>
+                                                <strong
+                                                    onClick={() => window.openPublicProfile(c.user_id)}
+                                                    style={{ fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+                                                >
+                                                    {c.username}
+                                                </strong>
                                                 <span style={{ fontSize: 11, opacity: 0.5 }}>{new Date(c.created_at).toLocaleDateString()}</span>
                                             </div>
                                             <div style={{

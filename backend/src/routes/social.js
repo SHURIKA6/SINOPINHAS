@@ -18,6 +18,8 @@ app.delete('/comments/:id', socialController.deleteComment);
 
 app.get('/notifications/:userId', socialController.getNotifications);
 app.get('/users/all', socialController.listAllUsers);
+app.get('/users/:id', socialController.getPublicProfile);
+app.get('/achievements/:type/users', socialController.getUsersByAchievement);
 app.post('/send-message', validate(schemas.sendMessageSchema), socialController.sendMessage);
 app.get('/inbox/:userId', socialController.getInbox);
 app.post('/conversations/:id/read', socialController.markAsRead);

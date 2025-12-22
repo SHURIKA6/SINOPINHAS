@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { logTermsAcceptance, fetchNotifications, savePushSubscription, sendFingerprint } from '../services/api';
+import { fetchPublicProfile, logTermsAcceptance, fetchNotifications, savePushSubscription, sendFingerprint } from '../services/api';
 
 export function useAuth(showToast) {
     const [user, setUser] = useState(null);
@@ -11,21 +11,6 @@ export function useAuth(showToast) {
     // Initial check
     useEffect(() => {
         const checkAuth = async () => {
-            // Admin Auth restoration - REMOVED for security (Admin must re-login on reload as requested)
-            /*
-            const token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    if (payload.role === 'admin') {
-                        setIsAdmin(true);
-                    }
-                } catch (e) {
-                    console.error("Failed to parse token for admin check", e);
-                }
-            }
-            */
-
             // User Auth
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
@@ -33,6 +18,18 @@ export function useAuth(showToast) {
                     const u = JSON.parse(savedUser);
                     setUser(u);
                     loadNotifications(u.id);
+
+                    // Refresh Profile (to get latest achievements/stats)
+                    try {
+                        const res = await fetchPublicProfile(u.id);
+                        if (res.data) {
+                            const updated = { ...u, ...res.data };
+                            setUser(updated);
+                            localStorage.setItem('user', JSON.stringify(updated));
+                        }
+                    } catch (refreshErr) {
+                        console.error("Failed to refresh profile", refreshErr);
+                    }
                 } catch (e) {
                     console.error("Failed to parse user", e);
                     logout();

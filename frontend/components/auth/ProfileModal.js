@@ -170,9 +170,15 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                         <div style={{ marginBottom: 24 }}>
                             <p style={{ fontSize: 13, color: 'var(--secondary-text)', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>🏆 Suas Conquistas</p>
                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                <Badge icon="⭐" label="Pioneiro" color="#fbbf24" />
-                                <Badge icon="🎬" label="Criador" color="#8d6aff" />
-                                <Badge icon="🏙️" label="Sinopense" color="#10b981" />
+                                {user.achievements?.map(ach => (
+                                    <Badge
+                                        key={ach.type}
+                                        icon={ach.icon}
+                                        label={ach.label}
+                                        color={ach.color}
+                                        onClick={() => window.openAchievementList(ach)}
+                                    />
+                                ))}
                             </div>
                         </div>
 
@@ -265,20 +271,24 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
     );
 }
 
-function Badge({ icon, label, color }) {
+function Badge({ icon, label, color, onClick }) {
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: `${color}15`,
-            border: `1px solid ${color}30`,
-            padding: '6px 12px',
-            borderRadius: 99,
-            fontSize: 12,
-            fontWeight: 700,
-            color: color
-        }}>
+        <div
+            onClick={onClick}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                background: `${color}15`,
+                border: `1px solid ${color}30`,
+                padding: '6px 12px',
+                borderRadius: 99,
+                fontSize: 12,
+                fontWeight: 700,
+                color: color,
+                cursor: onClick ? 'pointer' : 'default'
+            }}
+        >
             <span>{icon}</span> {label}
         </div>
     );

@@ -313,18 +313,139 @@ export const getNotifications = async (c) => {
     }
 };
 
-// Listar usuários
+// Helper para calcular conquistas dinâmicas
+function getAchievementList(u) {
+    const list = [];
+    // 1. Sinopense (Sempre - Base)
+    list.push({ type: 'sinopense', icon: '🏙️', label: 'Sinopense', color: '#10b981', desc: 'Membro oficial da nossa comunidade' });
+
+    // 2. Pioneiro (Primeiros usuários)
+    if (u.id <= 50) {
+        list.push({ type: 'pioneiro', icon: '⭐', label: 'Pioneiro', color: '#fbbf24', desc: 'Uma das primeiras 50 contas criadas no sistema' });
+    }
+
+    // 3. Criador / Diretor (Baseado em posts)
+    if (u.video_count > 5) {
+        list.push({ type: 'diretor', icon: '🎥', label: 'Diretor', color: '#f97316', desc: 'Mestre do conteúdo com mais de 5 postagens' });
+    } else if (u.video_count > 0) {
+        list.push({ type: 'criador', icon: '🎬', label: 'Criador', color: '#8d6aff', desc: 'Já contribuiu com conteúdos para o mural' });
+    }
+
+    // 4. Popular (Likes recebidos)
+    if ((u.total_likes_received || u.total_likes) >= 50) {
+        list.push({ type: 'popular', icon: '🔥', label: 'Popular', color: '#ff4444', desc: 'Seus conteúdos brilham! Mais de 50 curtidas recebidas' });
+    }
+
+    // 5. Tagarela (Comentários feitos)
+    if (u.comment_count_made >= 10) {
+        list.push({ type: 'tagarela', icon: '💬', label: 'Tagarela', color: '#3b82f6', desc: 'Sempre engajado! Mais de 10 comentários feitos' });
+    }
+
+    // 6. Amigável (Likes dados)
+    if (u.likes_given >= 20) {
+        list.push({ type: 'amigavel', icon: '❤️', label: 'Amigável', color: '#ec4899', desc: 'Espalhando amor! Deu mais de 20 curtidas' });
+    }
+
+    return list;
+}
+
+// Listar usuários decorados com conquistas
 export const listAllUsers = async (c) => {
     const env = c.env;
     try {
         const { rows } = await queryDB(
-            "SELECT id, username, avatar, bio FROM users ORDER BY username ASC",
+            `SELECT u.id, u.username, u.avatar, u.bio,
+            (SELECT COUNT(*) FROM videos WHERE user_id = u.id) as video_count,
+            (SELECT COUNT(*) FROM comments WHERE user_id = u.id) as comment_count_made,
+            (SELECT COUNT(*) FROM likes WHERE user_id = u.id) as likes_given,
+            (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = u.id) as total_likes_received
+            FROM users u ORDER BY u.username ASC`,
             [],
             env
         );
-        return createResponse(c, rows);
+
+        const decorated = rows.map(u => ({
+            ...u,
+            achievements: getAchievementList(u)
+        }));
+
+        return createResponse(c, decorated);
     } catch (err) {
         return createResponse(c, []);
+    }
+};
+
+// Buscar Perfil Público
+export const getPublicProfile = async (c) => {
+    const userId = c.req.param("id");
+    const env = c.env;
+
+    try {
+        const { rows } = await queryDB(
+            `SELECT id, username, avatar, bio, created_at,
+            (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
+            (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
+            (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
+            (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) as total_likes_received
+            FROM users WHERE id = $1`,
+            [userId],
+            env
+        );
+
+        if (rows.length === 0) return createErrorResponse(c, "NOT_FOUND", "Usuário não encontrado", 404);
+
+        const u = rows[0];
+        const decorated = {
+            ...u,
+            achievements: getAchievementList(u)
+        };
+
+        return createResponse(c, decorated);
+    } catch (err) {
+        return createErrorResponse(c, "DB_ERROR", err.message, 500);
+    }
+};
+
+// Listar usuários por conquista
+export const getUsersByAchievement = async (c) => {
+    const type = c.req.param("type");
+    const env = c.env;
+
+    try {
+        let sql = `SELECT id, username, avatar, bio,
+                   (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
+                   (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
+                   (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
+                   (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) as total_likes_received
+                   FROM users `;
+
+        if (type === 'pioneiro') {
+            sql += " WHERE id <= 50";
+        } else if (type === 'criador') {
+            sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 0";
+        } else if (type === 'diretor') {
+            sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 5";
+        } else if (type === 'popular') {
+            sql += " WHERE (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) >= 50";
+        } else if (type === 'tagarela') {
+            sql += " WHERE (SELECT COUNT(*) FROM comments WHERE user_id = users.id) >= 10";
+        } else if (type === 'amigavel') {
+            sql += " WHERE (SELECT COUNT(*) FROM likes WHERE user_id = users.id) >= 20";
+        }
+        // 'sinopense' retorna todos
+
+        sql += " ORDER BY username ASC LIMIT 100";
+
+        const { rows } = await queryDB(sql, [], env);
+
+        const decorated = rows.map(u => ({
+            ...u,
+            achievements: getAchievementList(u)
+        }));
+
+        return createResponse(c, decorated);
+    } catch (err) {
+        return createErrorResponse(c, "DB_ERROR", err.message, 500);
     }
 };
 
