@@ -52,7 +52,7 @@ export const likeVideo = async (c) => {
     }
 };
 
-// Visualizar vídeo
+// Visualizar vídeo (Log de visualização)
 export const viewVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -62,45 +62,33 @@ export const viewVideo = async (c) => {
         const body = await c.req.json().catch(() => ({}));
         userId = body.user_id || null;
 
-        await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
+        // Processa em segundo plano para não bloquear o player/UI
+        c.executionCtx.waitUntil((async () => {
+            try {
+                await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
+            } catch (err) {
+                console.error("Error logging view in background:", err.message);
+
+                // Reparo de esquema em segundo plano se necessário
+                if (err.code === '42P01') {
+                    await queryDB(`
+                        CREATE TABLE IF NOT EXISTS views (
+                            id SERIAL PRIMARY KEY,
+                            video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+                            user_id INTEGER,
+                            created_at TIMESTAMP DEFAULT NOW()
+                        )
+                    `, [], env);
+                } else if (err.code === '42703' || err.message.includes('user_id')) {
+                    await queryDB("ALTER TABLE views ADD COLUMN IF NOT EXISTS user_id INTEGER", [], env);
+                }
+            }
+        })());
+
         return createResponse(c, { success: true });
     } catch (err) {
-        console.error("Error in viewVideo:", err.code, err.message);
-
-        // Tabela não existe
-        if (err.code === '42P01') {
-            await queryDB(`
-                CREATE TABLE IF NOT EXISTS views (
-                    id SERIAL PRIMARY KEY,
-                    video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
-                    user_id INTEGER,
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
-            `, [], env);
-
-            await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
-            return createResponse(c, { success: true, repaired: true });
-        }
-
-        // Coluna 'user_id' não existe ou erro de Unique Constraint
-        if (err.code === '42703' || err.code === '23505' || err.message.includes('user_id')) {
-            try {
-                // Remove restrição única se existir (caso tenha sido criada pelo schema.js antigo)
-                await queryDB("ALTER TABLE views DROP CONSTRAINT IF EXISTS views_video_id_key", [], env);
-                // Adiciona coluna user_id se faltar
-                await queryDB("ALTER TABLE views ADD COLUMN IF NOT EXISTS user_id INTEGER", [], env);
-                // Remove coluna views se existir (limpeza)
-                await queryDB("ALTER TABLE views DROP COLUMN IF EXISTS views", [], env);
-
-                await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
-                return createResponse(c, { success: true, repaired_schema: true });
-            } catch (repairErr) {
-                console.error("Failed to repair views table:", repairErr);
-            }
-        }
-
-        // Se falhar tudo, pelo menos não crasha o app
-        return createResponse(c, { success: false, error: err.message }, 500);
+        // Erro crítico antes do processamento (raro, ex: JSON inválido)
+        return createResponse(c, { success: true, warning: err.message });
     }
 };
 
@@ -264,8 +252,9 @@ export const deleteComment = async (c) => {
     const commentId = c.req.param("id");
     const env = c.env;
     try {
-        const { user_id, admin_password } = await c.req.json();
-        const isAdmin = admin_password === env.ADMIN_PASSWORD;
+        const body = await c.req.json().catch(() => ({}));
+        const { user_id, admin_password } = body;
+        const isAdmin = admin_password && admin_password === env.ADMIN_PASSWORD;
 
         if (!isAdmin) {
             const { rows } = await queryDB("SELECT user_id FROM comments WHERE id = $1", [commentId], env);

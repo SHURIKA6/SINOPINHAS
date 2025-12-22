@@ -15,7 +15,10 @@ const createPool = (env) => {
     });
 
     newPool.on('error', (err) => {
-        console.error('❌ FATAL: Unexpected error on idle client', err);
+        console.error('❌ FATAL: Unexpected error on idle client', err.message);
+        if (err.message.includes('terminated') || err.message.includes('Connection')) {
+            pool = null; // Força recriação na próxima query
+        }
     });
 
     return newPool;
@@ -26,20 +29,18 @@ export async function queryDB(sql, params = [], env) {
         throw new Error("DATABASE_URL não configurada nas variáveis de ambiente!");
     }
 
-    // Padrão Singleton para o pool de conexões
-    if (!pool) {
-        console.log("🔌 Inicializando novo Pool Neon Serverless...");
-        pool = createPool(env);
-    }
-
     let retries = 2; // Tentar até 3 vezes no total
     let lastError = null;
 
-
-
     while (retries >= 0) {
         const start = Date.now();
-        let client;
+
+        // Garante que o pool exista em cada tentativa (caso tenha sido resetado na anterior)
+        if (!pool) {
+            console.log("🔌 Recriando Pool Neon Serverless para retry...");
+            pool = createPool(env);
+        }
+
         try {
             // Setup Defensivo: Timeout estrito para conexão e query
             const dbOperation = async () => {
@@ -65,6 +66,11 @@ export async function queryDB(sql, params = [], env) {
         } catch (err) {
             lastError = err;
             console.error(`⚠️ Erro no banco (Tentativa ${3 - retries}/3):`, err.message);
+
+            // Se o erro for de conexão, reseta o pool para a próxima tentativa
+            if (err.message.includes('terminated') || err.message.includes('Connection')) {
+                pool = null;
+            }
 
             if (retries === 0) break;
 
