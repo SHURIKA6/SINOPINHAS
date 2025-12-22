@@ -1,16 +1,20 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Lock, Shield, Eye, Cpu, AlertTriangle, ChevronRight, Binary } from 'lucide-react';
+import { Terminal, Lock, Shield, Eye, Cpu, AlertTriangle, ChevronRight, Binary, Send } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../hooks/useAuth';
-import { discoverLogs } from '../services/api';
+import { discoverLogs, submitShuraMessage, fetchApprovedShuraMessages } from '../services/api';
 
 export default function ShuraLogs() {
     const [text, setText] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [isError, setIsError] = useState(false);
+    const [activeTab, setActiveWindowTab] = useState('log');
+    const [communityMessages, setCommunityMessages] = useState([]);
+    const [userMessage, setUserMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
     const secretContent = `
@@ -35,6 +39,7 @@ Ultimamente, não tenho muito que fazer, e pensamentos pesados vieram a minha ca
 
 Se você está lendo isso, você é curioso pra krl. E a curiosidade é o que move a inovação.
 Continue explorando, continue questionando.
+
 
 -- FIM DA TRANSMISSÃO --
     `;
@@ -73,6 +78,38 @@ Continue explorando, continue questionando.
         } else {
             setIsError(true);
             setTimeout(() => setIsError(false), 2000);
+        }
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadCommunityMessages();
+        }
+    }, [isAuthenticated]);
+
+    const loadCommunityMessages = async () => {
+        try {
+            const res = await fetchApprovedShuraMessages();
+            setCommunityMessages(res.data);
+        } catch (err) {
+            console.error("Erro ao carregar mensagens da comunidade:", err);
+        }
+    };
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!userMessage.trim()) return;
+
+        try {
+            setIsSubmitting(true);
+            await submitShuraMessage(userMessage);
+            setUserMessage('');
+            alert("Mensagem enviada! Ela aparecerá aqui após ser aprovada por um administrador.");
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao enviar mensagem.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -151,8 +188,24 @@ Continue explorando, continue questionando.
                                     <span>shura@sinopinhas_os:~/home/logs</span>
                                 </div>
                                 <div className="header-tabs">
-                                    <div className="tab active">secret_notes.log</div>
-                                    <div className="tab">system_dump</div>
+                                    <div
+                                        className={`tab ${activeTab === 'log' ? 'active' : ''}`}
+                                        onClick={() => setActiveWindowTab('log')}
+                                    >
+                                        secret_notes.log
+                                    </div>
+                                    <div
+                                        className={`tab ${activeTab === 'community' ? 'active' : ''}`}
+                                        onClick={() => setActiveWindowTab('community')}
+                                    >
+                                        community_logs.txt
+                                    </div>
+                                    <div
+                                        className={`tab ${activeTab === 'visual' ? 'active' : ''}`}
+                                        onClick={() => setActiveWindowTab('visual')}
+                                    >
+                                        visual_archive.jpeg
+                                    </div>
                                 </div>
                                 <div className="header-controls">
                                     <div className="dot" />
@@ -162,50 +215,134 @@ Continue explorando, continue questionando.
                             </div>
 
                             <div className="window-body">
-                                <div className="content-scroll">
-                                    <div className="terminal-text">
-                                        {text}
-                                        <motion.span
-                                            animate={{ opacity: [1, 0] }}
-                                            transition={{ duration: 0.8, repeat: Infinity }}
-                                            className="cursor"
-                                        />
-                                    </div>
-
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 3 }}
-                                        className="system-stats"
-                                    >
-                                        <div className="stat-card">
-                                            <div className="stat-header">
-                                                <Cpu size={14} />
-                                                <span>CPU_LOAD</span>
-                                            </div>
-                                            <div className="progress-bar">
-                                                <motion.div
-                                                    animate={{ width: ['30%', '85%', '45%', '95%', '60%'] }}
-                                                    transition={{ duration: 4, repeat: Infinity }}
-                                                    className="progress-fill"
+                                <AnimatePresence mode="wait">
+                                    {activeTab === 'log' ? (
+                                        <motion.div
+                                            key="log-content"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="content-scroll"
+                                        >
+                                            <div className="terminal-text">
+                                                {text}
+                                                <motion.span
+                                                    animate={{ opacity: [1, 0] }}
+                                                    transition={{ duration: 0.8, repeat: Infinity }}
+                                                    className="cursor"
                                                 />
                                             </div>
-                                        </div>
 
-                                        <div className="stat-card">
-                                            <div className="stat-header">
-                                                <Eye size={14} />
-                                                <span>WATCHER_ID</span>
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ delay: 3 }}
+                                                className="system-stats"
+                                            >
+                                                <div className="stat-card">
+                                                    <div className="stat-header">
+                                                        <Cpu size={14} />
+                                                        <span>CPU_LOAD</span>
+                                                    </div>
+                                                    <div className="progress-bar">
+                                                        <motion.div
+                                                            animate={{ width: ['30%', '85%', '45%', '95%', '60%'] }}
+                                                            transition={{ duration: 4, repeat: Infinity }}
+                                                            className="progress-fill"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="stat-card">
+                                                    <div className="stat-header">
+                                                        <Eye size={14} />
+                                                        <span>WATCHER_ID</span>
+                                                    </div>
+                                                    <div className="stat-value">SH-XXXX-8821</div>
+                                                </div>
+                                            </motion.div>
+
+                                            <div className="terminal-footer">
+                                                <ChevronRight size={14} className="prompt-icon" />
+                                                <span className="prompt-text">Aguardando novo comando...</span>
                                             </div>
-                                            <div className="stat-value">SH-XXXX-8821</div>
-                                        </div>
-                                    </motion.div>
 
-                                    <div className="terminal-footer">
-                                        <ChevronRight size={14} className="prompt-icon" />
-                                        <span className="prompt-text">Aguardando novo comando...</span>
-                                    </div>
-                                </div>
+                                            {/* APPROVED COMMUNITY MESSAGES */}
+                                            {communityMessages.length > 0 && (
+                                                <div className="community-section">
+                                                    <div className="section-header">
+                                                        <Terminal size={12} />
+                                                        <span>COMUNIDADE_RESPONSES</span>
+                                                    </div>
+                                                    <div className="messages-list">
+                                                        {communityMessages.map((msg, i) => (
+                                                            <div key={i} className="comm-msg">
+                                                                <span className="comm-user">{msg.username}</span>
+                                                                <span className="comm-sep">:</span>
+                                                                <span className="comm-text">{msg.message}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    ) : activeTab === 'community' ? (
+                                        <motion.div
+                                            key="community-input"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="community-form-container"
+                                        >
+                                            <div className="form-header">
+                                                <h3>CONTRIBUIÇÃO AO LOG</h3>
+                                                <p>Sua mensagem será revisada e poderá ser exibida permanentemente no log secreto.</p>
+                                            </div>
+                                            <form onSubmit={handleSendMessage} className="shura-form">
+                                                <textarea
+                                                    value={userMessage}
+                                                    onChange={(e) => setUserMessage(e.target.value)}
+                                                    placeholder="Digite sua reflexão, código ou mensagem para o log..."
+                                                    maxLength={500}
+                                                />
+                                                <button type="submit" disabled={isSubmitting || !userMessage.trim()}>
+                                                    {isSubmitting ? 'TRANSMITINDO...' : (
+                                                        <>
+                                                            <Send size={16} />
+                                                            ENVIAR MENSAGEM
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </form>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="visual-content"
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 1.05 }}
+                                            className="visual-archive"
+                                        >
+                                            <div className="archive-frame">
+                                                <div className="glitch-overlay" />
+                                                <img
+                                                    src="/shura-visual.jpg"
+                                                    alt="ARCHIVE_01"
+                                                    className="archive-img"
+                                                />
+                                                <div className="img-metadata">
+                                                    <div className="meta-tag">ENCRYPTED_MEDIA</div>
+                                                    <div className="meta-tag">SOURCE: UNKNOWN</div>
+                                                    <div className="meta-tag">LOC: SINOP_SURREAL</div>
+                                                </div>
+                                            </div>
+                                            <div className="warning-box">
+                                                <AlertTriangle size={18} />
+                                                <span>Aviso: Arquivo visual detectado com resquícios de psicodelia urbana.</span>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </motion.div>
                     )}
@@ -436,7 +573,13 @@ Continue explorando, continue questionando.
                     opacity: 0.3;
                     border-left: 1px solid rgba(255, 255, 255, 0.05);
                     border-right: 1px solid rgba(255, 255, 255, 0.05);
-                    cursor: default;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .tab:hover {
+                    opacity: 0.6;
+                    background: rgba(255, 255, 255, 0.02);
                 }
 
                 .tab.active {
@@ -538,6 +681,179 @@ Continue explorando, continue questionando.
                 .stat-value {
                     font-size: 16px;
                     font-weight: bold;
+                }
+
+                /* Visual Archive */
+                .visual-archive {
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                }
+
+                .archive-frame {
+                    position: relative;
+                    flex: 1;
+                    min-height: 300px;
+                    border: 1px solid rgba(0, 255, 65, 0.2);
+                    border-radius: 4px;
+                    overflow: hidden;
+                    background: black;
+                }
+
+                .archive-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    filter: contrast(1.1) brightness(0.9) hue-rotate(-5deg);
+                }
+
+                .glitch-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(0deg, rgba(0, 255, 65, 0.05) 0%, transparent 100%);
+                    z-index: 5;
+                    pointer-events: none;
+                }
+
+                .img-metadata {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    padding: 12px;
+                    display: flex;
+                    gap: 16px;
+                    border-top: 1px solid rgba(0, 255, 65, 0.2);
+                }
+
+                .meta-tag {
+                    font-size: 10px;
+                    background: rgba(0, 255, 65, 0.1);
+                    padding: 4px 8px;
+                    border: 1px solid rgba(0, 255, 65, 0.2);
+                    border-radius: 2px;
+                }
+
+                .warning-box {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 16px;
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    border-radius: 4px;
+                    color: #ef4444;
+                    font-size: 12px;
+                }
+
+                /* Community Section in Log */
+                .community-section {
+                    margin-top: 40px;
+                    border-top: 1px dashed rgba(0, 255, 65, 0.2);
+                    padding-top: 24px;
+                }
+
+                .section-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 10px;
+                    color: var(--accent-color);
+                    margin-bottom: 16px;
+                    opacity: 0.8;
+                }
+
+                .messages-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .comm-msg {
+                    font-size: 13px;
+                    line-height: 1.4;
+                }
+
+                .comm-user {
+                    color: #fff;
+                    font-weight: bold;
+                }
+
+                .comm-sep {
+                    color: var(--accent-color);
+                    margin: 0 8px;
+                }
+
+                .comm-text {
+                    color: rgba(0, 255, 65, 0.8);
+                }
+
+                /* Community Form */
+                .community-form-container {
+                    padding: 20px;
+                }
+
+                .form-header h3 {
+                    font-size: 18px;
+                    margin: 0 0 8px;
+                    color: var(--accent-color);
+                }
+
+                .form-header p {
+                    font-size: 13px;
+                    color: var(--secondary-text);
+                    margin-bottom: 24px;
+                }
+
+                .shura-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+
+                .shura-form textarea {
+                    background: rgba(0, 0, 0, 0.5);
+                    border: 1px solid rgba(0, 255, 65, 0.3);
+                    border-radius: 8px;
+                    padding: 16px;
+                    color: var(--accent-color);
+                    font-family: 'JetBrains Mono', monospace;
+                    min-height: 150px;
+                    outline: none;
+                    transition: all 0.2s;
+                    resize: none;
+                }
+
+                .shura-form textarea:focus {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+                }
+
+                .shura-form button {
+                    align-self: flex-end;
+                    background: var(--accent-color);
+                    color: black;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .shura-form button:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0, 255, 65, 0.4);
+                }
+
+                .shura-form button:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
                 }
 
                 .terminal-footer {

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import * as adminController from '../controllers/adminController.js';
+import * as shuraController from '../controllers/shuraController.js';
 import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 
 import { limiter } from '../middleware/rateLimit.js';
@@ -12,5 +13,10 @@ app.post('/admin/reset-password', authMiddleware, requireAdmin, adminController.
 app.delete('/admin/users/:userId', authMiddleware, requireAdmin, adminController.banUser);
 app.post('/admin/toggle-role', authMiddleware, requireAdmin, adminController.toggleAdmin);
 app.get('/admin/logs', authMiddleware, requireAdmin, adminController.getLogs);
+
+// Admin Shura Messages Management
+app.get('/admin/shura/messages', authMiddleware, requireAdmin, shuraController.getAllShuraMessages);
+app.post('/admin/shura/messages/toggle-approve', authMiddleware, requireAdmin, shuraController.toggleApproveShuraMessage);
+app.delete('/admin/shura/messages/:id', authMiddleware, requireAdmin, shuraController.deleteShuraMessage);
 
 export default app;

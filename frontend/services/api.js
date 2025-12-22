@@ -262,4 +262,13 @@ export const discoverLogs = (userId) => {
     return api.post(`/api/users/${userId}/discover-logs`);
 };
 
+// Shura Messages
+export const fetchApprovedShuraMessages = () => api.get('/api/shura/messages/approved');
+export const submitShuraMessage = (message) => api.post('/api/shura/messages', { message });
+
+// Admin Shura Management
+export const fetchAllShuraMessages = () => api.get('/api/admin/shura/messages');
+export const toggleApproveShuraMessage = (id, approved) => api.post('/api/admin/shura/messages/toggle-approve', { id, approved });
+export const deleteShuraMessage = (id) => api.delete(`/api/admin/shura/messages/${id}`);
+
 export default api;

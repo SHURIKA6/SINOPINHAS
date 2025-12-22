@@ -131,6 +131,14 @@ export const SCHEMA_QUERIES = [
     "CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)",
     "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)",
 
+    // Tabela de Mensagens do Shura Logs
+    `CREATE TABLE IF NOT EXISTS shura_messages (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        is_approved BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
     // Tabela de Subscrições Push
     `CREATE TABLE IF NOT EXISTS push_subscriptions (
         id SERIAL PRIMARY KEY,

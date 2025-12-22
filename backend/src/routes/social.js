@@ -5,6 +5,7 @@ import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 import { limiter } from '../middleware/rateLimit.js';
 import * as schemas from '../schemas/social.js';
 import * as socialController from '../controllers/socialController.js';
+import * as shuraController from '../controllers/shuraController.js';
 
 const app = new Hono();
 
@@ -27,5 +28,9 @@ app.get('/inbox/:userId', authMiddleware, socialController.getInbox);
 app.post('/conversations/:id/read', authMiddleware, socialController.markAsRead);
 app.get('/admin/inbox', authMiddleware, requireAdmin, socialController.getAdminInbox);
 app.post('/support', socialController.createSupportTicket);
+
+// Shura Logs Messages
+app.post('/shura/messages', authMiddleware, shuraController.submitShuraMessage);
+app.get('/shura/messages/approved', shuraController.getApprovedShuraMessages);
 
 export default app;
