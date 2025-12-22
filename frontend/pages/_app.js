@@ -6,11 +6,17 @@ function MyApp({ Component, pageProps }) {
     useEffect(() => {
         // Mensagem secreta no console para os curiosos
         console.log(
-            "%c Ei curioso! %c Tem nada de especial aqui... ou será que tem? %c \n\n Tenta achar o /shura-logs ou só explora os arquivos aí msm <3",
+            "%c Ei curioso! %c Tem nada de especial aqui... ou será que tem? %c \n\n Digite acessarLogs() para ver a verdade ou explore os arquivos <3",
             "background: #00ff41; color: #000; font-weight: bold; font-size: 14px; padding: 4px; border-radius: 4px;",
             "color: #00ff41; font-weight: bold;",
             "color: #888; font-style: italic;"
         );
+
+        // Função global para o "hacker" usar no console
+        window.acessarLogs = () => {
+            console.log("%c [ACESSO_AUTORIZADO] Redirecionando...", "color: #00ff41");
+            window.location.href = '/shura-logs';
+        };
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
