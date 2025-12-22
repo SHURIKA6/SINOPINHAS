@@ -6,7 +6,7 @@ export const subscribe = async (c) => {
     const env = c.env;
     const payload = c.get('jwtPayload');
 
-    if (!payload?.id) {
+    if (payload?.id === undefined || payload?.id === null) {
         return createErrorResponse(c, "UNAUTHORIZED", "Login necessário", 401);
     }
 

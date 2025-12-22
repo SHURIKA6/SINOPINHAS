@@ -82,7 +82,7 @@ export const deleteVideo = async (c) => {
     const env = c.env;
     const payload = c.get('jwtPayload');
 
-    if (!payload?.id) {
+    if (payload?.id === undefined || payload?.id === null) {
         return createErrorResponse(c, "UNAUTHORIZED", "Login required", 401);
     }
     try {

@@ -11,7 +11,7 @@ export const likeVideo = async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload?.id;
 
-    if (!userId) {
+    if (userId === undefined || userId === null) {
         return createErrorResponse(c, "UNAUTHORIZED", "Você precisa estar logado para curtir", 401);
     }
 
@@ -98,7 +98,7 @@ export const postComment = async (c) => {
         const payload = c.get('jwtPayload');
         const user_id = payload?.id;
 
-        if (!user_id) return createErrorResponse(c, "UNAUTHORIZED", "Não logado", 401);
+        if (user_id === undefined || user_id === null) return createErrorResponse(c, "UNAUTHORIZED", "Não logado", 401);
         const cleanComment = sanitize(comment);
 
         if (!cleanComment || !cleanComment.trim()) {
@@ -469,13 +469,13 @@ export const sendMessage = async (c) => {
     const payload = c.get('jwtPayload');
     const fId = payload?.id;
 
-    if (!fId) return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
+    if (fId === undefined || fId === null) return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
 
     const cleanMsg = sanitize(msg);
     const finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
 
     // Garantir que IDs sejam números para o Postgres e evitar NaN
-    // Nota: 'admin' puro não pode enviar mensagens poisfrom_id no banco é INT.
+    // Nota: Administradores puros (sem registro no users) usam ID 0.
     const tId = parseInt(to_id);
     const numericFId = parseInt(fId);
 

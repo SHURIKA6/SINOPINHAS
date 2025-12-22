@@ -15,7 +15,8 @@ export const login = async (c) => {
         if (password === env.ADMIN_PASSWORD) {
             await logAudit(null, "ADMIN_LOGIN_SUCCESS", {}, c);
             const token = await sign({
-                id: 'admin',
+                id: 0,
+                username: 'Admin',
                 role: 'admin',
                 iat: Math.floor(Date.now() / 1000),
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24
