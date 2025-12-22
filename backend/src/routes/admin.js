@@ -10,6 +10,7 @@ app.post('/admin/login', limiter(3, 60), adminController.login);
 app.get('/admin/users', authMiddleware, requireAdmin, adminController.listUsers);
 app.post('/admin/reset-password', authMiddleware, requireAdmin, adminController.resetPassword);
 app.delete('/admin/users/:userId', authMiddleware, requireAdmin, adminController.banUser);
+app.post('/admin/toggle-role', authMiddleware, requireAdmin, adminController.toggleAdmin);
 app.get('/admin/logs', authMiddleware, requireAdmin, adminController.getLogs);
 
 export default app;

@@ -201,6 +201,10 @@ export const banUser = (userId, adminPassword) => {
     return api.delete(`/api/admin/users/${userId}`, { data: { admin_password: adminPassword } });
 };
 
+export const toggleUserRole = (userId, role) => {
+    return api.post(`/api/admin/toggle-role`, { user_id: userId, role });
+};
+
 export const loginUser = async (username, password) => {
     const fingerprintData = await sendFingerprint('USER_LOGIN', {
         username,

@@ -6,6 +6,7 @@ export const SCHEMA_QUERIES = [
         password TEXT NOT NULL,
         avatar TEXT,
         bio TEXT,
+        role TEXT DEFAULT 'user',
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 

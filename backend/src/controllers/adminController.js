@@ -37,7 +37,7 @@ export const listUsers = async (c) => {
     const env = c.env;
     try {
         const { rows } = await queryDB(
-            "SELECT id, username, created_at FROM users ORDER BY created_at DESC",
+            "SELECT id, username, role, created_at FROM users ORDER BY created_at DESC",
             [],
             env
         );
@@ -75,6 +75,34 @@ export const banUser = async (c) => {
         return createResponse(c, { success: true });
     } catch (err) {
         return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao banir usuário", 500);
+    }
+};
+
+// Alternar status de admin de um usuário
+export const toggleAdmin = async (c) => {
+    const env = c.env;
+    try {
+        const { user_id, role } = await c.req.json();
+
+        // Impede que o admin se auto-desbaixe se quisermos (opcional)
+        // Mas aqui vamos permitir setar role ('admin' ou 'user')
+        const newRole = role === 'admin' ? 'admin' : 'user';
+
+        const { rows } = await queryDB(
+            "UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role",
+            [newRole, user_id],
+            env
+        );
+
+        if (rows.length === 0) {
+            return createErrorResponse(c, "NOT_FOUND", "Usuário não encontrado", 404);
+        }
+
+        await logAudit(null, "ADMIN_ROLE_CHANGED", { target_user: rows[0].username, new_role: newRole }, c);
+
+        return createResponse(c, { success: true, user: rows[0] });
+    } catch (err) {
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao alterar privilégios", 500);
     }
 };
 

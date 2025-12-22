@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchUsers, fetchLogs, resetUserPassword, banUser } from '../../services/api';
+import { fetchUsers, fetchLogs, resetUserPassword, banUser, toggleUserRole } from '../../services/api';
 
 export default function AdminPanel({ adminPassword, showToast }) {
     const [usersList, setUsersList] = useState([]);
@@ -58,6 +58,20 @@ export default function AdminPanel({ adminPassword, showToast }) {
         } catch (err) { showToast(err.message || 'Erro ao banir', 'error'); }
     };
 
+    const handleToggleRole = async (userId, currentRole) => {
+        const newRole = currentRole === 'admin' ? 'user' : 'admin';
+        const msg = newRole === 'admin' ? 'Promover este usuário a ADMIN?' : 'Remover privilégios de ADMIN deste usuário?';
+        if (!confirm(msg)) return;
+
+        try {
+            await toggleUserRole(userId, newRole);
+            showToast(`Usuário ${newRole === 'admin' ? 'promovido' : 'rebaixado'} com sucesso!`, 'success');
+            loadUsers();
+        } catch (err) {
+            showToast(err.message || 'Erro ao alterar cargo', 'error');
+        }
+    };
+
     return (
         <div style={{ color: 'var(--text-color)' }}>
             <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>🛡️ Painel Admin</h2>
@@ -92,6 +106,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
                             <tr style={{ background: 'var(--input-bg)' }}>
                                 <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>ID</th>
                                 <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Usuário</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Cargo</th>
                                 <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ações</th>
                             </tr>
                         </thead>
@@ -100,7 +115,27 @@ export default function AdminPanel({ adminPassword, showToast }) {
                                 <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: 12 }}>#{u.id}</td>
                                     <td style={{ padding: 12 }}>{u.username}</td>
+                                    <td style={{ padding: 12 }}>
+                                        <span style={{
+                                            padding: '2px 8px',
+                                            background: u.role === 'admin' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                            color: u.role === 'admin' ? '#10b981' : 'inherit',
+                                            borderRadius: 4,
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {u.role || 'user'}
+                                        </span>
+                                    </td>
                                     <td style={{ padding: 12, display: 'flex', gap: 8 }}>
+                                        <button onClick={() => handleToggleRole(u.id, u.role)} style={{
+                                            padding: '6px 12px',
+                                            background: u.role === 'admin' ? '#6366f1' : '#8b5cf6',
+                                            color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13
+                                        }}>
+                                            {u.role === 'admin' ? 'Tirar Admin' : 'Dar Admin'}
+                                        </button>
                                         <button onClick={() => handleResetPassword(u.id)} style={{ padding: '6px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
                                             Resetar Senha
                                         </button>

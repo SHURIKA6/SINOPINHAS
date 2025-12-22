@@ -30,7 +30,7 @@ export const register = async (c) => {
 
         const hashedPassword = await hash(password);
         const { rows } = await queryDB(
-            "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, avatar, bio",
+            "INSERT INTO users (username, password, role) VALUES ($1, $2, 'user') RETURNING id, username, avatar, bio, role",
             [username, hashedPassword],
             env
         );
@@ -43,7 +43,7 @@ export const register = async (c) => {
         const token = await sign({
             id: user.id,
             username: user.username,
-            role: 'user',
+            role: user.role || 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
         }, env.JWT_SECRET || 'development_secret_123');
 
@@ -92,7 +92,7 @@ export const login = async (c) => {
         const token = await sign({
             id: user.id,
             username: user.username,
-            role: 'user',
+            role: user.role || 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
         }, env.JWT_SECRET || 'development_secret_123');
 
@@ -102,6 +102,7 @@ export const login = async (c) => {
                 username: user.username,
                 avatar: user.avatar,
                 bio: user.bio,
+                role: user.role || 'user'
             },
             token
         });
