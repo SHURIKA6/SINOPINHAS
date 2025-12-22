@@ -17,11 +17,17 @@ export const subscribe = async (c) => {
             return createErrorResponse(c, "INVALID_INPUT", "Subscrição é obrigatória", 400);
         }
 
+        const endpoint = subscription.endpoint;
+
         await queryDB(
-            `INSERT INTO push_subscriptions (user_id, subscription, device_info)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (user_id, subscription) DO NOTHING`,
-            [payload.id, JSON.stringify(subscription), JSON.stringify(deviceInfo || {})],
+            `INSERT INTO push_subscriptions (user_id, endpoint, subscription, device_info)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (endpoint) DO UPDATE 
+             SET user_id = EXCLUDED.user_id,
+                 subscription = EXCLUDED.subscription,
+                 device_info = EXCLUDED.device_info,
+                 created_at = NOW()`,
+            [payload.id, endpoint, JSON.stringify(subscription), JSON.stringify(deviceInfo || {})],
             env
         );
 
@@ -37,11 +43,12 @@ export const unsubscribe = async (c) => {
     const env = c.env;
     try {
         const { subscription } = await c.req.json();
-        if (!subscription) return createResponse(c, { success: true });
+        const endpoint = subscription?.endpoint;
+        if (!endpoint) return createResponse(c, { success: true });
 
         await queryDB(
-            "DELETE FROM push_subscriptions WHERE subscription = $1",
-            [JSON.stringify(subscription)],
+            "DELETE FROM push_subscriptions WHERE endpoint = $1",
+            [endpoint],
             env
         );
 

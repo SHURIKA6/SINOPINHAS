@@ -134,11 +134,13 @@ export const SCHEMA_QUERIES = [
     `CREATE TABLE IF NOT EXISTS push_subscriptions (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        endpoint TEXT UNIQUE,
         subscription JSONB NOT NULL,
         device_info JSONB,
-        created_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(user_id, subscription)
+        created_at TIMESTAMP DEFAULT NOW()
     )`,
+    "ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS endpoint TEXT",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint)",
     "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id)",
