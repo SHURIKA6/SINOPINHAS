@@ -28,6 +28,7 @@ import Toast from '../components/common/Toast';
 import CommentsDrawer from '../components/feed/CommentsDrawer';
 import PublicProfileModal from '../components/modals/PublicProfileModal';
 import AchievementUsersModal from '../components/modals/AchievementUsersModal';
+import PhotoZoomModal from '../components/modals/PhotoZoomModal';
 
 import {
   logTermsAcceptance,
@@ -88,6 +89,7 @@ export default function Home({ initialVideo }) {
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [zoomedPhoto, setZoomedPhoto] = useState(null);
   const router = useRouter();
   const [activeTab, setActiveTabState] = useState('feed');
 
@@ -158,6 +160,7 @@ export default function Home({ initialVideo }) {
     window.subscribeToPush = subscribeToNotifications;
     window.openPublicProfile = (id) => setPublicProfileId(id);
     window.openAchievementList = (ach) => setAchievementToList(ach);
+    window.openPhotoZoom = (photo) => setZoomedPhoto(photo);
     window.openChatWithUser = (id) => {
       setActiveTab('inbox');
       // Precisa passar o ID para o componente Inbox de alguma forma, 
@@ -305,6 +308,15 @@ export default function Home({ initialVideo }) {
               setAchievementToList(null);
               setPublicProfileId(id);
             }}
+          />
+        )}
+
+        {zoomedPhoto && (
+          <PhotoZoomModal
+            isOpen={!!zoomedPhoto}
+            photoUrl={zoomedPhoto.video_url || zoomedPhoto.url}
+            title={zoomedPhoto.title}
+            onClose={() => setZoomedPhoto(null)}
           />
         )}
 

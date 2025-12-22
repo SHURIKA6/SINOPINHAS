@@ -113,7 +113,16 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                             src={video.video_url}
                             alt={video.title}
                             loading="lazy"
-                            style={{ width: "100%", height: "100%", objectFit: 'contain' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.openPhotoZoom) window.openPhotoZoom(video);
+                            }}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: 'contain',
+                                cursor: 'zoom-in'
+                            }}
                         />
                     ) : (
                         <video
