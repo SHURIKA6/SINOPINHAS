@@ -26,12 +26,29 @@ export function useComments(showToast, user, isAdmin, adminPassword) {
         }
         if (!text.trim()) return false;
 
+        const optimisticComment = {
+            id: `temp-${Date.now()}`,
+            video_id: videoId,
+            user_id: user.id,
+            comment: text,
+            username: user.username,
+            avatar: user.avatar,
+            created_at: new Date().toISOString(),
+            isOptimistic: true
+        };
+
+        // Adiciona imediatamente ao estado (Optimistic UI)
+        setComments(prev => [optimisticComment, ...prev]);
+
         try {
             await postComment(videoId, user.id, text);
-            await loadComments(videoId); // Reload
+            // Recarrega para obter o ID real e timestamp do banco
+            await loadComments(videoId);
             showToast('Comentário enviado!', 'success');
             return true;
         } catch (err) {
+            // Reverte em caso de erro
+            setComments(prev => prev.filter(c => c.id !== optimisticComment.id));
             showToast(err.message || 'Erro ao comentar', 'error');
             return false;
         }

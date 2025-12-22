@@ -121,23 +121,27 @@ export const postComment = async (c) => {
             env
         );
 
-        const { rows: video } = await queryDB("SELECT user_id FROM videos WHERE id = $1", [video_id], env);
-
-        if (video.length > 0 && video[0].user_id !== user_id) {
-            await queryDB(
-                "INSERT INTO notifications (user_id, type, related_id, message) VALUES ($1, $2, $3, $4)",
-                [video[0].user_id, "comment", video_id, "Novo comentário no seu vídeo"],
-                env
-            );
-
-            // Notificação Push em Segundo Plano
-            c.executionCtx.waitUntil(notifyUser(
-                video[0].user_id,
-                "Novo Comentário! 💬",
-                "Alguém comentou no seu vídeo no SINOPINHAS.",
-                env
-            ));
-        }
+        // Processamento de notificações em segundo plano (não bloqueia a resposta)
+        c.executionCtx.waitUntil((async () => {
+            try {
+                const { rows: video } = await queryDB("SELECT user_id FROM videos WHERE id = $1", [video_id], env);
+                if (video.length > 0 && video[0].user_id !== user_id) {
+                    await queryDB(
+                        "INSERT INTO notifications (user_id, type, related_id, message) VALUES ($1, $2, $3, $4)",
+                        [video[0].user_id, "comment", video_id, "Novo comentário no seu vídeo"],
+                        env
+                    );
+                    await notifyUser(
+                        video[0].user_id,
+                        "Novo Comentário! 💬",
+                        "Alguém comentou no seu vídeo no SINOPINHAS.",
+                        env
+                    );
+                }
+            } catch (notifyErr) {
+                console.error("Error sending background notification:", notifyErr);
+            }
+        })());
 
         return createResponse(c, { success: true });
     } catch (err) {
