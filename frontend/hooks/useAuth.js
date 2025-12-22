@@ -40,6 +40,16 @@ export function useAuth(showToast) {
         checkAuth();
     }, []);
 
+    // Sync isAdmin with user role
+    useEffect(() => {
+        if (user?.role === 'admin') {
+            setIsAdmin(true);
+        } else if (!adminPassword) {
+            // Se não logou manualmente com senha mestre, e não é role admin, reseta
+            setIsAdmin(false);
+        }
+    }, [user?.role, adminPassword]);
+
     // Polling para Notificações (Simulação de Real-time)
     useEffect(() => {
         if (!user) return;
@@ -70,6 +80,7 @@ export function useAuth(showToast) {
 
     const handleAuthSuccess = (userData) => {
         setUser(userData);
+        if (userData.role === 'admin') setIsAdmin(true);
         localStorage.setItem('user', JSON.stringify(userData));
         if (userData.id) loadNotifications(userData.id);
         showToast(`Bem-vindo, ${userData.username}!`, 'success');
@@ -85,6 +96,8 @@ export function useAuth(showToast) {
 
     const logout = () => {
         setUser(null);
+        setIsAdmin(false);
+        setAdminPassword('');
         localStorage.removeItem('user');
         localStorage.removeItem('token'); // Clear token on full logout
         setUnreadCount(0);

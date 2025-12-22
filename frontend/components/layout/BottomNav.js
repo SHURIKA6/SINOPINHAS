@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import {
     LayoutGrid, Newspaper, Calendar,
-    Plus, MessageCircle, MapPin, CloudSun
+    Plus, MessageCircle, MapPin, CloudSun, Settings
 } from 'lucide-react';
 
 export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin }) {
@@ -11,7 +11,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
         { id: 'eventos', label: 'Eventos', icon: <Calendar size={22} /> },
         { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
         { id: 'inbox', label: 'Chat', icon: <MessageCircle size={22} />, badge: unreadCount },
-        { id: 'lugares', label: 'Lugares', icon: <MapPin size={22} /> },
+        isAdmin ? { id: 'admin', label: 'Painel', icon: <Settings size={22} /> } : { id: 'lugares', label: 'Lugares', icon: <MapPin size={22} /> },
         { id: 'weather', label: 'Clima', icon: <CloudSun size={22} /> },
     ];
 
