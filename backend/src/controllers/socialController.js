@@ -8,16 +8,14 @@ import { notifyUser } from '../utils/push-utils.js';
 export const likeVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
-    let userId = null;
+    const payload = c.get('jwtPayload');
+    const userId = payload?.id;
+
+    if (!userId) {
+        return createErrorResponse(c, "UNAUTHORIZED", "Você precisa estar logado para curtir", 401);
+    }
 
     try {
-        const body = await c.req.json();
-        userId = body.user_id;
-
-        if (!userId) {
-            return createErrorResponse(c, "REQUIRED_USER", "Identificação do usuário necessária", 400);
-        }
-
         const { rows: existing } = await queryDB(
             "SELECT * FROM likes WHERE video_id = $1 AND user_id = $2",
             [videoId, userId],
@@ -96,7 +94,11 @@ export const viewVideo = async (c) => {
 export const postComment = async (c) => {
     const env = c.env;
     try {
-        const { video_id, user_id, comment } = await c.req.json();
+        const { video_id, comment } = await c.req.json();
+        const payload = c.get('jwtPayload');
+        const user_id = payload?.id;
+
+        if (!user_id) return createErrorResponse(c, "UNAUTHORIZED", "Não logado", 401);
         const cleanComment = sanitize(comment);
 
         if (!cleanComment || !cleanComment.trim()) {
@@ -253,13 +255,15 @@ export const deleteComment = async (c) => {
     const env = c.env;
     try {
         const body = await c.req.json().catch(() => ({}));
-        const { user_id, admin_password } = body;
-        const isAdmin = admin_password && admin_password === env.ADMIN_PASSWORD;
+        const { admin_password } = body;
+        const payload = c.get('jwtPayload');
+        const current_user_id = payload?.id;
+        const isAdmin = (admin_password && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
 
         if (!isAdmin) {
             const { rows } = await queryDB("SELECT user_id FROM comments WHERE id = $1", [commentId], env);
-            if (rows.length === 0 || rows[0].user_id !== user_id) {
-                return createErrorResponse(c, "FORBIDDEN", "Não autorizado", 403);
+            if (rows.length === 0 || rows[0].user_id !== current_user_id) {
+                return createErrorResponse(c, "FORBIDDEN", "Não autorizado para deletar este comentário", 403);
             }
         }
 
@@ -272,14 +276,20 @@ export const deleteComment = async (c) => {
 
 // Buscar notificações
 export const getNotifications = async (c) => {
-    const userId = c.req.param("userId");
+    const userIdParam = c.req.param("userId");
     const env = c.env;
-    if (!userId) return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' inválido", 400);
+    const payload = c.get('jwtPayload');
+    const authId = payload?.id;
+
+    // Segurança: Usuário só vê suas próprias notificações (ou admin)
+    if (authId?.toString() !== userIdParam?.toString() && payload?.role !== 'admin') {
+        return createErrorResponse(c, "FORBIDDEN", "Acesso negado às notificações", 403);
+    }
 
     try {
         const { rows } = await queryDB(
             "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
-            [userId],
+            [authId],
             env
         );
         return createResponse(c, rows);
@@ -450,9 +460,14 @@ export const sendMessage = async (c) => {
         return createErrorResponse(c, "INVALID_JSON", "Corpo da requisição inválido", 400);
     }
 
-    const { from_id, to_id, msg, admin_password, is_admin } = body;
+    const { to_id, msg, admin_password, is_admin } = body;
+    const payload = c.get('jwtPayload');
+    const fId = payload?.id;
+
+    if (!fId) return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
+
     const cleanMsg = sanitize(msg);
-    const finalIsAdmin = !!(is_admin && admin_password === env.ADMIN_PASSWORD);
+    const finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
 
     // Garantir que IDs sejam números para o Postgres e evitar NaN
     const fId = parseInt(from_id);
@@ -549,11 +564,11 @@ export const markAsRead = async (c) => {
     const fromId = c.req.param("id");
     const env = c.env;
     try {
-        const body = await c.req.json();
-        const userId = body.userId;
+        const payload = c.get('jwtPayload');
+        const userId = payload?.id;
 
         if (!userId) {
-            return createErrorResponse(c, "INVALID_PARAM", "userId não fornecido no corpo da requisição", 400);
+            return createErrorResponse(c, "UNAUTHORIZED", "Não logado", 401);
         }
 
         await queryDB(
@@ -604,9 +619,17 @@ export const markAsRead = async (c) => {
 
 // Buscar mensagens (Privado)
 export const getInbox = async (c) => {
-    const userId = c.req.param("userId");
+    const userIdParam = c.req.param("userId");
     const env = c.env;
-    if (!userId) return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' inválido", 400);
+    const payload = c.get('jwtPayload');
+    const authId = payload?.id;
+
+    // Segurança: Só pode ver o próprio inbox
+    if (authId?.toString() !== userIdParam?.toString() && payload?.role !== 'admin') {
+        return createErrorResponse(c, "FORBIDDEN", "Acesso negado ao chat", 403);
+    }
+
+    if (!userIdParam) return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' inválido", 400);
 
     try {
         const { rows } = await queryDB(

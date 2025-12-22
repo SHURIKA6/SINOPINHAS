@@ -138,5 +138,10 @@ export const SCHEMA_QUERIES = [
         device_info JSONB,
         created_at TIMESTAMP DEFAULT NOW(),
         UNIQUE(user_id, subscription)
-    )`
+    )`,
+    "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_messages_users ON messages(from_id, to_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)"
 ];
