@@ -31,10 +31,10 @@ PRESS ENTER TO FINALIZE...
         let i = 0;
         let currentText = "";
         const speed = 20;
+        console.log("%c [SISTEMA V4.0] Iniciando descriptografia...", "color: #00ff41; font-weight: bold;");
 
         const typingInterval = setInterval(() => {
             if (i < bio.length) {
-                if (i === 0) console.log("%c [SISTEMA] Descriptografando perfil...", "color: #888");
                 i++;
             } else {
                 clearInterval(typingInterval);
