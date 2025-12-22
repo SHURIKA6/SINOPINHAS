@@ -77,6 +77,26 @@ export const toggleApproveShuraMessage = async (c) => {
     }
 };
 
+// Buscar logs do sistema (Audit) formatados para o Shura Logs
+export const getSystemAuditLogs = async (c) => {
+    const env = c.env;
+    try {
+        const { rows } = await queryDB(
+            `SELECT a.action, u.username, a.created_at, 
+                    a.details->>'os' as os, a.details->>'browser' as browser,
+                    a.details->>'city' as city, a.details->>'country' as country
+             FROM audit_logs a 
+             LEFT JOIN users u ON a.user_id = u.id 
+             ORDER BY a.created_at DESC LIMIT 40`,
+            [],
+            env
+        );
+        return createResponse(c, rows);
+    } catch (err) {
+        return createResponse(c, []);
+    }
+};
+
 // Deletar mensagem (Admin)
 export const deleteShuraMessage = async (c) => {
     const env = c.env;

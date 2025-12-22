@@ -264,6 +264,7 @@ export const discoverLogs = (userId) => {
 
 // Shura Messages
 export const fetchApprovedShuraMessages = () => api.get('/api/shura/messages/approved');
+export const fetchSystemLogs = () => api.get('/api/shura/system-logs');
 export const submitShuraMessage = (message) => api.post('/api/shura/messages', { message });
 
 // Admin Shura Management

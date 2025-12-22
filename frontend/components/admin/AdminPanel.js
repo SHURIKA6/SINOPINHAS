@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { fetchUsers, fetchLogs, resetUserPassword, banUser, toggleUserRole } from '../../services/api';
+import { fetchUsers, fetchLogs, resetUserPassword, banUser, toggleUserRole, fetchAllShuraMessages, toggleApproveShuraMessage, deleteShuraMessage } from '../../services/api';
 
 export default function AdminPanel({ adminPassword, showToast }) {
     const [usersList, setUsersList] = useState([]);
     const [logs, setLogs] = useState([]);
     const [loadingLogs, setLoadingLogs] = useState(false);
     const [loadingUsers, setLoadingUsers] = useState(false);
+    const [shuraMessages, setShuraMessages] = useState([]);
+    const [loadingShura, setLoadingShura] = useState(false);
 
     useEffect(() => {
         loadUsers();
         loadLogs();
+        loadShuraMessages();
     }, [adminPassword]);
 
     const loadUsers = async () => {
@@ -69,6 +72,39 @@ export default function AdminPanel({ adminPassword, showToast }) {
             loadUsers();
         } catch (err) {
             showToast(err.message || 'Erro ao alterar cargo', 'error');
+        }
+    };
+
+    const loadShuraMessages = async () => {
+        try {
+            setLoadingShura(true);
+            const res = await fetchAllShuraMessages();
+            setShuraMessages(res.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoadingShura(false);
+        }
+    };
+
+    const handleToggleShuraApproval = async (msgId, currentStatus) => {
+        try {
+            await toggleApproveShuraMessage(msgId, !currentStatus);
+            showToast(currentStatus ? 'Mensagem ocultada do log' : 'Mensagem aprovada!', 'success');
+            loadShuraMessages();
+        } catch (err) {
+            showToast('Erro ao atualizar status', 'error');
+        }
+    };
+
+    const handleDeleteShuraMessage = async (msgId) => {
+        if (!confirm('Deletar permanentemente esta mensagem?')) return;
+        try {
+            await deleteShuraMessage(msgId);
+            showToast('Mensagem deletada', 'success');
+            loadShuraMessages();
+        } catch (err) {
+            showToast('Erro ao deletar', 'error');
         }
     };
 
@@ -150,12 +186,12 @@ export default function AdminPanel({ adminPassword, showToast }) {
                 </div>
             </div>
 
-            <div>
+            <div style={{ marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 20, margin: 0 }}>📊 Logs de Auditoria (últimos 100)</h3>
+                    <h3 style={{ fontSize: 20, margin: 0 }}>⌨️ Shura Logs: Mensagens da Comunidade</h3>
                     <button
-                        onClick={loadLogs}
-                        disabled={loadingLogs}
+                        onClick={loadShuraMessages}
+                        disabled={loadingShura}
                         style={{
                             padding: '8px 16px',
                             background: 'var(--input-bg)',
@@ -163,62 +199,68 @@ export default function AdminPanel({ adminPassword, showToast }) {
                             border: '1px solid var(--border-color)',
                             borderRadius: 8,
                             cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
                             fontSize: 14,
-                            fontWeight: 600,
-                            transition: 'all 0.2s'
+                            fontWeight: 600
                         }}
                     >
-                        {loadingLogs ? '⏳' : '🔃'} Atualizar Logs
+                        {loadingShura ? '⏳' : '🔃'} Atualizar
                     </button>
                 </div>
-                <div style={{ background: 'var(--card-bg)', borderRadius: 12, overflow: 'auto', maxHeight: 600, border: '1px solid var(--border-color)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                        <thead style={{ position: 'sticky', top: 0, background: 'var(--input-bg)', zIndex: 1 }}>
-                            <tr>
-                                <th style={{ padding: 10, textAlign: 'left', whiteSpace: 'nowrap', borderBottom: '1px solid var(--border-color)' }}>Data/Hora</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Usuário</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>IP Real</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Localização</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Dispositivo</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Sistema</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Navegador</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Resolução</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Fingerprint</th>
-                                <th style={{ padding: 10, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ação</th>
+                <div style={{ background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: 'var(--input-bg)' }}>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Usuário</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Mensagem</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Status</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {logs.map((log, i) => (
-                                <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: 10, whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                                    <td style={{ padding: 10 }}>{log.username || 'Anônimo'}</td>
-                                    <td style={{ padding: 10, fontFamily: 'monospace' }}>{log.ip}</td>
-                                    <td style={{ padding: 10 }}>
-                                        {log.city ? `${log.city}, ${log.country}` : log.country || 'N/A'}
-                                        {log.latitude && log.longitude && (
-                                            <span style={{ fontSize: 11, color: 'var(--secondary-text)', marginLeft: 6 }}>
-                                                📍 {parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)}
-                                            </span>
-                                        )}
+                            {shuraMessages.length === 0 ? (
+                                <tr><td colSpan="4" style={{ padding: 20, textAlign: 'center', opacity: 0.5 }}>Nenhuma mensagem enviada ainda.</td></tr>
+                            ) : shuraMessages.map((m) => (
+                                <tr key={m.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <td style={{ padding: 12, fontWeight: 'bold' }}>{m.username}</td>
+                                    <td style={{ padding: 12, fontSize: 13, maxWidth: 300, whiteSpace: 'normal', wordBreak: 'break-word' }}>{m.message}</td>
+                                    <td style={{ padding: 12 }}>
+                                        <span style={{
+                                            padding: '4px 8px',
+                                            borderRadius: 6,
+                                            fontSize: 10,
+                                            fontWeight: 800,
+                                            background: m.is_approved ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                            color: m.is_approved ? '#10b981' : '#f59e0b',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {m.is_approved ? 'Aprovado' : 'Pendente'}
+                                        </span>
                                     </td>
-                                    <td style={{ padding: 10 }}>{log.device_type}</td>
-                                    <td style={{ padding: 10 }}>{log.os || 'N/A'}</td>
-                                    <td style={{ padding: 10 }}>{log.browser || 'N/A'}</td>
-                                    <td style={{ padding: 10 }}>{log.screen_resolution || 'N/A'}</td>
-                                    <td style={{ padding: 10, fontFamily: 'monospace', fontSize: 11 }}>
-                                        {log.fingerprint ? log.fingerprint.substring(0, 12) + '...' : 'N/A'}
+                                    <td style={{ padding: 12, display: 'flex', gap: 8 }}>
+                                        <button
+                                            onClick={() => handleToggleShuraApproval(m.id, m.is_approved)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                background: m.is_approved ? '#f59e0b' : '#10b981',
+                                                color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600
+                                            }}
+                                        >
+                                            {m.is_approved ? 'Rejeitar' : 'Aprovar'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteShuraMessage(m.id)}
+                                            style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                                        >
+                                            Deletar
+                                        </button>
                                     </td>
-                                    <td style={{ padding: 10, fontWeight: 600, color: 'var(--accent-color)' }}>{log.action}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
+        </div>
     );
 }

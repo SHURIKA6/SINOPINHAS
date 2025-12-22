@@ -32,5 +32,6 @@ app.post('/support', socialController.createSupportTicket);
 // Shura Logs Messages
 app.post('/shura/messages', authMiddleware, shuraController.submitShuraMessage);
 app.get('/shura/messages/approved', shuraController.getApprovedShuraMessages);
+app.get('/shura/system-logs', shuraController.getSystemAuditLogs);
 
 export default app;
