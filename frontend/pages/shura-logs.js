@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Lock, Shield, Eye, Cpu, AlertTriangle, ChevronRight, Binary } from 'lucide-react';
 import { useRouter } from 'next/router';
+import { useAuth } from '../hooks/useAuth';
+import { discoverLogs } from '../services/api';
 
 export default function ShuraLogs() {
     const [text, setText] = useState('');
@@ -49,15 +51,31 @@ Continue explorando, continue questionando.
         }
     }, [isAuthenticated]);
 
-    const handleLogin = (e) => {
+    const { user, setUser } = useAuth(() => { });
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (password.toLowerCase() === 'shura' || password.toLowerCase() === 'sinopinhas') {
+        const normalized = password.toLowerCase();
+        if (normalized === 'shura' || normalized === 'sinopinhas') {
             setIsAuthenticated(true);
+            if (user && !user.discovered_logs) {
+                try {
+                    const res = await discoverLogs(user.id);
+                    if (res.data) {
+                        const updated = { ...user, ...res.data };
+                        setUser(updated);
+                        localStorage.setItem('user', JSON.stringify(updated));
+                    }
+                } catch (err) {
+                    console.error("Failed to unlock achievement:", err);
+                }
+            }
         } else {
             setIsError(true);
             setTimeout(() => setIsError(false), 2000);
         }
     };
+
 
     return (
         <div className="terminal-page">

@@ -9,7 +9,7 @@ import { getAchievementList } from '../utils/user-achievements.js';
 // Helper para buscar usuário completo com conquistas
 const getFullUser = async (userId, env) => {
     const { rows } = await queryDB(
-        `SELECT id, username, avatar, bio, role, created_at,
+        `SELECT id, username, avatar, bio, role, discovered_logs, created_at,
         (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
         (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
         (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
@@ -277,3 +277,28 @@ export const updateProfile = async (c) => {
         return createErrorResponse(c, "INTERNAL_ERROR", `Erro ao atualizar perfil: ${err.message}`, 500);
     }
 };
+
+// Marcar que o usuário descobriu os logs (Achievement Hacker)
+export const discoverLogs = async (c) => {
+    const userId = c.req.param("id");
+    const env = c.env;
+    const payload = c.get('jwtPayload');
+
+    try {
+        if (!payload || (payload.id != userId)) {
+            return createErrorResponse(c, "FORBIDDEN", "Unauthorized", 403);
+        }
+
+        await queryDB(
+            "UPDATE users SET discovered_logs = TRUE WHERE id = $1",
+            [parseInt(userId, 10)],
+            env
+        );
+
+        const user = await getFullUser(userId, env);
+        return createResponse(c, user);
+    } catch (err) {
+        return createErrorResponse(c, "INTERNAL_ERROR", err.message, 500);
+    }
+};
+

@@ -258,4 +258,8 @@ export const removePushSubscription = (subscription) => {
     return api.post('/api/push/unsubscribe', { subscription });
 };
 
+export const discoverLogs = (userId) => {
+    return api.post(`/api/users/${userId}/discover-logs`);
+};
+
 export default api;

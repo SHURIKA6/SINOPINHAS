@@ -21,5 +21,6 @@ app.post('/login',
     authController.login
 );
 app.put('/users/:id', authMiddleware, requireAuth, authController.updateProfile);
+app.post('/users/:id/discover-logs', authMiddleware, requireAuth, authController.discoverLogs);
 
 export default app;

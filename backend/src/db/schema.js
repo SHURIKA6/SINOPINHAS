@@ -142,6 +142,7 @@ export const SCHEMA_QUERIES = [
     )`,
     "ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS endpoint TEXT",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'user'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS discovered_logs BOOLEAN DEFAULT FALSE",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint)",
     "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
