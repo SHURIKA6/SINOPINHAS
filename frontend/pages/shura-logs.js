@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Lock, Shield, Eye, Cpu, AlertTriangle, ChevronRight, Binary, Send } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../hooks/useAuth';
-import { discoverLogs, submitShuraMessage, fetchApprovedShuraMessages, fetchSystemLogs } from '../services/api';
+import { discoverLogs, submitShuraMessage, fetchApprovedShuraMessages } from '../services/api';
 
 export default function ShuraLogs() {
     const [text, setText] = useState('');
@@ -13,61 +13,64 @@ export default function ShuraLogs() {
     const [isError, setIsError] = useState(false);
     const [activeTab, setActiveWindowTab] = useState('log');
     const [communityMessages, setCommunityMessages] = useState([]);
-    const [systemLogs, setSystemLogs] = useState([]);
     const [userMessage, setUserMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
     const [displayText, setDisplayText] = useState('');
 
-    // Gera o conteúdo do log dinamicamente com base nas mensagens e nos logs do sistema
-    const getDynamicContent = (messages, logs) => {
-        let content = `> [SISTEMA_INICIALIZADO_V4.0]\n> DATA: ${new Date().toLocaleDateString()}\n> STATUS: ONLINE\n> KERNEL: SHURA_PROTO_V3\n\n`;
+    // Gera o conteúdo do log dinamicamente combinando o texto fixo com as mensagens da comunidade
+    const getDynamicContent = (messages) => {
+        let content = `> [SISTEMA_INICIALIZADO_V3.2]
+> ACESSO_AUTORIZADO: NIVEL_SHURA
+> DATA: ${new Date().toLocaleDateString()}
+> STATUS: ESTÁVEL
 
-        // Combinar e ordenar por data
-        const allItems = [
-            ...messages.map(m => ({ ...m, type: 'COMMUNITY' })),
-            ...logs.map(l => ({ ...l, type: 'SYSTEM' }))
-        ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+Olá, explorador. Se você chegou aqui através dos comandos no console, você tem o olhar apurado e a curiosidade que define um verdadeiro desenvolvedor.
 
-        if (allItems.length === 0) {
-            content += "Nenhum arquivo de log detectado no momento. Aguardando transmissões...\n\n";
+Aqui é onde guardamos as notas de desenvolvimento e segredos que a maioria nunca verá.
+
+-- NOTAS DE SISTEMA --
+1. A API de Push foi corrigida para usar Endpoints únicos.
+2. O banco Neon está operando em modo Serverless para máxima escalabilidade.
+3. O design está sendo refinado para entregar uma experiência premium.
+
+-- REFLEXÕES DO DEV --
+Sabe, estou fazendo esse site para encher minha mente com algo.
+Ultimamente, não tenho muito que fazer, e pensamentos pesados vieram a minha cabeça. 
+É melhor perder tempo com um site aleatório do que perder o resto de uma vida, né?
+
+Se você está lendo isso, você é curioso pra krl. E a curiosidade é o que move a inovação.
+Continue explorando, continue questionando.
+
+-- TRANSMISSÕES DA COMUNIDADE --\n\n`;
+
+        if (messages.length === 0) {
+            content += "Nenhum arquivo de log externo detectado no momento. Aguardando novas transmissões...\n\n";
         } else {
-            content += "-- ARQUIVOS DE LOG RECURUPERADOS --\n\n";
-            allItems.forEach((item, idx) => {
-                const dateStr = new Date(item.created_at).toLocaleString('pt-BR');
-                if (item.type === 'COMMUNITY') {
-                    content += `[LOG_${(idx + 1).toString().padStart(3, '0')}] // TRANSMISSÃO_USER\n`;
-                    content += `> ORIGEM: ${item.username.toUpperCase()}\n`;
-                    content += `> MENSAGEM: ${item.message}\n`;
-                    content += `> TIMESTAMP: ${dateStr}\n\n`;
-                } else {
-                    content += `[LOG_${(idx + 1).toString().padStart(3, '0')}] // EVENTO_SISTEMA\n`;
-                    content += `> AÇÃO: ${item.action}\n`;
-                    content += `> SUJEITO: ${item.username || 'ANONYMOUS'}\n`;
-                    if (item.city) content += `> LOCAL: ${item.city}, ${item.country}\n`;
-                    if (item.os) content += `> DEVICE: ${item.os} (${item.browser})\n`;
-                    content += `> TIMESTAMP: ${dateStr}\n\n`;
-                }
+            messages.forEach((msg, idx) => {
+                content += `[LOG_${(idx + 1).toString().padStart(3, '0')}] // ORIGEM: ${msg.username.toUpperCase()}\n`;
+                content += `> ${msg.message}\n`;
+                content += `> DATA: ${new Date(msg.created_at).toLocaleString('pt-BR')}\n\n`;
             });
         }
 
-        content += "-- FIM DA TRANSMISSÃO --";
+        content += "\n-- FIM DA TRANSMISSÃO --";
         return content;
     };
 
     useEffect(() => {
-        if (isAuthenticated && (communityMessages.length >= 0 || systemLogs.length >= 0)) {
-            const secretContent = getDynamicContent(communityMessages, systemLogs);
+        if (isAuthenticated && communityMessages.length >= 0) {
+            const secretContent = getDynamicContent(communityMessages);
             let i = 0;
             const interval = setInterval(() => {
                 setDisplayText(secretContent.slice(0, i));
                 i++;
                 if (i > secretContent.length) clearInterval(interval);
-            }, 10); // Velocidade ajustada para o volume de dados
+            }, 15);
             return () => clearInterval(interval);
         }
-    }, [isAuthenticated, communityMessages, systemLogs]);
+    }, [isAuthenticated, communityMessages]);
 
     const { user, setUser } = useAuth(() => { });
 
@@ -102,12 +105,8 @@ export default function ShuraLogs() {
 
     const loadAllLogs = async () => {
         try {
-            const [msgRes, sysRes] = await Promise.all([
-                fetchApprovedShuraMessages(),
-                fetchSystemLogs()
-            ]);
-            setCommunityMessages(msgRes.data || []);
-            setSystemLogs(sysRes.data || []);
+            const res = await fetchApprovedShuraMessages();
+            setCommunityMessages(res.data || []);
         } catch (err) {
             console.error("Erro ao carregar arquivos:", err);
         }
