@@ -97,7 +97,8 @@ export function getAchievementList(u) {
     }
 
     // 8. Hacker (Segredo)
-    if (u.discovered_logs) {
+    // 8. Hacker (Segredo)
+    if (u.discovered_logs === true || u.discovered_logs === 'true' || u.discovered_logs === 't') {
         list.push({
             type: 'hacker',
             icon: '⌨️',

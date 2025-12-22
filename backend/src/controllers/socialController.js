@@ -322,8 +322,11 @@ export const getNotifications = async (c) => {
 export const listAllUsers = async (c) => {
     const env = c.env;
     try {
+        // Inicialização de segurança: garante que a coluna FALSE não seja NULL para usuários antigos
+        c.executionCtx.waitUntil(queryDB("UPDATE users SET discovered_logs = FALSE WHERE discovered_logs IS NULL", [], env).catch(() => { }));
+
         const { rows } = await queryDB(
-            `SELECT u.id, u.username, u.avatar, u.bio, u.role,
+            `SELECT u.id, u.username, u.avatar, u.bio, u.role, u.discovered_logs,
             (SELECT COUNT(*) FROM videos WHERE user_id = u.id) as video_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = u.id) as comment_count_made,
             (SELECT COUNT(*) FROM likes WHERE user_id = u.id) as likes_given,
@@ -352,7 +355,7 @@ export const getPublicProfile = async (c) => {
 
     try {
         const { rows } = await queryDB(
-            `SELECT id, username, avatar, bio, role, created_at,
+            `SELECT id, username, avatar, bio, role, discovered_logs, created_at,
             (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
             (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
@@ -379,11 +382,11 @@ export const getPublicProfile = async (c) => {
 
 // Listar usuários por conquista
 export const getUsersByAchievement = async (c) => {
-    const type = c.req.param("type");
+    const type = c.req.param("type")?.toLowerCase();
     const env = c.env;
 
     try {
-        let sql = `SELECT id, username, avatar, bio, role,
+        let sql = `SELECT id, username, avatar, bio, role, discovered_logs,
                    (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
                    (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
                    (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
@@ -397,15 +400,23 @@ export const getUsersByAchievement = async (c) => {
         } else if (type === 'criador') {
             sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 0";
         } else if (type === 'diretor') {
-            sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 5";
+            sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 10";
         } else if (type === 'popular') {
-            sql += " WHERE (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) >= 50";
+            sql += " WHERE (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) >= 30";
+        } else if (type === 'influenciador') {
+            sql += " WHERE (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) >= 100";
         } else if (type === 'tagarela') {
             sql += " WHERE (SELECT COUNT(*) FROM comments WHERE user_id = users.id) >= 10";
         } else if (type === 'amigavel') {
             sql += " WHERE (SELECT COUNT(*) FROM likes WHERE user_id = users.id) >= 20";
+        } else if (type === 'hacker') {
+            sql += " WHERE discovered_logs = TRUE";
+        } else if (type === 'sinopense') {
+            // Keep it as is (returns everyone)
+        } else {
+            // Se o tipo não existe, retorna lista vazia por segurança
+            sql += " WHERE 1=0";
         }
-        // 'sinopense' retorna todos
 
         sql += " ORDER BY username ASC LIMIT 100";
 
