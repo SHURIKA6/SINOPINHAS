@@ -201,12 +201,35 @@ export default function Home({ initialVideo }) {
     return isAdmin || (user && user.id.toString() === ownerId);
   }, [isAdmin, user]);
 
-  if (!mounted) return null;
+  // No servidor, começamos com um estado base para SEO
+  const pageTitle = currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS';
+
+  // Renderiza Head separadamente do mounted check para garantir SEO e PWA no servidor
+  const headElement = (
+    <Head>
+      <title>{pageTitle}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      <meta name="theme-color" content="#0f0d15" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="apple-mobile-web-app-title" content="SINOPINHAS" />
+      <link rel="manifest" href="/manifest.json" />
+    </Head>
+  );
+
+  if (!mounted) {
+    return (
+      <>
+        {headElement}
+        <div style={{ background: '#0f0d15', minHeight: '100vh' }} />
+      </>
+    );
+  }
 
   if (!termsAccepted) {
     return (
       <>
-        <Head><title>SINOPINHAS - Termos</title></Head>
+        {headElement}
         {showTerms && <TermsModal onAccept={handleAcceptTerms} onDecline={handleDeclineTerms} />}
       </>
     );
@@ -214,12 +237,6 @@ export default function Home({ initialVideo }) {
 
   return (
     <>
-      <Head>
-        <title>{currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS'}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-        <meta name="theme-color" content="#0f0d15" />
-        <link rel="manifest" href="/manifest.json" />
-      </Head>
 
       <div
         onTouchStart={handleTouchStart}

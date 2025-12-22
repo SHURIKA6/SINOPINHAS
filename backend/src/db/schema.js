@@ -41,12 +41,12 @@ export const SCHEMA_QUERIES = [
         UNIQUE(video_id, user_id)
     )`,
 
-    // Tabela de Visualizações
+    // Tabela de Visualizações (Log de acessos)
     `CREATE TABLE IF NOT EXISTS views (
         id SERIAL PRIMARY KEY,
         video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE,
-        views INTEGER DEFAULT 0,
-        UNIQUE(video_id)
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW()
     )`,
 
     // Tabela de Notificações

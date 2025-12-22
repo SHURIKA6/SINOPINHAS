@@ -59,28 +59,48 @@ export const viewVideo = async (c) => {
     let userId = null;
 
     try {
-        const body = await c.req.json();
-        userId = body.user_id;
+        const body = await c.req.json().catch(() => ({}));
+        userId = body.user_id || null;
 
         await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
         return createResponse(c, { success: true });
     } catch (err) {
+        console.error("Error in viewVideo:", err.code, err.message);
+
+        // Tabela não existe
         if (err.code === '42P01') {
             await queryDB(`
                 CREATE TABLE IF NOT EXISTS views (
                     id SERIAL PRIMARY KEY,
-                    video_id INTEGER NOT NULL,
-                    user_id INTEGER NOT NULL,
+                    video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+                    user_id INTEGER,
                     created_at TIMESTAMP DEFAULT NOW()
                 )
             `, [], env);
 
-            if (userId) {
+            await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
+            return createResponse(c, { success: true, repaired: true });
+        }
+
+        // Coluna 'user_id' não existe ou erro de Unique Constraint
+        if (err.code === '42703' || err.code === '23505' || err.message.includes('user_id')) {
+            try {
+                // Remove restrição única se existir (caso tenha sido criada pelo schema.js antigo)
+                await queryDB("ALTER TABLE views DROP CONSTRAINT IF EXISTS views_video_id_key", [], env);
+                // Adiciona coluna user_id se faltar
+                await queryDB("ALTER TABLE views ADD COLUMN IF NOT EXISTS user_id INTEGER", [], env);
+                // Remove coluna views se existir (limpeza)
+                await queryDB("ALTER TABLE views DROP COLUMN IF EXISTS views", [], env);
+
                 await queryDB("INSERT INTO views (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
-                return createResponse(c, { success: true, repaired: true });
+                return createResponse(c, { success: true, repaired_schema: true });
+            } catch (repairErr) {
+                console.error("Failed to repair views table:", repairErr);
             }
         }
-        throw err;
+
+        // Se falhar tudo, pelo menos não crasha o app
+        return createResponse(c, { success: false, error: err.message }, 500);
     }
 };
 
