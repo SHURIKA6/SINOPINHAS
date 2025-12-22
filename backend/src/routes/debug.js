@@ -59,7 +59,14 @@ app.get('/fix-db', async (c) => {
             "ALTER TABLE videos ADD COLUMN IF NOT EXISTS is_secret BOOLEAN DEFAULT FALSE",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT",
-            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT"
+            "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT",
+
+            // Fix Comments & Views
+            "ALTER TABLE comments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()",
+            "ALTER TABLE views ADD COLUMN IF NOT EXISTS user_id INTEGER",
+            "ALTER TABLE views ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()",
+            "ALTER TABLE views DROP COLUMN IF EXISTS views",
+            "ALTER TABLE views DROP CONSTRAINT IF EXISTS views_video_id_key"
         ];
 
         const results = [];

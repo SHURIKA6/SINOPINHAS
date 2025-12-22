@@ -147,8 +147,8 @@ export const postComment = async (c) => {
                 await queryDB(`
                     CREATE TABLE IF NOT EXISTS comments (
                         id SERIAL PRIMARY KEY,
-                        video_id INTEGER NOT NULL,
-                        user_id INTEGER NOT NULL,
+                        video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                         comment TEXT NOT NULL,
                         created_at TIMESTAMP DEFAULT NOW()
                     )
@@ -181,20 +181,56 @@ export const postComment = async (c) => {
 export const getComments = async (c) => {
     const videoId = c.req.param("videoId");
     const env = c.env;
+
+    if (!videoId) {
+        return createErrorResponse(c, "INVALID_PARAM", "ID do vídeo não fornecido", 400);
+    }
+
     try {
         const { rows } = await queryDB(
             `SELECT c.*, u.username, u.avatar 
-       FROM comments c 
-       LEFT JOIN users u ON c.user_id = u.id 
-       WHERE c.video_id = $1 
-       ORDER BY c.created_at DESC`,
+             FROM comments c 
+             LEFT JOIN users u ON c.user_id = u.id 
+             WHERE c.video_id = $1 
+             ORDER BY c.created_at DESC`,
             [videoId],
             env
         );
         return createResponse(c, rows);
     } catch (err) {
-        if (err.code === '42P01') return createResponse(c, []);
-        throw err;
+        console.error("Error in getComments:", err.code, err.message);
+
+        // Tabela não existe
+        if (err.code === '42P01') {
+            return createResponse(c, []);
+        }
+
+        // Coluna ausente (provavelmente criada por versão antiga)
+        if (err.code === '42703') {
+            try {
+                // Tenta recriar/ajustar a tabela se algo estiver muito errado
+                // Mas geralmente SELECT falha por colunas específicas
+                console.log("🛠️ Tentando reparar tabela comments...");
+                await queryDB(`
+                    CREATE TABLE IF NOT EXISTS comments (
+                        id SERIAL PRIMARY KEY,
+                        video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        comment TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `, [], env);
+
+                // Se o SELECT falhou, pode ser que falte 'created_at' ou 'user_id'
+                // Tenta o query de novo mas de forma mais simples se falhar
+                const { rows } = await queryDB("SELECT * FROM comments WHERE video_id = $1", [videoId], env);
+                return createResponse(c, rows);
+            } catch (repairErr) {
+                return createErrorResponse(c, "DB_ERROR", "Erro ao recuperar comentários após falha de esquema", 500, repairErr.message);
+            }
+        }
+
+        return createErrorResponse(c, "DB_ERROR", "Erro ao buscar comentários", 500, err.message);
     }
 };
 

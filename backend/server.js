@@ -45,13 +45,16 @@ app.get("/", (c) => {
 import { HTTPException } from 'hono/http-exception';
 
 app.onError((err, c) => {
+  console.error("❌ Global Error Handler:", err);
+
   if (err instanceof HTTPException) {
-    // Retornar a exceção HTTP específica (401, 403, 404, etc.)
     return createErrorResponse(c, "REQUEST_ERROR", err.message, err.status);
   }
 
-  console.error("❌ Erro não tratado (Global Handler):", err);
-  return createErrorResponse(c, "INTERNAL_ERROR", "Ocorreu um erro interno no servidor.", 500, err.message);
+  // Se for erro de banco Neon, tenta extrair mais info
+  const dbError = err.code ? `[${err.code}] ${err.message}` : err.message;
+
+  return createErrorResponse(c, "INTERNAL_ERROR", "O servidor encontrou um erro interno.", 500, dbError);
 });
 
 // Handler de fetch padrão do Hono
