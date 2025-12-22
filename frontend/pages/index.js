@@ -76,7 +76,10 @@ export async function getServerSideProps(context) {
 
 export default function Home({ initialVideo }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    document.title = 'SINOPINHAS by SHURA';
+  }, []);
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
