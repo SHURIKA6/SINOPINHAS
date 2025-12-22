@@ -286,6 +286,11 @@ export const getNotifications = async (c) => {
         return createErrorResponse(c, "FORBIDDEN", "Acesso negado às notificações", 403);
     }
 
+    // Se for admin "puro" (sem ID numérico), ele não tem notificações no banco
+    if (isNaN(parseInt(authId))) {
+        return createResponse(c, []);
+    }
+
     try {
         const { rows } = await queryDB(
             "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
@@ -470,9 +475,11 @@ export const sendMessage = async (c) => {
     const finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
 
     // Garantir que IDs sejam números para o Postgres e evitar NaN
+    // Nota: 'admin' puro não pode enviar mensagens poisfrom_id no banco é INT.
     const tId = parseInt(to_id);
+    const numericFId = parseInt(fId);
 
-    if (isNaN(fId) || isNaN(tId)) {
+    if (isNaN(numericFId) || isNaN(tId)) {
         return createErrorResponse(c, "INVALID_PARAM", `IDs inválidos: from=${fId}, to=${to_id}`, 400);
     }
 
@@ -566,13 +573,13 @@ export const markAsRead = async (c) => {
         const payload = c.get('jwtPayload');
         const userId = payload?.id;
 
-        if (!userId) {
-            return createErrorResponse(c, "UNAUTHORIZED", "Não logado", 401);
+        if (isNaN(parseInt(userId))) {
+            return createResponse(c, { success: true, note: 'Admin ignore' });
         }
 
         await queryDB(
             "UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2 AND is_read = FALSE",
-            [fromId, userId],
+            [fromId, parseInt(userId)],
             env
         );
         return createResponse(c, { success: true });
@@ -628,7 +635,11 @@ export const getInbox = async (c) => {
         return createErrorResponse(c, "FORBIDDEN", "Acesso negado ao chat", 403);
     }
 
-    if (!userIdParam) return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' inválido", 400);
+    if (!userIdParam || isNaN(parseInt(userIdParam))) {
+        return createErrorResponse(c, "INVALID_PARAM", "Parâmetro 'userId' deve ser um número", 400);
+    }
+
+    const targetId = parseInt(userIdParam);
 
     try {
         const { rows } = await queryDB(
@@ -640,7 +651,7 @@ export const getInbox = async (c) => {
        LEFT JOIN users ut ON m.to_id = ut.id
        WHERE m.from_id = $1 OR m.to_id = $1
        ORDER BY m.created_at ASC`,
-            [userId],
+            [targetId],
             env
         );
         return createResponse(c, rows);
