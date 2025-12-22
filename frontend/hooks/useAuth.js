@@ -94,7 +94,7 @@ export function useAuth(showToast) {
     const logoutAdmin = () => {
         setIsAdmin(false);
         setAdminPassword('');
-        localStorage.removeItem('token'); // Clear token to prevent auto-restore
+        logout(); // Também limpa o usuário para evitar chamadas sem token
         showToast('Saiu do modo admin', 'success');
     };
 

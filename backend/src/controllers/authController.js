@@ -45,7 +45,7 @@ export const register = async (c) => {
             username: user.username,
             role: 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
-        }, c.env.JWT_SECRET);
+        }, env.JWT_SECRET || 'development_secret_123');
 
         return createResponse(c, { user, token });
     } catch (err) {
@@ -94,7 +94,7 @@ export const login = async (c) => {
             username: user.username,
             role: 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
-        }, c.env.JWT_SECRET);
+        }, env.JWT_SECRET || 'development_secret_123');
 
         return createResponse(c, {
             user: {
