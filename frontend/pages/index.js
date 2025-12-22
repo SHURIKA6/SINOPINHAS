@@ -216,7 +216,7 @@ export default function Home({ initialVideo }) {
   }, [isAdmin, user]);
 
   // No servidor, começamos com um estado base para SEO
-  const pageTitle = currentVideo ? `${currentVideo.title} | SINOPINHAS` : initialVideo ? `${initialVideo.title} | SINOPINHAS` : 'SINOPINHAS';
+  const pageTitle = currentVideo ? `${currentVideo.title} | SINOPINHAS by SHURA` : initialVideo ? `${initialVideo.title} | SINOPINHAS by SHURA` : 'SINOPINHAS by SHURA';
 
   // Renderiza Head separadamente do mounted check para garantir SEO e PWA no servidor
   const headElement = (
