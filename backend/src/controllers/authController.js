@@ -235,7 +235,7 @@ export const updateProfile = async (c) => {
         values.push(targetId);
 
         const { rows } = await queryDB(
-            `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramCount} RETURNING id, username, avatar, bio`,
+            `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramCount} RETURNING id, username, avatar, bio, role`,
             values,
             env
         );

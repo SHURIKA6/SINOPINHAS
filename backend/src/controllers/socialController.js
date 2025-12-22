@@ -350,6 +350,11 @@ function getAchievementList(u) {
         list.push({ type: 'amigavel', icon: '❤️', label: 'Amigável', color: '#ec4899', desc: 'Espalhando amor! Deu mais de 20 curtidas' });
     }
 
+    // 7. Admin (Cargo Especial)
+    if (u.role === 'admin') {
+        list.push({ type: 'admin', icon: '🛡️', label: 'Admin', color: '#6366f1', desc: 'Guardião e moderador oficial do Sinopinhas' });
+    }
+
     return list;
 }
 
@@ -358,7 +363,7 @@ export const listAllUsers = async (c) => {
     const env = c.env;
     try {
         const { rows } = await queryDB(
-            `SELECT u.id, u.username, u.avatar, u.bio,
+            `SELECT u.id, u.username, u.avatar, u.bio, u.role,
             (SELECT COUNT(*) FROM videos WHERE user_id = u.id) as video_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = u.id) as comment_count_made,
             (SELECT COUNT(*) FROM likes WHERE user_id = u.id) as likes_given,
@@ -387,7 +392,7 @@ export const getPublicProfile = async (c) => {
 
     try {
         const { rows } = await queryDB(
-            `SELECT id, username, avatar, bio, created_at,
+            `SELECT id, username, avatar, bio, role, created_at,
             (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
             (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
             (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
@@ -418,7 +423,7 @@ export const getUsersByAchievement = async (c) => {
     const env = c.env;
 
     try {
-        let sql = `SELECT id, username, avatar, bio,
+        let sql = `SELECT id, username, avatar, bio, role,
                    (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
                    (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
                    (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
@@ -427,6 +432,8 @@ export const getUsersByAchievement = async (c) => {
 
         if (type === 'pioneiro') {
             sql += " WHERE (SELECT COUNT(*) FROM users u2 WHERE u2.id <= users.id) <= 50";
+        } else if (type === 'admin') {
+            sql += " WHERE role = 'admin'";
         } else if (type === 'criador') {
             sql += " WHERE (SELECT COUNT(*) FROM videos WHERE user_id = users.id) > 0";
         } else if (type === 'diretor') {
