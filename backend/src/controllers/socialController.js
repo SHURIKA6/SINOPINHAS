@@ -202,15 +202,7 @@ export const getComments = async (c) => {
 
         // Tabela não existe
         if (err.code === '42P01') {
-            return createResponse(c, []);
-        }
-
-        // Coluna ausente (provavelmente criada por versão antiga)
-        if (err.code === '42703') {
             try {
-                // Tenta recriar/ajustar a tabela se algo estiver muito errado
-                // Mas geralmente SELECT falha por colunas específicas
-                console.log("🛠️ Tentando reparar tabela comments...");
                 await queryDB(`
                     CREATE TABLE IF NOT EXISTS comments (
                         id SERIAL PRIMARY KEY,
@@ -220,17 +212,46 @@ export const getComments = async (c) => {
                         created_at TIMESTAMP DEFAULT NOW()
                     )
                 `, [], env);
-
-                // Se o SELECT falhou, pode ser que falte 'created_at' ou 'user_id'
-                // Tenta o query de novo mas de forma mais simples se falhar
-                const { rows } = await queryDB("SELECT * FROM comments WHERE video_id = $1", [videoId], env);
-                return createResponse(c, rows);
-            } catch (repairErr) {
-                return createErrorResponse(c, "DB_ERROR", "Erro ao recuperar comentários após falha de esquema", 500, repairErr.message);
+                return createResponse(c, []);
+            } catch (e) {
+                return createErrorResponse(c, "DB_ERROR", "Falha ao criar tabela de comentários", 500, e.message);
             }
         }
 
-        return createErrorResponse(c, "DB_ERROR", "Erro ao buscar comentários", 500, err.message);
+        // Coluna ausente ou erro de tipo
+        if (err.code === '42703' || err.code === '42804' || err.message.includes('column')) {
+            try {
+                console.log("🛠️ Tentando reparar esquema da tabela comments...");
+                await queryDB("ALTER TABLE comments ADD COLUMN IF NOT EXISTS video_id INTEGER", [], env);
+                await queryDB("ALTER TABLE comments ADD COLUMN IF NOT EXISTS user_id INTEGER", [], env);
+                await queryDB("ALTER TABLE comments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()", [], env);
+
+                try {
+                    const { rows } = await queryDB(
+                        `SELECT c.*, u.username, u.avatar 
+                         FROM comments c 
+                         LEFT JOIN users u ON c.user_id = u.id 
+                         WHERE c.video_id = $1 
+                         ORDER BY c.created_at DESC`,
+                        [videoId],
+                        env
+                    );
+                    return createResponse(c, rows);
+                } catch (innerErr) {
+                    console.warn("⚠️ Recuperação com JOIN falhou, tentando fallback simples:", innerErr.message);
+                    const { rows: simpleRows } = await queryDB(
+                        "SELECT * FROM comments WHERE video_id = $1 ORDER BY created_at DESC",
+                        [videoId],
+                        env
+                    );
+                    return createResponse(c, simpleRows);
+                }
+            } catch (repairErr) {
+                return createErrorResponse(c, "DB_ERROR", "Falha ao reparar esquema de comentários", 500, repairErr.message);
+            }
+        }
+
+        return createErrorResponse(c, "DB_ERROR", `Erro ao buscar comentários: ${err.message}`, 500);
     }
 };
 

@@ -7,6 +7,7 @@ export function useComments(showToast, user, isAdmin, adminPassword) {
 
     const loadComments = useCallback(async (videoId) => {
         setIsLoading(true);
+        setComments([]); // Limpa comentários anteriores para evitar "vazamento" de histórico
         try {
             const data = await fetchComments(videoId);
             setComments(data);

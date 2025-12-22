@@ -160,7 +160,8 @@ export const listVideos = async (c) => {
         sql = `
           SELECT v.*, u.username,
           (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
-          (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+          (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views,
+          (SELECT COUNT(*) FROM comments WHERE video_id = v.id) as comments_count
         `;
 
         const params = [];
@@ -230,7 +231,8 @@ export const listSecretVideos = async (c) => {
         let sql = `
       SELECT v.*, u.username,
       (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
-      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views
+      (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views,
+      (SELECT COUNT(*) FROM comments WHERE video_id = v.id) as comments_count
     `;
 
         const params = [];

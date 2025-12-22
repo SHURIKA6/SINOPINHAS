@@ -157,7 +157,7 @@ const VideoCard = memo(({ video, onDelete, onLike, onOpenComments, canDelete, is
                             border: '1px solid var(--border-color)', color: 'var(--text-color)',
                             fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, cursor: 'pointer'
                         }}
-                    >💬 {video.views || 0}</button>
+                    >💬 {video.comments_count || 0}</button>
 
                     <button
                         onClick={(e) => { e.stopPropagation(); handleShareClick(); }}

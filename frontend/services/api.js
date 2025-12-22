@@ -24,7 +24,7 @@ api.interceptors.response.use(
     (error) => {
         // Extrai mensagem de erro padronizada do backend
         const backendError = error.response?.data?.error;
-        // console.error("Debug API Error Response:", error.response?.data); // Útil para debug
+        console.error("🔥 Backend Error Details:", error.response?.data);
         let customMessage = error.response?.data?.message || backendError;
 
         // Cria um erro novo com a mensagem limpa para o frontend exibir
@@ -53,7 +53,11 @@ api.interceptors.response.use(
         } else if (error.response?.status === 500 && !backendError) {
             customError.message = "Erro Interno: Falha crítica no servidor.";
         } else {
+            const details = error.response?.data?.details;
             customError.message = customMessage || error.message;
+            if (details) {
+                customError.message += ` (${details})`;
+            }
         }
 
         return Promise.reject(customError);
