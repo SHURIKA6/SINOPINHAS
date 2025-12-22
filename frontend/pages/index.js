@@ -216,7 +216,7 @@ export default function Home({ initialVideo }) {
   }, [isAdmin, user]);
 
   // No servidor, começamos com um estado base para SEO
-  const pageTitle = currentVideo ? `${currentVideo.title} | SINOPINHAS by SHURA` : initialVideo ? `${initialVideo.title} | SINOPINHAS by SHURA` : 'SINOPINHAS by SHURA';
+  const pageTitle = 'SINOPINHAS by SHURA';
 
   // Renderiza Head separadamente do mounted check para garantir SEO e PWA no servidor
   const headElement = (
@@ -226,7 +226,7 @@ export default function Home({ initialVideo }) {
       <meta name="theme-color" content="#0f0d15" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-      <meta name="apple-mobile-web-app-title" content="SINOPINHAS" />
+      <meta name="apple-mobile-web-app-title" content="SINOPINHAS by SHURA" />
       <link rel="manifest" href="/manifest.json" />
     </Head>
   );
