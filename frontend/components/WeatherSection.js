@@ -72,12 +72,18 @@ export default function WeatherSection() {
                 {/* Card Principal */}
                 <div style={{ background: 'var(--card-bg)', borderRadius: 24, padding: 32, border: '1px solid var(--border-color)', textAlign: 'center' }} className="card-hover">
                     <div style={{ fontSize: 64, marginBottom: 16 }}>
-                        {realData?.description.toLowerCase().includes('rain') ? '🌧️' :
-                            realData?.description.toLowerCase().includes('cloud') ? '☁️' : '☀️'}
+                        {(() => {
+                            const d = realData?.description?.toLowerCase() || '';
+                            if (d.includes('storm') || d.includes('trovoada')) return '⛈️';
+                            if (d.includes('rain') || d.includes('chuva')) return '🌧️';
+                            if (d.includes('drizzle') || d.includes('garoa')) return '🌦️';
+                            if (d.includes('cloud') || d.includes('nublado') || d.includes('encoberto')) return '☁️';
+                            return '☀️';
+                        })()}
                     </div>
                     <div style={{ fontSize: 64, fontWeight: 900, lineHeight: 1 }}>{realData ? `${realData.temp}°` : '--°'}</div>
                     <div style={{ fontSize: 20, color: 'var(--text-color)', fontWeight: 700, margin: '16px 0 4px' }}>{realData ? translate(realData.description) : '...'}</div>
-                    <div style={{ fontSize: 13, color: 'var(--secondary-text)' }}>Sensação: {realData ? `${realData.temp}°` : '--'} • Humidade: {realData?.humidity}%</div>
+                    <div style={{ fontSize: 13, color: 'var(--secondary-text)' }}>Sensação: {realData ? `${realData.feels_like || realData.temp}°` : '--'} • Humidade: {realData?.humidity}%</div>
                 </div>
 
                 {/* Widget Detalhado */}
