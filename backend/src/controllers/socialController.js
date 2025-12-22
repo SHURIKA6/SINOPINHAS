@@ -470,11 +470,10 @@ export const sendMessage = async (c) => {
     const finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
 
     // Garantir que IDs sejam números para o Postgres e evitar NaN
-    const fId = parseInt(from_id);
     const tId = parseInt(to_id);
 
     if (isNaN(fId) || isNaN(tId)) {
-        return createErrorResponse(c, "INVALID_PARAM", `IDs inválidos: from=${from_id}, to=${to_id}`, 400);
+        return createErrorResponse(c, "INVALID_PARAM", `IDs inválidos: from=${fId}, to=${to_id}`, 400);
     }
 
     if (!cleanMsg) {
