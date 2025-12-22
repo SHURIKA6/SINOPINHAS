@@ -4,6 +4,28 @@ import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
 import { updateProfileSchema } from '../schemas/auth.js';
+import { getAchievementList } from '../utils/user-achievements.js';
+
+// Helper para buscar usuário completo com conquistas
+const getFullUser = async (userId, env) => {
+    const { rows } = await queryDB(
+        `SELECT id, username, avatar, bio, role, created_at,
+        (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
+        (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
+        (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
+        (SELECT COUNT(*) FROM likes l JOIN videos v ON l.video_id = v.id WHERE v.user_id = users.id) as total_likes_received,
+        (SELECT COUNT(*) FROM users u2 WHERE u2.id <= users.id) as global_rank
+        FROM users WHERE id = $1`,
+        [userId],
+        env
+    );
+    if (rows.length === 0) return null;
+    const u = rows[0];
+    return {
+        ...u,
+        achievements: getAchievementList(u)
+    };
+};
 
 // Registrar usuário
 export const register = async (c) => {
@@ -35,7 +57,7 @@ export const register = async (c) => {
             env
         );
 
-        const user = rows[0];
+        const user = await getFullUser(rows[0].id, env);
         try {
             await logAudit(user.id, "USER_REGISTERED", body, c);
         } catch (logErr) { }
@@ -77,17 +99,18 @@ export const login = async (c) => {
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
-        const user = rows[0];
-        const validPassword = await compare(password, user.password);
+        const validPassword = await compare(password, rows[0].password);
 
         if (!validPassword) {
-            await logAudit(user.id, "LOGIN_FAILED_WRONG_PASSWORD", { username }, c);
+            await logAudit(rows[0].id, "LOGIN_FAILED_WRONG_PASSWORD", { username }, c);
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
         try {
-            await logAudit(user.id, "USER_LOGIN_SUCCESS", { username }, c);
+            await logAudit(rows[0].id, "USER_LOGIN_SUCCESS", { username }, c);
         } catch (logErr) { }
+
+        const user = await getFullUser(rows[0].id, env);
 
         const token = await sign({
             id: user.id,
@@ -97,13 +120,7 @@ export const login = async (c) => {
         }, env.JWT_SECRET || 'development_secret_123');
 
         return createResponse(c, {
-            user: {
-                id: user.id,
-                username: user.username,
-                avatar: user.avatar,
-                bio: user.bio,
-                role: user.role || 'user'
-            },
+            user,
             token
         });
     } catch (err) {
@@ -244,6 +261,8 @@ export const updateProfile = async (c) => {
             return createErrorResponse(c, "NOT_FOUND", "Usuário não encontrado para atualização", 404);
         }
 
+        const decoratedUser = await getFullUser(userId, env);
+
         await logAudit(userId, "USER_PROFILE_UPDATED", {
             avatar_changed: avatar !== undefined,
             bio_changed: bio !== undefined,
@@ -251,7 +270,7 @@ export const updateProfile = async (c) => {
             avatar_uploaded: !!avatarFile
         }, c);
 
-        return createResponse(c, rows[0]);
+        return createResponse(c, decoratedUser);
     } catch (err) {
         console.error("🔥 Error updating profile:", err);
         // Retornar um erro mais descritivo se possível
