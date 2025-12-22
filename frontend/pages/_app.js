@@ -4,6 +4,8 @@ import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
     useEffect(() => {
+        // Ei curioso, tem nada de especial aqui, ou será que tem? 
+        // Tenta achar o shura-logs ou só explora os arquivos aí msm <3
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('/sw.js').then(
