@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-
-import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import {
     Wind,
     Sunrise,
@@ -128,37 +127,37 @@ export default function WeatherSection() {
                         <WeatherStat
                             icon={<Thermometer size={18} />}
                             label="TEMPERATURA"
-                            value={realData?.temp ? `${realData.temp}°C` : '--'}
+                            value={realData?.temp ? `${realData.temp}°C` : <div className="skeleton-inline" />}
                             color="#ff6b6b"
                         />
                         <WeatherStat
                             icon={<Droplets size={18} />}
                             label="UMIDADE"
-                            value={realData?.humidity ? `${realData.humidity}%` : '--'}
+                            value={realData?.humidity ? `${realData.humidity}%` : <div className="skeleton-inline" />}
                             color="#4dabf7"
                         />
                         <WeatherStat
                             icon={<Wind size={18} />}
                             label="VENTO"
-                            value={realData?.wind_speedy}
+                            value={realData?.wind_speedy || <div className="skeleton-inline" />}
                             color="#51cf66"
                         />
                         <WeatherStat
                             icon={<Sunrise size={18} />}
                             label="NASCER DO SOL"
-                            value={realData?.sunrise}
+                            value={realData?.sunrise || <div className="skeleton-inline" />}
                             color="#fcc419"
                         />
                         <WeatherStat
                             icon={<Sunset size={18} />}
                             label="PÔR DO SOL"
-                            value={realData?.sunset}
+                            value={realData?.sunset || <div className="skeleton-inline" />}
                             color="#ff922b"
                         />
                         <WeatherStat
                             icon={<Thermometer size={18} />}
                             label="SENSAÇÃO TMP"
-                            value={realData?.feels_like ? `${realData.feels_like}°C` : '--'}
+                            value={realData?.feels_like ? `${realData.feels_like}°C` : <div className="skeleton-inline" />}
                             color="#ff8787"
                         />
                     </motion.div>
@@ -359,6 +358,25 @@ export default function WeatherSection() {
                     .time-main { font-size: 64px; }
                     .stats-inner-grid { grid-template-columns: 1fr; }
                     .clock-card { padding: 60px 20px 40px; }
+                }
+                .skeleton-inline {
+                    width: 60px;
+                    height: 18px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 4px;
+                    overflow: hidden;
+                    position: relative;
+                }
+                .skeleton-inline::after {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+                    animation: skeleton-sweep 1.5s infinite;
+                }
+                @keyframes skeleton-sweep {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
                 }
             `}</style>
         </div>
