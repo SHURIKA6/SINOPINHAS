@@ -99,7 +99,7 @@ export default function WeatherSection() {
                 >
                     <div className="live-indicator">
                         <span className="pulse-dot"></span>
-                        LIVE SINOP
+                        SINOPINHAS
                     </div>
 
                     <div className="clock-display">
