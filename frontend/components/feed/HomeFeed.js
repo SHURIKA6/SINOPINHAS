@@ -3,7 +3,7 @@ import VideoCard from '../VideoCard';
 import SkeletonVideoCard from '../SkeletonVideoCard';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
-import { Search } from 'lucide-react';
+import { Search, Flame, Video, Image as ImageIcon } from 'lucide-react';
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
@@ -18,27 +18,24 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     const [hearts, setHearts] = useState([]);
 
-    // Debounce da busca
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchQuery(searchQuery);
         }, 500);
         return () => clearTimeout(timer);
     }, [searchQuery]);
-    const loadMoreRef = useRef(null);
 
+    const loadMoreRef = useRef(null);
     const [videoToShare, setVideoToShare] = useState(null);
 
-    // Estados derivados para ordenação
     const sortedVideos = useMemo(() => {
         let list = [...videos];
-        if (sortBy === 'popular') list.sort((a, b) => b.views - a.views);
-        else if (sortBy === 'liked') list.sort((a, b) => b.likes - a.likes);
+        if (sortBy === 'popular') list.sort((a, b) => (parseInt(b.views) || 0) - (parseInt(a.views) || 0));
+        else if (sortBy === 'liked') list.sort((a, b) => (parseInt(b.likes) || 0) - (parseInt(a.likes) || 0));
         else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         return list;
     }, [videos, sortBy]);
 
-    // Observador para rolagem infinita
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && hasMore && !loading) {
@@ -50,14 +47,12 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         return () => observer.disconnect();
     }, [hasMore, loading]);
 
-    // Reinicia o offset quando os filtros mudam
     useEffect(() => {
         setOffset(0);
         setHasMore(true);
         loadVideos(0, true);
     }, [debouncedSearchQuery, sortBy, filterType]);
 
-    // Carga incremental
     useEffect(() => {
         if (offset > 0) {
             loadVideos(offset, false);
@@ -65,7 +60,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     }, [offset]);
 
     const loadVideos = async (currentOffset, reset = false) => {
-        if (reset) setLoading(true); // Skeleton apenas no carregamento inicial ou reset
+        if (reset) setLoading(true);
         try {
             let data = [];
             if (debouncedSearchQuery.trim().length > 2) {
@@ -75,7 +70,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 data = await fetchVideos(user?.id, LIMIT, currentOffset, filterType === 'all' ? null : filterType);
                 if (data.length < LIMIT) setHasMore(false);
             }
-
             setVideos(prev => reset ? data : [...prev, ...data]);
         } catch (error) {
             showToast('Erro ao carregar conteúdo', 'error');
@@ -96,9 +90,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     const toggleLike = async (videoId, e) => {
         if (!user) return showToast('Faça login para curtir!', 'error');
-
         if (e) spawnHeart(e);
-
         setVideos(prev => prev.map(v => {
             if (v.id === videoId) {
                 const isLiked = !v.user_liked;
@@ -110,7 +102,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             }
             return v;
         }));
-
         try {
             await likeVideo(videoId, user.id);
         } catch (err) {
@@ -121,192 +112,76 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
     const handleDeleteVideo = async (videoId) => {
         if (!confirm('Tem certeza que deseja excluir?')) return;
-
         try {
             await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
             setVideos(prev => prev.filter(v => v.id !== videoId));
             showToast('success', 'Removido com sucesso!');
         } catch (err) {
-            console.error(err);
             showToast('Erro ao excluir', 'error');
         }
     };
 
     return (
-        <div style={{ position: 'relative' }}>
-            {/* Efeito de Corações */}
+        <div className="home-feed-root">
             {hearts.map(h => (
-                <div key={h.id} style={{
-                    position: 'fixed', left: h.x, top: h.y,
-                    pointerEvents: 'none', zIndex: 10001,
-                    fontSize: 24, animation: 'floatHeart 1s ease-out forwards'
-                }}>❤️</div>
+                <div key={h.id} className="floating-heart" style={{ left: h.x, top: h.y }}>❤️</div>
             ))}
 
             <div className="home-feed-container">
-
-                {/* Cabeçalho de Busca e Filtros */}
-                <div className="section-header">
-                    <div className="search-row">
-                        <div className="search-wrapper">
-                            <span className="icon"><Search size={18} /></span>
+                {/* Premium Search & Filter Header */}
+                <div className="feed-header-glass">
+                    <div className="search-row-feed">
+                        <div className="feed-search-input-box">
+                            <Search size={18} className="search-f-icon" />
                             <input
                                 type="text"
                                 placeholder="O que você quer ver hoje em Sinop?"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="search-input-global"
                             />
                         </div>
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="sort-select"
+                            className="feed-sort-select"
                         >
-                            <option value="recent">📅 Recentes</option>
+                            <option value="recent">🕒 Recentes</option>
                             <option value="popular">🔥 Populares</option>
                             <option value="liked">❤️ Curtidos</option>
                         </select>
                     </div>
 
-                    {/* Sub-Tabs de Filtro */}
-                    <div className="filter-tabs">
-                        {['all', 'video', 'photo'].map(type => (
+                    <div className="feed-filter-tabs">
+                        {[
+                            { id: 'all', label: 'Todos', icon: <Flame size={14} /> },
+                            { id: 'video', label: 'Vídeos', icon: <Video size={14} /> },
+                            { id: 'photo', label: 'Fotos', icon: <ImageIcon size={14} /> }
+                        ].map(type => (
                             <button
-                                key={type}
-                                onClick={() => setFilterType(type)}
-                                className={`filter-btn ${filterType === type ? 'active' : ''}`}
+                                key={type.id}
+                                onClick={() => setFilterType(type.id)}
+                                className={`feed-filter-btn ${filterType === type.id ? 'active' : ''}`}
                             >
-                                {type === 'all' && '🔥 Todos'}
-                                {type === 'video' && '📹 Vídeos'}
-                                {type === 'photo' && '📷 Fotos'}
+                                {type.icon}
+                                <span>{type.label}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <style jsx>{`
-                    .home-feed-container {
-                        padding: 24px 16px;
-                        max-width: 1160px;
-                        margin: 0 auto;
-                        width: 100%;
-                        box-sizing: border-box;
-                    }
-
-                    .search-row {
-                        display: flex;
-                        gap: 12px;
-                        align-items: center;
-                        margin-bottom: 24px;
-                    }
-
-                    .sort-select {
-                        padding: 12px 16px;
-                        background: rgba(255, 255, 255, 0.05);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 20px;
-                        color: var(--text-color);
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        min-width: 140px;
-                        transition: all 0.2s ease;
-                    }
-
-                    .sort-select:focus {
-                        outline: none;
-                        border-color: var(--accent-color);
-                        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
-                    }
-
-                    .filter-tabs {
-                        display: flex;
-                        gap: 8px;
-                        overflow-x: auto;
-                        padding: 4px 0 20px;
-                        scrollbar-width: none;
-                    }
-
-                    .filter-tabs::-webkit-scrollbar {
-                        display: none;
-                    }
-
-                    .filter-btn {
-                        padding: 8px 20px;
-                        border-radius: 99px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        background: rgba(255, 255, 255, 0.03);
-                        color: var(--secondary-text);
-                        font-weight: 700;
-                        font-size: 13px;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-                        white-space: nowrap;
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                    }
-
-                    .filter-btn:hover {
-                        background: rgba(255, 255, 255, 0.1);
-                    }
-
-                    .filter-btn.active {
-                        background: linear-gradient(135deg, var(--accent-color), #6366f1);
-                        color: #fff;
-                        border-color: transparent;
-                        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
-                    }
-
-                    @media (max-width: 768px) {
-                        .home-feed-container {
-                            padding: 12px 12px 80px;
-                        }
-
-                        .search-row {
-                            flex-direction: column;
-                            gap: 10px;
-                        }
-
-                        .sort-select {
-                            width: 100%;
-                            min-width: 0;
-                            height: 48px;
-                        }
-
-                        .filter-btn {
-                            padding: 8px 16px;
-                            font-size: 12px;
-                        }
-                        
-                        .section-header {
-                            background: rgba(15, 13, 21, 0.4);
-                            padding: 16px;
-                            margin: -12px -12px 20px;
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                            backdrop-filter: blur(10px);
-                        }
-                    }
-                `}</style>
-
-                {/* Grade de Vídeos */}
                 {loading && videos.length === 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-                        {[...Array(8)].map((_, i) => (
-                            <SkeletonVideoCard key={i} />
-                        ))}
+                    <div className="feed-grid">
+                        {[...Array(8)].map((_, i) => <SkeletonVideoCard key={i} />)}
                     </div>
                 ) : videos.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '80px 20px', background: 'var(--card-bg)', borderRadius: '24px', color: 'var(--secondary-text)', border: '1px solid var(--border-color)' }}>
-                        <div style={{ fontSize: '64px', marginBottom: '24px' }}>🏜️</div>
-                        <h3 style={{ fontSize: '24px', color: 'var(--text-color)', margin: '0 0 8px' }}>Nada por aqui ainda</h3>
-                        <p style={{ fontSize: '16px', margin: 0 }}>Seja o primeiro a compartilhar algo legal em Sinop!</p>
+                    <div className="feed-empty">
+                        <div className="empty-emoji">🏜️</div>
+                        <h3>Nada por aqui ainda</h3>
+                        <p>Seja o primeiro a compartilhar algo legal em Sinop!</p>
                     </div>
                 ) : (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                        <div className="feed-grid">
                             {sortedVideos.map((v) => (
                                 <VideoCard
                                     key={v.id}
@@ -315,7 +190,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                     onLike={toggleLike}
                                     onOpenComments={onVideoClick}
                                     canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
-                                    isSecret={false}
                                     onShare={(video) => setVideoToShare(video)}
                                 />
                             ))}
@@ -331,24 +205,97 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                         )}
 
                         {hasMore && (
-                            <div
-                                ref={loadMoreRef}
-                                style={{
-                                    textAlign: 'center',
-                                    marginTop: '48px',
-                                    padding: '24px',
-                                    color: 'var(--accent-color)',
-                                    fontWeight: '700'
-                                }}
-                            >
-                                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite', marginRight: '10px' }}>⏳</span>
-                                Carregando mais descobertas...
+                            <div ref={loadMoreRef} className="feed-loader">
+                                <span className="loader-spin">⏳</span>
+                                Buscando mais novidades...
                             </div>
                         )}
                     </>
                 )}
             </div>
 
+            <style jsx>{`
+                .home-feed-root { position: relative; }
+                .home-feed-container { max-width: 1200px; margin: 0 auto; padding: 0 0 100px; }
+                
+                .feed-header-glass {
+                    background: rgba(25, 20, 40, 0.4);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 28px;
+                    padding: 24px;
+                    margin-bottom: 32px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                }
+
+                .search-row-feed { display: flex; gap: 12px; margin-bottom: 20px; }
+                
+                .feed-search-input-box {
+                    flex: 1; position: relative;
+                }
+
+                .search-f-icon {
+                    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+                    color: rgba(255,255,255,0.3);
+                }
+
+                .feed-search-input-box input {
+                    width: 100%; padding: 14px 20px 14px 48px;
+                    background: rgba(15, 13, 21, 0.4);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px; color: white; font-size: 15px; outline: none;
+                }
+
+                .feed-sort-select {
+                    padding: 12px 16px; background: rgba(15, 13, 21, 0.4);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px; color: white; font-size: 14px; font-weight: 600; cursor: pointer;
+                }
+
+                .feed-filter-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+                .feed-filter-tabs::-webkit-scrollbar { display: none; }
+
+                .feed-filter-btn {
+                    padding: 8px 18px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.03); color: #94a3b8; font-weight: 700;
+                    font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+                    white-space: nowrap; transition: all 0.2s ease;
+                }
+
+                .feed-filter-btn.active {
+                    background: linear-gradient(135deg, #a855f7, #6366f1);
+                    color: white; border-color: transparent; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+                }
+
+                .feed-grid {
+                    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+                }
+
+                .floating-heart {
+                    position: fixed; pointer-events: none; z-index: 10001; font-size: 24px;
+                    animation: floatHeart 1s ease-out forwards;
+                }
+
+                .feed-empty { text-align: center; padding: 80px 20px; color: #94a3b8; }
+                .empty-emoji { font-size: 64px; margin-bottom: 24px; }
+                
+                .feed-loader {
+                    text-align: center; margin-top: 48px; padding: 24px; color: #a855f7; font-weight: 700;
+                }
+
+                @media (max-width: 768px) {
+                    .feed-header-glass { padding: 16px; border-radius: 20px; margin: 0 0 20px; }
+                    .search-row-feed { flex-direction: column; }
+                    .feed-sort-select { width: 100%; height: 48px; }
+                    .feed-search-input-box input { height: 48px; }
+                    .feed-filter-btn { padding: 6px 14px; font-size: 12px; }
+                }
+
+                @keyframes floatHeart {
+                    0% { transform: translateY(0) scale(1); opacity: 1; }
+                    100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+                }
+            `}</style>
         </div>
     );
 }

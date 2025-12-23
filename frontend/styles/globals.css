@@ -82,6 +82,18 @@ button:active {
   transform: scale(0.96);
 }
 
+/* Nuke any unwanted button styles in the nav */
+.ultra-nav-btn,
+.nav-item,
+.nav-btn,
+.tab-btn {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(180%);

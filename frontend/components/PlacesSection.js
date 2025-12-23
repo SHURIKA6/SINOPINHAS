@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { fetchPlaces } from '../services/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { Search, MapPin, ExternalLink, Star } from 'lucide-react';
 
 const RECOMMENDATIONS = [
     {
@@ -51,7 +52,6 @@ export default function PlacesSection() {
     }, []);
 
     const filteredPlaces = useMemo(() => {
-        if (!searchQuery.trim()) return places;
         const q = searchQuery.toLowerCase();
         return places.filter(p =>
             (p.title?.toLowerCase() || '').includes(q) ||
@@ -68,73 +68,119 @@ export default function PlacesSection() {
     };
 
     return (
-        <div style={{ padding: '0px 0px 48px', animation: 'fadeIn 0.5s ease' }}>
-
-            {/* Cabeçalho de Busca */}
-            <div className="section-header">
-                <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 16px', color: 'var(--text-color)' }}>
-                    📍 Guia Sinop
-                </h2>
-                <div className="search-wrapper">
-                    <span className="icon">🔍</span>
+        <div className="places-container">
+            {/* Header Premium */}
+            <div className="places-header">
+                <div className="p-header-top">
+                    <div className="p-header-icon"><MapPin size={20} color="#a855f7" /></div>
+                    <h2 className="p-header-title">Guia Sinop</h2>
+                </div>
+                <div className="p-search-wrapper">
+                    <Search size={18} className="p-search-icon" />
                     <input
                         type="text"
                         placeholder="Onde vamos hoje em Sinop?"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="search-input-global"
+                        className="p-search-input"
                     />
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
+            <div className="places-grid">
                 {loading ? (
                     [...Array(6)].map((_, i) => (
-                        <div key={i} style={{ background: 'var(--card-bg)', borderRadius: 24, border: '1px solid var(--border-color)', overflow: 'hidden', height: 400 }}>
-                            <div className="skeleton" style={{ height: 200, width: '100%', borderRadius: 0 }} />
-                            <div style={{ padding: 24 }}>
-                                <div className="skeleton" style={{ height: 20, width: '60%', marginBottom: 12 }} />
-                                <div className="skeleton" style={{ height: 14, width: '90%', marginBottom: 8 }} />
-                                <div className="skeleton" style={{ height: 14, width: '50%', marginBottom: 20 }} />
-                                <div className="skeleton" style={{ height: 20, width: '30%' }} />
-                            </div>
-                        </div>
+                        <div key={i} className="skeleton-place-card" />
                     ))
                 ) : filteredPlaces.length === 0 ? (
-                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: 'var(--secondary-text)' }}>
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗺️</div>
+                    <div className="p-empty">
+                        <MapPin size={48} strokeWidth={1.5} opacity={0.3} />
                         <p>Nenhum lugar encontrado para sua busca.</p>
                     </div>
                 ) : (
                     filteredPlaces.map((place, index) => (
-                        <a key={index} href={place.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', background: 'var(--card-bg)', borderRadius: 24, overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', cursor: 'pointer', position: 'relative' }} className="card-hover">
-                            <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
-                                <img src={place.image} alt={place.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} className="place-img" />
+                        <a
+                            key={index}
+                            href={place.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="place-card card-hover"
+                        >
+                            <div className="p-img-box">
+                                <img src={place.image} alt={place.title} loading="lazy" />
                                 <button
                                     onClick={(e) => handleToggleFavorite(e, place)}
-                                    style={{
-                                        position: 'absolute', top: 12, right: 12,
-                                        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
-                                        border: 'none', borderRadius: '50%', width: 36, height: 36,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer', fontSize: 16, zIndex: 10
-                                    }}
+                                    className={`p-fav-btn ${isFavorite('places', place) ? 'active' : ''}`}
                                 >
-                                    {isFavorite('places', place) ? '⭐' : '☆'}
+                                    <Star size={18} fill={isFavorite('places', place) ? "#ffca28" : "none"} />
                                 </button>
-                                <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(141, 106, 255, 0.9)', color: '#fff', padding: '4px 12px', borderRadius: 99, fontSize: 12, fontWeight: 600, backdropFilter: 'blur(4px)' }}>
-                                    {place.category}
-                                </div>
+                                <div className="p-cat-tag">{place.category}</div>
                             </div>
-                            <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: 'var(--text-color)' }}>{place.title}</h3>
-                                <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>{place.description}</p>
-                                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-color)', fontSize: 14, fontWeight: 600 }}>Visitar Site ↗</div>
+                            <div className="p-info">
+                                <h3 className="p-title">{place.title}</h3>
+                                <p className="p-desc">{place.description}</p>
+                                <div className="p-action">
+                                    <span>Visitar Site</span>
+                                    <ExternalLink size={14} />
+                                </div>
                             </div>
                         </a>
                     ))
                 )}
             </div>
+
+            <style jsx>{`
+                .places-container { padding: 8px 0 100px; max-width: 1160px; margin: 0 auto; }
+
+                .places-header {
+                    background: rgba(25, 20, 40, 0.4);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 28px;
+                    padding: 24px;
+                    margin-bottom: 32px;
+                }
+
+                .p-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+                .p-header-icon { width: 40px; height: 40px; background: rgba(168, 85, 247, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+                .p-header-title { font-size: 24px; font-weight: 900; margin: 0; color: white; }
+
+                .p-search-wrapper { position: relative; width: 100%; }
+                .p-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.3; }
+                .p-search-input { width: 100%; padding: 14px 20px 14px 48px; background: rgba(15, 13, 21, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; color: white; font-size: 15px; outline: none; }
+                .p-search-input:focus { border-color: #a855f7; box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1); }
+
+                .places-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+
+                .place-card { background: var(--card-bg); border-radius: 24px; overflow: hidden; border: 1px solid var(--border-color); text-decoration: none; display: flex; flex-direction: column; transition: all 0.3s ease; }
+                .p-img-box { position: relative; height: 200px; overflow: hidden; }
+                .p-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+                .place-card:hover .p-img-box img { transform: scale(1.08); }
+
+                .p-fav-btn { position: absolute; top: 12px; right: 12px; font-size: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
+                .p-fav-btn.active { color: #ffca28; }
+                
+                .p-cat-tag { position: absolute; top: 12px; left: 12px; background: rgba(139, 92, 246, 0.9); color: white; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+
+                .p-info { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+                .p-title { margin: 0 0 10px; font-size: 20px; font-weight: 700; color: white; }
+                .p-desc { margin: 0; font-size: 14px; line-height: 1.6; color: #94a3b8; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+                
+                .p-action { margin-top: 20px; display: flex; align-items: center; gap: 8px; color: #a855f7; font-size: 14px; font-weight: 700; }
+
+                @media (max-width: 768px) {
+                    .places-grid { grid-template-columns: 1fr; gap: 16px; }
+                    .place-card { flex-direction: row; height: 140px; border-radius: 20px; }
+                    .p-img-box { width: 120px; height: 100%; flex-shrink: 0; }
+                    .p-info { padding: 16px; justify-content: center; }
+                    .p-title { font-size: 16px; margin-bottom: 4px; -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; }
+                    .p-desc { font-size: 12px; -webkit-line-clamp: 2; }
+                    .p-action { display: none; }
+                }
+
+                .skeleton-place-card { height: 350px; background: rgba(255,255,255,0.05); border-radius: 24px; animation: pulse 1.5s infinite; }
+                .p-empty { padding: 80px 20px; text-align: center; color: #94a3b8; }
+            `}</style>
         </div>
     );
 }

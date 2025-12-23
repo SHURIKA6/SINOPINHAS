@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { fetchEvents } from '../services/api';
 import { useFavorites } from '../hooks/useFavorites';
+import { Search, Calendar, MapPin, Clock, Star } from 'lucide-react';
 
 const MOCK_EVENTS = [
     {
@@ -51,7 +52,6 @@ export default function EventsSection() {
     }, []);
 
     const filteredEvents = useMemo(() => {
-        if (!searchQuery.trim()) return events;
         const q = searchQuery.toLowerCase();
         return events.filter(e =>
             (e.title?.toLowerCase() || '').includes(q) ||
@@ -68,80 +68,62 @@ export default function EventsSection() {
     };
 
     return (
-        <div style={{ padding: '0px 0px 48px', animation: 'fadeIn 0.5s ease' }}>
-
-            {/* Cabeçalho de Busca */}
-            <div className="section-header">
-                <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 16px', color: 'var(--text-color)' }}>
-                    📅 Agenda Sinop
-                </h2>
-                <div className="search-wrapper">
-                    <span className="icon">🔍</span>
+        <div className="events-container">
+            {/* Header Premium */}
+            <div className="events-header">
+                <div className="header-top">
+                    <div className="header-icon"><Calendar size={20} color="#a855f7" /></div>
+                    <h2 className="header-title">Agenda Sinop</h2>
+                </div>
+                <div className="e-search-wrapper">
+                    <Search size={18} className="e-search-icon" />
                     <input
                         type="text"
                         placeholder="O que está acontecendo em Sinop?"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="search-input-global"
+                        className="e-search-input"
                     />
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 24 }}>
+            <div className="events-grid">
                 {loading ? (
                     [...Array(3)].map((_, i) => (
-                        <div key={i} style={{ background: 'var(--card-bg)', borderRadius: 24, border: '1px solid var(--border-color)', overflow: 'hidden', height: 420 }}>
-                            <div className="skeleton" style={{ height: 220, width: '100%', borderRadius: 0 }} />
-                            <div style={{ padding: 24 }}>
-                                <div className="skeleton" style={{ height: 24, width: '70%', marginBottom: 12 }} />
-                                <div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 16 }} />
-                                <div className="skeleton" style={{ height: 16, width: '90%', marginBottom: 8 }} />
-                                <div className="skeleton" style={{ height: 16, width: '60%', marginBottom: 24 }} />
-                                <div className="skeleton" style={{ height: 44, width: '100%', borderRadius: 12 }} />
-                            </div>
-                        </div>
+                        <div key={i} className="skeleton-event-card" />
                     ))
                 ) : filteredEvents.length === 0 ? (
-                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: 'var(--secondary-text)' }}>
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗓️</div>
+                    <div className="empty-state">
+                        <Calendar size={48} strokeWidth={1.5} />
                         <p>Nenhum evento encontrado para sua busca.</p>
                     </div>
                 ) : (
                     filteredEvents.map((event) => (
-                        <div key={event.id} style={{ background: 'var(--card-bg)', borderRadius: 24, overflow: 'hidden', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', position: 'relative' }} className="card-hover">
-                            <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
-                                <img src={event.image} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div key={event.id} className="event-card card-hover">
+                            <div className="event-img-box">
+                                <img src={event.image} alt={event.title} />
                                 <button
                                     onClick={(e) => handleToggleFavorite(e, event)}
-                                    style={{
-                                        position: 'absolute', top: 16, left: 16,
-                                        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
-                                        border: 'none', borderRadius: '50%', width: 40, height: 40,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer', fontSize: 18, zIndex: 10
-                                    }}
+                                    className={`event-fav-btn ${isFavorite('events', event) ? 'active' : ''}`}
                                 >
-                                    {isFavorite('events', event) ? '⭐' : '☆'}
+                                    <Star size={18} fill={isFavorite('events', event) ? "#ffca28" : "none"} />
                                 </button>
-                                <div style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255, 255, 255, 0.9)', color: '#1a1a1a', padding: '8px 16px', borderRadius: 12, textAlign: 'center', fontWeight: 800, backdropFilter: 'blur(4px)' }}>
-                                    <div style={{ fontSize: 18, lineHeight: 1 }}>{event.date ? event.date.split('-')[2] : '??'}</div>
-                                    <div style={{ fontSize: 10, textTransform: 'uppercase' }}>
+                                <div className="event-date-badge">
+                                    <span className="day">{event.date ? event.date.split('-')[2] : '??'}</span>
+                                    <span className="month">
                                         {event.date ? new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' }) : '...'}
-                                    </div>
+                                    </span>
                                 </div>
-                                <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'var(--accent-color)', color: '#fff', padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
-                                    {event.category}
-                                </div>
+                                <div className="event-category-tag">{event.category}</div>
                             </div>
-                            <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: 'var(--text-color)' }}>{event.title}</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--secondary-text)', fontSize: 13, marginBottom: 12 }}>
-                                    <span>📍 {event.location}</span>
-                                    <span>•</span>
-                                    <span>🕒 {event.time}</span>
+                            <div className="event-content">
+                                <h3 className="event-title">{event.title}</h3>
+                                <div className="event-meta">
+                                    <div className="meta-item"><MapPin size={14} /> {event.location}</div>
+                                    <div className="meta-item"><Clock size={14} /> {event.time}</div>
                                 </div>
-                                <p style={{ margin: 0, color: 'var(--secondary-text)', fontSize: 14, lineHeight: 1.6, flex: 1 }}>{event.description}</p>
-                                <button onClick={() => setSelectedEvent(event)} style={{ marginTop: 20, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 12, color: 'var(--text-color)', fontWeight: 700, cursor: 'pointer' }}>Ver Detalhes</button>
+                                <p className="event-desc">{event.description}</p>
+                                <button onClick={() => setSelectedEvent(event)} className="details-btn">Ver Detalhes</button>
                             </div>
                         </div>
                     ))
@@ -149,32 +131,106 @@ export default function EventsSection() {
             </div>
 
             {selectedEvent && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(8px)' }} onClick={() => setSelectedEvent(null)}>
-                    <div style={{ background: 'var(--card-bg)', borderRadius: 32, maxWidth: 600, width: '100%', maxHeight: '90vh', overflowY: 'auto', color: 'var(--text-color)', border: '1px solid var(--border-color)', position: 'relative' }} onClick={e => e.stopPropagation()}>
-                        <button onClick={() => setSelectedEvent(null)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: '50%', cursor: 'pointer', zIndex: 10 }}>✕</button>
-                        <div style={{ height: 260, position: 'relative' }}>
-                            <img src={selectedEvent.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top, var(--card-bg), transparent)' }} />
+                <div className="event-modal-overlay" onClick={() => setSelectedEvent(null)}>
+                    <div className="event-modal" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setSelectedEvent(null)} className="close-btn">✕</button>
+                        <div className="modal-header-img">
+                            <img src={selectedEvent.image} alt="" />
+                            <div className="modal-img-overlay" />
                         </div>
-                        <div style={{ padding: 40, marginTop: -60, position: 'relative' }}>
-                            <div style={{ background: 'var(--accent-color)', color: '#fff', padding: '6px 16px', borderRadius: 99, fontSize: 13, fontWeight: 800, display: 'inline-block', marginBottom: 16 }}>{selectedEvent.category}</div>
-                            <h2 style={{ fontSize: 32, fontWeight: 1000, margin: '0 0 16px' }}>{selectedEvent.title}</h2>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 32 }}>
-                                <div style={{ background: 'var(--input-bg)', padding: 16, borderRadius: 20, border: '1px solid var(--border-color)' }}>
-                                    <div style={{ fontSize: 12, color: 'var(--secondary-text)', fontWeight: 700, marginBottom: 4 }}>Data</div>
-                                    <div style={{ fontWeight: 800 }}>{selectedEvent.date} às {selectedEvent.time}</div>
+                        <div className="modal-body">
+                            <div className="modal-tag">{selectedEvent.category}</div>
+                            <h2 className="modal-title">{selectedEvent.title}</h2>
+                            <div className="modal-info-grid">
+                                <div className="info-item">
+                                    <label>Data & Hora</label>
+                                    <p>{selectedEvent.date} às {selectedEvent.time}</p>
                                 </div>
-                                <div style={{ background: 'var(--input-bg)', padding: 16, borderRadius: 20, border: '1px solid var(--border-color)' }}>
-                                    <div style={{ fontSize: 12, color: 'var(--secondary-text)', fontWeight: 700, marginBottom: 4 }}>Local</div>
-                                    <div style={{ fontWeight: 800 }}>{selectedEvent.location}</div>
+                                <div className="info-item">
+                                    <label>Localização</label>
+                                    <p>{selectedEvent.location}</p>
                                 </div>
                             </div>
-                            <p style={{ fontSize: 16, lineHeight: 1.8, opacity: 0.9 }}>{selectedEvent.description}</p>
-                            <button onClick={() => setSelectedEvent(null)} style={{ width: '100%', padding: '18px', background: 'var(--accent-color)', color: '#fff', border: 'none', borderRadius: 20, fontSize: 18, fontWeight: 800, marginTop: 32 }}>Fechar</button>
+                            <p className="modal-description">{selectedEvent.description}</p>
+                            <button onClick={() => setSelectedEvent(null)} className="confirm-btn">Entendi</button>
                         </div>
                     </div>
                 </div>
             )}
+
+            <style jsx>{`
+                .events-container { padding: 8px 0 100px; max-width: 1160px; margin: 0 auto; }
+                
+                .events-header {
+                    background: rgba(25, 20, 40, 0.4);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 28px;
+                    padding: 24px;
+                    margin-bottom: 32px;
+                }
+
+                .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+                .header-icon { width: 40px; height: 40px; background: rgba(168, 85, 247, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+                .header-title { font-size: 24px; font-weight: 900; margin: 0; color: white; }
+
+                .e-search-wrapper { position: relative; width: 100%; }
+                .e-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.3; }
+                .e-search-input { width: 100%; padding: 14px 20px 14px 48px; background: rgba(15, 13, 21, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; color: white; font-size: 15px; outline: none; }
+                .e-search-input:focus { border-color: #a855f7; box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1); }
+
+                .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+
+                .event-card { background: var(--card-bg); border-radius: 24px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flexDirection: column; }
+                .event-img-box { position: relative; height: 220px; overflow: hidden; }
+                .event-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+                .event-card:hover .event-img-box img { transform: scale(1.08); }
+
+                .event-fav-btn { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; z-index: 10; }
+                .event-fav-btn.active { color: #ffca28; }
+
+                .event-date-badge { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.9); color: #1a1a1a; padding: 8px 14px; border-radius: 16px; text-align: center; font-weight: 800; backdrop-filter: blur(4px); display: flex; flex-direction: column; }
+                .event-date-badge .day { font-size: 18px; line-height: 1; }
+                .event-date-badge .month { font-size: 10px; text-transform: uppercase; }
+
+                .event-category-tag { position: absolute; bottom: 12px; left: 12px; background: #a855f7; color: white; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+
+                .event-content { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+                .event-title { margin: 0 0 12px; font-size: 20px; font-weight: 800; color: white; }
+                .event-meta { display: flex; align-items: center; gap: 16px; color: var(--secondary-text); font-size: 13px; margin-bottom: 16px; }
+                .meta-item { display: flex; align-items: center; gap: 6px; }
+                .event-desc { margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+                
+                .details-btn { margin-top: 20px; width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: white; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+                .details-btn:hover { background: rgba(255,255,255,0.1); border-color: #a855f7; }
+
+                @media (max-width: 768px) {
+                    .events-grid { grid-template-columns: 1fr; gap: 16px; }
+                    .event-card { flex-direction: row; height: 160px; }
+                    .event-img-box { width: 130px; height: 100%; flex-shrink: 0; }
+                    .event-content { padding: 16px; justify-content: center; }
+                    .event-title { font-size: 16px; margin-bottom: 6px; -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
+                    .event-desc, .details-btn { display: none; }
+                    .event-meta { font-size: 11px; margin-bottom: 0; gap: 10px; }
+                    .event-date-badge { padding: 4px 10px; top: 10px; right: 10px; }
+                    .event-date-badge .day { font-size: 14px; }
+                }
+
+                .event-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+                .event-modal { background: #1a152d; border-radius: 32px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+                .modal-header-img { height: 240px; position: relative; }
+                .modal-header-img img { width: 100%; height: 100%; object-fit: cover; }
+                .modal-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, #1a152d, transparent); }
+                .modal-body { padding: 32px; margin-top: -40px; position: relative; }
+                .modal-tag { display: inline-block; background: #a855f7; color: white; padding: 4px 14px; border-radius: 99px; font-size: 12px; font-weight: 800; margin-bottom: 16px; }
+                .modal-title { font-size: 28px; font-weight: 900; margin-bottom: 24px; color: white; }
+                .modal-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+                .info-item label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin-bottom: 4px; }
+                .info-item p { margin: 0; font-size: 14px; font-weight: 700; color: white; }
+                .modal-description { font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-bottom: 32px; }
+                .confirm-btn { width: 100%; padding: 18px; background: #a855f7; color: white; border: none; border-radius: 20px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4); }
+                .close-btn { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; z-index: 100; cursor: pointer; }
+            `}</style>
         </div>
     );
 }
