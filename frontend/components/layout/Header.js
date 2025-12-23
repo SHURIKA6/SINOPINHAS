@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Menu, X, Sun, Moon, Lock, LifeBuoy,
@@ -27,6 +27,22 @@ export default function Header({
     setShowSupport
 }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const formatTime = (date) => {
+        return date.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    };
 
     const menuItems = [
         { id: 'feed', label: 'Explorar', icon: <LayoutGrid size={20} /> },
@@ -45,14 +61,13 @@ export default function Header({
         <>
             <header className="glass header-container">
                 <div className="header-left">
-                    <motion.h1
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="clock-container"
                         onClick={() => setActiveTab('feed')}
-                        className="logo"
                     >
-                        SINOPINHAS
-                    </motion.h1>
+                        <span className="digital-clock">{formatTime(currentTime)}</span>
+                    </motion.div>
                 </div>
 
                 <div className="header-actions">
@@ -248,17 +263,35 @@ export default function Header({
                     z-index: 1000;
                 }
 
-                .logo {
-                    margin: 0;
-                    font-size: 26px;
-                    font-weight: 900;
-                    letter-spacing: -1.5px;
+                .clock-container {
+                    cursor: pointer;
+                    user-select: none;
+                    background: var(--input-bg);
+                    padding: 6px 16px;
+                    border-radius: 14px;
+                    border: 1px solid var(--border-color);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    transition: all 0.3s ease;
+                }
+
+                .clock-container:hover {
+                    border-color: var(--accent-color);
+                    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2);
+                    transform: translateY(-1px);
+                }
+
+                .digital-clock {
+                    font-family: 'JetBrains Mono', 'Courier New', monospace;
+                    font-size: 22px;
+                    font-weight: 800;
+                    letter-spacing: 1px;
                     background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
-                    color: #a855f7;
-                    cursor: pointer;
-                    user-select: none;
+                    filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.3));
                 }
 
                 .header-actions {
