@@ -54,10 +54,6 @@ export default function Header({
                 </div>
 
                 <div className="header-actions">
-                    <button onClick={toggleSidebar} className="menu-btn-mobile">
-                        <Menu size={24} />
-                    </button>
-
                     <div className="desktop-actions">
                         <button
                             onClick={toggleTheme}
@@ -233,16 +229,16 @@ export default function Header({
 
             <style jsx>{`
                 .header-container {
-                    padding: 12px 24px;
+                    padding: 8px 16px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    background: rgba(15, 13, 21, 0.75);
+                    background: rgba(13, 11, 20, 0.7);
                     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                     position: sticky;
                     top: 0;
                     z-index: 1000;
-                    backdrop-filter: blur(20px) saturate(180%);
+                    backdrop-filter: blur(24px) saturate(180%);
                 }
 
                 .logo-container {
