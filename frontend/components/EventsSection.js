@@ -54,9 +54,9 @@ export default function EventsSection() {
         if (!searchQuery.trim()) return events;
         const q = searchQuery.toLowerCase();
         return events.filter(e =>
-            e.title.toLowerCase().includes(q) ||
-            e.description.toLowerCase().includes(q) ||
-            e.category.toLowerCase().includes(q)
+            (e.title?.toLowerCase() || '').includes(q) ||
+            (e.description?.toLowerCase() || '').includes(q) ||
+            (e.category?.toLowerCase() || '').includes(q)
         );
     }, [events, searchQuery]);
 

@@ -54,9 +54,9 @@ export default function PlacesSection() {
         if (!searchQuery.trim()) return places;
         const q = searchQuery.toLowerCase();
         return places.filter(p =>
-            p.title.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q) ||
-            p.category.toLowerCase().includes(q)
+            (p.title?.toLowerCase() || '').includes(q) ||
+            (p.description?.toLowerCase() || '').includes(q) ||
+            (p.category?.toLowerCase() || '').includes(q)
         );
     }, [places, searchQuery]);
 

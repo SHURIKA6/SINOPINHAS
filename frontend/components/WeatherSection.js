@@ -99,14 +99,14 @@ export default function WeatherSection() {
                         Tempo Real
                     </div>
                     <div style={{
-                        fontSize: isMobile ? 54 : 72,
+                        fontSize: isMobile ? 54 : 78,
                         fontWeight: 900,
                         fontFamily: 'JetBrains Mono, monospace',
                         lineHeight: 1,
-                        background: 'linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%)',
+                        background: 'linear-gradient(180deg, #fff 0%, #a855f7 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.4))'
+                        filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.5))'
                     }}>
                         {currentTime.toLocaleTimeString('pt-BR', { hour12: false })}
                     </div>
@@ -131,16 +131,17 @@ export default function WeatherSection() {
             <style jsx>{`
                 .weather-header {
                     text-align: center;
-                    margin-bottom: 32px;
+                    margin-bottom: 40px;
                 }
                 .weather-title {
-                    font-size: 32px;
+                    font-size: 42px;
                     font-weight: 1000;
                     margin: 0;
-                    background: linear-gradient(90deg, #8d6aff, #fe7d45);
+                    background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
-                    letter-spacing: -1px;
+                    letter-spacing: -2px;
+                    text-transform: uppercase;
                 }
                 .weather-grid {
                     display: grid;

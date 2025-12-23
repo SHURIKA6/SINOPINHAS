@@ -30,8 +30,8 @@ export default function NewsFeed() {
         if (!searchQuery.trim()) return news;
         const q = searchQuery.toLowerCase();
         return news.filter(item =>
-            item.title.toLowerCase().includes(q) ||
-            item.description.toLowerCase().includes(q)
+            (item.title?.toLowerCase() || '').includes(q) ||
+            (item.description?.toLowerCase() || '').includes(q)
         );
     }, [news, searchQuery]);
 
@@ -129,7 +129,7 @@ export default function NewsFeed() {
                             </div>
                             <div style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column' }}>
                                 <span style={{ fontSize: 11, color: 'var(--accent-color)', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase' }}>
-                                    {new Date(item.pubDate).toLocaleDateString('pt-BR')} • {item.source}
+                                    {item.pubDate ? new Date(item.pubDate).toLocaleDateString('pt-BR') : '--/--/----'} • {item.source}
                                 </span>
                                 <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700, lineHeight: 1.4, color: 'var(--text-color)' }}>{item.title}</h3>
                                 <p style={{ fontSize: 14, color: 'var(--secondary-text)', margin: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>

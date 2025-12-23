@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Menu, X, Sun, Moon, Lock, LifeBuoy,
@@ -7,7 +7,6 @@ import {
     MessageCircle, ShieldCheck
 } from 'lucide-react';
 
-// Cabeçalho
 export default function Header({
     user,
     isAdmin,
@@ -21,7 +20,6 @@ export default function Header({
     setShowProfile,
     logout,
     logoutAdmin,
-    setShowProfileModal,
     theme,
     toggleTheme,
     setShowSupport
@@ -43,7 +41,7 @@ export default function Header({
 
     return (
         <>
-            <header className="glass header-container">
+            <header className="header-container glass">
                 <div className="header-left">
                     <motion.div
                         whileHover={{ scale: 1.02 }}
@@ -56,7 +54,6 @@ export default function Header({
                 </div>
 
                 <div className="header-actions">
-                    {/* Botão do Menu Sidebar (Mobile) */}
                     <button onClick={toggleSidebar} className="menu-btn-mobile">
                         <Menu size={24} />
                     </button>
@@ -99,7 +96,6 @@ export default function Header({
                                     </div>
                                     <strong className="username">{user.username}</strong>
                                 </button>
-
                                 <button onClick={logout} className="logout-button" title="Sair">
                                     <LogOut size={18} />
                                 </button>
@@ -112,17 +108,16 @@ export default function Header({
                         )}
 
                         {!isAdmin ? (
-                            <button onClick={() => setShowAdminAuth(true)} className="admin-trigger-btn">
+                            <button onClick={() => setShowAdminAuth(true)} className="admin-trigger-btn" title="Painel Admin">
                                 <Settings size={16} />
                             </button>
                         ) : (
-                            <button onClick={logoutAdmin} className="admin-logout-btn">
+                            <button onClick={logoutAdmin} className="admin-logout-btn" title="Sair do Admin">
                                 <LogOut size={16} />
                             </button>
                         )}
                     </div>
 
-                    {/* Versão simplificada para mobile no Header */}
                     <div className="mobile-header-user">
                         {user ? (
                             <img
@@ -159,7 +154,7 @@ export default function Header({
                             className="sidebar-drawer"
                         >
                             <div className="sidebar-header">
-                                <h2 className="logo" style={{ fontSize: 20 }}>SINOPINHAS</h2>
+                                <h2 className="logo-text" style={{ fontSize: 20 }}>SINOPINHAS</h2>
                                 <button onClick={toggleSidebar} className="close-sidebar">
                                     <X size={24} />
                                 </button>
@@ -167,7 +162,7 @@ export default function Header({
 
                             <div className="sidebar-content">
                                 <div className="sidebar-section">
-                                    <p className="sidebar-label">Navegação Principal</p>
+                                    <p className="sidebar-label">Navegação</p>
                                     {menuItems.map(item => (
                                         <button
                                             key={item.id}
@@ -182,7 +177,7 @@ export default function Header({
                                 </div>
 
                                 <div className="sidebar-section">
-                                    <p className="sidebar-label">Preferências & Ajuda</p>
+                                    <p className="sidebar-label">Sistema</p>
                                     <button onClick={() => { toggleTheme(); toggleSidebar(); }} className="sidebar-item">
                                         <span className="item-icon">{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</span>
                                         <span className="item-label">{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
@@ -202,18 +197,18 @@ export default function Header({
                                 {isAdmin ? (
                                     <button onClick={() => { logoutAdmin(); toggleSidebar(); }} className="sidebar-action-btn admin-out">
                                         <ShieldCheck size={18} />
-                                        <span>Sair do Admin</span>
+                                        <span>Encerrar Admin</span>
                                     </button>
                                 ) : (
                                     <button onClick={() => { setShowAdminAuth(true); toggleSidebar(); }} className="sidebar-action-btn admin-in">
                                         <Settings size={18} />
-                                        <span>Painel Admin</span>
+                                        <span>Modo Admin</span>
                                     </button>
                                 )}
                                 {user && (
                                     <button onClick={() => { logout(); toggleSidebar(); }} className="sidebar-action-btn logout">
                                         <LogOut size={18} />
-                                        <span>Encerrar Sessão</span>
+                                        <span>Sair da Conta</span>
                                     </button>
                                 )}
                             </div>
@@ -242,21 +237,21 @@ export default function Header({
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    border-bottom: 1px solid var(--border-color);
+                    background: rgba(15, 13, 21, 0.75);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                     position: sticky;
                     top: 0;
                     z-index: 1000;
+                    backdrop-filter: blur(20px) saturate(180%);
                 }
 
                 .logo-container {
                     cursor: pointer;
                     user-select: none;
-                    display: flex;
-                    align-items: center;
                 }
                 
                 .logo-text {
-                    font-size: 24px;
+                    font-size: 26px;
                     font-weight: 1000;
                     margin: 0;
                     background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
@@ -264,13 +259,11 @@ export default function Header({
                     -webkit-text-fill-color: transparent;
                     letter-spacing: -1.5px;
                     text-transform: uppercase;
-                    filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.2));
+                    filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.4));
                 }
 
                 @media (max-width: 768px) {
-                    .logo-text {
-                        font-size: 20px;
-                    }
+                    .logo-text { font-size: 20px; }
                 }
 
                 .header-actions {
@@ -304,19 +297,10 @@ export default function Header({
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
                 }
 
-                .restricted-btn { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
-                .support-btn { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
-                
-                .login-btn { 
-                    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-                    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
-                    color: white !important;
-                }
+                .restricted-btn { background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); }
+                .support-btn { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); }
+                .login-btn { background: linear-gradient(135deg, #a855f7 0%, #6d28d9 100%); }
 
-                .login-btn span {
-                    color: white;
-                }
-                
                 .icon-btn, .admin-trigger-btn, .admin-logout-btn {
                     width: 40px;
                     height: 40px;
@@ -328,26 +312,11 @@ export default function Header({
                     border: 1px solid var(--border-color);
                     color: var(--text-color);
                     cursor: pointer;
-                    transition: all 0.2s ease;
-                    outline: none;
                 }
 
                 .action-btn:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
                     filter: brightness(1.1);
-                }
-
-                .admin-trigger-btn:hover, .admin-logout-btn:hover {
-                    background: var(--glass-bg);
-                    border-color: var(--accent-color);
-                    color: var(--accent-color);
-                }
-
-                .admin-logout-btn {
-                    background: rgba(239, 68, 68, 0.1);
-                    color: #ef4444;
-                    border-color: rgba(239, 68, 68, 0.2);
                 }
 
                 .admin-status {
@@ -445,7 +414,6 @@ export default function Header({
                     padding: 2px;
                 }
 
-                /* Sidebar Styles */
                 .sidebar-overlay {
                     position: fixed;
                     inset: 0;
@@ -553,9 +521,15 @@ export default function Header({
                 .admin-out { background: #ef4444; color: white; }
                 .logout { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
 
-                /* Desktop Tabs */
+                .close-sidebar {
+                    background: none;
+                    border: none;
+                    color: var(--text-color);
+                    cursor: pointer;
+                }
+
                 .tab-container-desktop {
-                    background: var(--header-bg);
+                    background: rgba(15, 13, 21, 0.8);
                     padding: 16px 24px;
                     display: flex;
                     justify-content: center;
@@ -582,17 +556,10 @@ export default function Header({
                     gap: 10px;
                 }
 
-                .tab-btn:hover {
-                    background: var(--accent-color);
-                    color: white;
-                    border-color: transparent;
-                }
-
-                .tab-btn.active {
+                .tab-btn:hover, .tab-btn.active {
                     background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
                     color: white;
                     border-color: transparent;
-                    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
                 }
 
                 .badge {

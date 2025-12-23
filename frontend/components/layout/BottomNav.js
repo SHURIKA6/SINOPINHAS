@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
     LayoutGrid, Newspaper, Calendar,
@@ -18,20 +19,18 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
     return (
         <nav className="bottom-nav">
             {navItems.map((item) => (
-                <button
+                <motion.button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
+                    whileTap={{ scale: 0.92 }}
                     className={`nav-item ${activeTab === item.id ? 'active' : ''} ${item.isCenter ? 'center-item' : ''}`}
                 >
                     {item.isCenter ? (
-                        <motion.div
-                            whileTap={{ scale: 0.9 }}
-                            className="center-button-wrapper"
-                        >
+                        <div className="center-button-wrapper">
                             <div className="center-button">
                                 {item.icon}
                             </div>
-                        </motion.div>
+                        </div>
                     ) : (
                         <>
                             <div className="icon-container">
@@ -41,7 +40,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                             <span className="label">{item.label}</span>
                         </>
                     )}
-                </button>
+                </motion.button>
             ))}
 
             <style jsx>{`
@@ -50,15 +49,16 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     bottom: 0;
                     left: 0;
                     right: 0;
-                    background: var(--header-bg);
+                    background: rgba(15, 13, 21, 0.85);
                     display: none;
                     justify-content: space-between;
                     align-items: center;
-                    padding: 0 4px calc(env(safe-area-inset-bottom) / 2);
-                    height: calc(65px + env(safe-area-inset-bottom));
-                    border-top: 1px solid var(--border-color);
+                    padding: 0 4px calc(env(safe-area-inset-bottom, 0px) / 2);
+                    height: calc(70px + env(safe-area-inset-bottom, 0px));
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
                     z-index: 9000;
-                    backdrop-filter: blur(25px);
+                    backdrop-filter: blur(25px) saturate(160%);
+                    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
                 }
 
                 @media (max-width: 1024px) {
@@ -78,7 +78,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     color: var(--secondary-text);
                     cursor: pointer;
                     flex: 1;
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: all 0.2s ease;
                     outline: none;
                     height: 65px;
                     min-width: 0;
@@ -125,17 +125,17 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .center-button {
-                    width: 58px;
-                    height: 58px;
-                    background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
-                    border-radius: 20px;
+                    width: 62px;
+                    height: 62px;
+                    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+                    border-radius: 22px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
                     color: white;
-                    border: 5px solid var(--bg-color);
-                    transition: all 0.3s ease;
+                    border: 4px solid #0f0d15;
+                    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
 
                 .nav-item.active .center-button {
@@ -149,20 +149,19 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     right: -10px;
                     background: #ff4757;
                     color: white;
-                    border-radius: 8px;
+                    border-radius: 10px;
                     padding: 0 4px;
-                    min-width: 16px;
-                    height: 16px;
+                    min-width: 18px;
+                    height: 18px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 9px;
+                    font-size: 10px;
                     font-weight: 900;
-                    border: 2px solid var(--header-bg);
+                    border: 2px solid #0f0d15;
                     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                 }
             `}</style>
         </nav>
     );
 }
-
