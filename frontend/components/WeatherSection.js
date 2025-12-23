@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 export default function WeatherSection() {
     const [realData, setRealData] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
 
     const sp = { n: '4px', m: '8px', s: '12px', r: '16px', l: '20px' };
 
@@ -10,6 +11,10 @@ export default function WeatherSection() {
         const checkMobile = () => setIsMobile(window.innerWidth <= 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
+
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
 
         const fetchRealData = async () => {
             try {
@@ -40,6 +45,7 @@ export default function WeatherSection() {
 
         return () => {
             window.removeEventListener('resize', checkMobile);
+            clearInterval(timer);
             document.documentElement.removeAttribute('data-weather'); // Limpa o tema
         };
     }, []);
@@ -69,21 +75,53 @@ export default function WeatherSection() {
             </div>
 
             <div className="weather-grid">
-                {/* Card Principal */}
-                <div style={{ background: 'var(--card-bg)', borderRadius: 24, padding: 32, border: '1px solid var(--border-color)', textAlign: 'center' }} className="card-hover">
-                    <div style={{ fontSize: 64, marginBottom: 16 }}>
-                        {(() => {
-                            const d = realData?.description?.toLowerCase() || '';
-                            if (d.includes('storm') || d.includes('trovoada')) return '⛈️';
-                            if (d.includes('rain') || d.includes('chuva')) return '🌧️';
-                            if (d.includes('drizzle') || d.includes('garoa')) return '🌦️';
-                            if (d.includes('cloud') || d.includes('nublado') || d.includes('encoberto')) return '☁️';
-                            return '☀️';
-                        })()}
+                {/* Card do Relógio Digital */}
+                <div style={{
+                    background: 'var(--card-bg)',
+                    borderRadius: 24,
+                    padding: '40px 32px',
+                    border: '1px solid var(--border-color)',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 280
+                }} className="card-hover">
+                    <div style={{
+                        fontSize: '12px',
+                        color: 'var(--secondary-text)',
+                        fontWeight: 800,
+                        letterSpacing: '2px',
+                        marginBottom: 16,
+                        textTransform: 'uppercase'
+                    }}>
+                        Tempo Real
                     </div>
-                    <div style={{ fontSize: 64, fontWeight: 900, lineHeight: 1 }}>{realData ? `${realData.temp}°` : '--°'}</div>
-                    <div style={{ fontSize: 20, color: 'var(--text-color)', fontWeight: 700, margin: '16px 0 4px' }}>{realData ? translate(realData.description) : '...'}</div>
-                    <div style={{ fontSize: 13, color: 'var(--secondary-text)' }}>Sensação: {realData ? `${realData.feels_like || realData.temp}°` : '--'} • Humidade: {realData?.humidity}%</div>
+                    <div style={{
+                        fontSize: isMobile ? 54 : 72,
+                        fontWeight: 900,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        lineHeight: 1,
+                        background: 'linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.4))'
+                    }}>
+                        {currentTime.toLocaleTimeString('pt-BR', { hour12: false })}
+                    </div>
+                    <div style={{
+                        marginTop: 20,
+                        padding: '8px 16px',
+                        background: 'rgba(168, 85, 247, 0.1)',
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: 'var(--accent-color)',
+                        border: '1px solid rgba(168, 85, 247, 0.2)'
+                    }}>
+                        {realData ? `${realData.temp}° - ${translate(realData.description)}` : 'Sincronizando...'}
+                    </div>
                 </div>
 
                 {/* Widget Detalhado */}
