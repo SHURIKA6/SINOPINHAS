@@ -110,18 +110,6 @@ export default function WeatherSection() {
                     }}>
                         {currentTime.toLocaleTimeString('pt-BR', { hour12: false })}
                     </div>
-                    <div style={{
-                        marginTop: 20,
-                        padding: '8px 16px',
-                        background: 'rgba(168, 85, 247, 0.1)',
-                        borderRadius: 12,
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: 'var(--accent-color)',
-                        border: '1px solid rgba(168, 85, 247, 0.2)'
-                    }}>
-                        {realData ? `${realData.temp}° - ${translate(realData.description)}` : 'Sincronizando...'}
-                    </div>
                 </div>
 
                 {/* Widget Detalhado */}
