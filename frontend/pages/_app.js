@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useEffect } from 'react';
 import '../styles/globals.css';
-import ProgressBar from '../components/common/ProgressBar';
 
 function MyApp({ Component, pageProps }) {
     useEffect(() => {
@@ -79,7 +78,6 @@ PRESS ENTER TO FINALIZE...
                 <title>SINOPINHAS by SHURA</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
             </Head>
-            <ProgressBar />
             <Component {...pageProps} />
         </>
     );

@@ -136,7 +136,6 @@ export default function Home({ initialVideo }) {
   const [showSecretAuth, setShowSecretAuth] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showSecretTab, setShowSecretTab] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
 
   // Perfil Público e Conquistas
@@ -285,7 +284,6 @@ export default function Home({ initialVideo }) {
           showSecretTab={showSecretTab} unreadCount={unreadCount} setShowProfile={setShowProfile}
           logout={() => { logout(); setActiveTab('feed'); }} logoutAdmin={logoutAdmin}
           theme={theme} toggleTheme={toggleTheme} setShowSupport={setShowSupport}
-          isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
         />
 
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuthSuccess={handleAuthSuccess} showToast={showToast} />}
@@ -380,7 +378,6 @@ export default function Home({ initialVideo }) {
         setActiveTab={setActiveTab}
         unreadCount={unreadCount}
         isAdmin={isAdmin}
-        onMenuClick={() => setIsSidebarOpen(true)}
       />
 
       <style jsx global>{`

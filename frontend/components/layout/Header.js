@@ -24,10 +24,9 @@ export default function Header({
     setShowProfileModal,
     theme,
     toggleTheme,
-    setShowSupport,
-    isSidebarOpen,
-    setIsSidebarOpen
+    setShowSupport
 }) {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
