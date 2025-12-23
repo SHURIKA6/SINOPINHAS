@@ -251,19 +251,19 @@ export default function Header({
                 }
                 
                 .logo-text {
-                    font-size: 26px;
+                    font-size: 24px;
                     font-weight: 1000;
                     margin: 0;
                     background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
-                    letter-spacing: -1.5px;
+                    letter-spacing: -1.2px;
                     text-transform: uppercase;
-                    filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.4));
+                    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.4));
                 }
 
                 @media (max-width: 768px) {
-                    .logo-text { font-size: 20px; }
+                    .logo-text { font-size: 20px; letter-spacing: -0.8px; }
                 }
 
                 .header-actions {
@@ -390,28 +390,44 @@ export default function Header({
 
                 .menu-btn-mobile {
                     display: none;
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 12px;
-                    background: var(--input-bg);
-                    border: 1px solid var(--border-color);
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 14px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     color: var(--text-color);
                     align-items: center;
                     justify-content: center;
+                    transition: all 0.2s ease;
                 }
 
-                .mobile-header-user { display: none; }
+                .menu-btn-mobile:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+
+                .login-btn-mini {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: var(--text-color);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                }
 
                 @media (max-width: 1024px) {
-                    .menu-btn-mobile, .mobile-header-user { display: flex; }
+                    .menu-btn-mobile, .mobile-header-user { display: flex; align-items: center; gap: 8px; }
+                    .header-container { padding: 10px 16px; }
                 }
 
                 .user-avatar-mobile {
-                    width: 42px;
-                    height: 42px;
+                    width: 38px;
+                    height: 38px;
                     border-radius: 50%;
                     border: 2px solid var(--accent-color);
                     padding: 2px;
+                    background: var(--bg-color);
                 }
 
                 .sidebar-overlay {

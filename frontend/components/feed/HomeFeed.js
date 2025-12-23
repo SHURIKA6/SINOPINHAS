@@ -3,6 +3,7 @@ import VideoCard from '../VideoCard';
 import SkeletonVideoCard from '../SkeletonVideoCard';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
+import { Search } from 'lucide-react';
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
@@ -142,13 +143,13 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 }}>❤️</div>
             ))}
 
-            <div style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+            <div className="home-feed-container">
 
                 {/* Cabeçalho de Busca e Filtros */}
                 <div className="section-header">
                     <div className="search-row">
                         <div className="search-wrapper">
-                            <span className="icon">🔍</span>
+                            <span className="icon"><Search size={18} /></span>
                             <input
                                 type="text"
                                 placeholder="O que você quer ver hoje em Sinop?"
@@ -185,30 +186,46 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 </div>
 
                 <style jsx>{`
+                    .home-feed-container {
+                        padding: 24px 16px;
+                        max-width: 1160px;
+                        margin: 0 auto;
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
+
                     .search-row {
                         display: flex;
-                        gap: 16px;
+                        gap: 12px;
                         align-items: center;
-                        margin-bottom: 20px;
+                        margin-bottom: 24px;
                     }
 
                     .sort-select {
-                        flex: 1;
-                        padding: 14px 20px;
-                        background: var(--input-bg);
-                        border: 1px solid var(--border-color);
-                        border-radius: 16px;
+                        padding: 12px 16px;
+                        background: rgba(255, 255, 255, 0.05);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 20px;
                         color: var(--text-color);
-                        font-size: 16px;
+                        font-size: 14px;
+                        font-weight: 600;
                         cursor: pointer;
-                        min-width: 180px;
+                        min-width: 140px;
+                        transition: all 0.2s ease;
+                    }
+
+                    .sort-select:focus {
+                        outline: none;
+                        border-color: var(--accent-color);
+                        box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
                     }
 
                     .filter-tabs {
                         display: flex;
-                        gap: 10px;
+                        gap: 8px;
                         overflow-x: auto;
-                        padding-bottom: 4px;
+                        padding: 4px 0 20px;
                         scrollbar-width: none;
                     }
 
@@ -217,43 +234,59 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                     }
 
                     .filter-btn {
-                        padding: 10px 24px;
-                        border-radius: 12px;
-                        border: 1px solid var(--border-color);
-                        background: transparent;
-                        color: var(--text-color);
+                        padding: 8px 20px;
+                        border-radius: 99px;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        background: rgba(255, 255, 255, 0.03);
+                        color: var(--secondary-text);
                         font-weight: 700;
-                        font-size: 14px;
+                        font-size: 13px;
                         cursor: pointer;
-                        transition: all 0.3s ease;
+                        transition: all 0.2s ease;
                         white-space: nowrap;
                         display: flex;
                         align-items: center;
-                        gap: 8px;
+                        gap: 6px;
+                    }
+
+                    .filter-btn:hover {
+                        background: rgba(255, 255, 255, 0.1);
                     }
 
                     .filter-btn.active {
-                        background: var(--accent-color);
+                        background: linear-gradient(135deg, var(--accent-color), #6366f1);
                         color: #fff;
-                        border-color: var(--accent-color);
+                        border-color: transparent;
+                        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
                     }
 
                     @media (max-width: 768px) {
+                        .home-feed-container {
+                            padding: 12px 12px 80px;
+                        }
+
                         .search-row {
                             flex-direction: column;
-                            gap: 12px;
+                            gap: 10px;
                         }
 
                         .sort-select {
                             width: 100%;
                             min-width: 0;
-                            font-size: 14px;
-                            padding: 12px 16px;
+                            height: 48px;
                         }
 
                         .filter-btn {
                             padding: 8px 16px;
-                            font-size: 13px;
+                            font-size: 12px;
+                        }
+                        
+                        .section-header {
+                            background: rgba(15, 13, 21, 0.4);
+                            padding: 16px;
+                            margin: -12px -12px 20px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                            backdrop-filter: blur(10px);
                         }
                     }
                 `}</style>

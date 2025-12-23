@@ -320,7 +320,7 @@ export default function Home({ initialVideo }) {
           />
         )}
 
-        <main style={{ padding: '24px 16px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+        <main className="main-content">
           <TabPane active={activeTab === 'feed'}>
             <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" />
           </TabPane>
