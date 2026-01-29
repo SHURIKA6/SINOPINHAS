@@ -16,10 +16,6 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
         { id: 'weather', label: 'Clima', icon: <CloudSun size={20} /> },
     ];
 
-    if (showSecretTab || isAdmin) {
-        navItems.push({ id: 'secret', label: 'Secreto', icon: <Lock size={20} /> });
-    }
-
     // Estilos inline para garantir que NENHUMA regra externa crie caixas brancas
     const btnBaseStyle = {
         background: 'none',
@@ -84,26 +80,21 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
 
                 .ultra-glass-nav {
                     pointer-events: auto;
-                    display: flex;
-                    justify-content: flex-start; /* Changed from space-around */
+                    display: grid; /* Grid layout for perfect centering */
+                    grid-template-columns: repeat(7, 1fr);
+                    gap: 0;
                     align-items: center;
                     height: 72px;
                     background: rgba(15, 13, 21, 0.7);
                     backdrop-filter: blur(32px) saturate(180%);
                     -webkit-backdrop-filter: blur(32px) saturate(180%);
                     border-radius: 30px;
-                    border: 1.5px solid rgba(255, 255, 255, 0.08);
+                    border: 1.5px solid rgba(255, 255, 255, 0.08); /* Borda muito suave e sofisticada */
                     box-shadow: 
                         0 20px 40px rgba(0, 0, 0, 0.6),
                         inset 0 1px 2px rgba(255, 255, 255, 0.1);
                     padding: 0 4px;
-                    overflow-x: auto;
-                    -webkit-overflow-scrolling: touch;
                 }
-
-                /* Hide Scrollbar */
-                .ultra-glass-nav::-webkit-scrollbar { display: none; }
-                .ultra-glass-nav { -ms-overflow-style: none; scrollbar-width: none; }
 
                 .ultra-nav-btn {
                     display: flex;
@@ -112,9 +103,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     justify-content: center;
                     color: rgba(255, 255, 255, 0.35);
                     cursor: pointer;
-                    flex: 0 0 auto; /* Stop shrinking */
-                    min-width: 64px; /* Ensure touch target size */
-                    padding: 0 8px;
+                    width: 100%;
                     height: 100%;
                     gap: 4px;
                     position: relative;
