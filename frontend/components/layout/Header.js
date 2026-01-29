@@ -83,9 +83,8 @@ export default function Header({
                         {user ? (
                             <div className="user-section">
                                 <button
-                                    onClick={() => (isAdmin || showSecretTab) ? setActiveTab('secret') : setShowProfile(true)}
+                                    onClick={() => setShowProfile(true)}
                                     className="profile-trigger"
-                                    title={(isAdmin || showSecretTab) ? "Acessar Área Secreta" : "Ver Perfil"}
                                 >
                                     <div className="avatar-wrapper">
                                         <img
@@ -123,7 +122,7 @@ export default function Header({
                             <img
                                 src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'}
                                 className="user-avatar-mobile"
-                                onClick={() => (isAdmin || showSecretTab) ? setActiveTab('secret') : setShowProfile(true)}
+                                onClick={() => setShowProfile(true)}
                                 alt={user.username}
                             />
                         ) : (

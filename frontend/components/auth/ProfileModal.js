@@ -168,6 +168,22 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                 ) : (
                     <>
                         <div style={{ marginBottom: 24 }}>
+                            {allowSecret && (
+                                <button
+                                    onClick={onGoToSecret}
+                                    style={{
+                                        width: '100%', padding: '12px', marginBottom: 20,
+                                        background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+                                        color: '#fff', border: 'none', borderRadius: 12,
+                                        cursor: 'pointer', fontWeight: 800, fontSize: 14,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                        boxShadow: '0 4px 15px rgba(168, 85, 247, 0.4)'
+                                    }}
+                                >
+                                    🔒 Acessar Área Restrita
+                                </button>
+                            )}
+
                             <p style={{ fontSize: 13, color: 'var(--secondary-text)', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>🏆 Suas Conquistas</p>
                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                 {user.achievements?.map(ach => (

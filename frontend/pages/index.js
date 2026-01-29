@@ -287,7 +287,14 @@ export default function Home({ initialVideo }) {
         />
 
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuthSuccess={handleAuthSuccess} showToast={showToast} />}
-        {showProfile && <ProfileModal user={user} setUser={setUser} onClose={() => setShowProfile(false)} showToast={showToast} />}
+        {showProfile && <ProfileModal
+          user={user}
+          setUser={setUser}
+          onClose={() => setShowProfile(false)}
+          showToast={showToast}
+          allowSecret={showSecretTab || isAdmin}
+          onGoToSecret={() => { setActiveTab('secret'); setShowProfile(false); }}
+        />}
         {showAdminAuth && <AdminAuthModal onClose={() => setShowAdminAuth(false)} onAdminAuthSuccess={handleAdminAuthSuccess} showToast={showToast} />}
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
