@@ -69,12 +69,13 @@ export const banUser = async (c) => {
         await queryDB("DELETE FROM videos WHERE user_id = $1", [userId], env);
         await queryDB("DELETE FROM comments WHERE user_id = $1", [userId], env);
         await queryDB("DELETE FROM likes WHERE user_id = $1", [userId], env);
+        await queryDB("DELETE FROM notifications WHERE user_id = $1 OR related_id = $1", [userId], env);
         await queryDB("DELETE FROM messages WHERE from_id = $1 OR to_id = $1", [userId], env);
         await queryDB("DELETE FROM users WHERE id = $1", [userId], env);
         await logAudit(null, "ADMIN_USER_BANNED", { target_user_id: userId }, c);
         return createResponse(c, { success: true });
     } catch (err) {
-        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao banir usuário", 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao banir usuário: " + err.message, 500);
     }
 };
 

@@ -378,6 +378,7 @@ export default function Home({ initialVideo }) {
         setActiveTab={setActiveTab}
         unreadCount={unreadCount}
         isAdmin={isAdmin}
+        showSecretTab={showSecretTab}
       />
 
       <style jsx global>{`

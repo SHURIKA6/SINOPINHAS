@@ -2,10 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
     LayoutGrid, Newspaper, Calendar,
-    Plus, MessageCircle, MapPin, CloudSun, Settings
+    Plus, MessageCircle, MapPin, CloudSun, Settings, Lock
 } from 'lucide-react';
 
-export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin }) {
+export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin, showSecretTab }) {
     const navItems = [
         { id: 'feed', label: 'Feed', icon: <LayoutGrid size={20} /> },
         { id: 'news', label: 'Notícias', icon: <Newspaper size={20} /> },
@@ -15,6 +15,10 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
         isAdmin ? { id: 'admin', label: 'Painel', icon: <Settings size={20} /> } : { id: 'lugares', label: 'Guia', icon: <MapPin size={20} /> },
         { id: 'weather', label: 'Clima', icon: <CloudSun size={20} /> },
     ];
+
+    if (showSecretTab) {
+        navItems.push({ id: 'secret', label: 'Secreto', icon: <Lock size={20} /> });
+    }
 
     // Estilos inline para garantir que NENHUMA regra externa crie caixas brancas
     const btnBaseStyle = {

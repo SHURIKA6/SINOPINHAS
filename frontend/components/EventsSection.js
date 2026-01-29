@@ -12,7 +12,8 @@ const MOCK_EVENTS = [
         location: "Centro de Eventos Dante de Oliveira",
         description: "Um show imperdível com os maiores sucessos do momento. Garanta seu ingresso!",
         category: "Música",
-        image: "https://images.unsplash.com/photo-1459749411177-042180ce673b?auto=format&fit=crop&w=800&q=80"
+        image: "https://images.unsplash.com/photo-1459749411177-042180ce673b?auto=format&fit=crop&w=800&q=80",
+        url: "https://www.ingressos.com.br"
     },
     {
         id: 2,
@@ -22,7 +23,8 @@ const MOCK_EVENTS = [
         location: "Praça da Bíblia",
         description: "Venha saborear o melhor da culinária de Sinop. Entrada gratuita!",
         category: "Gastronomia",
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80"
+        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
+        url: "https://www.sinop.mt.gov.br"
     }
 ];
 
@@ -152,7 +154,20 @@ export default function EventsSection() {
                                 </div>
                             </div>
                             <p className="modal-description">{selectedEvent.description}</p>
-                            <button onClick={() => setSelectedEvent(null)} className="confirm-btn">Entendi</button>
+
+                            {selectedEvent.url ? (
+                                <a
+                                    href={selectedEvent.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="confirm-btn"
+                                    style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+                                >
+                                    Saber mais
+                                </a>
+                            ) : (
+                                <button onClick={() => setSelectedEvent(null)} className="confirm-btn">Entendi</button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -231,6 +246,6 @@ export default function EventsSection() {
                 .confirm-btn { width: 100%; padding: 18px; background: #a855f7; color: white; border: none; border-radius: 20px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4); }
                 .close-btn { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; z-index: 100; cursor: pointer; }
             `}</style>
-        </div>
+        </div >
     );
 }

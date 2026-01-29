@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { corsMiddleware } from './src/middleware/cors.js';
+import { blockVPN } from './src/middleware/vpn.js';
 import { createErrorResponse, corsHeaders } from './src/utils/api-utils.js';
 import authRoutes from './src/routes/auth.js';
 import adminRoutes from './src/routes/admin.js';
@@ -17,6 +18,9 @@ const app = new Hono();
 
 // Aplicar Middleware de CORS Centralizado
 app.use('*', corsMiddleware);
+
+// Bloqueio de VPN/Proxy (Segurança)
+app.use('*', blockVPN);
 
 // Montagem das Rotas do Sistema
 app.route('/api', authRoutes);

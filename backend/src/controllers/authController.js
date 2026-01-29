@@ -214,14 +214,16 @@ export const updateProfile = async (c) => {
                 return createErrorResponse(c, "NOT_FOUND", "Usuário não encontrado", 404);
             }
 
-            if (!currentPassword) {
-                return createErrorResponse(c, "REQUIRED_FIELD", "Senha atual é necessária para definir uma nova senha", 400);
-            }
+            if (payload.role !== 'admin') {
+                if (!currentPassword) {
+                    return createErrorResponse(c, "REQUIRED_FIELD", "Senha atual é necessária para definir uma nova senha", 400);
+                }
 
-            const isMatch = await compare(currentPassword, userRows[0].password);
-            if (!isMatch) {
-                await logAudit(userId, "PASSWORD_UPDATE_FAILED_WRONG_CURRENT", {}, c);
-                return createErrorResponse(c, "AUTH_ERROR", "Senha atual incorreta", 401);
+                const isMatch = await compare(currentPassword, userRows[0].password);
+                if (!isMatch) {
+                    await logAudit(userId, "PASSWORD_UPDATE_FAILED_WRONG_CURRENT", {}, c);
+                    return createErrorResponse(c, "AUTH_ERROR", "Senha atual incorreta", 401);
+                }
             }
         }
 
