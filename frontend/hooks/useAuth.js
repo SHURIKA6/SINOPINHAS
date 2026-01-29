@@ -13,7 +13,9 @@ export function useAuth(showToast) {
         const checkAuth = async () => {
             // User Auth
             const savedUser = localStorage.getItem('user');
-            if (savedUser) {
+            const token = localStorage.getItem('token');
+
+            if (savedUser && token) {
                 try {
                     const u = JSON.parse(savedUser);
                     setUser(u);
@@ -34,6 +36,9 @@ export function useAuth(showToast) {
                     console.error("Failed to parse user", e);
                     logout();
                 }
+            } else {
+                // Limpa resquícios se não tiver token
+                if (savedUser) localStorage.removeItem('user');
             }
         };
 
@@ -75,6 +80,10 @@ export function useAuth(showToast) {
             prevUnreadRef.current = unread;
         } catch (err) {
             console.error('Erro ao carregar notificações:', err);
+            if (err.status === 401 || err.response?.status === 401) {
+                // Token inválido ou expirado
+                logout();
+            }
         }
     };
 
