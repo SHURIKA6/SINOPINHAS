@@ -16,7 +16,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
         { id: 'weather', label: 'Clima', icon: <CloudSun size={20} /> },
     ];
 
-    if (showSecretTab) {
+    if (showSecretTab || isAdmin) {
         navItems.push({ id: 'secret', label: 'Secreto', icon: <Lock size={20} /> });
     }
 
@@ -151,14 +151,14 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     align-items: center;
                     justify-content: center;
                     color: white;
-                    margin-bottom: 24px;
+                    margin-bottom: 0px; /* Alinhado centralmente */
                     box-shadow: 0 12px 30px rgba(168, 85, 247, 0.5);
                     border: 4px solid #0f0d15;
                     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
 
                 .ultra-nav-btn:active .premium-plus-button {
-                    transform: scale(0.9) translateY(4px);
+                    transform: scale(0.9);
                 }
 
                 .ultra-badge {
@@ -178,7 +178,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     border: 2px solid #0f0d15;
                     padding: 0 3px;
                 }
-            `}</style>
+    `}</style>
         </div>
     );
 }
