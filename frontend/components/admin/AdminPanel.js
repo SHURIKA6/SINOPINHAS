@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchUsers, fetchLogs, resetUserPassword, banUser, toggleUserRole, fetchAllShuraMessages, toggleApproveShuraMessage, deleteShuraMessage } from '../../services/api';
+import { fetchUsers, fetchLogs, fetchUserLogs, resetUserPassword, banUser, toggleUserRole, fetchAllShuraMessages, toggleApproveShuraMessage, deleteShuraMessage } from '../../services/api';
 
 export default function AdminPanel({ adminPassword, showToast }) {
     const [usersList, setUsersList] = useState([]);
@@ -8,6 +8,11 @@ export default function AdminPanel({ adminPassword, showToast }) {
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [shuraMessages, setShuraMessages] = useState([]);
     const [loadingShura, setLoadingShura] = useState(false);
+
+    // New State for User Logs Modal
+    const [selectedUserLog, setSelectedUserLog] = useState(null);
+    const [userLogs, setUserLogs] = useState([]);
+    const [loadingUserLogs, setLoadingUserLogs] = useState(false);
 
     useEffect(() => {
         loadUsers();
@@ -41,6 +46,20 @@ export default function AdminPanel({ adminPassword, showToast }) {
             showToast(err.message || 'Erro ao buscar registros', 'error');
         } finally {
             setLoadingLogs(false);
+        }
+    };
+
+    const handleUserClick = async (user) => {
+        setSelectedUserLog(user);
+        setLoadingUserLogs(true);
+        try {
+            const logs = await fetchUserLogs(user.id);
+            setUserLogs(logs);
+        } catch (err) {
+            showToast('Erro ao buscar logs do usuário', 'error');
+            setUserLogs([]);
+        } finally {
+            setLoadingUserLogs(false);
         }
     };
 
@@ -150,7 +169,19 @@ export default function AdminPanel({ adminPassword, showToast }) {
                             {usersList.map((u) => (
                                 <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: 12 }}>#{u.id}</td>
-                                    <td style={{ padding: 12 }}>{u.username}</td>
+                                    <td
+                                        onClick={() => handleUserClick(u)}
+                                        style={{
+                                            padding: 12,
+                                            cursor: 'pointer',
+                                            color: '#a855f7',
+                                            fontWeight: 'bold',
+                                            textDecoration: 'underline'
+                                        }}
+                                        title="Clique para ver os logs deste usuário"
+                                    >
+                                        {u.username}
+                                    </td>
                                     <td style={{ padding: 12 }}>
                                         <span style={{
                                             padding: '2px 8px',
@@ -261,6 +292,76 @@ export default function AdminPanel({ adminPassword, showToast }) {
                 </div>
             </div>
 
+            {/* Modal de Logs do Usuário */}
+            {selectedUserLog && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+                    backdropFilter: 'blur(5px)'
+                }} onClick={() => setSelectedUserLog(null)}>
+                    <div style={{
+                        background: '#1a152d', borderRadius: 20, maxWidth: 800, width: '100%',
+                        maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                        border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ margin: 0, color: 'white', fontSize: 20 }}>
+                                📜 Logs: <span style={{ color: '#a855f7' }}>{selectedUserLog.username}</span>
+                            </h3>
+                            <button onClick={() => setSelectedUserLog(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 24, padding: 8 }}>✕</button>
+                        </div>
+
+                        <div style={{ padding: 24, overflowY: 'auto' }}>
+                            {loadingUserLogs ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Carregando logs...</div>
+                            ) : userLogs.length === 0 ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Nenhum log encontrado para este usuário.</div>
+                            ) : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                    <thead>
+                                        <tr style={{ color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                            <th style={{ padding: '12px 0', textAlign: 'left' }}>Ação</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'left' }}>Data</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'center' }}>IP</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'right' }}>Device</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {userLogs.map((log) => (
+                                            <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#e2e8f0' }}>
+                                                <td style={{ padding: '12px 0' }}>
+                                                    <span style={{
+                                                        background: 'rgba(168, 85, 247, 0.1)', color: '#c084fc',
+                                                        padding: '4px 8px', borderRadius: 6, fontWeight: 600, fontSize: 11
+                                                    }}>{log.action}</span>
+                                                    {log.details && (
+                                                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                                                            {JSON.stringify(log.details).slice(0, 50)}...
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '12px 0', color: '#94a3b8' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                                                <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace' }}>{log.ip || '---'}</td>
+                                                <td style={{ padding: '12px 0', textAlign: 'right', maxWidth: 200 }}>
+                                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={log.fingerprint || log.details?.user_agent}>
+                                                        {log.fingerprint ? (
+                                                            <span style={{ fontFamily: 'monospace', background: '#0f172a', padding: '2px 6px', borderRadius: 4 }}>
+                                                                {log.fingerprint.substring(0, 16)}...
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{ fontStyle: 'italic', color: '#475569' }}>Sem fingerprint</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

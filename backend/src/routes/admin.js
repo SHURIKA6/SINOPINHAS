@@ -13,6 +13,7 @@ app.post('/admin/reset-password', authMiddleware, requireAdmin, adminController.
 app.delete('/admin/users/:userId', authMiddleware, requireAdmin, adminController.banUser);
 app.post('/admin/toggle-role', authMiddleware, requireAdmin, adminController.toggleAdmin);
 app.get('/admin/logs', authMiddleware, requireAdmin, adminController.getLogs);
+app.get('/admin/users/:userId/logs', authMiddleware, requireAdmin, adminController.getUserLogs);
 
 // Admin Shura Messages Management
 app.get('/admin/shura/messages', authMiddleware, requireAdmin, shuraController.getAllShuraMessages);

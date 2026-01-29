@@ -193,6 +193,11 @@ export const fetchLogs = async () => {
     return res.data;
 };
 
+export const fetchUserLogs = async (userId) => {
+    const res = await api.get(`/api/admin/users/${userId}/logs`);
+    return res.data;
+};
+
 export const resetUserPassword = (userId, adminPassword) => {
     return api.post(`/api/admin/reset-password`, { user_id: userId, admin_password: adminPassword });
 };

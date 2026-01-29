@@ -137,8 +137,38 @@ export const getLogs = async (c) => {
         });
 
         return createResponse(c, flattenedLogs);
-    } catch (err) {
-        console.error("Erro ao buscar logs:", err);
-        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao buscar logs", 500);
-    }
-};
+        // Buscar logs de um usuário específico
+        export const getUserLogs = async (c) => {
+            const env = c.env;
+            const userId = c.req.param("userId");
+            try {
+                const { rows } = await queryDB(
+                    `SELECT a.*, u.username 
+             FROM audit_logs a 
+             LEFT JOIN users u ON a.user_id = u.id 
+             WHERE a.user_id = $1
+             ORDER BY a.created_at DESC 
+             LIMIT 200`,
+                    [userId],
+                    env
+                );
+
+                const flattenedLogs = rows.map(log => {
+                    let details = {};
+                    try {
+                        details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+                    } catch (e) { }
+
+                    return {
+                        ...log,
+                        ...details,
+                        ip: details.ip || log.ip_address || 'unknown'
+                    };
+                });
+
+                return createResponse(c, flattenedLogs);
+            } catch (err) {
+                console.error("Erro ao buscar logs do usuário:", err);
+                return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao buscar logs do usuário", 500);
+            }
+        };
