@@ -35,6 +35,11 @@ export const register = async (c) => {
         const username = body.username;
         const password = body.password;
 
+        if (!env.JWT_SECRET) {
+            console.error("CRITICAL: JWT_SECRET is not defined in environment variables.");
+            return createErrorResponse(c, "INTERNAL_ERROR", "Configuration Error", 500);
+        }
+
         if (username.length < 4) {
             return createErrorResponse(c, "INVALID_INPUT", "Nome de usuário deve ter pelo menos 4 caracteres", 400);
         }
@@ -67,7 +72,7 @@ export const register = async (c) => {
             username: user.username,
             role: user.role || 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
-        }, env.JWT_SECRET || 'development_secret_123');
+        }, env.JWT_SECRET);
 
         return createResponse(c, { user, token });
     } catch (err) {
@@ -82,6 +87,11 @@ export const login = async (c) => {
         const body = await c.req.json();
         const username = body.username;
         const password = body.password;
+
+        if (!env.JWT_SECRET) {
+            console.error("CRITICAL: JWT_SECRET is not defined in environment variables.");
+            return createErrorResponse(c, "INTERNAL_ERROR", "Configuration Error", 500);
+        }
 
         if (!username || !password) {
             await logAudit(null, "LOGIN_FAILED_MISSING_FIELDS", { username }, c);
@@ -117,7 +127,7 @@ export const login = async (c) => {
             username: user.username,
             role: user.role || 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
-        }, env.JWT_SECRET || 'development_secret_123');
+        }, env.JWT_SECRET);
 
         return createResponse(c, {
             user,
