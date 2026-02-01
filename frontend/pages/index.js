@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuthContext } from "../contexts/AuthContext";
+import { useUIContext } from "../contexts/UIContext";
 import { useComments } from "../hooks/useComments";
 import { usePWA } from "../hooks/usePWA";
 import { useSwipe } from "../hooks/useSwipe";
@@ -82,79 +83,48 @@ export default function Home({ initialVideo }) {
     document.title = 'SINOPINHAS by SHURA';
   }, []);
 
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const [showAuth, setShowAuth] = useState(false);
-  const [showAdminAuth, setShowAdminAuth] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [zoomedPhoto, setZoomedPhoto] = useState(null);
-  const router = useRouter();
-  const [activeTab, setActiveTabState] = useState('feed');
-
-  // Hooks Customizados
-  const { showInstallBtn, installApp, dismissInstall } = usePWA();
-
-  const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }, []);
+  const {
+    activeTab, setActiveTab,
+    theme, toggleTheme,
+    showProfile, setShowProfile,
+    showSupport, setShowSupport,
+    showSecretTab, setShowSecretTab,
+    toast, showToast, setToast,
+    publicProfileId, setPublicProfileId,
+    achievementToList, setAchievementToList,
+    zoomedPhoto, setZoomedPhoto
+  } = useUIContext();
 
   const {
     user, setUser, isAdmin, adminPassword, unreadCount,
     handleAuthSuccess, handleAdminAuthSuccess, logout,
-    logoutAdmin, loadNotifications, subscribeToNotifications
-  } = useAuth(showToast);
+    logoutAdmin, loadNotifications, subscribeToNotifications,
+    showAuth, setShowAuth,
+    showAdminAuth, setShowAdminAuth,
+    showSecretAuth, setShowSecretAuth
+  } = useAuthContext();
+
+  // Hooks Customizados
+  const { showInstallBtn, installApp, dismissInstall } = usePWA();
 
   const tabs = ['feed', 'news', 'eventos', 'lugares', 'weather'];
   const currentIndex = tabs.indexOf(activeTab);
 
-  const setActiveTab = (tab) => {
-    setActiveTabState(tab);
-    router.push({
-      pathname: '/',
-      query: { ...router.query, tab: tab }
-    }, undefined, { shallow: true });
-  };
+  // useSwipe e setTermsAccepted continuam aqui ou movemos para UIContext também? termos é global
+  // Vamos manter termos aqui por enquanto para não quebrar muito
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const { handleTouchStart, handleTouchEnd } = useSwipe(
     () => currentIndex < tabs.length - 1 && setActiveTab(tabs[currentIndex + 1]),
     () => currentIndex > 0 && setActiveTab(tabs[currentIndex - 1])
   );
 
-  // Sincroniza estado com a URL
-  useEffect(() => {
-    if (router.isReady) {
-      const tab = router.query.tab;
-      if (tab && ['feed', 'upload', 'eventos', 'news', 'lugares', 'weather', 'admin', 'inbox', 'secret'].includes(tab)) {
-        setActiveTabState(tab);
-      }
-    }
-  }, [router.isReady, router.query.tab]);
 
-  const [showSecretAuth, setShowSecretAuth] = useState(false);
-  const [showSupport, setShowSupport] = useState(false);
-  const [showSecretTab, setShowSecretTab] = useState(false);
-  const [theme, setTheme] = useState('dark');
 
-  // Perfil Público e Conquistas
-  const [publicProfileId, setPublicProfileId] = useState(null);
-  const [achievementToList, setAchievementToList] = useState(null);
 
-  // Troca de Tema
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+
 
   useEffect(() => {
     window.subscribeToPush = subscribeToNotifications;
@@ -165,9 +135,10 @@ export default function Home({ initialVideo }) {
       setActiveTab('inbox');
       // Precisa passar o ID para o componente Inbox de alguma forma, 
       // mas como ele é um filho do TabPane, podemos usar router query.
+      // router está disponível no hook, mas precisamos dele aqui? Sim, temos o router importado.
       router.push({ pathname: '/', query: { ...router.query, tab: 'inbox', u: id } }, undefined, { shallow: true });
     };
-  }, [subscribeToNotifications, router]);
+  }, [subscribeToNotifications, router, setPublicProfileId, setAchievementToList, setZoomedPhoto, setActiveTab]);
 
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
