@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import VideoCard from '../VideoCard';
-import SkeletonVideoCard from '../SkeletonVideoCard';
+import FeedSkeleton from './FeedSkeleton';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 import { Search, Flame, Video, Image as ImageIcon } from 'lucide-react';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
@@ -171,7 +173,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
                 {loading && videos.length === 0 ? (
                     <div className="feed-grid">
-                        {[...Array(8)].map((_, i) => <SkeletonVideoCard key={i} />)}
+                        {[...Array(8)].map((_, i) => <FeedSkeleton key={i} />)}
                     </div>
                 ) : videos.length === 0 ? (
                     <div className="feed-empty">
@@ -180,37 +182,55 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                         <p>Seja o primeiro a compartilhar algo legal em Sinop!</p>
                     </div>
                 ) : (
-                    <>
-                        <div className="feed-grid">
-                            {sortedVideos.map((v) => (
-                                <VideoCard
-                                    key={v.id}
-                                    video={v}
-                                    onDelete={handleDeleteVideo}
-                                    onLike={toggleLike}
-                                    onOpenComments={onVideoClick}
-                                    canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
-                                    onShare={(video) => setVideoToShare(video)}
-                                />
-                            ))}
-                        </div>
+                    <div style={{ height: 'calc(100vh - 200px)', width: '100%' }}>
+                        <AutoSizer>
+                            {({ height, width }) => {
+                                const MIN_COL_WIDTH = 280;
+                                const GAP = 20;
+                                const columnCount = Math.floor((width + GAP) / (MIN_COL_WIDTH + GAP)) || 1;
+                                const rowCount = Math.ceil(videos.length / columnCount);
+                                const cardWidth = (width - (columnCount - 1) * GAP) / columnCount;
+                                const CARD_HEIGHT = 450; // Aproximado, ideal seria medir
 
-                        {videoToShare && (
-                            <ShareModal
-                                video={videoToShare}
-                                user={user}
-                                onClose={() => setVideoToShare(null)}
-                                showToast={showToast}
-                            />
-                        )}
+                                return (
+                                    <List
+                                        height={height}
+                                        width={width}
+                                        itemCount={rowCount}
+                                        itemSize={CARD_HEIGHT + GAP}
+                                        onItemsRendered={({ visibleStopIndex }) => {
+                                            if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
+                                                setOffset(prev => prev + LIMIT);
+                                            }
+                                        }}
+                                    >
+                                        {({ index, style }) => {
+                                            const fromIndex = index * columnCount;
+                                            const toIndex = Math.min(fromIndex + columnCount, videos.length);
+                                            const items = videos.slice(fromIndex, toIndex);
 
-                        {hasMore && (
-                            <div ref={loadMoreRef} className="feed-loader">
-                                <span className="loader-spin">⏳</span>
-                                Buscando mais novidades...
-                            </div>
-                        )}
-                    </>
+                                            return (
+                                                <div style={{ ...style, display: 'flex', gap: GAP }}>
+                                                    {items.map(v => (
+                                                        <div key={v.id} style={{ width: cardWidth }}>
+                                                            <VideoCard
+                                                                video={v}
+                                                                onDelete={handleDeleteVideo}
+                                                                onLike={toggleLike}
+                                                                onOpenComments={onVideoClick}
+                                                                canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
+                                                                onShare={(video) => setVideoToShare(video)}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }}
+                                    </List>
+                                );
+                            }}
+                        </AutoSizer>
+                    </div>
                 )}
             </div>
 
