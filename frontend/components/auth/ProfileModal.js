@@ -3,13 +3,15 @@ import Cropper from 'react-easy-crop';
 import { useRouter } from 'next/router';
 import { updateUserProfile } from '../../services/api';
 import { getCroppedImg } from '../../lib/imageUtils';
+import { LogOut, Lock } from 'lucide-react';
 
-export default function ProfileModal({ user, setUser, onClose, showToast }) {
+export default function ProfileModal({ user, setUser, onClose, showToast, logout, allowSecret, onGoToSecret }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('profile'); // profile, security, achievements
 
     const [newAvatar, setNewAvatar] = useState(user.avatar || '');
     const [newBio, setNewBio] = useState(user.bio || '');
+    const [newEmail, setNewEmail] = useState(user.email || '');
     const [avatarFile, setAvatarFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(user.avatar || '');
     const [currentPassword, setCurrentPassword] = useState('');
@@ -70,6 +72,11 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
 
             if (newBio !== user.bio) {
                 formData.append('bio', newBio);
+                hasChanges = true;
+            }
+
+            if (newEmail !== user.email) {
+                formData.append('email', newEmail);
                 hasChanges = true;
             }
 
@@ -244,9 +251,25 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
 
                                     <div style={{ padding: 16, background: 'var(--glass-bg)', borderRadius: 12, marginBottom: 16, border: '1px solid var(--border-color)' }}>
                                         <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: 'var(--secondary-text)', textTransform: 'uppercase' }}>Informações</h4>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14, alignItems: 'center' }}>
                                             <span style={{ color: 'var(--secondary-text)' }}>Email:</span>
-                                            <span style={{ fontWeight: 600 }}>{user.email}</span>
+                                            <input
+                                                type="email"
+                                                value={newEmail}
+                                                onChange={e => setNewEmail(e.target.value)}
+                                                placeholder="Adicionar e-mail..."
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    borderBottom: '1px solid var(--secondary-text)',
+                                                    color: 'var(--text-color)',
+                                                    fontSize: 14,
+                                                    fontWeight: 600,
+                                                    textAlign: 'right',
+                                                    width: '60%',
+                                                    outline: 'none'
+                                                }}
+                                            />
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
                                             <span style={{ color: 'var(--secondary-text)' }}>Membro desde:</span>
@@ -254,9 +277,50 @@ export default function ProfileModal({ user, setUser, onClose, showToast }) {
                                         </div>
                                     </div>
 
-                                    <button type="submit" style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%)', color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16, boxShadow: '0 8px 20px rgba(141, 106, 255, 0.3)' }}>
+                                    <button type="submit" style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%)', color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16, boxShadow: '0 8px 20px rgba(141, 106, 255, 0.3)', marginBottom: 16 }}>
                                         Salvar Alterações
                                     </button>
+
+                                    {/* Actions Group (Restricted + Logout) */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: allowSecret ? '1fr 1fr' : '1fr', gap: 12 }}>
+                                        {allowSecret && (
+                                            <button
+                                                type="button"
+                                                onClick={onGoToSecret}
+                                                style={{
+                                                    padding: '12px',
+                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                    color: '#ef4444',
+                                                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                    borderRadius: 12,
+                                                    cursor: 'pointer',
+                                                    fontWeight: 700,
+                                                    fontSize: 14,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                                                }}
+                                            >
+                                                <Lock size={16} /> Restrito
+                                            </button>
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            onClick={logout}
+                                            style={{
+                                                padding: '12px',
+                                                background: 'var(--input-bg)',
+                                                color: 'var(--secondary-text)',
+                                                border: '1px solid var(--border-color)',
+                                                borderRadius: 12,
+                                                cursor: 'pointer',
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                                            }}
+                                        >
+                                            <LogOut size={16} /> Sair
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 

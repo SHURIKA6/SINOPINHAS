@@ -156,5 +156,6 @@ export const SCHEMA_QUERIES = [
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_messages_users ON messages(from_id, to_id)",
-    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)"
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE"
 ];

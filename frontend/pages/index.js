@@ -294,6 +294,7 @@ export default function Home({ initialVideo }) {
           showToast={showToast}
           allowSecret={showSecretTab || isAdmin}
           onGoToSecret={() => { setActiveTab('secret'); setShowProfile(false); }}
+          logout={() => { logout(); setShowProfile(false); setActiveTab('feed'); }}
         />}
         {showAdminAuth && <AdminAuthModal onClose={() => setShowAdminAuth(false)} onAdminAuthSuccess={handleAdminAuthSuccess} showToast={showToast} />}
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}

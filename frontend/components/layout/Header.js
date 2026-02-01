@@ -106,13 +106,9 @@ export default function Header({
                             </button>
                         )}
 
-                        {!isAdmin ? (
+                        {!isAdmin && (
                             <button onClick={() => setShowAdminAuth(true)} className="admin-trigger-btn" title="Painel Admin">
                                 <Settings size={16} />
-                            </button>
-                        ) : (
-                            <button onClick={logoutAdmin} className="admin-logout-btn" title="Sair do Admin">
-                                <LogOut size={16} />
                             </button>
                         )}
                     </div>
@@ -385,6 +381,10 @@ export default function Header({
                     color: #ef4444;
                     border: none;
                     cursor: pointer;
+                }
+
+                .mobile-header-user {
+                    display: none;
                 }
 
                 .menu-btn-mobile {

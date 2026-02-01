@@ -9,7 +9,7 @@ import { getAchievementList } from '../utils/user-achievements.js';
 // Helper para buscar usuário completo com conquistas
 const getFullUser = async (userId, env) => {
     const { rows } = await queryDB(
-        `SELECT id, username, avatar, bio, role, discovered_logs, created_at,
+        `SELECT id, username, email, avatar, bio, role, discovered_logs, created_at,
         (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count,
         (SELECT COUNT(*) FROM comments WHERE user_id = users.id) as comment_count_made,
         (SELECT COUNT(*) FROM likes WHERE user_id = users.id) as likes_given,
@@ -142,7 +142,7 @@ export const updateProfile = async (c) => {
         }
 
         const contentType = c.req.header('content-type');
-        let password, currentPassword, avatar, bio, avatarFile;
+        let password, currentPassword, avatar, bio, email, avatarFile;
 
         if (contentType && contentType.includes('multipart/form-data')) {
             try {
@@ -151,6 +151,7 @@ export const updateProfile = async (c) => {
                 currentPassword = formData.get('currentPassword');
                 avatar = formData.get('avatar');
                 bio = formData.get('bio');
+                email = formData.get('email');
                 avatarFile = formData.get('avatarFile');
             } catch (formErr) {
                 console.error("Error parsing formData:", formErr);
@@ -163,6 +164,7 @@ export const updateProfile = async (c) => {
                 currentPassword = body.currentPassword;
                 avatar = body.avatar;
                 bio = body.bio;
+                email = body.email;
             } catch (e) {
                 // If body is empty or not JSON, we just continue with what we have
             }
@@ -172,7 +174,8 @@ export const updateProfile = async (c) => {
         const validationResult = updateProfileSchema.safeParse({
             password: password || undefined,
             avatar: (typeof avatar === 'string' ? avatar : undefined),
-            bio: (typeof bio === 'string' ? bio : undefined)
+            bio: (typeof bio === 'string' ? bio : undefined),
+            email: (typeof email === 'string' ? email : undefined)
         });
 
         if (!validationResult.success) {
@@ -244,6 +247,10 @@ export const updateProfile = async (c) => {
             updates.push(`bio = $${paramCount++}`);
             values.push(bio);
         }
+        if (email !== null && email !== undefined) {
+            updates.push(`email = $${paramCount++}`);
+            values.push(email);
+        }
 
         if (updates.length === 0) {
             return createErrorResponse(c, "INVALID_INPUT", "Nenhum campo para atualizar", 400);
@@ -254,7 +261,7 @@ export const updateProfile = async (c) => {
         values.push(targetId);
 
         const { rows } = await queryDB(
-            `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramCount} RETURNING id, username, avatar, bio, role`,
+            `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramCount} RETURNING id, username, email, avatar, bio, role`,
             values,
             env
         );
