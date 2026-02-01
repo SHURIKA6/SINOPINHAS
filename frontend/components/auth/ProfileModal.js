@@ -5,7 +5,7 @@ import { updateUserProfile } from '../../services/api';
 import { getCroppedImg } from '../../lib/imageUtils';
 import { LogOut, Lock } from 'lucide-react';
 
-export default function ProfileModal({ user, setUser, onClose, showToast, logout, allowSecret, onGoToSecret }) {
+export default function ProfileModal({ user, setUser, onClose, showToast, logout, allowSecret, onGoToSecret, onRequestSecret }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('profile'); // profile, security, achievements
 
@@ -279,26 +279,24 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                                     </button>
 
                                     {/* Actions Group (Restricted + Logout) */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: allowSecret ? '1fr 1fr' : '1fr', gap: 12 }}>
-                                        {allowSecret && (
-                                            <button
-                                                type="button"
-                                                onClick={onGoToSecret}
-                                                style={{
-                                                    padding: '12px',
-                                                    background: 'rgba(239, 68, 68, 0.1)',
-                                                    color: '#ef4444',
-                                                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                                                    borderRadius: 12,
-                                                    cursor: 'pointer',
-                                                    fontWeight: 700,
-                                                    fontSize: 14,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                                                }}
-                                            >
-                                                <Lock size={16} /> Restrito
-                                            </button>
-                                        )}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                        <button
+                                            type="button"
+                                            onClick={onRequestSecret}
+                                            style={{
+                                                padding: '12px',
+                                                background: 'rgba(239, 68, 68, 0.1)',
+                                                color: '#ef4444',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                borderRadius: 12,
+                                                cursor: 'pointer',
+                                                fontWeight: 700,
+                                                fontSize: 14,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                                            }}
+                                        >
+                                            <Lock size={16} /> Restrito
+                                        </button>
 
                                         <button
                                             type="button"
