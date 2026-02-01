@@ -25,10 +25,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
     const [isCropping, setIsCropping] = useState(false);
     const [tempImageUrl, setTempImageUrl] = useState(null);
 
-    const onGoToSecret = () => {
-        router.push('/shura-logs');
-        onClose();
-    };
+
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
