@@ -264,3 +264,154 @@ a {
   color: red;
   margin-left: auto;
 }
+
+/* --- MSN Messenger Style for Inbox --- */
+:root {
+  --msn-blue-light: #EBF4FC;
+  --msn-blue-medium: #D1E5FB;
+  --msn-blue-dark: #6CA5EA;
+  --msn-border: #7B9EBD;
+  --msn-header-gradient: linear-gradient(180deg, #FFFFFF 0%, #D4E6FC 100%);
+  --msn-contact-hover: #FFFCE5;
+  --msn-contact-selected: #CDE3FA;
+}
+
+.msn-window {
+  background: linear-gradient(180deg, #E6F3FF 0%, #B6D9FA 100%);
+  border: 1px solid #7B9EBD;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  overflow: hidden;
+  height: 70vh;
+  /* Adjust as needed */
+  font-family: 'Verdana', sans-serif;
+}
+
+/* Sidebar / Contact List */
+.msn-sidebar {
+  width: 300px;
+  background: white;
+  border-right: 1px solid #A0B5CA;
+  display: flex;
+  flex-direction: column;
+}
+
+.msn-header {
+  background: var(--msn-header-gradient);
+  padding: 10px;
+  border-bottom: 1px solid #BED6F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.msn-user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #E1F0FF;
+  border-bottom: 1px solid #95BDE3;
+}
+
+.msn-contact-list {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+}
+
+.msn-contact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+
+.msn-contact:hover {
+  background: var(--msn-contact-hover);
+  border-color: #E2D991;
+}
+
+.msn-contact.active {
+  background: var(--msn-contact-selected);
+  border-color: #7DA2CE;
+}
+
+.msn-avatar-frame {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  background: white;
+  border: 1px solid #95BDE3;
+  border-radius: 4px;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Chat Area */
+.msn-chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  background-image: linear-gradient(#F3F8FE 1px, transparent 1px);
+  background-size: 100% 24px;
+  /* Notebook lines effect */
+}
+
+.msn-chat-header {
+  height: 60px;
+  background: var(--msn-header-gradient);
+  border-bottom: 1px solid #BED6F0;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.msn-messages-box {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-size: 13px;
+  color: #000;
+}
+
+.msn-input-area {
+  height: 100px;
+  padding: 8px;
+  background: #F4F9FF;
+  border-top: 1px solid #A0B5CA;
+  display: flex;
+  flex-direction: column;
+}
+
+.msn-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+  opacity: 0.7;
+}
+
+.msn-textarea {
+  flex: 1;
+  border: 1px solid #7B9EBD;
+  border-radius: 3px;
+  resize: none;
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  padding: 4px;
+}
+
+.msn-send-btn {
+  align-self: flex-end;
+  margin-top: 4px;
+  background: linear-gradient(180deg, #FDFDFD 0%, #D8D8D8 100%);
+  border: 1px solid #888;
+  border-radius: 4px;
+  padding: 2px 12px;
+  font-size: 11px;
+  cursor: pointer;
+}

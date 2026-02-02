@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
+import { ArrowLeft, Send, Paperclip, Smile } from 'lucide-react';
 
 const DEFAULT_API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -13,6 +14,8 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
 
   const [showAdminInbox, setShowAdminInbox] = useState(false);
   const [sendAsAdmin, setSendAsAdmin] = useState(false);
+
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (user || isAdmin) {
@@ -58,6 +61,11 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
   useEffect(() => {
     if (selectedUser) markMessagesAsRead();
   }, [selectedUser]);
+
+  // Scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Carregar mensagens
   const loadMessages = async () => {
@@ -117,7 +125,10 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const usersToShow = localUsersList.filter(u => u.id !== user?.id);
+  // Filtrar usuários para inbox (apenas com quem houve interação ou todos se quiser uma lista completa)
+  // No original, parecia listar todos. Vamos manter, mas talvez filtrar admin?
+  // O código original filtrava apenas o próprio usuário:
+  const inboxUsers = localUsersList.filter(u => u.id !== user?.id);
 
   if (!user && !isAdmin) {
     return (
@@ -129,184 +140,140 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     );
   }
 
-  // Interface do Inbox
+  // --- MSN LAYOUT ---
   return (
-    <div style={{
-      display: 'flex',
-      gap: isMobile ? 0 : 20,
-      height: isMobile ? 'calc(100vh - 120px)' : '70vh',
-      flexDirection: 'row',
-      position: 'relative',
-      overflow: 'hidden',
-      background: 'var(--bg-color)',
-      borderRadius: 16
-    }}>
-      {/* LISTA DE USUÁRIOS */}
-      <div style={{
-        width: isMobile ? '100%' : '300px',
-        display: (isMobile && selectedUser) ? 'none' : 'flex',
-        flexDirection: 'column',
-        background: 'var(--card-bg)',
-        borderRadius: isMobile ? 0 : 12,
-        padding: isMobile ? '15px' : 20,
-        overflowY: 'auto',
-        flex: isMobile ? '1' : '0 0 300px',
-        border: '1px solid var(--border-color)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, color: 'var(--text-color)', fontSize: isMobile ? 18 : 22 }}>💬 Conversas</h3>
-          {isAdmin && (
-            <button onClick={() => setShowAdminInbox(!showAdminInbox)} style={{ fontSize: 10, padding: '4px 8px', background: showAdminInbox ? '#ef4444' : 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 4, color: 'white' }}>
-              {showAdminInbox ? 'SAIR ADMIN' : 'ADMIN VIEW'}
-            </button>
-          )}
-        </div>
+    <div className="msn-container" style={{ padding: '20px', display: 'flex', justifyContent: 'center', height: '100%' }}>
+      <div className="msn-window" style={{ width: '100%', maxWidth: '900px', height: isMobile ? 'calc(100vh - 150px)' : '600px' }}>
 
-        {usersLoading ? (
-          <div style={{ textAlign: 'center', padding: 20 }}>
-            <div style={{ width: 30, height: 30, border: '3px solid var(--border-color)', borderTop: '3px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-          </div>
-        ) : usersToShow.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 48, marginBottom: 15 }}>👥</div>
-            <p style={{ color: 'var(--secondary-text)', fontSize: 14, margin: 0 }}>Nenhum usuário online</p>
-          </div>
-        ) : (
-          usersToShow.map(u => {
-            const unreadCount = messages.filter(m => m.from_id === u.id && m.to_id === user?.id && !m.is_read).length;
-            return (
-              <div key={u.id} onClick={() => setSelectedUser(u)} style={{
-                padding: '14px 12px',
-                marginBottom: 8,
-                background: selectedUser?.id === u.id ? 'var(--accent-color)' : 'var(--input-bg)',
-                borderRadius: 12,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                border: selectedUser?.id === u.id && showAdminInbox ? '2px solid #ef4444' : '1px solid var(--border-color)',
-                transition: 'all 0.2s ease'
-              }}>
-                <div style={{ position: 'relative' }}>
-                  {u.avatar ?
-                    <img src={u.avatar} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} alt={u.username} /> :
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-color) 0%, #7c3aed 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 'bold', color: '#fff' }}> {u.username.charAt(0).toUpperCase()} </div>
-                  }
-                </div>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontWeight: 600, color: selectedUser?.id === u.id ? '#fff' : 'var(--text-color)', fontSize: 15 }}>{u.username}</div>
-                  {user && unreadCount > 0 && <div style={{ background: '#ef4444', color: '#fff', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'bold', border: '2px solid var(--card-bg)' }}> {unreadCount} </div>}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* ÁREA DA CONVERSA */}
-      <div style={{
-        flex: 1,
-        display: (isMobile && !selectedUser) ? 'none' : 'flex',
-        flexDirection: 'column',
-        background: 'var(--card-bg)',
-        borderRadius: isMobile ? 0 : 12,
-        overflow: 'hidden',
-        border: showAdminInbox ? '2px solid #ef4444' : '1px solid var(--border-color)',
-        height: '100%'
-      }}>
-        {selectedUser ? (
-          <>
-            <div style={{ padding: isMobile ? '12px 15px' : '15px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: 12, background: showAdminInbox ? '#2a0000' : 'var(--card-bg)' }}>
-              {isMobile && (
-                <button onClick={() => setSelectedUser(null)} style={{ background: 'none', border: 'none', color: 'var(--text-color)', fontSize: 24, padding: '0 10px 0 0', cursor: 'pointer' }}>
-                  ←
+        {/* SIDEBAR (Contacts) */}
+        {(!isMobile || !selectedUser) && (
+          <div className={`msn-sidebar ${isMobile ? 'w-full' : ''}`} style={{ width: isMobile ? '100%' : '300px' }}>
+            <div className="msn-header">
+              <span style={{ fontWeight: 'bold', color: '#444' }}>Conversas {isAdmin && '(Admin)'}</span>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowAdminInbox(!showAdminInbox)}
+                  style={{ fontSize: 10, padding: '2px 6px', background: showAdminInbox ? 'red' : '#ddd', color: 'white', borderRadius: 4, border: 'none' }}
+                >
+                  {showAdminInbox ? 'Spy Mode ON' : 'Spy OFF'}
                 </button>
               )}
-              <div
-                onClick={() => window.openPublicProfile(selectedUser.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-              >
-                {selectedUser.avatar ? <img src={selectedUser.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} alt={selectedUser.username} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 'bold', color: '#fff' }}> {selectedUser.username.charAt(0).toUpperCase()} </div>}
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, color: 'var(--text-color)', fontSize: 16 }}>{selectedUser.username}</h3>
-                  {showAdminInbox && <span style={{ fontSize: 10, color: '#ef4444' }}>Modo Espião</span>}
-                </div>
+            </div>
+
+            <div className="msn-user-bar">
+              <div className="msn-avatar-frame">
+                <img
+                  src={user?.avatar || 'https://www.gravatar.com/avatar?d=mp'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  alt={user?.username || 'Me'}
+                />
+              </div>
+              <div style={{ fontSize: '12px', lineHeight: '1.2' }}>
+                <span style={{ fontWeight: 'bold', color: '#000' }}>{user?.username}</span> <br />
+                <span style={{ color: '#008000', fontSize: '11px' }}>(Online)</span>
               </div>
             </div>
 
-            <div style={{ flex: 1, padding: isMobile ? '15px' : '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 15, background: 'var(--bg-color)' }}>
-              {loading && messages.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40 }}><div style={{ width: 40, height: 40, border: '4px solid var(--border-color)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div>
-              ) : filteredMessages.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--secondary-text)', marginTop: 40, background: 'var(--card-bg)', padding: 20, borderRadius: 12 }}><p>Inicie uma conversa com {selectedUser.username}</p></div>
+            <div className="msn-contact-list">
+              {usersLoading ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Carregando contatos...</div>
+              ) : inboxUsers.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Nenhum contato online</div>
               ) : (
-                filteredMessages.map((msg, i) => {
-                  const isFromMe = user && msg.from_id === user.id;
-                  const isFromSelectedUser = selectedUser && msg.from_id === selectedUser.id;
-
-                  // No modo Admin/Espião, alinhamos o usuário "espionado" à direita para facilitar leitura
-                  const alignRight = showAdminInbox ? isFromSelectedUser : isFromMe;
-                  const senderName = msg.from_username || `Usuário ${msg.from_id}`;
-                  const receiverName = msg.to_username || `Usuário ${msg.to_id}`;
-
+                inboxUsers.map(u => {
+                  const unreadCount = messages.filter(m => m.from_id === u.id && m.to_id === user?.id && !m.is_read).length;
                   return (
-                    <div key={i} style={{ alignSelf: alignRight ? 'flex-end' : 'flex-start', maxWidth: isMobile ? '85%' : '75%', position: 'relative' }}>
-                      {showAdminInbox && (
-                        <div style={{ fontSize: 9, marginBottom: 2, opacity: 0.6, textAlign: alignRight ? 'right' : 'left', color: 'var(--text-color)' }}>
-                          {alignRight ? `Para: ${receiverName}` : `De: ${senderName}`}
-                        </div>
-                      )}
-                      <div style={{
-                        background: msg.is_admin ? 'linear-gradient(135deg, #ef4444 0%, #991b1b 100%)' : (alignRight ? 'var(--accent-color)' : 'var(--card-bg)'),
-                        padding: '10px 14px',
-                        borderRadius: alignRight ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
-                        color: (alignRight || msg.is_admin) ? '#fff' : 'var(--text-color)',
-                        border: '1px solid var(--border-color)',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }}>
-                        {msg.is_admin && <strong style={{ display: 'block', fontSize: 9, color: '#ffd700', marginBottom: 4, textTransform: 'uppercase' }}>📢 Admin Oficial</strong>}
-                        <p style={{ margin: 0, wordBreak: 'break-word', whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: '1.4' }}>
-                          {msg.msg.split(/\[VIDEO_LINK:(\d+)\]/g).map((part, idx) => idx % 2 === 1 ? <span key={idx} style={{ display: 'block', margin: '8px 0', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: 8, color: '#fff', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} onClick={() => window.open(`/?v=${part}`, '_blank')}>▶️ Ver Vídeo #{part}</span> : part)}
-                        </p>
-                        <div style={{ fontSize: 10, color: (isFromMe || msg.is_admin) ? 'rgba(255,255,255,0.7)' : 'var(--secondary-text)', marginTop: 6, textAlign: 'right' }}> {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} </div>
+                    <div
+                      key={u.id}
+                      className={`msn-contact ${selectedUser?.id === u.id ? 'active' : ''}`}
+                      onClick={() => setSelectedUser(u)}
+                    >
+                      <div className="msn-avatar-frame" style={{ width: '32px', height: '32px' }}>
+                        <img src={u.avatar || 'https://www.gravatar.com/avatar?d=mp'} style={{ width: '100%', height: '100%' }} alt={u.username} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#000' }}>{u.username}</span>
+                        <span style={{ fontSize: '10px', color: '#666' }}>
+                          {unreadCount > 0 ? `(${unreadCount} nova(s) msg)` : 'Disponível'}
+                        </span>
                       </div>
                     </div>
                   );
                 })
               )}
             </div>
+          </div>
+        )}
 
-            <form onSubmit={sendMessage} style={{ padding: isMobile ? '10px' : '15px 20px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: 10, flexDirection: 'column', background: 'var(--card-bg)' }}>
-              {isAdmin && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: sendAsAdmin ? '#ef4444' : 'var(--secondary-text)', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={sendAsAdmin} onChange={e => setSendAsAdmin(e.target.checked)} /> Modo Admin
-                </label>
-              )}
-              <div style={{ display: 'flex', gap: 10, width: '100%', alignItems: 'center' }}>
-                <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Sua mensagem..." style={{ flex: 1, padding: '12px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 25, color: 'var(--text-color)', fontSize: 14, outline: 'none' }} />
-                <button type="submit" disabled={!newMessage.trim()} style={{
-                  width: 44,
-                  height: 44,
-                  background: newMessage.trim() ? 'var(--accent-color)' : 'var(--input-bg)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s active'
-                }}>
-                  <span style={{ fontSize: 20 }}>{newMessage.trim() ? '↑' : '✉️'}</span>
-                </button>
+        {/* CHAT AREA */}
+        {(!isMobile || selectedUser) && (
+          <div className="msn-chat-area">
+            {selectedUser ? (
+              <>
+                <div className="msn-chat-header">
+                  {isMobile && (
+                    <button onClick={() => setSelectedUser(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: 8 }}>
+                      <ArrowLeft size={20} color="#444" />
+                    </button>
+                  )}
+                  <div className="msn-avatar-frame">
+                    <img src={selectedUser.avatar || 'https://www.gravatar.com/avatar?d=mp'} style={{ width: '100%', height: '100%' }} alt="Buddy" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#000' }}>{selectedUser.username}</span>
+                    <span style={{ fontSize: '11px', color: '#555' }}>&lt; Digite uma mensagem... &gt;</span>
+                  </div>
+                </div>
+
+                <div className="msn-messages-box">
+                  {loading && messages.length === 0 ? (
+                    <div style={{ padding: 20, textAlign: 'center' }}>Carregando...</div>
+                  ) : filteredMessages.map((msg, idx) => {
+                    const isMe = user && msg.from_id === user.id;
+                    return (
+                      <div key={idx} style={{ marginBottom: '4px', color: isMe ? '#000' : '#000080' }}>
+                        <span style={{ color: '#888', marginRight: '4px', fontSize: '11px' }}>
+                          [{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]
+                        </span>
+                        <span style={{ fontWeight: 'bold' }}>{isMe ? user.username : selectedUser.username}: </span>
+                        <span>{msg.msg}</span>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                <form onSubmit={sendMessage} className="msn-input-area">
+                  <div className="msn-tools">
+                    <Send size={14} color="#666" /> <Paperclip size={14} color="#666" /> <Smile size={14} color="#666" />
+                  </div>
+                  <textarea
+                    className="msn-textarea"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage(e);
+                      }
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    {isAdmin && (
+                      <label style={{ fontSize: 10, display: 'flex', alignItems: 'center' }}>
+                        <input type="checkbox" checked={sendAsAdmin} onChange={e => setSendAsAdmin(e.target.checked)} /> Admin Mode
+                      </label>
+                    )}
+                    <button type="submit" className="msn-send-btn" disabled={!newMessage.trim()}>Enviar</button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F8FF', flexDirection: 'column' }}>
+                <div style={{ fontSize: 40, opacity: 0.3 }}>🦋</div>
+                <p style={{ color: '#666', marginTop: '10px' }}>Selecione um contato para conversar</p>
               </div>
-            </form>
-          </>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--secondary-text)', flexDirection: 'column', gap: 15, padding: 40, textAlign: 'center' }}>
-            <div style={{ fontSize: 64, opacity: 0.5 }}>💬</div>
-            <h3 style={{ margin: 0, color: 'var(--text-color)' }}>Selecione um chat para começar</h3>
-            <p style={{ fontSize: 14, maxWidth: 200 }}>Escolha uma das conversas ao lado</p>
+            )}
           </div>
         )}
       </div>
