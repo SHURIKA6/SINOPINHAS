@@ -33,7 +33,7 @@ PRESS ENTER TO FINALIZE...
 
         let i = 0;
         let currentText = "";
-        const speed = 20;
+        const speed = 5;
         console.log("%c [SISTEMA V4.0] Iniciando descriptografia...", "color: #00ff41; font-weight: bold;");
 
         const typingInterval = setInterval(() => {

@@ -86,7 +86,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
             {/* WMP Title Bar */}
             <div className="wmp-title-bar">
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '250px' }}>
-                    {isPhoto ? 'Windows Picture Viewer' : 'Windows Media Player'} - {video.username}
+                    {isPhoto ? 'Sinopinhas Picture Viewer' : 'Sinopinhas Media Player'} - {video.username}
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
                     <Minus size={10} />

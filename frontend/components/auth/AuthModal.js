@@ -2,23 +2,29 @@ import { useState } from 'react';
 import { loginUser, registerUser } from '../../services/api';
 import { X } from 'lucide-react';
 
+// Componente Modal de Autenticação (Login e Cadastro) estilo Windows XP
 export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
+    // Estados para controlar o modo (Login/Cadastro) e os campos do formulário
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
+    // Função que manipula o envio do formulário
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Validação simples dos campos
         if (!username || !password) return showToast('Preencha todos os campos', 'error');
 
         try {
             let data;
+            // Alterna entre a chamada de API de Login ou Registro
             if (isLogin) {
                 data = await loginUser(username, password);
             } else {
                 data = await registerUser(username, password);
             }
 
+            // Callback de sucesso e notificação
             onAuthSuccess(data.user);
             showToast(isLogin ? 'Login realizado!' : 'Conta criada!', 'success');
             onClose();
@@ -34,7 +40,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
             alignItems: 'center', justifyContent: 'center'
         }} onClick={onClose}>
 
-            {/* XP Classic Dialog Window */}
+            {/* Janela de Diálogo Estilo Clássico do Windows XP */}
             <div style={{
                 width: '380px',
                 background: '#ECE9D8',
@@ -45,7 +51,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                 display: 'flex', flexDirection: 'column'
             }} onClick={e => e.stopPropagation()}>
 
-                {/* Title Bar */}
+                {/* Barra de Título com Degradê Azul */}
                 <div style={{
                     height: '30px',
                     background: 'linear-gradient(to bottom, #0058EE 0%, #3593FF 4%, #288EFF 18%, #127DFF 20%, #0369FC 39%, #0262EE 41%, #0057E5 100%)',
@@ -57,6 +63,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                     <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px', textShadow: '1px 1px 0 black' }}>
                         {isLogin ? 'Login' : 'Criar Conta'}
                     </span>
+                    {/* Botão Fechar (X) estilo XP */}
                     <div
                         onClick={onClose}
                         style={{
@@ -69,10 +76,10 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                     </div>
                 </div>
 
-                {/* Content Body */}
+                {/* Corpo do Conteúdo da Janela */}
                 <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
-                    {/* XP Header Image/Banner (Optional style element) */}
+                    {/* Cabeçalho com Ícone e Instrução */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
                         <img src="/icons/icon-192x192.png" width="48" height="48" alt="Logo" style={{ filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0.2))' }} />
                         <div style={{ fontSize: '12px', color: '#444' }}>
@@ -80,6 +87,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                         </div>
                     </div>
 
+                    {/* Formulário de Credenciais */}
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <label style={{ fontSize: '11px', color: '#333' }}>Usuário:</label>
@@ -103,7 +111,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                             />
                         </div>
 
-                        {/* Button Row */}
+                        {/* Botões de Ação (Alternar modo e Submeter) */}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
                             <button
                                 type="button"
