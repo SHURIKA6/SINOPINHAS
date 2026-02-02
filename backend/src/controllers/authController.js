@@ -282,7 +282,7 @@ export const updateProfile = async (c) => {
 
         const decoratedUser = await getFullUser(userId, env);
 
-        await logAudit(userId, "USER_PROFILE_UPDATED", {
+        await logAudit(targetId, "USER_PROFILE_UPDATED", {
             avatar_changed: avatar !== undefined,
             bio_changed: bio !== undefined,
             password_changed: !!password,

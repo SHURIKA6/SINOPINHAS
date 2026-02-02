@@ -155,7 +155,7 @@ export const getUserLogs = async (c) => {
              WHERE a.user_id = $1
              ORDER BY a.created_at DESC 
              LIMIT 200`,
-            [userId],
+            [parseInt(userId, 10)],
             env
         );
 

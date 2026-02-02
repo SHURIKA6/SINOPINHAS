@@ -224,6 +224,79 @@ export default function AdminPanel({ adminPassword, showToast }) {
                 </div>
             </div>
 
+            {/* System Logs Section */}
+            <div style={{ marginBottom: 40 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 20, margin: 0 }}>📜 Logs do Sistema ({logs.length})</h3>
+                    <button
+                        onClick={loadLogs}
+                        disabled={loadingLogs}
+                        style={{
+                            padding: '8px 16px',
+                            background: 'rgba(255, 255, 255, 0.5)',
+                            color: '#003366',
+                            border: '1px solid rgba(255, 255, 255, 0.6)',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            fontSize: 14,
+                            fontWeight: 600
+                        }}
+                    >
+                        {loadingLogs ? '⏳' : '🔃'} Atualizar Logs
+                    </button>
+                </div>
+                <div style={{
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%)',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(12px)',
+                    boxShadow: '0 8px 32px rgba(0, 71, 171, 0.15)',
+                    maxHeight: '400px',
+                    overflowY: 'auto'
+                }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                            <tr style={{ background: 'rgba(255, 255, 255, 0.4)', borderBottom: '1px solid rgba(255,255,255,0.8)' }}>
+                                <th style={{ padding: 12, textAlign: 'left', color: '#0047AB', fontWeight: 800 }}>Ação</th>
+                                <th style={{ padding: 12, textAlign: 'left', color: '#0047AB', fontWeight: 800 }}>Usuário</th>
+                                <th style={{ padding: 12, textAlign: 'right', color: '#0047AB', fontWeight: 800 }}>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {logs.map((log) => (
+                                <tr key={log.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.6)' }}>
+                                    <td style={{ padding: 12 }}>
+                                        <span style={{
+                                            background: 'rgba(0, 71, 171, 0.1)', color: '#0047AB',
+                                            padding: '4px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11
+                                        }}>{log.action}</span>
+                                        {log.details && (
+                                            <div style={{ fontSize: 11, color: '#445566', marginTop: 4, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                {JSON.stringify(log.details)}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: 12, fontWeight: 600, color: '#002244' }}>
+                                        {log.username || `User #${log.user_id}`}
+                                    </td>
+                                    <td style={{ padding: 12, textAlign: 'right', color: '#445566' }}>
+                                        {new Date(log.created_at).toLocaleString('pt-BR')}
+                                    </td>
+                                </tr>
+                            ))}
+                            {logs.length === 0 && (
+                                <tr>
+                                    <td colSpan="3" style={{ padding: 40, textAlign: 'center', color: '#667788' }}>
+                                        Nenhum log registrado ainda.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div style={{ marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <h3 style={{ fontSize: 20, margin: 0 }}>⌨️ Shura Logs: Mensagens da Comunidade</h3>
@@ -309,61 +382,65 @@ export default function AdminPanel({ adminPassword, showToast }) {
             {/* Modal de Logs do Usuário */}
             {selectedUserLog && (
                 <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000,
+                    position: 'fixed', inset: 0, background: 'rgba(255, 255, 255, 0.1)', zIndex: 10000,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-                    backdropFilter: 'blur(5px)'
+                    backdropFilter: 'blur(8px)'
                 }} onClick={() => setSelectedUserLog(null)}>
                     <div style={{
-                        background: '#1a152d', borderRadius: 20, maxWidth: 800, width: '100%',
+                        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                        borderRadius: 24, maxWidth: 800, width: '100%',
                         maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                        border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                        border: '1px solid rgba(255, 255, 255, 0.9)',
+                        boxShadow: '0 25px 50px -12px rgba(0, 71, 171, 0.25), inset 0 1px 0 rgba(255,255,255,0.8)'
                     }} onClick={e => e.stopPropagation()}>
                         <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: 0, color: 'white', fontSize: 20 }}>
-                                📜 Logs: <span style={{ color: '#a855f7' }}>{selectedUserLog.username}</span>
+                            <h3 style={{ margin: 0, color: '#002244', fontSize: 22, fontWeight: 900, textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
+                                📜 Logs: <span style={{ color: '#0047AB' }}>{selectedUserLog.username}</span>
                             </h3>
-                            <button onClick={() => setSelectedUserLog(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 24, padding: 8 }}>✕</button>
+                            <button onClick={() => setSelectedUserLog(null)} style={{ background: 'none', border: 'none', color: '#0047AB', cursor: 'pointer', fontSize: 24, padding: 8, fontWeight: 'bold' }}>✕</button>
                         </div>
 
                         <div style={{ padding: 24, overflowY: 'auto' }}>
                             {loadingUserLogs ? (
-                                <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Carregando logs...</div>
+                                <div style={{ padding: 40, textAlign: 'center', color: '#0047AB', fontWeight: 600 }}>Carregando logs...</div>
                             ) : userLogs.length === 0 ? (
-                                <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Nenhum log encontrado para este usuário.</div>
+                                <div style={{ padding: 40, textAlign: 'center', color: '#445566', fontStyle: 'italic' }}>
+                                    Nenhum log encontrado para este usuário.
+                                </div>
                             ) : (
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                                     <thead>
-                                        <tr style={{ color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                            <th style={{ padding: '12px 0', textAlign: 'left' }}>Ação</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'left' }}>Data</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'center' }}>IP</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'right' }}>Device</th>
+                                        <tr style={{ color: '#003366', borderBottom: '1px solid rgba(0, 71, 171, 0.1)' }}>
+                                            <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Ação</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Data</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'center', fontWeight: 800 }}>IP</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'right', fontWeight: 800 }}>Device</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {userLogs.map((log) => (
-                                            <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#e2e8f0' }}>
+                                            <tr key={log.id} style={{ borderBottom: '1px solid rgba(0, 71, 171, 0.05)', color: '#1e293b' }}>
                                                 <td style={{ padding: '12px 0' }}>
                                                     <span style={{
-                                                        background: 'rgba(168, 85, 247, 0.1)', color: '#c084fc',
-                                                        padding: '4px 8px', borderRadius: 6, fontWeight: 600, fontSize: 11
+                                                        background: 'rgba(0, 71, 171, 0.1)', color: '#0047AB',
+                                                        padding: '4px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11
                                                     }}>{log.action}</span>
                                                     {log.details && (
-                                                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                                                            {JSON.stringify(log.details).slice(0, 50)}...
+                                                        <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>
+                                                            {JSON.stringify(log.details).slice(0, 70)}...
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td style={{ padding: '12px 0', color: '#94a3b8' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                                                <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace' }}>{log.ip || '---'}</td>
+                                                <td style={{ padding: '12px 0', color: '#334155' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                                                <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace', color: '#334155' }}>{log.ip || '---'}</td>
                                                 <td style={{ padding: '12px 0', textAlign: 'right', maxWidth: 200 }}>
                                                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={log.fingerprint || log.details?.user_agent}>
                                                         {log.fingerprint ? (
-                                                            <span style={{ fontFamily: 'monospace', background: '#0f172a', padding: '2px 6px', borderRadius: 4 }}>
+                                                            <span style={{ fontFamily: 'monospace', background: 'rgba(255,255,255,0.6)', padding: '2px 6px', borderRadius: 4, border: '1px solid #cbd5e1' }}>
                                                                 {log.fingerprint.substring(0, 16)}...
                                                             </span>
                                                         ) : (
-                                                            <span style={{ fontStyle: 'italic', color: '#475569' }}>Sem fingerprint</span>
+                                                            <span style={{ fontStyle: 'italic', color: '#64748b' }}>Sem fingerprint</span>
                                                         )}
                                                     </div>
                                                 </td>
@@ -375,7 +452,8 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
