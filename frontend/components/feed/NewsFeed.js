@@ -45,7 +45,7 @@ export default function NewsFeed() {
 
     return (
         <div className="news-container">
-            {/* Premium Header */}
+            {/* Cabeçalho Premium */}
             <div className="news-header-box">
                 <div className="title-row">
                     <div className="icon-badge">
@@ -120,7 +120,7 @@ export default function NewsFeed() {
                     margin: 0 auto;
                 }
 
-                /* Header Light Glass Style */
+                /* Estilo Vidro Claro - Cabeçalho */
                 .news-header-box {
                     background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%);
                     backdrop-filter: blur(12px);

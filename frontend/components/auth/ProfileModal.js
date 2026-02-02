@@ -18,7 +18,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    // Image Cropping States
+    // Estados de Recorte de Imagem
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -101,13 +101,13 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
-            // Limpa campos de senha
+            // Limpar campos de senha
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
             setAvatarFile(null);
 
-            // Não fecha o modal, apenas notifica
+            // Não fechar o modal, apenas notificar
             showToast('Perfil atualizado!', 'success');
         } catch (err) {
             showToast(err.message || 'Erro ao atualizar perfil', 'error');
@@ -134,13 +134,13 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* Header */}
+                {/* Cabeçalho */}
                 <div style={{ padding: '24px 24px 0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>✏️ Editar Perfil</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--secondary-text)', fontSize: 20, cursor: 'pointer' }}>✕</button>
                 </div>
 
-                {/* Tabs */}
+                {/* Abas */}
                 <div style={{ display: 'flex', padding: '0 24px', marginTop: 24, borderBottom: '1px solid var(--border-color)' }}>
                     {['profile', 'security', 'achievements'].map(tab => (
                         <button
@@ -164,7 +164,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                     ))}
                 </div>
 
-                {/* Scrollable Content */}
+                {/* Conteúdo Rolável */}
                 <div style={{ padding: 24, overflowY: 'auto' }}>
                     {isCropping ? (
                         <div style={{ position: 'relative', width: '100%', height: 350, background: '#000', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
@@ -209,7 +209,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                     ) : (
                         <form onSubmit={updateProfile}>
 
-                            {/* TAB: PROFILE */}
+                            {/* ABA: PERFIL */}
                             {activeTab === 'profile' && (
                                 <div className="animate-fade-in">
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
@@ -278,7 +278,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                                         Salvar Alterações
                                     </button>
 
-                                    {/* Actions Group (Restricted + Logout) */}
+                                    {/* Grupo de Ações (Restrito + Sair) */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                         <button
                                             type="button"
@@ -319,7 +319,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                                 </div>
                             )}
 
-                            {/* TAB: SECURITY */}
+                            {/* ABA: SEGURANÇA */}
                             {activeTab === 'security' && (
                                 <div className="animate-fade-in">
                                     <p style={{ fontSize: 14, color: 'var(--secondary-text)', marginBottom: 20 }}>
@@ -346,7 +346,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                                         Atualizar Senha
                                     </button>
 
-                                    {/* Secret Button if allowed */}
+                                    {/* Botão Secreto se permitido */}
                                     {user.allowSecret && (
                                         <>
                                             <div style={{ height: 1, background: 'var(--border-color)', margin: '24px 0' }} />
@@ -369,7 +369,7 @@ export default function ProfileModal({ user, setUser, onClose, showToast, logout
                                 </div>
                             )}
 
-                            {/* TAB: ACHIEVEMENTS */}
+                            {/* ABA: CONQUISTAS */}
                             {activeTab === 'achievements' && (
                                 <div className="animate-fade-in">
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>

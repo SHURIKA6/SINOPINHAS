@@ -146,16 +146,16 @@ export const updateUserProfile = (userId, updates) => {
     return api.put(`/api/users/${userId}`, updates);
 };
 
-// --- News ---
+// --- Notícias ---
 export const fetchNews = () => api.get('/api/news').then(res => res.data);
 
-// --- Events ---
+// --- Eventos ---
 export const fetchEvents = () => api.get('/api/local-agenda').then(res => res.data);
 
-// --- Places ---
+// --- Lugares ---
 export const fetchPlaces = () => api.get('/api/local-guide').then(res => res.data);
 
-// --- Comments ---
+// --- Comentários ---
 export const fetchComments = async (videoId) => {
     const res = await api.get(`/api/comments/${videoId}`);
     return res.data;
@@ -258,7 +258,7 @@ export const uploadVideo = (formData, onUploadProgress) => {
 };
 
 export const removeVideo = (videoId, userId, adminPassword = null) => {
-    // Send both fields. Backend checks adminPassword first, then uses userId for ownership check if not admin.
+    // Envia ambos os campos. Backend verifica adminPassword primeiro, depois usa userId para verificação de propriedade se não for admin.
     const deleteData = { userId, adminPassword };
     return api.delete(`/api/videos/${videoId}`, { data: deleteData });
 };
@@ -275,12 +275,12 @@ export const discoverLogs = (userId) => {
     return api.post(`/api/users/${userId}/discover-logs`);
 };
 
-// Shura Messages
+// Mensagens Shura
 export const fetchApprovedShuraMessages = () => api.get('/api/shura/messages/approved');
 export const fetchSystemLogs = () => api.get('/api/shura/system-logs');
 export const submitShuraMessage = (message) => api.post('/api/shura/messages', { message });
 
-// Admin Shura Management
+// Gerenciamento Admin Shura
 export const fetchAllShuraMessages = () => api.get('/api/admin/shura/messages');
 export const toggleApproveShuraMessage = (id, approved) => api.post('/api/admin/shura/messages/toggle-approve', { id, approved });
 export const deleteShuraMessage = (id) => api.delete(`/api/admin/shura/messages/${id}`);

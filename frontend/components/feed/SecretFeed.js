@@ -15,7 +15,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
     const loadMoreRef = useRef(null);
     const [videoToShare, setVideoToShare] = useState(null);
 
-    // Derived State
+    // Estado Derivado (Filtros e Ordenação)
     const sortedVideos = useMemo(() => {
         let list = [...videos];
         if (searchQuery) {
@@ -29,7 +29,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         return list;
     }, [videos, sortBy, searchQuery]);
 
-    // Infinite Scroll Intersection Observer
+    // Observer para Rolagem Infinita
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && hasMore && !loading) {
@@ -41,7 +41,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         return () => observer.disconnect();
     }, [hasMore, loading]);
 
-    // Reset on sortBy change
+    // Resetar lista ao mudar ordenação
     useEffect(() => {
         setVideos([]);
         setOffset(0);
@@ -49,7 +49,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         loadVideos(0, true);
     }, [sortBy]);
 
-    // Increment offset
+    // Incrementar paginação (Offset)
     useEffect(() => {
         if (offset > 0) {
             loadVideos(offset, false);

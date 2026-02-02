@@ -38,7 +38,7 @@ const PhotoZoomModal = ({ isOpen, photoUrl, title, onClose }) => {
                     className="fax-viewer-modal"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Fax Viewer Title Bar */}
+                    {/* Barra de Título Visualizador de Fax */}
                     <div className="fax-title-bar">
                         <span>{title || 'Visualizador de Imagens'} - Windows Picture Viewer</span>
                         <div style={{ display: 'flex', gap: 4 }}>
@@ -48,7 +48,7 @@ const PhotoZoomModal = ({ isOpen, photoUrl, title, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Toolbar */}
+                    {/* Barra de Ferramentas */}
                     <div className="fax-toolbar">
                         <button className="fax-btn" onClick={() => setIsInternalZoom(!isInternalZoom)}>
                             <ZoomIn size={20} color="#333" />
@@ -64,7 +64,7 @@ const PhotoZoomModal = ({ isOpen, photoUrl, title, onClose }) => {
                         </button>
                     </div>
 
-                    {/* Content Area */}
+                    {/* Área de Conteúdo */}
                     <div className="fax-content">
                         <img
                             src={photoUrl}

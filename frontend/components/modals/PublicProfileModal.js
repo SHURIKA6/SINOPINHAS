@@ -16,7 +16,7 @@ export default function PublicProfileModal({ userId, onClose, onAchievementClick
             setLoading(true);
             const [profileRes, postsRes] = await Promise.all([
                 fetchPublicProfile(userId),
-                fetchVideos(userId, 50) // Fetch last 50 posts
+                fetchVideos(userId, 50) // Buscar últimos 50 posts
             ]);
             setUser(profileRes.data);
             setPosts(postsRes.data || []);
@@ -77,7 +77,7 @@ export default function PublicProfileModal({ userId, onClose, onAchievementClick
                     </div>
                 </div>
 
-                {/* Achievements */}
+                {/* Conquistas (Achievements) */}
                 {user.achievements && user.achievements.length > 0 && (
                     <div style={{ marginBottom: 24 }}>
                         <p style={{ fontSize: 13, color: 'var(--secondary-text)', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>🏆 Conquistas</p>
@@ -102,7 +102,7 @@ export default function PublicProfileModal({ userId, onClose, onAchievementClick
                     </div>
                 )}
 
-                {/* Posts Grid */}
+                {/* Grade de Postagens */}
                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 24 }}>
                     <p style={{ fontSize: 13, color: 'var(--secondary-text)', marginBottom: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>📸 Galeria</p>
                     {posts.length === 0 ? (
@@ -128,7 +128,7 @@ export default function PublicProfileModal({ userId, onClose, onAchievementClick
                                         <video src={post.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     )}
 
-                                    {/* Icon Overlay */}
+                                    {/* Sobreposição de Ícone */}
                                     <div style={{ position: 'absolute', top: 4, right: 4, opacity: 0.8 }}>
                                         {post.type === 'photo' || (post.video_url && post.video_url.match(/\.(jpeg|jpg|gif|png)$/) != null) ? (
                                             null

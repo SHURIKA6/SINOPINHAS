@@ -8,10 +8,10 @@ export function useAuth(showToast) {
     const [adminPassword, setAdminPassword] = useState('');
     const prevUnreadRef = useRef(0);
 
-    // Initial check
+    // Verificação Inicial
     useEffect(() => {
         const checkAuth = async () => {
-            // User Auth
+            // Autenticação de Usuário
             const savedUser = localStorage.getItem('user');
             const token = localStorage.getItem('token');
 
@@ -21,7 +21,7 @@ export function useAuth(showToast) {
                     setUser(u);
                     loadNotifications(u.id);
 
-                    // Refresh Profile (to get latest achievements/stats)
+                    // Atualizar Perfil (para obter conquistas/estatísticas mais recentes)
                     try {
                         const res = await fetchPublicProfile(u.id);
                         if (res.data) {
@@ -45,7 +45,7 @@ export function useAuth(showToast) {
         checkAuth();
     }, []);
 
-    // Sync isAdmin with user role
+    // Sincronizar isAdmin com o cargo do usuário
     useEffect(() => {
         if (user?.role === 'admin') {
             setIsAdmin(true);
@@ -96,10 +96,10 @@ export function useAuth(showToast) {
     };
 
     const handleAdminAuthSuccess = (password) => {
-        // We do NOT save password to localStorage anymore.
+        // Nós NÃO salvamos mais a senha no localStorage.
         setIsAdmin(true);
         setAdminPassword(password);
-        // Token is already saved by api.loginAdmin
+        // Token já salvo por api.loginAdmin
         showToast('Modo Admin Ativado', 'success');
     };
 

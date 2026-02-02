@@ -128,7 +128,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             ))}
 
             <div className="home-feed-container">
-                {/* Premium Search & Filter Header */}
+                {/* Cabeçalho Premium de Pesquisa e Filtro */}
                 <div className="feed-header-glass">
                     <div className="search-row-feed">
                         <div className="feed-search-input-box">
@@ -201,7 +201,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 .home-feed-root { position: relative; }
                 .home-feed-container { max-width: 1200px; margin: 0 auto; padding: 0 0 100px; }
                 
-                /* Feed Header - Light Glass */
+                /* Estilo Vidro Claro - Cabeçalho do Feed */
                 .feed-header-glass {
                     background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%);
                     backdrop-filter: blur(12px);

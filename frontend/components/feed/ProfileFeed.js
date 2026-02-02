@@ -45,7 +45,7 @@ export default function ProfileFeed({ userId, onAchievementClick, onPostClick, o
 
     return (
         <div className="profile-feed-container" style={{ padding: '20px 0', maxWidth: 800, margin: '0 auto' }}>
-            {/* Header Profile */}
+            {/* Cabeçalho do Perfil */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
                 <div style={{ position: 'relative', width: 120, height: 120, borderRadius: '50%', overflow: 'hidden', border: '4px solid white', boxShadow: '0 8px 20px rgba(0,0,0,0.1)', marginBottom: 16 }}>
                     {user.avatar ?
@@ -66,7 +66,7 @@ export default function ProfileFeed({ userId, onAchievementClick, onPostClick, o
                 </button>
             </div>
 
-            {/* Stats */}
+            {/* Estatísticas */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32, padding: '0 16px' }}>
                 <div className="stat-card">
                     <span style={{ display: 'block', fontSize: 24, fontWeight: 800 }}>{posts.length || 0}</span>
@@ -82,7 +82,7 @@ export default function ProfileFeed({ userId, onAchievementClick, onPostClick, o
                 </div>
             </div>
 
-            {/* Achievements */}
+            {/* Conquistas (Achievements) */}
             {user.achievements && user.achievements.length > 0 && (
                 <div style={{ marginBottom: 32, padding: '0 16px' }}>
                     <p style={{ fontSize: 14, color: 'white', marginBottom: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9 }}>🏆 Conquistas</p>
@@ -107,7 +107,7 @@ export default function ProfileFeed({ userId, onAchievementClick, onPostClick, o
                 </div>
             )}
 
-            {/* Gallery */}
+            {/* Galeria */}
             <div style={{ padding: '0 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                     <span style={{ fontSize: 20 }}>📸</span>

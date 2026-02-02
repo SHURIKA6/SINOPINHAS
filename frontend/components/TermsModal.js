@@ -8,13 +8,13 @@ export default function TermsModal({ onAccept, onDecline }) {
   const handleScroll = (e) => {
     const element = e.target;
 
-    // Calculate reading progress
+    // Calcular progresso de leitura
     const winScroll = element.scrollTop;
     const height = element.scrollHeight - element.clientHeight;
     const scrolled = Math.min(100, Math.ceil((winScroll / height) * 100));
     setReadPercentage(scrolled);
 
-    const bottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 40; // More lenient for mobile
+    const bottom = Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 40; // Mais permissivo para mobile
     if (bottom || scrolled > 98) {
       setHasScrolled(true);
     }

@@ -9,7 +9,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
     const [shuraMessages, setShuraMessages] = useState([]);
     const [loadingShura, setLoadingShura] = useState(false);
 
-    // New State for User Logs Modal
+    // Novo Estado para Modal de Logs do Usuário
     const [selectedUserLog, setSelectedUserLog] = useState(null);
     const [userLogs, setUserLogs] = useState([]);
     const [loadingUserLogs, setLoadingUserLogs] = useState(false);
@@ -229,7 +229,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
                 </div>
             </div>
 
-            {/* System Logs Section */}
+            {/* Seção de Logs do Sistema */}
             <div style={{ marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <h3 style={{ fontSize: 20, margin: 0 }}>📜 Logs do Sistema ({logs.length})</h3>

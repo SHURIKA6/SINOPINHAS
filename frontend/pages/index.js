@@ -279,7 +279,7 @@ export default function Home({ initialVideo }) {
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
 
-        {/* Removed PublicProfileModal as it is now a Tab */}
+        {/* PublicProfileModal removido pois agora é uma Aba */}
 
         {achievementToList && (
           <AchievementUsersModal

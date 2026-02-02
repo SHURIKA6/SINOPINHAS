@@ -17,7 +17,7 @@ export default function CommentsDrawer({
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop */}
+                    {/* Fundo Escuro (Backdrop) */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -32,7 +32,7 @@ export default function CommentsDrawer({
                         }}
                     />
 
-                    {/* Drawer */}
+                    {/* Gaveta de Comentários (Drawer) */}
                     <motion.div
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
