@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Componente de Cartão de Vídeo Principal
 export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare }) {
     const [isHovering, setIsHovering] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -11,6 +12,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
     const [videoError, setVideoError] = useState(false);
     const videoRef = useRef(null);
 
+    // Alterna a reprodução (Play/Pause) do vídeo
     const togglePlay = async (e) => {
         if (e) e.stopPropagation();
         if (videoRef.current && !videoError) {
@@ -29,12 +31,14 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         }
     };
 
+    // Lida com erros de carregamento do vídeo
     const handleVideoError = () => {
         console.error("Video failed to load:", video.video_url);
         setVideoError(true);
         setIsPlaying(false);
     };
 
+    // Atualiza o tempo de reprodução e a barra de progresso
     const handleTimeUpdate = () => {
         if (videoRef.current) {
             const current = videoRef.current.currentTime;
@@ -45,6 +49,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         }
     };
 
+    // Gerencia a navegação (seek) na barra de tempo
     const handleSeek = (e) => {
         e.stopPropagation();
         const value = Number(e.target.value);
@@ -59,6 +64,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         }
     };
 
+    // Formata segundos para o formato MM:SS
     const formatTime = (time) => {
         if (!time || isNaN(time)) return "00:00";
         const minutes = Math.floor(time / 60);
@@ -66,6 +72,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    // Abre os comentários ao clicar no vídeo
     const handleContainerClick = () => {
         onOpenComments(video);
     };
@@ -83,7 +90,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
             className="wmp-container"
             style={{ marginBottom: 24 }}
         >
-            {/* WMP Title Bar */}
+            {/* Barra de Título estilo Sinopinhas Media Player */}
             <div className="wmp-title-bar">
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '250px' }}>
                     {isPhoto ? 'Sinopinhas Picture Viewer' : 'Sinopinhas Media Player'} - {video.username}
@@ -95,7 +102,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 </div>
             </div>
 
-            {/* Content Body */}
+            {/* Tela do Vídeo / Conteúdo Principal */}
             <div className="wmp-video-screen"
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
@@ -137,14 +144,14 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 )}
             </div>
 
-            {/* WMP Controls (Only for Videos) */}
+            {/* Controles de Mídia (Apenas para Vídeos) */}
             {!isPhoto && (
                 <div className="wmp-controls">
                     <button className="wmp-btn" onClick={togglePlay} disabled={videoError}>
                         {isPlaying ? <Pause size={14} fill="#333" /> : <Play size={14} fill="#333" style={{ marginLeft: 2 }} />}
                     </button>
 
-                    {/* Seek Bar */}
+                    {/* Barra de Progresso */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 8px' }}>
                         <input
                             type="range"
@@ -174,7 +181,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 </div>
             )}
 
-            {/* Metadata & Actions (Styled as Playlist/Media Info) */}
+            {/* Metadados e Ações do Vídeo */}
             <div style={{ background: '#F0F0F0', padding: 12, borderTop: '1px solid #CCC' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <img

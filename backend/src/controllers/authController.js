@@ -6,7 +6,7 @@ import { sign } from 'hono/jwt';
 import { updateProfileSchema } from '../schemas/auth.js';
 import { getAchievementList } from '../utils/user-achievements.js';
 
-// Helper para buscar usuário completo com conquistas
+// Função Auxiliar: Busca usuário completo com conquistas
 const getFullUser = async (userId, env) => {
     const { rows } = await queryDB(
         `SELECT id, username, email, avatar, bio, role, discovered_logs, created_at,
@@ -27,7 +27,7 @@ const getFullUser = async (userId, env) => {
     };
 };
 
-// Registrar usuário
+// Função: Registrar novo usuário
 export const register = async (c) => {
     const env = c.env;
     try {
@@ -80,7 +80,7 @@ export const register = async (c) => {
     }
 };
 
-// Login de usuário
+// Função: Realizar login do usuário
 export const login = async (c) => {
     const env = c.env;
     try {
@@ -138,7 +138,7 @@ export const login = async (c) => {
     }
 };
 
-// Atualizar perfil
+// Função: Atualizar perfil do usuário
 export const updateProfile = async (c) => {
     const userId = c.req.param("id");
     const env = c.env;
@@ -176,7 +176,7 @@ export const updateProfile = async (c) => {
                 bio = body.bio;
                 email = body.email;
             } catch (e) {
-                // If body is empty or not JSON, we just continue with what we have
+                // Se o corpo estiver vazio ou não for JSON, continuamos com o que temos
             }
         }
 
@@ -297,7 +297,7 @@ export const updateProfile = async (c) => {
     }
 };
 
-// Marcar que o usuário descobriu os logs (Achievement Hacker)
+// Função: Marcar que o usuário descobriu os logs (Conquista Hacker)
 export const discoverLogs = async (c) => {
     const userId = c.req.param("id");
     const env = c.env;

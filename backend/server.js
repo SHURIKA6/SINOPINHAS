@@ -16,7 +16,7 @@ import { initDatabase } from './src/db/index.js';
 
 const app = new Hono();
 
-// Aplicar Middleware de CORS Centralizado
+// Função Middleware: Aplica CORS Centralizado
 app.use('*', corsMiddleware);
 
 // Bloqueio de VPN/Proxy (Segurança)
@@ -27,9 +27,9 @@ app.route('/api', authRoutes);
 app.route('/api', adminRoutes);
 app.route('/api', videoRoutes);
 app.route('/api', socialRoutes);
-app.route('/api', newsRoutes); // News Route
-app.route('/api', localRoutes); // Local Guide Routes (Events & Places)
-app.route('/api', pushRoutes); // Push Notification Routes
+app.route('/api', newsRoutes); // Rota de Notícias
+app.route('/api', localRoutes); // Rotas do Guia Local (Eventos e Lugares)
+app.route('/api', pushRoutes); // Rotas de Notificações Push
 app.route('/api/weather', weatherRoutes);
 app.route('/api/debug', debugRoutes);
 app.route('/api/health', healthRoutes);
@@ -61,7 +61,7 @@ app.onError((err, c) => {
   return createErrorResponse(c, "INTERNAL_ERROR", "O servidor encontrou um erro interno.", 500, dbError);
 });
 
-// Handler de fetch padrão do Hono
+// Função: Handler de fetch padrão do Hono
 const honoFetch = app.fetch;
 
 export default {

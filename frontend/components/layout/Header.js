@@ -7,6 +7,7 @@ import {
     MessageCircle, ShieldCheck
 } from 'lucide-react';
 
+// Componente Principal do Cabeçalho (Header) com navegação e menu lateral
 export default function Header({
     user,
     isAdmin,
@@ -37,11 +38,12 @@ export default function Header({
         showSecretTab ? { id: 'secret', label: 'Secreto', icon: <Lock size={18} /> } : null
     ].filter(Boolean);
 
+    // Alterna o estado de visibilidade da barra lateral
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
         <div className="header-wrapper">
-            {/* Top Banner / Glass Header */}
+            {/* Banner Superior / Cabeçalho de Vidro */}
             <div className="aero-header-top">
                 <div className="left-brand">
                     <motion.div whileHover={{ scale: 1.1 }} className="logo-bubble">
@@ -68,7 +70,7 @@ export default function Header({
                 </div>
             </div>
 
-            {/* Tab Navigation Ribbon */}
+            {/* Faixa de Navegação por Abas */}
             <nav className="aero-ribbon-container">
                 {menuItems.map(item => (
                     <button
@@ -83,7 +85,7 @@ export default function Header({
                 ))}
             </nav>
 
-            {/* Mobile Sidebar */}
+            {/* Barra Lateral Móvel */}
             <AnimatePresence>
                 {isSidebarOpen && (
                     <>
@@ -210,18 +212,18 @@ export default function Header({
 
                 .mobile-only { display: none; }
                 @media (max-width: 768px) {
-                    .aero-ribbon-container { display: none; } /* Hide tabs on mobile, show in sidebar */
+                    .aero-ribbon-container { display: none; } /* Esconder abas no celular, mostrar na barra lateral */
                     .mobile-only { display: flex; }
                     .brand-text { font-size: 18px; }
                 }
 
-                /* Sidebar */
+                /* Estilos da Barra Lateral */
                 .sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; backdrop-filter: blur(4px); }
                 .frutiger-sidebar {
                     position: fixed; top: 0; right: 0; bottom: 0;
                     width: 300px;
                     z-index: 2001; display: flex; flex-direction: column;
-                    background: rgba(255, 255, 255, 0.5) !important; /* Glassy backdrop */
+                    background: rgba(255, 255, 255, 0.5) !important; /* Fundo de vidro */
                     backdrop-filter: blur(20px) saturate(180%);
                     -webkit-backdrop-filter: blur(20px) saturate(180%);
                     box-shadow: -10px 0 40px rgba(0, 71, 171, 0.15);
@@ -230,7 +232,7 @@ export default function Header({
                 
                 .sidebar-head {
                     padding: 24px; display: flex; justify-content: space-between; align-items: center;
-                    border-bottom: none; /* Removed border to let card stand out */
+                    border-bottom: none; /* Borda removida para destacar o cartão */
                     color: #0047AB;
                 }
                 .sidebar-head h3 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
@@ -242,13 +244,13 @@ export default function Header({
                 }
                 .close-btn:hover { background: #FFFFFF; transform: rotate(90deg); }
 
-                /* Main Card Style for Menu List */
+                /* Estilo do Cartão Principal para Lista de Menu */
                 .sidebar-menu-list { 
                     flex: 1; 
                     margin: 0 16px 16px 16px;
                     padding: 16px; 
                     display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
-                    background: #FFFFFF; /* Opaque Card */
+                    background: #FFFFFF; /* Cartão Opaco */
                     border-radius: 24px;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
                 }
