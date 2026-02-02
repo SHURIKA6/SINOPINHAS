@@ -351,19 +351,21 @@ a {
   transform: translateY(1px);
 }
 
-/* Windows Vista / Aero Glass Utilities */
+/* Windows Vista / Aero Glass Utilities - LIGHT VERSION (User Request) */
 .vista-glass-widget {
-  background: linear-gradient(135deg, rgba(20, 30, 48, 0.6) 0%, rgba(36, 59, 85, 0.4) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 1);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    0 8px 32px rgba(0, 71, 171, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
   border-radius: 16px;
   position: relative;
   overflow: hidden;
+  color: #002244;
+  /* Dark Blue for contrast */
 }
 
 .vista-glass-widget::before {
@@ -372,30 +374,33 @@ a {
   top: 0;
   left: 0;
   right: 0;
-  height: 40%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.1) 100%);
   pointer-events: none;
-  border-radius: 16px 16px 0 0;
+  border-radius: 14px 14px 60% 60% / 10px 10px 20px 20px;
+  /* Glossy curve */
 }
 
 .vista-card-title {
   font-family: 'Segoe UI', Tahoma, sans-serif;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  font-weight: 700;
+  color: #003366;
+  /* Deep Aero Blue */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-weight: 800;
 }
 
 .vista-tile {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 8px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .vista-tile:hover {
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 150, 255, 0.3);
+  border-color: #00C6FF;
   transform: translateY(-2px);
 }
 

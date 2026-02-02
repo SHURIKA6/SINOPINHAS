@@ -69,159 +69,186 @@ export default function EventsSection() {
         if ('vibrate' in navigator) navigator.vibrate(30);
     };
 
+    const handleEventClick = (event) => {
+        setSelectedEvent(event);
+    };
+
+    const closeModal = () => {
+        setSelectedEvent(null);
+    };
+
     return (
         <div className="events-container">
-            <div className="events-header vista-glass-widget" style={{ padding: '20px' }}>
-                <div className="header-top">
-                    <div className="header-icon"><Calendar size={24} color="#FFF" style={{ filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.7))' }} /></div>
-                    <h2 className="header-title" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontFamily: 'Segoe UI, Tahoma', letterSpacing: '0.5px' }}>Agenda Sinop</h2>
-                </div>
-                <div className="e-search-wrapper">
-                    <Search size={18} className="e-search-icon" color="white" />
-                    <input
-                        type="text"
-                        placeholder="O que está acontecendo em Sinop?"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="e-search-input"
-                    />
-                </div>
-            </div>
-
-            <div className="events-grid">
-                {loading ? (
-                    [...Array(3)].map((_, i) => (
-                        <div key={i} className="skeleton-event-card vista-glass-widget" />
-                    ))
-                ) : filteredEvents.length === 0 ? (
-                    <div className="empty-state vista-glass-widget">
-                        <Calendar size={48} strokeWidth={1.5} color="white" />
-                        <p style={{ color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Nenhum evento encontrado.</p>
+                <div className="events-header vista-glass-widget" style={{padding: '24px'}}>
+                    <div className="e-header-content">
+                        <div className="e-icon-box">
+                            <Calendar size={28} color="#0047AB" style={{filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.8))'}} />
+                        </div>
+                        <div className="e-title-box">
+                            <h2 style={{margin: 0, fontSize: 24, fontWeight: 900, color: '#003366', textShadow: '0 1px 0 rgba(255,255,255,0.8)', fontFamily: 'Segoe UI, Tahoma'}}>Agenda Cultural</h2>
+                            <p style={{margin: '4px 0 0', color: '#556677', fontSize: 13, fontWeight: 600}}>O que está rolando em Sinop</p>
+                        </div>
                     </div>
-                ) : (
-                    filteredEvents.map((event) => (
-                        <div key={event.id} className="event-card card-hover vista-glass-widget" style={{ border: '1px solid rgba(255,255,255,0.3)', padding: 0 }}>
-                            <div className="event-img-box">
-                                <img src={event.image} alt={event.title} />
+                    
+                    <div className="e-search-row">
+                        <div className="e-search-wrapper">
+                            <Search size={16} className="e-search-icon" color="#0047AB" />
+                            <input
+                                type="text"
+                                placeholder="Buscar eventos..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="e-search-input"
+                            />
+                        </div>
+                        <div className="e-tabs">
+                            {categories.map(cat => (
                                 <button
-                                    onClick={(e) => handleToggleFavorite(e, event)}
-                                    className={`event-fav-btn ${isFavorite('events', event) ? 'active' : ''}`}
+                                    key={cat.id}
+                                    onClick={() => setSelectedCategory(cat.id)}
+                                    className={`e-tab-btn ${selectedCategory === cat.id ? 'active' : ''}`}
                                 >
-                                    <Star size={18} fill={isFavorite('events', event) ? "#FFD700" : "none"} color={isFavorite('events', event) ? "#FFD700" : "white"} />
+                                    {cat.label}
                                 </button>
-                                <div className="event-date-badge backdrop-blur">
-                                    <span className="day">{event.date ? event.date.split('-')[2] : '??'}</span>
-                                    <span className="month">
-                                        {event.date ? new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' }) : '...'}
-                                    </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="events-grid">
+                    {loading ? (
+                         [...Array(4)].map((_, i) => (
+                            <div key={i} className="skeleton-event-card vista-glass-widget" />
+                        ))
+                    ) : filteredEvents.length === 0 ? (
+                        <div className="e-empty vista-glass-widget" style={{color: '#444'}}>
+                            <Calendar size={48} strokeWidth={1.5} opacity={0.6} color="#444" />
+                            <p>Nenhum evento encontrado.</p>
+                        </div>
+                    ) : (
+                        filteredEvents.map((event) => (
+                            <div key={event.id} className="event-card vista-glass-widget card-hover" onClick={() => handleEventClick(event)}>
+                                <div className="e-date-badge">
+                                    <span className="e-day">{event.date.day}</span>
+                                    <span className="e-month">{event.date.month}</span>
                                 </div>
-                                <div className="event-category-tag backdrop-blur">{event.category}</div>
+                                <div className="e-card-content">
+                                    <h3 className="e-title vista-card-title">{event.title}</h3>
+                                    <div className="e-meta">
+                                        <div className="e-meta-item">
+                                            <Clock size={14} /> <span>{event.time}</span>
+                                        </div>
+                                        <div className="e-meta-item">
+                                            <MapPin size={14} /> <span>{event.location}</span>
+                                        </div>
+                                    </div>
+                                    <div className="e-tags">
+                                        <span className="e-tag">{event.category}</span>
+                                        {event.isFree && <span className="e-tag free">Gratuito</span>}
+                                    </div>
+                                </div>
+                                <div className="e-arrow">
+                                    <ChevronRight size={20} color="#0047AB" />
+                                </div>
                             </div>
-                            <div className="event-content">
-                                <h3 className="event-title vista-card-title">{event.title}</h3>
-                                <div className="event-meta">
-                                    <div className="meta-item"><MapPin size={14} /> {event.location}</div>
-                                    <div className="meta-item"><Clock size={14} /> {event.time}</div>
+                        ))
+                    )}
+                </div>
+
+                {/* Modal de Detalhes (Estilo Aero Glass Light) */}
+                {selectedEvent && (
+                    <div className="e-modal-overlay" onClick={closeModal}>
+                        <div className="e-modal vista-glass-widget" onClick={e => e.stopPropagation()} style={{background: 'rgba(255,255,255,0.95)'}}>
+                            <button className="e-close-btn" onClick={closeModal}><X size={20} color="#0047AB" /></button>
+                            <div className="e-modal-header">
+                                <span className="e-modal-date">{selectedEvent.date.day} de {selectedEvent.date.month}</span>
+                                <h2 className="e-modal-title" style={{color: '#003366'}}>{selectedEvent.title}</h2>
+                            </div>
+                            <div className="e-modal-body">
+                                <div className="e-modal-info">
+                                    <div className="e-info-row">
+                                        <Clock size={18} color="#0047AB" />
+                                        <span>{selectedEvent.time}</span>
+                                    </div>
+                                    <div className="e-info-row">
+                                        <MapPin size={18} color="#0047AB" />
+                                        <span>{selectedEvent.location}</span>
+                                    </div>
                                 </div>
-                                <p className="event-desc">{event.description}</p>
-                                <button onClick={() => setSelectedEvent(event)} className="details-btn">Ver Detalhes</button>
+                                <p className="e-modal-desc" style={{color: '#333'}}>{selectedEvent.description}</p>
+                                <button className="e-modal-action shiny-button">Confirmar Presença</button>
                             </div>
                         </div>
-                    ))
+                    </div>
                 )}
             </div>
 
-            {selectedEvent && (
-                <div className="event-modal-overlay" onClick={() => setSelectedEvent(null)}>
-                    <div className="event-modal vista-glass-widget" onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(220,230,240,0.95) 100%)', border: '1px solid rgba(255,255,255,0.8)' }}>
-                        <button onClick={() => setSelectedEvent(null)} className="close-btn">✕</button>
-                        <div className="modal-header-img">
-                            <img src={selectedEvent.image} alt="" />
-                            <div className="modal-img-overlay" />
-                        </div>
-                        <div className="modal-body">
-                            <div className="modal-tag">{selectedEvent.category}</div>
-                            <h2 className="modal-title" style={{ color: '#1a1a1a', textShadow: 'none' }}>{selectedEvent.title}</h2>
-                            <div className="modal-info-grid">
-                                <div className="info-item">
-                                    <label>Data & Hora</label>
-                                    <p style={{ color: '#0047AB' }}>{selectedEvent.date} às {selectedEvent.time}</p>
-                                </div>
-                                <div className="info-item">
-                                    <label>Localização</label>
-                                    <p style={{ color: '#0047AB' }}>{selectedEvent.location}</p>
-                                </div>
-                            </div>
-                            <p className="modal-description" style={{ color: '#444' }}>{selectedEvent.description}</p>
-
-                            {selectedEvent.url ? (
-                                <a
-                                    href={selectedEvent.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="confirm-btn"
-                                    style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
-                                >
-                                    Saber mais
-                                </a>
-                            ) : (
-                                <button onClick={() => setSelectedEvent(null)} className="confirm-btn">Entendi</button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <style jsx>{`
-                .events-container { padding: 8px 0 100px; max-width: 1160px; margin: 0 auto; }
+                .events-section { margin-bottom: 80px; }
                 
-                .events-header {
-                    margin-bottom: 32px;
-                }
-
-                .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-                .header-icon { width: 44px; height: 44px; background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-                .header-title { font-size: 26px; font-weight: 900; margin: 0; color: white; }
-
-                .e-search-wrapper { position: relative; width: 100%; }
-                .e-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); opacity: 0.8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
-                .e-search-input { width: 100%; padding: 14px 20px 14px 48px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 16px; color: white; font-size: 15px; outline: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); backdrop-filter: blur(4px); transition: all 0.2s; }
-                .e-search-input::placeholder { color: rgba(255,255,255,0.6); }
-                .e-search-input:focus { background: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.5); box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 0 10px rgba(255,255,255,0.1); }
-
-                .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
-
-                .event-card { display: flex; flexDirection: column; transition: all 0.3s ease; }
-                .event-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.4) !important; }
-
-                .event-img-box { position: relative; height: 220px; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.1); }
-                .event-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-                .event-card:hover .event-img-box img { transform: scale(1.08); }
-
-                .event-fav-btn { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; z-index: 10; transition: all 0.2s; }
-                .event-fav-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
-                .event-fav-btn.active { color: #FFD700; background: rgba(255,255,255,0.9); }
-
-                .event-date-badge { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.9); color: #1a1a1a; padding: 8px 14px; border-radius: 12px; text-align: center; font-weight: 800; backdrop-filter: blur(4px); display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.8); }
-                .event-date-badge .day { font-size: 20px; line-height: 1; color: #0047AB; }
-                .event-date-badge .month { font-size: 10px; text-transform: uppercase; color: #555; }
-
-                .event-category-tag { position: absolute; bottom: 12px; left: 12px; background: rgba(0, 71, 171, 0.85); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-
-                .event-content { padding: 24px; flex: 1; display: flex; flex-direction: column; background: transparent; }
-                .event-title { margin: 0 0 12px; font-size: 20px; }
-                .event-meta { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 16px; }
-                .meta-item { display: flex; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-                .event-desc { margin: 0; color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+                .events-header { margin-bottom: 24px; display: flex; flex-direction: column; gap: 20px; }
+                .e-header-content { display: flex; align-items: center; gap: 16px; }
+                .e-icon-box { width: 50px; height: 50px; background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4)); border: 1px solid white; border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
                 
-                .details-btn { margin-top: 20px; width: 100%; padding: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-                .details-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%); border-color: white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+                .e-search-row { display: flex; gap: 12px; flex-wrap: wrap; }
+                .e-search-wrapper { position: relative; flex: 1; min-width: 200px; }
+                .e-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: 0.7; }
+                .e-search-input { width: 100%; padding: 12px 16px 12px 40px; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 12px; font-size: 14px; color: #002244; outline: none; transition: all 0.2s; font-weight: 600; }
+                .e-search-input:focus { background: rgba(255, 255, 255, 0.8); border-color: #0078D4; box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2); }
+                .e-search-input::placeholder { color: #667788; }
+
+                .e-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+                .e-tab-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid transparent; background: rgba(255, 255, 255, 0.3); color: #0047AB; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+                .e-tab-btn:hover { background: rgba(255, 255, 255, 0.6); }
+                .e-tab-btn.active { background: #0078D4; color: white; box-shadow: 0 2px 5px rgba(0, 120, 212, 0.3); border: 1px solid #005A9E; }
+
+                .events-grid { display: flex; flex-direction: column; gap: 12px; }
+                
+                .event-card { display: flex; align-items: center; padding: 16px; gap: 16px; cursor: pointer; border: 1px solid rgba(255,255,255,0.6); transition: all 0.2s; background: rgba(255, 255, 255, 0.5); }
+                .event-card:hover { transform: translateX(4px); background: rgba(255, 255, 255, 0.8); border-color: #00C6FF; }
+
+                .e-date-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 50px; height: 50px; background: linear-gradient(135deg, #0078D4, #005A9E); border-radius: 10px; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.3); }
+                .e-day { font-size: 18px; font-weight: 800; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+                .e-month { font-size: 10px; text-transform: uppercase; font-weight: 700; opacity: 0.9; }
+
+                .e-card-content { flex: 1; }
+                .e-title { margin: 0 0 6px; font-size: 16px; }
+                .e-meta { display: flex; gap: 12px; font-size: 12px; color: #445566; margin-bottom: 8px; font-weight: 600; }
+                .e-meta-item { display: flex; align-items: center; gap: 4px; }
+                
+                .e-tags { display: flex; gap: 6px; }
+                .e-tag { font-size: 10px; padding: 2px 8px; background: rgba(0, 71, 171, 0.1); color: #0047AB; border-radius: 4px; font-weight: 700; border: 1px solid rgba(0, 71, 171, 0.2); }
+                .e-tag.free { background: rgba(46, 204, 113, 0.2); color: #218c53; border-color: rgba(46, 204, 113, 0.3); }
+
+                .e-arrow { opacity: 0.5; transition: 0.2s; }
+                .event-card:hover .e-arrow { opacity: 1; transform: translateX(2px); }
+
+                .e-empty { padding: 40px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-weight: 600; background: rgba(255,255,255,0.3); }
+
+                /* Modal */
+                .e-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.3s; }
+                .e-modal { width: 100%; max-width: 500px; padding: 0; border-radius: 20px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+                .e-close-btn { position: absolute; top: 12px; right: 12px; background: transparent; border: none; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; }
+                .e-close-btn:hover { background: rgba(0,0,0,0.1); }
+                
+                .e-modal-header { padding: 24px; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4)); border-bottom: 1px solid rgba(0,0,0,0.05); border-top-left-radius: 20px; border-top-right-radius: 20px; }
+                .e-modal-date { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #0047AB; letter-spacing: 1px; }
+                .e-modal-title { margin: 8px 0 0; font-size: 24px; font-weight: 800; font-family: 'Segoe UI', sans-serif; }
+                
+                .e-modal-body { padding: 24px; }
+                .e-modal-info { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); }
+                .e-info-row { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #444; font-weight: 600; }
+                .e-modal-desc { line-height: 1.6; color: #333; margin-bottom: 24px; font-size: 15px; }
+                
+                .e-modal-action { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; background: linear-gradient(180deg, #0078D4 0%, #005A9E 100%); color: white; box-shadow: 0 4px 10px rgba(0, 120, 212, 0.3); text-shadow: 0 1px 1px rgba(0,0,0,0.2); transition: all 0.2s; }
+                .e-modal-action:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 120, 212, 0.4); filter: brightness(1.1); }
+
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+                .skeleton-event-card { height: 80px; margin-bottom: 12px; animation: pulse 1.5s infinite; background: rgba(255,255,255,0.4); border-radius: 12px; }
 
                 @media (max-width: 768px) {
-                    .events-grid { grid-template-columns: 1fr; gap: 16px; }
-                    .event-card { flex-direction: row; height: 160px; }
-                    .event-img-box { width: 130px; height: 100%; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.1); border-bottom: none; }
-                    .event-content { padding: 16px; justify-content: center; }
                     .event-title { font-size: 16px; margin-bottom: 6px; -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
                     .event-desc, .details-btn { display: none; }
                     .event-meta { font-size: 11px; margin-bottom: 0; gap: 10px; }

@@ -89,18 +89,18 @@ export default function WeatherSection() {
                         position: 'absolute', top: 12, right: 12,
                         width: 16, height: 16, borderRadius: '50%',
                         background: 'radial-gradient(circle at 30% 30%, #ff4d4d, #990000)',
-                        boxShadow: '0 0 5px rgba(255,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.4)',
-                        border: '1px solid rgba(0,0,0,0.3)'
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.3), inset 1px 1px 2px rgba(255,255,255,0.4)',
+                        border: '1px solid rgba(0,0,0,0.1)'
                     }} title="Gadget Close (Cosmetic)"></div>
 
                     <div style={{
                         fontSize: '11px',
-                        color: 'rgba(255,255,255,0.8)',
+                        color: '#444',
                         fontWeight: 800,
                         letterSpacing: '2px',
                         marginBottom: 16,
                         textTransform: 'uppercase',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                        textShadow: '0 1px 0 rgba(255,255,255,0.8)'
                     }}>
                         Local Time (Sinop)
                     </div>
@@ -109,19 +109,19 @@ export default function WeatherSection() {
                         fontWeight: 900,
                         fontFamily: 'Segoe UI, Tahoma, sans-serif',
                         lineHeight: 1,
-                        background: 'linear-gradient(180deg, #FFFFFF 0%, #B0C4DE 100%)',
+                        background: 'linear-gradient(180deg, #333 0%, #000 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+                        filter: 'drop-shadow(0 2px 0px rgba(255,255,255,0.5))'
                     }}>
                         {currentTime.toLocaleTimeString('pt-BR', { hour12: false })}
                     </div>
                     <div style={{
                         fontSize: '14px',
                         fontWeight: 700,
-                        color: '#E0EEFF',
+                        color: '#0047AB',
                         marginTop: 8,
-                        textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                        textShadow: '0 1px 0 rgba(255,255,255,0.5)'
                     }}>
                         {new Date().toLocaleDateString('pt-BR', { weekday: 'long' })}
                     </div>
@@ -129,15 +129,15 @@ export default function WeatherSection() {
 
                 {/* Widget Detalhado */}
                 <div style={{ padding: 24 }} className="vista-glass-widget card-hover">
-                    <a className="weatherwidget-io" href="https://forecast7.com/pt/n11d86n55d51/sinop/" data-label_1="SINOP" data-label_2="MATO GROSSO" data-theme="weather_one" data-basecolor="rgba(0,0,0,0)" data-textcolor="#FFFFFF">SINOP WEATHER</a>
+                    <a className="weatherwidget-io" href="https://forecast7.com/pt/n11d86n55d51/sinop/" data-label_1="SINOP" data-label_2="MATO GROSSO" data-theme="weather_one" data-basecolor="rgba(0,0,0,0)" data-textcolor="#003366">SINOP WEATHER</a>
                     <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div className="vista-tile" style={{ padding: 12, textAlign: 'center' }}>
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 800 }}>VENTO</div>
-                            <div style={{ fontSize: 16, fontWeight: 900, color: 'white', textShadow: '0 1px 2px black' }}>{realData?.wind_speedy || '--'}</div>
+                            <div style={{ fontSize: 10, color: '#555', fontWeight: 800 }}>VENTO</div>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: '#002244', textShadow: '0 1px 0 white' }}>{realData?.wind_speedy || '--'}</div>
                         </div>
                         <div className="vista-tile" style={{ padding: 12, textAlign: 'center' }}>
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 800 }}>NASCEU</div>
-                            <div style={{ fontSize: 16, fontWeight: 900, color: 'white', textShadow: '0 1px 2px black' }}>{realData?.sunrise || '--'}</div>
+                            <div style={{ fontSize: 10, color: '#555', fontWeight: 800 }}>NASCEU</div>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: '#002244', textShadow: '0 1px 0 white' }}>{realData?.sunrise || '--'}</div>
                         </div>
                     </div>
                 </div>
