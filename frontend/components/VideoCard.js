@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2, Minimize2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare }) {
@@ -41,7 +41,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                     Windows Media Player - {video.username}
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
-                    <Minimize2 size={10} />
+                    <Minus size={10} />
                     <Maximize2 size={10} />
                     <X size={10} />
                 </div>
