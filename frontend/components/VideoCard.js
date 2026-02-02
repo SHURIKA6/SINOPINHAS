@@ -74,6 +74,8 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
     });
 
+    const isPhoto = video.type === 'photo' || (video.video_url && video.video_url.match(/\.(jpeg|jpg|gif|png)$/) != null);
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -84,7 +86,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
             {/* WMP Title Bar */}
             <div className="wmp-title-bar">
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '250px' }}>
-                    Windows Media Player - {video.username}
+                    {isPhoto ? 'Windows Picture Viewer' : 'Windows Media Player'} - {video.username}
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
                     <Minus size={10} />
@@ -99,11 +101,17 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 onMouseLeave={() => setIsHovering(false)}
                 onClick={handleContainerClick}
             >
-                {videoError ? (
+                {videoError && !isPhoto ? (
                     <div style={{ width: '100%', height: '100%', minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#666', background: '#1a1a1a' }}>
                         <X size={48} color="#D44033" />
                         <p style={{ marginTop: 12, fontSize: 12 }}>Playback Error</p>
                     </div>
+                ) : isPhoto ? (
+                    <img
+                        src={video.video_url}
+                        alt={video.description}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '400px', display: 'block' }}
+                    />
                 ) : (
                     <video
                         ref={videoRef}
@@ -120,7 +128,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                     />
                 )}
 
-                {!isPlaying && !videoError && (
+                {!isPlaying && !videoError && !isPhoto && (
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                         <div style={{ width: 60, height: 60, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
                             <Play size={30} fill="white" stroke="white" style={{ marginLeft: 4 }} />
@@ -129,40 +137,42 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 )}
             </div>
 
-            {/* WMP Controls */}
-            <div className="wmp-controls">
-                <button className="wmp-btn" onClick={togglePlay} disabled={videoError}>
-                    {isPlaying ? <Pause size={14} fill="#333" /> : <Play size={14} fill="#333" style={{ marginLeft: 2 }} />}
-                </button>
+            {/* WMP Controls (Only for Videos) */}
+            {!isPhoto && (
+                <div className="wmp-controls">
+                    <button className="wmp-btn" onClick={togglePlay} disabled={videoError}>
+                        {isPlaying ? <Pause size={14} fill="#333" /> : <Play size={14} fill="#333" style={{ marginLeft: 2 }} />}
+                    </button>
 
-                {/* Seek Bar */}
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 8px' }}>
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={progress}
-                        onChange={handleSeek}
-                        disabled={videoError}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            width: '100%',
-                            height: '4px',
-                            appearance: 'none',
-                            background: '#888',
-                            borderRadius: '2px',
-                            cursor: 'pointer',
-                            outline: 'none',
-                            opacity: videoError ? 0.5 : 1
-                        }}
-                        className="wmp-slider"
-                    />
-                </div>
+                    {/* Seek Bar */}
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={progress}
+                            onChange={handleSeek}
+                            disabled={videoError}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                width: '100%',
+                                height: '4px',
+                                appearance: 'none',
+                                background: '#888',
+                                borderRadius: '2px',
+                                cursor: 'pointer',
+                                outline: 'none',
+                                opacity: videoError ? 0.5 : 1
+                            }}
+                            className="wmp-slider"
+                        />
+                    </div>
 
-                <div style={{ fontSize: 10, color: '#333', fontWeight: 'bold', minWidth: '35px', textAlign: 'right' }}>
-                    {formatTime(currentTime)}
+                    <div style={{ fontSize: 10, color: '#333', fontWeight: 'bold', minWidth: '35px', textAlign: 'right' }}>
+                        {formatTime(currentTime)}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Metadata & Actions (Styled as Playlist/Media Info) */}
             <div style={{ background: '#F0F0F0', padding: 12, borderTop: '1px solid #CCC' }}>
