@@ -138,7 +138,11 @@ export default function Header({
                 .header-wrapper {
                     position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
                     padding: 10px 20px 0;
-                    background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 100%);
+                    background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border-bottom: 1px solid rgba(255,255,255,0.2);
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
                 }
 
                 .aero-header-top {
