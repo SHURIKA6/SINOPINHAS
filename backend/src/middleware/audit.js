@@ -11,7 +11,7 @@ export async function logAudit(userId, action, details = {}, c) {
         const mobile = c.req.header("sec-ch-ua-mobile") || "unknown";
         const rayId = c.req.header("cf-ray") || "unknown";
 
-        // Captura dados geográficos do Cloudflare
+        // Função: Capturar metadados geográficos via Cloudflare
         const cf = c.req.raw?.cf || {};
         const geoInfo = {
             city: cf.city || "Unknown City",
@@ -24,7 +24,7 @@ export async function logAudit(userId, action, details = {}, c) {
             asOrganization: cf.asOrganization || "Unknown ISP"
         };
 
-        // Mescla geoInfo com os detalhes existentes (impressão digital do frontend, etc)
+        // Função: Consolidar detalhes par audit log (inclui impressão digital)
         const finalDetails = {
             ...details,
             ...geoInfo,
@@ -33,19 +33,19 @@ export async function logAudit(userId, action, details = {}, c) {
             platform,
             is_mobile: mobile,
             ray_id: rayId,
-            fingerprint_raw: `${ip}|${userAgent}|${cf.country}|${cf.city}` // Simple backend fingerprint
+            fingerprint_raw: `${ip}|${userAgent}|${cf.country}|${cf.city}` // Fingerprint simples de backend
         };
 
-        // Salva no Banco de Dados
+        // Persistência: Banco de Dados Postgres
         await queryDB(
             "INSERT INTO audit_logs (user_id, action, details, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)",
             [userId, action, JSON.stringify(finalDetails), ip.substring(0, 45), userAgent.substring(0, 255)],
             env
         );
 
-        // --- Atividades em Segundo Plano (WaitUntil) ---
+        // --- Tarefas Assíncronas (Execução em Background) ---
 
-        // 1. Sincronizar com Google Sheets
+        // 1. Integração Google Sheets
         c.executionCtx.waitUntil(sendToGoogleSheets({
             userId,
             action,
@@ -53,7 +53,7 @@ export async function logAudit(userId, action, details = {}, c) {
             created_at: new Date().toISOString()
         }, env));
 
-        // 2. Observabilidade Ativa (Discord)
+        // 2. Alertas Críticos (Discord)
         const criticalActions = ['VIDEO_DELETED', 'VIDEO_DELETED_R2', 'ADMIN_LOGIN_SUCCESS', 'ADMIN_USER_BANNED', 'ADMIN_PASSWORD_RESET'];
         if (criticalActions.includes(action)) {
             const emoji = action.includes('DELETE') ? '🗑️' : action.includes('BAN') ? '🚫' : '🛡️';

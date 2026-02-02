@@ -1,6 +1,6 @@
 import { logAudit } from './audit.js';
 
-// Expanded ASN list covering major cloud providers and known VPN hosting services
+// Lista Expandida de ASNs (Provedores de Nuvem e VPN conhecidos)
 const VPN_ASNS = [
     // Existing
     'AS60068', 'AS20473', 'AS29073', 'AS31109', 'AS32934', 'AS40027', 'AS43350',
@@ -71,7 +71,7 @@ async function checkVPNShodan(ip) {
 
 export async function isVPN(ip, c) {
     try {
-        // 1. Strict Header Check
+        // 1. Verificação Estrita de Headers de Proxy
         const proxyHeaders = [
             "X-Forwarded-For", "X-ProxyUser-Ip", "X-Proxy-ID", "Via", "Forwarded",
             "X-Forwarded", "X-Forwarded-Host", "Client-IP", "WL-Proxy-Client-IP",
@@ -89,21 +89,21 @@ export async function isVPN(ip, c) {
             }
         }
 
-        // 2. CF Threat Score (Bot Protection)
+        // 2. Classificação de Ameaça Cloudflare (Bot Protection)
         const cfThreatScore = c.req.header("CF-Threat-Score");
         if (cfThreatScore && parseInt(cfThreatScore) > 10) { // Stricter: > 10 is risky
             console.log(`🚫 VPN/Bot detectado via CF Threat Score: ${cfThreatScore}`);
             return true;
         }
 
-        // 3. CF Bot Management
+        // 3. Detecção de Bots Cloudflare
         const cfBotScore = c.req.header("CF-Bot-Score");
         if (cfBotScore && parseInt(cfBotScore) < 30) { // < 30 likely automated
             console.log(`🚫 Bot detectado via CF Bot Score: ${cfBotScore}`);
             return true;
         }
 
-        // 4. Tor & Country Block
+        // 4. Bloqueio de TOR e Países de Risco
         const cfIsTor = c.req.header("CF-Is-Tor");
         const cfCountry = c.req.header("CF-IPCountry");
         if (cfIsTor === "1" || cfCountry === 'T1') {
@@ -111,7 +111,7 @@ export async function isVPN(ip, c) {
             return true;
         }
 
-        // 5. ASN Block (Datacenters)
+        // 5. Bloqueio por ASN (Datacenters)
         const cfASN = c.req.header("CF-Connecting-ASN");
         if (cfASN) {
             const asnString = `AS${cfASN}`;
@@ -121,7 +121,7 @@ export async function isVPN(ip, c) {
             }
         }
 
-        // 6. ISP Keyword Check (Resilient fallback)
+        // 6. Análise de Nome do ISP (Palavras-chave resilientes)
         const cfISP = c.req.header("CF-Connecting-ISP") || c.req.header("CF-ISP"); // Check CF headers first if available
         if (cfISP) {
             const ispLower = String(cfISP).toLowerCase();
@@ -133,8 +133,8 @@ export async function isVPN(ip, c) {
             }
         }
 
-        // 7. External Checks (Only if not caught by headers/ASN to save latency)
-        // We race them but with short timeouts
+        // 7. Verificações Externas (Apenas se passar pelos checks rápidos)
+        // Race condition com timeout curto para não impactar latência
         const checks = await Promise.race([
             checkVPNShodan(ip),
             new Promise(resolve => setTimeout(() => resolve(false), 2500)) // Fallback if APIs are slow
@@ -145,8 +145,7 @@ export async function isVPN(ip, c) {
         return false;
     } catch (err) {
         console.error("⚠️ Erro ao verificar VPN:", err.message);
-        // Fail OPEN or CLOSED? For "rigorous", maybe strict?
-        // Let's stick to fail open but log error to avoid blocking legit users on system error.
+        // Estratégia: Falha Aberta (Logar erro mas permitir acesso para evitar falsos positivos em caso de erro de API)
         return false;
     }
 }
@@ -161,7 +160,7 @@ export async function blockVPN(c, next) {
         realIP = xForwardedFor.split(",")[0].trim();
     }
 
-    // Exempt localhost/internal for testing
+    // Exceção: Permitir localhost e redes internas para testes e desenvolvimento
     if (realIP === '127.0.0.1' || realIP.startsWith('192.168.')) {
         return await next();
     }

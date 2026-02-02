@@ -8,7 +8,7 @@ export const authMiddleware = async (c, next) => {
     return jwtMiddleware(c, next);
 };
 
-// Middleware customizado para verificar autenticação simples
+// Middleware: Verificação Simples de Autenticação
 export const requireAuth = async (c, next) => {
     const payload = c.get('jwtPayload');
     if (!payload) {
@@ -17,7 +17,7 @@ export const requireAuth = async (c, next) => {
     await next();
 };
 
-// Middleware para exigir privilégios de Administrador
+// Middleware: Proteção de Rotas Administrativas
 export const requireAdmin = async (c, next) => {
     const payload = c.get('jwtPayload');
     if (!payload || payload.role !== 'admin') {

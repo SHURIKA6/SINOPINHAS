@@ -15,7 +15,7 @@ app.post('/admin/toggle-role', authMiddleware, requireAdmin, adminController.tog
 app.get('/admin/logs', authMiddleware, requireAdmin, adminController.getLogs);
 app.get('/admin/users/:userId/logs', authMiddleware, requireAdmin, adminController.getUserLogs);
 
-// Admin Shura Messages Management
+// Rotas: Gerenciamento de Mensagens Shura (Admin)
 app.get('/admin/shura/messages', authMiddleware, requireAdmin, shuraController.getAllShuraMessages);
 app.post('/admin/shura/messages/toggle-approve', authMiddleware, requireAdmin, shuraController.toggleApproveShuraMessage);
 app.delete('/admin/shura/messages/:id', authMiddleware, requireAdmin, shuraController.deleteShuraMessage);

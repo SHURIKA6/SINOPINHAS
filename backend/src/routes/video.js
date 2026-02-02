@@ -6,15 +6,15 @@ import * as videoController from '../controllers/videoController.js';
 
 const app = new Hono();
 
-// Search routes
+// Rotas: Pesquisa de Vídeos
 app.get('/videos/search', videoController.searchVideos);
 app.get('/videos/:id', videoController.getVideo);
 
-// Protected Routes
+// Rotas Protegidas
 app.post('/upload', authMiddleware, blockVPN, limiter(3, 300), videoController.uploadVideo); // Added limiter middleware
 app.delete('/videos/:id', authMiddleware, videoController.deleteVideo); // /api/videos/:id
 
-// Public Routes
+// Rotas Públicas
 app.get('/videos', videoController.listVideos); // /api/videos
 app.get('/secret-videos', videoController.listSecretVideos); // /api/secret-videos
 

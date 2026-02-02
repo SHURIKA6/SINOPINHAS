@@ -1,12 +1,12 @@
 import { corsHeaders } from '../utils/api-utils.js';
 
 export const corsMiddleware = async (c, next) => {
-    // Add CORS headers to ALL responses (success or error) via Context
+    // Função: Adicionar cabeçalhos CORS globais para todas as respostas
     Object.entries(corsHeaders).forEach(([key, value]) => {
         c.header(key, value);
     });
 
-    // Handle Preflight (OPTIONS)
+    // Tratamento de Requisicões Preflight (OPTIONS)
     if (c.req.method === 'OPTIONS') {
         return c.text('', 204);
     }
@@ -14,9 +14,8 @@ export const corsMiddleware = async (c, next) => {
     try {
         await next();
     } catch (err) {
-        // If an error bubbling up wasn't caught, headers might be missing if response wasn't started
-        // But c.header sets them for the response object.
-        // We re-set them in the Global Error Handler just to be safe, but this middleware logic is mainly for success/preflight.
+        // Erro global: Garantir que headers sejam enviados mesmo em falhas não tratadas
+        // O Hono geralmente lida com isso, mas este bloco é uma segurança extra.
         throw err;
     }
 };

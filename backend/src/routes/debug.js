@@ -35,33 +35,33 @@ app.get('/fix-db', async (c) => {
     const env = c.env;
     try {
         const migrations = [
-            // Fix Notifications
+            // Correção: Notificações
             "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE",
             "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS related_id INTEGER",
             "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT",
             "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS user_id INTEGER",
 
-            // Fix Messages
+            // Correção: Mensagens
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS from_id INTEGER",
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS to_id INTEGER",
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS msg TEXT",
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE",
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE",
 
-            // Sync data if old columns exist (ignoring errors if columns don't exist)
+            // Sincronização: Corrigir dados se colunas antigas existirem (ignora erros)
             "UPDATE notifications SET is_read = read WHERE is_read IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='notifications' AND column_name='read')",
             "UPDATE messages SET from_id = sender_id WHERE from_id IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='messages' AND column_name='sender_id')",
             "UPDATE messages SET to_id = recipient_id WHERE to_id IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='messages' AND column_name='recipient_id')",
             "UPDATE messages SET msg = content WHERE msg IS NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='messages' AND column_name='content')",
 
-            // Videos/Users
+            // Schema: Vídeos e Usuários
             "ALTER TABLE videos ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'video'",
             "ALTER TABLE videos ADD COLUMN IF NOT EXISTS is_secret BOOLEAN DEFAULT FALSE",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT",
             "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT",
 
-            // Fix Comments & Views
+            // Schema: Comentários e Visualizações
             "ALTER TABLE comments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()",
             "ALTER TABLE views ADD COLUMN IF NOT EXISTS user_id INTEGER",
             "ALTER TABLE views ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()",
@@ -79,7 +79,7 @@ app.get('/fix-db', async (c) => {
             }
         }
 
-        // Run full init too
+        // Executar inicialização completa do banco
         await initDatabase(env);
         results.push("Database Init Executed");
 

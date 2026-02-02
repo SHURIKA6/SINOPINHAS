@@ -4,12 +4,12 @@ import { getPlaces, addPlace, deletePlace } from "../controllers/placeController
 
 const routes = new Hono();
 
-// Events
+// Seção: Agenda Local (Eventos)
 routes.get("/local-agenda", getEvents);
 routes.post("/local-agenda", addEvent);
 routes.delete("/local-agenda/:id", deleteEvent);
 
-// Places
+// Seção: Guia Local (Lugares)
 routes.get("/local-guide", getPlaces);
 routes.post("/local-guide", addPlace);
 routes.delete("/local-guide/:id", deletePlace);
