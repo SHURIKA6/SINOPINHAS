@@ -77,52 +77,67 @@ export default function WeatherSection() {
             <div className="weather-grid">
                 {/* Card do Relógio Digital */}
                 <div style={{
-                    background: 'var(--card-bg)',
-                    borderRadius: 24,
                     padding: '40px 32px',
-                    border: '1px solid var(--border-color)',
                     textAlign: 'center',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
                     minHeight: 280
-                }} className="card-hover">
+                }} className="vista-glass-widget card-hover">
                     <div style={{
-                        fontSize: '12px',
-                        color: 'var(--secondary-text)',
+                        position: 'absolute', top: 12, right: 12,
+                        width: 16, height: 16, borderRadius: '50%',
+                        background: 'radial-gradient(circle at 30% 30%, #ff4d4d, #990000)',
+                        boxShadow: '0 0 5px rgba(255,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.4)',
+                        border: '1px solid rgba(0,0,0,0.3)'
+                    }} title="Gadget Close (Cosmetic)"></div>
+
+                    <div style={{
+                        fontSize: '11px',
+                        color: 'rgba(255,255,255,0.8)',
                         fontWeight: 800,
                         letterSpacing: '2px',
                         marginBottom: 16,
-                        textTransform: 'uppercase'
+                        textTransform: 'uppercase',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
                     }}>
-                        Tempo Real
+                        Local Time (Sinop)
                     </div>
                     <div style={{
-                        fontSize: isMobile ? 54 : 78,
+                        fontSize: isMobile ? 54 : 72,
                         fontWeight: 900,
-                        fontFamily: 'JetBrains Mono, monospace',
+                        fontFamily: 'Segoe UI, Tahoma, sans-serif',
                         lineHeight: 1,
-                        background: 'linear-gradient(180deg, #fff 0%, #a855f7 100%)',
+                        background: 'linear-gradient(180deg, #FFFFFF 0%, #B0C4DE 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.5))'
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
                     }}>
                         {currentTime.toLocaleTimeString('pt-BR', { hour12: false })}
+                    </div>
+                    <div style={{
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        color: '#E0EEFF',
+                        marginTop: 8,
+                        textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                    }}>
+                        {new Date().toLocaleDateString('pt-BR', { weekday: 'long' })}
                     </div>
                 </div>
 
                 {/* Widget Detalhado */}
-                <div style={{ background: 'var(--card-bg)', borderRadius: 24, padding: 24, border: '1px solid var(--border-color)' }} className="card-hover">
-                    <a className="weatherwidget-io" href="https://forecast7.com/pt/n11d86n55d51/sinop/" data-label_1="SINOP" data-label_2="MATO GROSSO" data-theme="weather_one" data-basecolor="rgba(0,0,0,0)" data-textcolor="var(--text-color)">SINOP WEATHER</a>
+                <div style={{ padding: 24 }} className="vista-glass-widget card-hover">
+                    <a className="weatherwidget-io" href="https://forecast7.com/pt/n11d86n55d51/sinop/" data-label_1="SINOP" data-label_2="MATO GROSSO" data-theme="weather_one" data-basecolor="rgba(0,0,0,0)" data-textcolor="#FFFFFF">SINOP WEATHER</a>
                     <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <div style={{ background: 'var(--input-bg)', padding: 12, borderRadius: 16, textAlign: 'center' }}>
-                            <div style={{ fontSize: 10, color: 'var(--secondary-text)', fontWeight: 800 }}>VENTO</div>
-                            <div style={{ fontSize: 16, fontWeight: 900 }}>{realData?.wind_speedy || '--'}</div>
+                        <div className="vista-tile" style={{ padding: 12, textAlign: 'center' }}>
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 800 }}>VENTO</div>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: 'white', textShadow: '0 1px 2px black' }}>{realData?.wind_speedy || '--'}</div>
                         </div>
-                        <div style={{ background: 'var(--input-bg)', padding: 12, borderRadius: 16, textAlign: 'center' }}>
-                            <div style={{ fontSize: 10, color: 'var(--secondary-text)', fontWeight: 800 }}>NASCEU</div>
-                            <div style={{ fontSize: 16, fontWeight: 900 }}>{realData?.sunrise || '--'}</div>
+                        <div className="vista-tile" style={{ padding: 12, textAlign: 'center' }}>
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 800 }}>NASCEU</div>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: 'white', textShadow: '0 1px 2px black' }}>{realData?.sunrise || '--'}</div>
                         </div>
                     </div>
                 </div>
@@ -134,14 +149,13 @@ export default function WeatherSection() {
                     margin-bottom: 40px;
                 }
                 .weather-title {
-                    font-size: 42px;
-                    font-weight: 1000;
+                    font-size: 32px;
+                    font-weight: 800;
                     margin: 0;
-                    background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    letter-spacing: -2px;
-                    text-transform: uppercase;
+                    color: white;
+                    text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 2px 4px rgba(0,0,0,0.5);
+                    font-family: 'Segoe UI', Tahoma, sans-serif;
+                    letter-spacing: 1px;
                 }
                 .weather-grid {
                     display: grid;
