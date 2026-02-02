@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import CommentsSection from './CommentsSection';
 
 export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare }) {
     const [isHovering, setIsHovering] = useState(false);
