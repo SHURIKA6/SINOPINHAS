@@ -8,19 +8,31 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
     const [progress, setProgress] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [videoError, setVideoError] = useState(false);
     const videoRef = useRef(null);
 
-    const togglePlay = (e) => {
+    const togglePlay = async (e) => {
         if (e) e.stopPropagation();
-        if (videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pause();
+        if (videoRef.current && !videoError) {
+            try {
+                if (isPlaying) {
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                } else {
+                    await videoRef.current.play();
+                    setIsPlaying(true);
+                }
+            } catch (err) {
+                console.error("Playback error:", err);
                 setIsPlaying(false);
-            } else {
-                videoRef.current.play();
-                setIsPlaying(true);
             }
         }
+    };
+
+    const handleVideoError = () => {
+        console.error("Video failed to load:", video.video_url);
+        setVideoError(true);
+        setIsPlaying(false);
     };
 
     const handleTimeUpdate = () => {
@@ -28,16 +40,23 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
             const current = videoRef.current.currentTime;
             const total = videoRef.current.duration;
             setCurrentTime(current);
-            setDuration(total);
-            setProgress((current / total) * 100);
+            setDuration(total || 0);
+            setProgress(total ? (current / total) * 100 : 0);
         }
     };
 
     const handleSeek = (e) => {
-        e.stopPropagation(); // Stop click from bubbling to other elements
-        const newTime = (e.target.value / 100) * duration;
-        videoRef.current.currentTime = newTime;
-        setProgress(e.target.value);
+        e.stopPropagation();
+        const value = Number(e.target.value);
+        const newTime = (value / 100) * duration;
+        if (videoRef.current && isFinite(newTime)) {
+            try {
+                videoRef.current.currentTime = newTime;
+                setProgress(value);
+            } catch (err) {
+                console.error("Seek error", err);
+            }
+        }
     };
 
     const formatTime = (time) => {
@@ -80,20 +99,28 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 onMouseLeave={() => setIsHovering(false)}
                 onClick={handleContainerClick}
             >
-                <video
-                    ref={videoRef}
-                    src={video.video_url}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '400px' }}
-                    loop
-                    muted={false} // Allow sound for functional player
-                    playsInline
-                    poster={video.thumbnail_url}
-                    onTimeUpdate={handleTimeUpdate}
-                    onLoadedMetadata={handleTimeUpdate}
-                    onClick={(e) => { e.stopPropagation(); togglePlay(); }} // Click video to toggle play
-                />
+                {videoError ? (
+                    <div style={{ width: '100%', height: '100%', minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#666', background: '#1a1a1a' }}>
+                        <X size={48} color="#D44033" />
+                        <p style={{ marginTop: 12, fontSize: 12 }}>Playback Error</p>
+                    </div>
+                ) : (
+                    <video
+                        ref={videoRef}
+                        src={video.video_url}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '400px' }}
+                        loop
+                        muted={false}
+                        playsInline
+                        poster={video.thumbnail_url}
+                        onTimeUpdate={handleTimeUpdate}
+                        onLoadedMetadata={handleTimeUpdate}
+                        onError={handleVideoError}
+                        onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                    />
+                )}
 
-                {!isPlaying && (
+                {!isPlaying && !videoError && (
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                         <div style={{ width: 60, height: 60, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
                             <Play size={30} fill="white" stroke="white" style={{ marginLeft: 4 }} />
@@ -104,7 +131,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
 
             {/* WMP Controls */}
             <div className="wmp-controls">
-                <button className="wmp-btn" onClick={togglePlay}>
+                <button className="wmp-btn" onClick={togglePlay} disabled={videoError}>
                     {isPlaying ? <Pause size={14} fill="#333" /> : <Play size={14} fill="#333" style={{ marginLeft: 2 }} />}
                 </button>
 
@@ -116,6 +143,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                         max="100"
                         value={progress}
                         onChange={handleSeek}
+                        disabled={videoError}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             width: '100%',
@@ -124,7 +152,8 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                             background: '#888',
                             borderRadius: '2px',
                             cursor: 'pointer',
-                            outline: 'none'
+                            outline: 'none',
+                            opacity: videoError ? 0.5 : 1
                         }}
                         className="wmp-slider"
                     />
