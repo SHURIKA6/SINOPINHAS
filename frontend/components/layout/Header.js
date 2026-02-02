@@ -121,8 +121,14 @@ export default function Header({
                             </div>
 
                             <div className="sidebar-foot">
-                                <button onClick={() => setShowSupport(true)}>Suporte</button>
-                                {user && <button onClick={logout} className="logout-text">Sair</button>}
+                                <button onClick={() => setShowSupport(true)} className="support-btn">
+                                    <LifeBuoy size={18} /> Suporte
+                                </button>
+                                {user && (
+                                    <button onClick={logout} className="sidebar-logout">
+                                        <LogOut size={18} /> Sair
+                                    </button>
+                                )}
                             </div>
                         </motion.aside>
                     </>
@@ -212,29 +218,62 @@ export default function Header({
                 /* Sidebar */
                 .sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; backdrop-filter: blur(4px); }
                 .frutiger-sidebar {
-                    position: fixed; top: 10px; right: 10px; bottom: 10px; width: 260px;
+                    position: fixed; top: 10px; right: 10px; bottom: 90px; /* Leave space for bottom nav */
+                    width: 280px;
                     z-index: 2001; display: flex; flex-direction: column;
-                    background: rgba(10, 40, 80, 0.85);
-                    border: 1px solid rgba(255,255,255,0.3);
+                    background: rgba(15, 13, 21, 0.9);
+                    backdrop-filter: blur(24px) saturate(180%);
+                    -webkit-backdrop-filter: blur(24px) saturate(180%);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 24px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                    overflow: hidden;
                 }
                 
                 .sidebar-head {
-                    padding: 16px; display: flex; justify-content: space-between; align-items: center;
-                    border-bottom: 1px solid rgba(255,255,255,0.1); color: white;
+                    padding: 20px; display: flex; justify-content: space-between; align-items: center;
+                    border-bottom: 1px solid rgba(255,255,255,0.05); color: white;
                 }
-                .close-btn { background: none; border: none; color: white; cursor: pointer; }
+                .sidebar-head h3 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+                .close-btn { 
+                    background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; 
+                    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                    transition: background 0.2s;
+                }
+                .close-btn:hover { background: rgba(255,255,255,0.2); }
 
-                .sidebar-menu-list { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+                .sidebar-menu-list { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
                 .sidebar-row {
-                    display: flex; alignItems: center; gap: 12px; padding: 12px;
-                    background: transparent; border: none; color: white; text-align: left;
-                    border-radius: 8px; cursor: pointer; font-size: 16px;
+                    display: flex; align-items: center; gap: 16px; padding: 14px 16px;
+                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); 
+                    color: rgba(255,255,255,0.8); text-align: left;
+                    border-radius: 16px; cursor: pointer; font-size: 15px; font-weight: 600;
+                    transition: all 0.2s;
                 }
-                .sidebar-row:hover { background: rgba(255,255,255,0.1); }
-                .sidebar-row.active { background: linear-gradient(90deg, rgba(0,198,255,0.2), transparent); border-left: 3px solid #00C6FF; }
+                .sidebar-row:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+                .sidebar-row.active { 
+                    background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1)); 
+                    border: 1px solid rgba(139, 92, 246, 0.4);
+                    color: #cfbbfd;
+                }
 
-                .sidebar-foot { padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; }
-                .logout-text { background: none; border: none; color: #FF8A80; cursor: pointer; margin-left: 10px; }
+                .sidebar-foot { 
+                    padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); 
+                    display: flex; flex-direction: column; gap: 10px;
+                }
+                .sidebar-foot button {
+                    width: 100%; padding: 12px; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
+                    display: flex; align-items: center; justify-content: center; gap: 8px;
+                }
+                .support-btn {
+                    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white;
+                }
+                .support-btn:hover { background: rgba(255,255,255,0.15); }
+                
+                .sidebar-logout { 
+                    background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5;
+                }
+                .sidebar-logout:hover { background: rgba(239, 68, 68, 0.25); }
             `}</style>
         </div>
     );
