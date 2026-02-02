@@ -221,57 +221,70 @@ export default function Header({
                     position: fixed; top: 0; right: 0; bottom: 0;
                     width: 300px;
                     z-index: 2001; display: flex; flex-direction: column;
-                    background: #FFFFFF !important;
-                    box-shadow: -5px 0 30px rgba(0,0,0,0.2);
-                    border-left: 1px solid #E0E0E0;
+                    background: rgba(255, 255, 255, 0.95) !important;
+                    backdrop-filter: blur(20px) saturate(180%);
+                    -webkit-backdrop-filter: blur(20px) saturate(180%);
+                    box-shadow: -10px 0 40px rgba(0, 71, 171, 0.15);
+                    border-left: 1px solid rgba(255, 255, 255, 0.8);
                 }
                 
                 .sidebar-head {
                     padding: 24px; display: flex; justify-content: space-between; align-items: center;
-                    border-bottom: 1px solid #F0F0F0; color: #1B9142; /* GE Green */
+                    border-bottom: 1px solid rgba(0, 71, 171, 0.1); 
+                    color: #0047AB; /* Frutiger Dark Blue */
                 }
-                .sidebar-head h3 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+                .sidebar-head h3 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
                 .close-btn { 
-                    background: #F5F5F5; border: none; color: #666; cursor: pointer; 
+                    background: rgba(0, 71, 171, 0.05); border: none; color: #0047AB; cursor: pointer; 
                     width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                    transition: background 0.2s;
+                    transition: all 0.2s;
                 }
-                .close-btn:hover { background: #E0E0E0; color: #333; }
+                .close-btn:hover { background: rgba(0, 71, 171, 0.1); transform: rotate(90deg); }
 
-                .sidebar-menu-list { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+                .sidebar-menu-list { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
                 .sidebar-row {
                     display: flex; align-items: center; gap: 16px; padding: 16px;
-                    background: transparent; border: none; border-bottom: 1px solid #F8F8F8;
-                    color: #333; text-align: left;
+                    background: transparent; border: none; border-radius: 12px;
+                    color: #4A5568; text-align: left;
                     cursor: pointer; font-size: 16px; font-weight: 600;
                     transition: all 0.2s;
-                    border-radius: 8px;
                 }
-                .sidebar-row:hover { background: #F5F9F6; color: #06AA48; transform: translateX(4px); }
+                .sidebar-row:hover { 
+                    background: linear-gradient(90deg, #E3F2FD, #F0F8FF); 
+                    color: #0047AB; 
+                    transform: translateX(4px);
+                    box-shadow: 0 2px 8px rgba(0, 71, 171, 0.05);
+                }
                 .sidebar-row.active { 
-                    background: #E8F5E9; 
-                    color: #06AA48;
+                    background: linear-gradient(90deg, #BBDEFB, #E3F2FD); 
+                    color: #0047AB;
                     font-weight: 700;
+                    box-shadow: 0 2px 10px rgba(0, 71, 171, 0.1);
                 }
 
                 .sidebar-foot { 
-                    padding: 24px; border-top: 1px solid #F0F0F0; background: #FAFAFA;
+                    padding: 24px; border-top: 1px solid rgba(0, 71, 171, 0.1); 
+                    background: rgba(240, 248, 255, 0.5);
                     display: flex; flex-direction: column; gap: 12px;
                 }
                 .sidebar-foot button {
-                    width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
+                    width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
                     display: flex; align-items: center; justify-content: center; gap: 8px;
                     text-transform: uppercase; letter-spacing: 0.5px;
                 }
                 .support-btn {
-                    background: #FFFFFF; border: 2px solid #E0E0E0; color: #555;
+                    background: #FFFFFF; border: 1px solid #BBDEFB; color: #0047AB;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
                 }
-                .support-btn:hover { border-color: #06AA48; color: #06AA48; background: #FFFFFF; }
+                .support-btn:hover { 
+                    background: #F0F8FF; border-color: #0047AB; 
+                    box-shadow: 0 4px 10px rgba(0, 71, 171, 0.1);
+                }
                 
                 .sidebar-logout { 
-                    background: #FEEEEE; border: 1px solid #FFCDD2; color: #D32F2F;
+                    background: rgba(255, 235, 238, 0.8); border: 1px solid rgba(255, 205, 210, 0.8); color: #C62828;
                 }
-                .sidebar-logout:hover { background: #FFCDD2; }
+                .sidebar-logout:hover { background: #FFCDD2; border-color: #EF5350; }
             `}</style>
         </div>
     );
