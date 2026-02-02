@@ -32,25 +32,11 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="xp-window" // Global XP Window Class
+            className="glass-panel" // New Glass Class
         >
-            {/* XP Title Bar */}
-            <div className="xp-title-bar">
-                <div className="window-title">
-                    <img src={video.avatar || 'https://www.gravatar.com/avatar?d=mp'} className="title-icon" />
-                    <span>{video.title || 'Sem título'} - {video.username}</span>
-                </div>
-                <div className="window-controls">
-                    <button className="win-btn min">_</button>
-                    <button className="win-btn max">□</button>
-                    <button className="win-btn close">X</button>
-                </div>
-            </div>
-
-            {/* Window Content (The Video) */}
-            <div className="xp-content video-window-body">
+            <div className="card-media-wrapper">
                 <div
-                    className="video-frame"
+                    className="media-frame"
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
                     onClick={handleContainerClick}
@@ -58,7 +44,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                     <video
                         ref={videoRef}
                         src={video.video_url}
-                        className="post-video"
+                        className="media-element"
                         loop
                         muted
                         playsInline
@@ -71,112 +57,97 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                         </div>
                     )}
 
-                    <button
-                        className="play-toggle-btn"
-                        onClick={togglePlay}
-                    >
+                    <button className="play-toggle-btn" onClick={togglePlay}>
                         {isPlaying ? <Pause size={16} /> : <Play size={16} />}
                     </button>
                 </div>
+            </div>
 
-                <div className="post-meta">
-                    <div className="post-info">
-                        <span className="post-id">#{video.id}</span>
-                        <span className="post-date">Enviado em: {formattedDate}</span>
+            <div className="card-details">
+                <div className="card-header">
+                    <img src={video.avatar || 'https://www.gravatar.com/avatar?d=mp'} className="card-avatar" />
+                    <div className="card-user-info">
+                        <strong>{video.title || 'Sem título'}</strong>
+                        <span>{video.username}</span>
                     </div>
+                </div>
 
-                    <div className="post-description">
-                        {video.description || "Sem descrição."}
-                    </div>
+                <div className="card-actions-row">
+                    <button
+                        className={`glass-action-btn ${video.user_liked ? 'liked' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onLike(video.id, e); }}
+                    >
+                        <Heart size={16} fill={video.user_liked ? "#FF4081" : "none"} />
+                        <span>{video.likes || 0}</span>
+                    </button>
 
-                    <div className="post-actions-bar">
-                        <button
-                            className={`xp-button action-btn ${video.user_liked ? 'liked' : ''}`}
-                            onClick={(e) => { e.stopPropagation(); onLike(video.id, e); }}
-                        >
-                            <Heart size={16} fill={video.user_liked ? "red" : "none"} color={video.user_liked ? "red" : "black"} />
-                            <span>{video.likes || 0} Curtir</span>
+                    <button className="glass-action-btn" onClick={(e) => { e.stopPropagation(); onOpenComments(video); }}>
+                        <MessageCircle size={16} />
+                    </button>
+
+                    <button className="glass-action-btn" onClick={(e) => { e.stopPropagation(); onShare(video); }}>
+                        <Share2 size={16} />
+                    </button>
+
+                    {canDelete && (
+                        <button className="glass-action-btn delete" onClick={(e) => { e.stopPropagation(); onDelete(video.id); }}>
+                            <Trash2 size={16} />
                         </button>
-
-                        <button className="xp-button action-btn" onClick={(e) => { e.stopPropagation(); onOpenComments(video); }}>
-                            <MessageCircle size={16} />
-                            <span>Comentar</span>
-                        </button>
-
-                        <button className="xp-button action-btn" onClick={(e) => { e.stopPropagation(); onShare(video); }}>
-                            <Share2 size={16} />
-                            <span>Share</span>
-                        </button>
-
-                        {canDelete && (
-                            <button className="xp-button action-btn delete" onClick={(e) => { e.stopPropagation(); onDelete(video.id); }}>
-                                <Trash2 size={16} />
-                            </button>
-                        )}
-                    </div>
+                    )}
                 </div>
             </div>
 
             <style jsx>{`
-                .window-title { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                .title-icon { width: 16px; height: 16px; border-radius: 2px; }
-                
-                .window-controls { display: flex; gap: 2px; }
-                .win-btn {
-                    width: 20px; height: 20px; border: 1px solid white; background: transparent;
-                    color: white; font-size: 10px; display: flex; align-items: center; justify-content: center;
-                    border-radius: 3px; cursor: pointer; opacity: 0.7;
-                }
-                .win-btn:hover { opacity: 1; background: rgba(255,255,255,0.2); }
-                .win-btn.close { background: #E81123; border: none; }
-
-                .video-window-body {
-                    background: #ECE9D8; /* Classic XP Gray/Beige */
-                    padding: 8px;
-                    display: flex; flex-direction: column; gap: 10px;
+                .card-media-wrapper {
+                    position: relative; border-radius: 12px; overflow: hidden;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                    border: 1px solid rgba(255,255,255,0.3);
                 }
 
-                .video-frame {
-                    background: black;
-                    border: 2px solid #999;
-                    border-radius: 2px;
-                    position: relative;
-                    aspect-ratio: 9/16;
-                    max-height: 400px;
-                    display: flex; justify-content: center; overflow: hidden;
-                    cursor: pointer;
-                    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+                .media-frame {
+                    aspect-ratio: 9/16; background: black; position: relative;
+                    display: flex; justify-content: center; cursor: pointer;
                 }
-
-                .post-video { height: 100%; width: 100%; object-fit: contain; }
+                .media-element { width: 100%; height: 100%; object-fit: contain; }
 
                 .play-overlay {
-                    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-                    background: rgba(0,0,0,0.2);
+                    position: absolute; inset: 0; background: rgba(0,0,0,0.3);
+                    display: flex; align-items: center; justify-content: center;
                 }
-
                 .play-toggle-btn {
                     position: absolute; bottom: 10px; right: 10px;
-                    background: rgba(0,0,0,0.5); border: 1px solid white; color: white;
-                    border-radius: 50%; width: 32px; height: 32px;
-                    display: flex; align-items: center; justify-content: center;
-                    cursor: pointer;
+                    width: 32px; height: 32px; border-radius: 50%;
+                    background: rgba(255,255,255,0.2); border: 1px solid white;
+                    color: white; display: flex; align-items: center; justify-content: center;
+                    backdrop-filter: blur(4px); cursor: pointer;
                 }
 
-                .post-meta {
-                    background: white; border: 1px solid #7F9DB9; padding: 10px;
+                .card-details {
+                    margin-top: 12px; color: white;
                 }
 
-                .post-info { font-size: 11px; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between; }
-                .post-description { font-size: 13px; color: black; margin-bottom: 12px; line-height: 1.4; }
+                .card-header {
+                    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+                }
+                .card-avatar { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); }
+                .card-user-info { display: flex; flex-direction: column; font-size: 13px; line-height: 1.2; }
+                .card-user-info strong { font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+                .card-user-info span { opacity: 0.8; font-size: 11px; }
 
-                .post-actions-bar {
-                    display: flex; gap: 8px; flex-wrap: wrap;
+                .card-actions-row {
+                    display: flex; gap: 8px;
                 }
 
-                .action-btn { display: flex; align-items: center; gap: 6px; }
-                .action-btn.liked { color: red; }
-                .action-btn.delete { color: red; margin-left: auto; }
+                .glass-action-btn {
+                    flex: 1; height: 32px; border-radius: 16px;
+                    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: white; display: flex; align-items: center; justify-content: center; gap: 6px;
+                    cursor: pointer; transition: all 0.2s; font-size: 12px; font-weight: bold;
+                }
+                .glass-action-btn:hover { background: rgba(255,255,255,0.25); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+                .glass-action-btn.liked { color: #FF4081; background: rgba(255, 64, 129, 0.15); border-color: rgba(255, 64, 129, 0.4); }
+                .glass-action-btn.delete { color: #FF5252; flex: 0 0 32px; }
+
             `}</style>
         </motion.div>
     );

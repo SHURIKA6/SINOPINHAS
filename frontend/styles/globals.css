@@ -1,69 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* --- Windows XP / Aero Glass Theme --- */
+/* --- Frutiger Aero / Vista Glass Theme --- */
 :root {
-  /* XP / Frutiger Aero Palette */
-  --xp-blue: #245EDC;
-  /* Taskbar Blue */
-  --xp-green: #3C8E42;
-  /* Start Button Green */
-  --xp-orange: #E68B2C;
-  /* Focus/Attention */
-  --xp-bg-blue: #BFDFFF;
-  /* Desktop Blue */
+  /* Palette: Blue Vista Gloss */
+  --frutiger-blue-dark: #0047AB;
+  --frutiger-blue-light: #4DA6FF;
+  --frutiger-accent: #00C6FF;
 
-  /* Increased opacity for readability ("Transparentes mas opacos") */
-  --glass-white: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.8);
-  --glass-shadow: rgba(0, 0, 0, 0.2);
+  /* Glass Gradients based on reference */
+  --glass-gradient-main: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.1) 40%,
+      rgba(255, 255, 255, 0.05) 100%);
 
-  --window-bg: rgba(255, 255, 255, 0.9);
-  /* Almost opaque white */
-  --window-header-gradient: linear-gradient(180deg, #0058EE 0%, #3593FF 4%, #288EFF 18%, #127DFF 44%, #0369FC 100%);
-  --window-border: #00138C;
+  --gloss-highlight: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.7) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 51%,
+      transparent 100%);
 
-  --bg-color: #BFDFFF;
-  --text-color: #000000;
-  --secondary-text: #444444;
+  /* UI Elements */
+  --window-bg: rgba(0, 50, 150, 0.25);
+  /* Deep transparent blue tint */
+  --window-border: rgba(255, 255, 255, 0.6);
+  --card-bg: rgba(255, 255, 255, 0.15);
 
-  /* Restored missing variables for compatibility */
-  --header-bg: rgba(255, 255, 255, 0.85);
-  --card-bg: rgba(255, 255, 255, 0.75);
-  /* High opacity for legibility */
-  --input-bg: rgba(255, 255, 255, 0.9);
-  --border-color: rgba(0, 0, 0, 0.1);
-
-  --accent-color: var(--xp-blue);
-
-  --font-main: 'Tahoma', 'Verdana', sans-serif;
-}
-
-[data-theme='dark'] {
-  /* Dark Mode adaptation for Aero (Dark Aero) */
-  --bg-color: #0F1219;
   --text-color: #FFFFFF;
-  --secondary-text: #CCCCCC;
+  --secondary-text: #E0E0E0;
 
-  --window-bg: rgba(20, 20, 30, 0.9);
-  /* Dark Glass Window - High Opacity */
-  --window-header-gradient: linear-gradient(180deg, #333 0%, #111 100%);
-  --window-border: #555;
+  --bg-color: #0E2A47;
+  --header-bg: transparent;
 
-  --glass-white: rgba(0, 0, 0, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.15);
-
-  --card-bg: rgba(30, 30, 40, 0.8);
-  --header-bg: rgba(20, 20, 30, 0.9);
-  --input-bg: rgba(40, 40, 50, 0.9);
-  --border-color: rgba(255, 255, 255, 0.1);
-
-  --accent-color: #3B82F6;
+  --accent-color: var(--frutiger-accent);
+  --font-main: 'Outfit', 'Segoe UI', 'Tahoma', sans-serif;
+  /* Clean modern/aero font */
 }
 
+/* Base Reset */
 body {
   margin: 0;
   padding: 0;
   font-family: var(--font-main);
+  background: url('/backgrounds/frutiger-ref.png') no-repeat center center fixed;
+  /* Using user ref as placeholder or existing bliss */
   background: url('/backgrounds/xp-bliss.png') no-repeat center center fixed;
   background-size: cover;
   color: var(--text-color);
@@ -75,119 +54,117 @@ body {
   box-sizing: border-box;
 }
 
-button,
-a,
-input,
-select {
-  font-family: var(--font-main);
-}
+/* --- Aero / Vista Utilities --- */
 
-/* XP Window Style Utility */
-.xp-window {
-  background: var(--window-bg);
+/* Main Glass Container (Like the reference store window) */
+.frutiger-container {
+  background: var(--glass-gradient-main);
+  backdrop-filter: blur(16px) saturate(120%);
   border: 1px solid var(--window-border);
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-  margin-bottom: 20px;
+  border-radius: 24px;
+  box-shadow:
+    0 0 15px rgba(0, 150, 255, 0.3),
+    /* Blue Glow */
+    inset 0 0 20px rgba(255, 255, 255, 0.2);
+  padding: 24px;
 }
 
-.xp-title-bar {
-  background: var(--window-header-gradient);
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Glassy Card (Grid items) */
+.glass-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: 14px 14px 0 0;
+}
+
+.glass-panel:hover {
+  transform: translateY(-5px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+}
+
+/* Glossy Tabs (Top Menu) */
+.aero-tab {
+  background: linear-gradient(180deg, #6FBFFF 0%, #007ACC 50%, #005999 51%, #0088CC 100%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
   color: white;
   font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid #00138C;
-}
-
-.xp-content {
-  padding: 16px;
-}
-
-/* Aero Glass Utility */
-.aero-glass {
-  background: linear-gradient(to bottom,
-      rgba(255, 255, 255, 0.85) 0%,
-      /* Much more opaque */
-      rgba(255, 255, 255, 0.6) 40%,
-      rgba(255, 255, 255, 0.4) 41%,
-      rgba(255, 255, 255, 0.8) 100%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-}
-
-/* Glossy Button */
-.xp-button {
-  background: linear-gradient(180deg, #F0F0F0 0%, #DCDCDC 50%, #C8C8C8 51%, #EEEEEE 100%);
-  border: 1px solid #707070;
-  border-radius: 4px;
-  padding: 4px 12px;
-  color: black;
-  font-size: 13px;
+  padding: 8px 24px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  box-shadow: inset 0 0 2px white;
+  position: relative;
+  overflow: hidden;
+  transition: filter 0.2s;
 }
 
-.xp-button:hover {
-  box-shadow: inset 0 0 5px #FDD;
-  border-color: #3C7FB1;
-  background: linear-gradient(180deg, #EAF6FD 0%, #D9F0FC 50%, #BEE6FD 51%, #A7D9F5 100%);
+.aero-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
 }
 
-.xp-button:active {
-  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
-  background: #DDD;
+.aero-tab:hover {
+  filter: brightness(1.1);
 }
 
-/* Global Layout */
-.main-content {
-  padding: 80px 24px 100px;
-  /* More top padding for glass header */
-  max-width: 1000px;
-  margin: 0 auto;
-  min-height: 100vh;
+.aero-tab.active {
+  background: linear-gradient(180deg, #A8DFFF 0%, #4DB8FF 50%, #0088DD 51%, #22AAFF 100%);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
 }
 
-/* Card Class Restoration for Compatibility */
-.card-hover {
-  background: var(--card-bg);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  backdrop-filter: blur(10px);
+/* Typography override */
+h1,
+h2,
+h3,
+button,
+a {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F1F1F1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CDCDCD;
-  border: 1px solid white;
-  border-radius: 6px;
-  box-shadow: inset 1px 0 0 #F0F0F0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A6A6A6;
+  background: rgba(255, 255, 255, 0.5);
 }
 
-/* Remove default button styles for icons */
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Layout adjustments */
+.main-content {
+  padding: 100px 20px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
