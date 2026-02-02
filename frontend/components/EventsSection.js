@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { fetchEvents } from '../services/api';
 import { useFavorites } from '../hooks/useFavorites';
-import { Search, Calendar, MapPin, Clock, Star } from 'lucide-react';
+import { Search, Calendar, MapPin, Clock, Star, ChevronRight, X } from 'lucide-react';
 
 const MOCK_EVENTS = [
     {
