@@ -51,11 +51,6 @@ export default function Header({
                 </div>
 
                 <div className="right-tools">
-                    <button onClick={toggleTheme} className="glass-circle-btn">
-                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
-                    {isAdmin && <span className="admin-pill"><ShieldCheck size={12} /> Admin Mode</span>}
-
                     {user ? (
                         <div className="user-profile-glass" onClick={() => setShowProfile(true)}>
                             <img src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'} className="user-img-circle" />
