@@ -201,8 +201,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                 videosLen: videos.length,
                                 rowCount,
                                 columnCount,
-                                width,
-                                height,
                                 shouldRender: videos.length > 0
                             });
 
@@ -210,9 +208,13 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                 <FixedSizeList
                                     height={height}
                                     width={width}
+                                    // Standard Props
                                     itemCount={rowCount}
                                     itemSize={CARD_HEIGHT + GAP}
                                     itemData={videos}
+                                    // Compatibility Props for ReactWindow.List export
+                                    rowCount={rowCount}
+                                    rowHeight={CARD_HEIGHT + GAP}
                                     rowProps={{}}
                                     onItemsRendered={({ visibleStopIndex }) => {
                                         if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
