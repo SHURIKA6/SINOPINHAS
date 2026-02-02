@@ -79,109 +79,109 @@ export default function EventsSection() {
 
     return (
         <div className="events-container">
-                <div className="events-header vista-glass-widget" style={{padding: '24px'}}>
-                    <div className="e-header-content">
-                        <div className="e-icon-box">
-                            <Calendar size={28} color="#0047AB" style={{filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.8))'}} />
-                        </div>
-                        <div className="e-title-box">
-                            <h2 style={{margin: 0, fontSize: 24, fontWeight: 900, color: '#003366', textShadow: '0 1px 0 rgba(255,255,255,0.8)', fontFamily: 'Segoe UI, Tahoma'}}>Agenda Cultural</h2>
-                            <p style={{margin: '4px 0 0', color: '#556677', fontSize: 13, fontWeight: 600}}>O que está rolando em Sinop</p>
-                        </div>
+            <div className="events-header vista-glass-widget" style={{ padding: '24px' }}>
+                <div className="e-header-content">
+                    <div className="e-icon-box">
+                        <Calendar size={28} color="#0047AB" style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.8))' }} />
                     </div>
-                    
-                    <div className="e-search-row">
-                        <div className="e-search-wrapper">
-                            <Search size={16} className="e-search-icon" color="#0047AB" />
-                            <input
-                                type="text"
-                                placeholder="Buscar eventos..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="e-search-input"
-                            />
-                        </div>
-                        <div className="e-tabs">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setSelectedCategory(cat.id)}
-                                    className={`e-tab-btn ${selectedCategory === cat.id ? 'active' : ''}`}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
+                    <div className="e-title-box">
+                        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#003366', textShadow: '0 1px 0 rgba(255,255,255,0.8)', fontFamily: 'Segoe UI, Tahoma' }}>Agenda Cultural</h2>
+                        <p style={{ margin: '4px 0 0', color: '#556677', fontSize: 13, fontWeight: 600 }}>O que está rolando em Sinop</p>
                     </div>
                 </div>
 
-                <div className="events-grid">
-                    {loading ? (
-                         [...Array(4)].map((_, i) => (
-                            <div key={i} className="skeleton-event-card vista-glass-widget" />
-                        ))
-                    ) : filteredEvents.length === 0 ? (
-                        <div className="e-empty vista-glass-widget" style={{color: '#444'}}>
-                            <Calendar size={48} strokeWidth={1.5} opacity={0.6} color="#444" />
-                            <p>Nenhum evento encontrado.</p>
-                        </div>
-                    ) : (
-                        filteredEvents.map((event) => (
-                            <div key={event.id} className="event-card vista-glass-widget card-hover" onClick={() => handleEventClick(event)}>
-                                <div className="e-date-badge">
-                                    <span className="e-day">{event.date.day}</span>
-                                    <span className="e-month">{event.date.month}</span>
-                                </div>
-                                <div className="e-card-content">
-                                    <h3 className="e-title vista-card-title">{event.title}</h3>
-                                    <div className="e-meta">
-                                        <div className="e-meta-item">
-                                            <Clock size={14} /> <span>{event.time}</span>
-                                        </div>
-                                        <div className="e-meta-item">
-                                            <MapPin size={14} /> <span>{event.location}</span>
-                                        </div>
-                                    </div>
-                                    <div className="e-tags">
-                                        <span className="e-tag">{event.category}</span>
-                                        {event.isFree && <span className="e-tag free">Gratuito</span>}
-                                    </div>
-                                </div>
-                                <div className="e-arrow">
-                                    <ChevronRight size={20} color="#0047AB" />
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                {/* Modal de Detalhes (Estilo Aero Glass Light) */}
-                {selectedEvent && (
-                    <div className="e-modal-overlay" onClick={closeModal}>
-                        <div className="e-modal vista-glass-widget" onClick={e => e.stopPropagation()} style={{background: 'rgba(255,255,255,0.95)'}}>
-                            <button className="e-close-btn" onClick={closeModal}><X size={20} color="#0047AB" /></button>
-                            <div className="e-modal-header">
-                                <span className="e-modal-date">{selectedEvent.date.day} de {selectedEvent.date.month}</span>
-                                <h2 className="e-modal-title" style={{color: '#003366'}}>{selectedEvent.title}</h2>
-                            </div>
-                            <div className="e-modal-body">
-                                <div className="e-modal-info">
-                                    <div className="e-info-row">
-                                        <Clock size={18} color="#0047AB" />
-                                        <span>{selectedEvent.time}</span>
-                                    </div>
-                                    <div className="e-info-row">
-                                        <MapPin size={18} color="#0047AB" />
-                                        <span>{selectedEvent.location}</span>
-                                    </div>
-                                </div>
-                                <p className="e-modal-desc" style={{color: '#333'}}>{selectedEvent.description}</p>
-                                <button className="e-modal-action shiny-button">Confirmar Presença</button>
-                            </div>
-                        </div>
+                <div className="e-search-row">
+                    <div className="e-search-wrapper">
+                        <Search size={16} className="e-search-icon" color="#0047AB" />
+                        <input
+                            type="text"
+                            placeholder="Buscar eventos..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="e-search-input"
+                        />
                     </div>
+                    <div className="e-tabs">
+                        {categories.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(cat.id)}
+                                className={`e-tab-btn ${selectedCategory === cat.id ? 'active' : ''}`}
+                            >
+                                {cat.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="events-grid">
+                {loading ? (
+                    [...Array(4)].map((_, i) => (
+                        <div key={i} className="skeleton-event-card vista-glass-widget" />
+                    ))
+                ) : filteredEvents.length === 0 ? (
+                    <div className="e-empty vista-glass-widget" style={{ color: '#444' }}>
+                        <Calendar size={48} strokeWidth={1.5} opacity={0.6} color="#444" />
+                        <p>Nenhum evento encontrado.</p>
+                    </div>
+                ) : (
+                    filteredEvents.map((event) => (
+                        <div key={event.id} className="event-card vista-glass-widget card-hover" onClick={() => handleEventClick(event)}>
+                            <div className="e-date-badge">
+                                <span className="e-day">{event.date.day}</span>
+                                <span className="e-month">{event.date.month}</span>
+                            </div>
+                            <div className="e-card-content">
+                                <h3 className="e-title vista-card-title">{event.title}</h3>
+                                <div className="e-meta">
+                                    <div className="e-meta-item">
+                                        <Clock size={14} /> <span>{event.time}</span>
+                                    </div>
+                                    <div className="e-meta-item">
+                                        <MapPin size={14} /> <span>{event.location}</span>
+                                    </div>
+                                </div>
+                                <div className="e-tags">
+                                    <span className="e-tag">{event.category}</span>
+                                    {event.isFree && <span className="e-tag free">Gratuito</span>}
+                                </div>
+                            </div>
+                            <div className="e-arrow">
+                                <ChevronRight size={20} color="#0047AB" />
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
+
+            {/* Modal de Detalhes (Estilo Aero Glass Light) */}
+            {selectedEvent && (
+                <div className="e-modal-overlay" onClick={closeModal}>
+                    <div className="e-modal vista-glass-widget" onClick={e => e.stopPropagation()} style={{ background: 'rgba(255,255,255,0.95)' }}>
+                        <button className="e-close-btn" onClick={closeModal}><X size={20} color="#0047AB" /></button>
+                        <div className="e-modal-header">
+                            <span className="e-modal-date">{selectedEvent.date.day} de {selectedEvent.date.month}</span>
+                            <h2 className="e-modal-title" style={{ color: '#003366' }}>{selectedEvent.title}</h2>
+                        </div>
+                        <div className="e-modal-body">
+                            <div className="e-modal-info">
+                                <div className="e-info-row">
+                                    <Clock size={18} color="#0047AB" />
+                                    <span>{selectedEvent.time}</span>
+                                </div>
+                                <div className="e-info-row">
+                                    <MapPin size={18} color="#0047AB" />
+                                    <span>{selectedEvent.location}</span>
+                                </div>
+                            </div>
+                            <p className="e-modal-desc" style={{ color: '#333' }}>{selectedEvent.description}</p>
+                            <button className="e-modal-action shiny-button">Confirmar Presença</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <style jsx>{`
                 .events-section { margin-bottom: 80px; }
