@@ -201,14 +201,17 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 .home-feed-root { position: relative; }
                 .home-feed-container { max-width: 1200px; margin: 0 auto; padding: 0 0 100px; }
                 
+                /* Feed Header - Light Glass */
                 .feed-header-glass {
-                    background: rgba(25, 20, 40, 0.4);
-                    backdrop-filter: blur(20px);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.9);
+                    border-top: 1px solid rgba(255, 255, 255, 1);
                     border-radius: 28px;
                     padding: 24px;
                     margin-bottom: 32px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                    box-shadow: 0 8px 32px rgba(0, 71, 171, 0.2), inset 0 1px 0 rgba(255, 255, 255, 1);
                 }
 
                 .search-row-feed { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -219,35 +222,63 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
 
                 .search-f-icon {
                     position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-                    color: rgba(255,255,255,0.3);
+                    color: #0047AB; opacity: 0.7;
                 }
 
                 .feed-search-input-box input {
                     width: 100%; padding: 14px 20px 14px 48px;
-                    background: rgba(15, 13, 21, 0.4);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 16px; color: white; font-size: 15px; outline: none;
+                    background: rgba(255, 255, 255, 0.5);
+                    border: 1px solid rgba(255, 255, 255, 0.6);
+                    border-radius: 16px; 
+                    color: #002244; 
+                    font-size: 15px; 
+                    outline: none;
+                    font-weight: 600;
+                    transition: all 0.2s;
+                }
+                
+                .feed-search-input-box input:focus {
+                    background: rgba(255, 255, 255, 0.8);
+                    border-color: #0078D4;
+                    box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.1);
                 }
 
+                .feed-search-input-box input::placeholder { color: #667788; }
+
                 .feed-sort-select {
-                    padding: 12px 16px; background: rgba(15, 13, 21, 0.4);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 16px; color: white; font-size: 14px; font-weight: 600; cursor: pointer;
+                    padding: 12px 16px; 
+                    background: rgba(255, 255, 255, 0.5);
+                    border: 1px solid rgba(255, 255, 255, 0.6);
+                    border-radius: 16px; 
+                    color: #003366; 
+                    font-size: 14px; 
+                    font-weight: 700; 
+                    cursor: pointer;
+                    transition: all 0.2s;
                 }
+                
+                .feed-sort-select:hover { background: rgba(255, 255, 255, 0.8); }
 
                 .feed-filter-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
                 .feed-filter-tabs::-webkit-scrollbar { display: none; }
 
                 .feed-filter-btn {
-                    padding: 8px 18px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, 0.1);
-                    background: rgba(255, 255, 255, 0.03); color: #94a3b8; font-weight: 700;
+                    padding: 8px 18px; border-radius: 99px; 
+                    border: 1px solid rgba(255, 255, 255, 0.6);
+                    background: rgba(255, 255, 255, 0.4); 
+                    color: #0047AB; 
+                    font-weight: 700;
                     font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;
                     white-space: nowrap; transition: all 0.2s ease;
                 }
 
+                .feed-filter-btn:hover { background: rgba(255, 255, 255, 0.7); }
+
                 .feed-filter-btn.active {
-                    background: linear-gradient(135deg, #a855f7, #6366f1);
-                    color: white; border-color: transparent; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+                    background: linear-gradient(135deg, #0078D4, #005A9E);
+                    color: white; border-color: transparent; 
+                    box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+                    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
                 }
 
                 .feed-grid {
@@ -259,11 +290,17 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                     animation: floatHeart 1s ease-out forwards;
                 }
 
-                .feed-empty { text-align: center; padding: 80px 20px; color: #94a3b8; }
+                .feed-empty { 
+                    text-align: center; padding: 80px 20px; 
+                    color: #003366; 
+                    background: rgba(255,255,255,0.3);
+                    border-radius: 20px;
+                    backdrop-filter: blur(4px);
+                }
                 .empty-emoji { font-size: 64px; margin-bottom: 24px; }
                 
                 .feed-loader {
-                    text-align: center; margin-top: 48px; padding: 24px; color: #a855f7; font-weight: 700;
+                    text-align: center; margin-top: 48px; padding: 24px; color: #0047AB; font-weight: 700;
                 }
 
                 @media (max-width: 768px) {

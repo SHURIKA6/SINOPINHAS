@@ -128,8 +128,8 @@ export default function AdminPanel({ adminPassword, showToast }) {
     };
 
     return (
-        <div style={{ color: 'var(--text-color)' }}>
-            <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>🛡️ Painel Admin</h2>
+        <div style={{ color: '#002244' }}>
+            <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 24, textShadow: '0 1px 0 rgba(255,255,255,0.8)' }}>🛡️ Painel Admin</h2>
 
             <div style={{ marginBottom: 40 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -139,9 +139,9 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         disabled={loadingUsers}
                         style={{
                             padding: '8px 16px',
-                            background: 'var(--input-bg)',
-                            color: 'var(--text-color)',
-                            border: '1px solid var(--border-color)',
+                            background: 'rgba(255, 255, 255, 0.5)',
+                            color: '#003366',
+                            border: '1px solid rgba(255, 255, 255, 0.6)',
                             borderRadius: 8,
                             cursor: 'pointer',
                             display: 'flex',
@@ -155,19 +155,26 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         {loadingUsers ? '⏳' : '🔃'} Atualizar Usuários
                     </button>
                 </div>
-                <div style={{ background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                <div style={{
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%)',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(12px)',
+                    boxShadow: '0 8px 32px rgba(0, 71, 171, 0.15)'
+                }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr style={{ background: 'var(--input-bg)' }}>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>ID</th>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Usuário</th>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Cargo</th>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ações</th>
+                            <tr style={{ background: 'rgba(255, 255, 255, 0.4)', borderBottom: '1px solid rgba(255,255,255,0.8)' }}>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>ID</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Usuário</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Cargo</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {usersList.map((u) => (
-                                <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                <tr key={u.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.6)' }}>
                                     <td style={{ padding: 12 }}>#{u.id}</td>
                                     <td
                                         onClick={() => handleUserClick(u)}
@@ -225,9 +232,9 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         disabled={loadingShura}
                         style={{
                             padding: '8px 16px',
-                            background: 'var(--input-bg)',
-                            color: 'var(--text-color)',
-                            border: '1px solid var(--border-color)',
+                            background: 'rgba(255, 255, 255, 0.5)',
+                            color: '#003366',
+                            border: '1px solid rgba(255, 255, 255, 0.6)',
                             borderRadius: 8,
                             cursor: 'pointer',
                             fontSize: 14,
@@ -237,21 +244,28 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         {loadingShura ? '⏳' : '🔃'} Atualizar
                     </button>
                 </div>
-                <div style={{ background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                <div style={{
+                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.2) 100%)',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(12px)',
+                    boxShadow: '0 8px 32px rgba(0, 71, 171, 0.15)'
+                }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
-                            <tr style={{ background: 'var(--input-bg)' }}>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Usuário</th>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Mensagem</th>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Status</th>
-                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ações</th>
+                            <tr style={{ background: 'rgba(255, 255, 255, 0.4)', borderBottom: '1px solid rgba(255,255,255,0.8)' }}>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Usuário</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Mensagem</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Status</th>
+                                <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.6)', color: '#0047AB', fontWeight: 800 }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {shuraMessages.length === 0 ? (
                                 <tr><td colSpan="4" style={{ padding: 20, textAlign: 'center', opacity: 0.5 }}>Nenhuma mensagem enviada ainda.</td></tr>
                             ) : shuraMessages.map((m) => (
-                                <tr key={m.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                <tr key={m.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.6)' }}>
                                     <td style={{ padding: 12, fontWeight: 'bold' }}>{m.username}</td>
                                     <td style={{ padding: 12, fontSize: 13, maxWidth: 300, whiteSpace: 'normal', wordBreak: 'break-word' }}>{m.message}</td>
                                     <td style={{ padding: 12 }}>
