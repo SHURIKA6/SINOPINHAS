@@ -83,6 +83,8 @@ export default function Home({ initialVideo }) {
     document.title = 'SINOPINHAS by SHURA';
   }, []);
 
+  const router = useRouter();
+
   const {
     activeTab, setActiveTab,
     theme, toggleTheme,
