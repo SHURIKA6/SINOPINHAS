@@ -68,7 +68,8 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     bottom: 0;
                     left: 0;
                     right: 0;
-                    padding: 0 12px 24px;
+                    padding: 0 8px 16px;
+                    padding-bottom: calc(16px + env(safe-area-inset-bottom));
                     z-index: 999999;
                     display: none;
                     pointer-events: none;
@@ -81,19 +82,19 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 .ultra-glass-nav {
                     pointer-events: auto;
                     display: grid; /* Grid layout for perfect centering */
-                    grid-template-columns: repeat(7, 1fr);
+                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr; /* Center gives more space to the big button */
                     gap: 0;
                     align-items: center;
                     height: 72px;
-                    background: rgba(15, 13, 21, 0.7);
-                    backdrop-filter: blur(32px) saturate(180%);
-                    -webkit-backdrop-filter: blur(32px) saturate(180%);
-                    border-radius: 30px;
-                    border: 1.5px solid rgba(255, 255, 255, 0.08); /* Borda muito suave e sofisticada */
+                    background: rgba(15, 13, 21, 0.85); /* Slightly darker for better contrast */
+                    backdrop-filter: blur(20px) saturate(180%);
+                    -webkit-backdrop-filter: blur(20px) saturate(180%);
+                    border-radius: 24px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     box-shadow: 
-                        0 20px 40px rgba(0, 0, 0, 0.6),
-                        inset 0 1px 2px rgba(255, 255, 255, 0.1);
-                    padding: 0 4px;
+                        0 20px 40px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+                    padding: 0 2px;
                 }
 
                 .ultra-nav-btn {
