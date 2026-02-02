@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare }) {
     const [isHovering, setIsHovering] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
     const videoRef = useRef(null);
 
     const togglePlay = (e) => {
@@ -18,6 +21,30 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 setIsPlaying(true);
             }
         }
+    };
+
+    const handleTimeUpdate = () => {
+        if (videoRef.current) {
+            const current = videoRef.current.currentTime;
+            const total = videoRef.current.duration;
+            setCurrentTime(current);
+            setDuration(total);
+            setProgress((current / total) * 100);
+        }
+    };
+
+    const handleSeek = (e) => {
+        e.stopPropagation(); // Stop click from bubbling to other elements
+        const newTime = (e.target.value / 100) * duration;
+        videoRef.current.currentTime = newTime;
+        setProgress(e.target.value);
+    };
+
+    const formatTime = (time) => {
+        if (!time || isNaN(time)) return "00:00";
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
     const handleContainerClick = () => {
@@ -58,13 +85,16 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                     src={video.video_url}
                     style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '400px' }}
                     loop
-                    muted
+                    muted={false} // Allow sound for functional player
                     playsInline
                     poster={video.thumbnail_url}
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleTimeUpdate}
+                    onClick={(e) => { e.stopPropagation(); togglePlay(); }} // Click video to toggle play
                 />
 
                 {!isPlaying && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                         <div style={{ width: 60, height: 60, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }}>
                             <Play size={30} fill="white" stroke="white" style={{ marginLeft: 4 }} />
                         </div>
@@ -77,10 +107,32 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                 <button className="wmp-btn" onClick={togglePlay}>
                     {isPlaying ? <Pause size={14} fill="#333" /> : <Play size={14} fill="#333" style={{ marginLeft: 2 }} />}
                 </button>
-                <div style={{ flex: 1, height: 4, background: '#888', borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{ width: '40%', height: '100%', background: '#00FF00' }}></div>
+
+                {/* Seek Bar */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={progress}
+                        onChange={handleSeek}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            height: '4px',
+                            appearance: 'none',
+                            background: '#888',
+                            borderRadius: '2px',
+                            cursor: 'pointer',
+                            outline: 'none'
+                        }}
+                        className="wmp-slider"
+                    />
                 </div>
-                <div style={{ fontSize: 10, color: '#333', fontWeight: 'bold' }}>00:00</div>
+
+                <div style={{ fontSize: 10, color: '#333', fontWeight: 'bold', minWidth: '35px', textAlign: 'right' }}>
+                    {formatTime(currentTime)}
+                </div>
             </div>
 
             {/* Metadata & Actions (Styled as Playlist/Media Info) */}
@@ -124,6 +176,28 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                     )}
                 </div>
             </div>
+            <style jsx>{`
+                .wmp-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: #00FF00; /* WMP Green */
+                    border: 1px solid white;
+                    cursor: pointer;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                }
+                .wmp-slider::-moz-range-thumb {
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: #00FF00;
+                    border: 1px solid white;
+                    cursor: pointer;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                }
+            `}</style>
         </motion.div>
     );
 }
