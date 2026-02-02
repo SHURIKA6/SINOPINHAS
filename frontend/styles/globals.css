@@ -9,24 +9,24 @@
 
   /* Glass Gradients based on reference */
   --glass-gradient-main: linear-gradient(180deg,
-      rgba(255, 255, 255, 0.4) 0%,
-      rgba(255, 255, 255, 0.1) 40%,
-      rgba(255, 255, 255, 0.05) 100%);
+      rgba(255, 255, 255, 0.65) 0%,
+      rgba(255, 255, 255, 0.4) 40%,
+      rgba(255, 255, 255, 0.2) 100%);
 
   --gloss-highlight: linear-gradient(180deg,
-      rgba(255, 255, 255, 0.7) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
       transparent 51%,
       transparent 100%);
 
   /* UI Elements */
-  --window-bg: rgba(0, 50, 150, 0.25);
+  --window-bg: rgba(0, 50, 150, 0.55);
   /* Deep transparent blue tint */
-  --window-border: rgba(255, 255, 255, 0.6);
-  --card-bg: rgba(255, 255, 255, 0.15);
+  --window-border: rgba(255, 255, 255, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.4);
 
   --text-color: #FFFFFF;
-  --secondary-text: #E0E0E0;
+  --secondary-text: #F0F0F0;
 
   --bg-color: #0E2A47;
   --header-bg: transparent;
@@ -59,26 +59,26 @@ body {
 /* Main Glass Container (Like the reference store window) */
 .frutiger-container {
   background: var(--glass-gradient-main);
-  backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(20px) saturate(120%);
   border: 1px solid var(--window-border);
   border-radius: 24px;
   box-shadow:
-    0 0 15px rgba(0, 150, 255, 0.3),
+    0 0 15px rgba(0, 150, 255, 0.4),
     /* Blue Glow */
-    inset 0 0 20px rgba(255, 255, 255, 0.2);
+    inset 0 0 20px rgba(255, 255, 255, 0.3);
   padding: 24px;
 }
 
 /* Glassy Card (Grid items) */
 .glass-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.2) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
   padding: 12px;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .glass-panel::after {
