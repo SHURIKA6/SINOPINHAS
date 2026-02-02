@@ -197,6 +197,15 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                             const cardWidth = (width - (columnCount - 1) * GAP) / columnCount;
                             const CARD_HEIGHT = 450;
 
+                            console.log('[DEBUG] Render List:', {
+                                videosLen: videos.length,
+                                rowCount,
+                                columnCount,
+                                width,
+                                height,
+                                shouldRender: videos.length > 0
+                            });
+
                             return (
                                 <FixedSizeList
                                     height={height}
@@ -204,7 +213,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                     itemCount={rowCount}
                                     itemSize={CARD_HEIGHT + GAP}
                                     itemData={videos}
-                                    rowProps={{}} // Fix for "Cannot convert undefined to object" in react-window build
+                                    rowProps={{}}
                                     onItemsRendered={({ visibleStopIndex }) => {
                                         if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
                                             setOffset(prev => prev + LIMIT);
