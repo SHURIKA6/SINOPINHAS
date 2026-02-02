@@ -100,7 +100,7 @@ export default function Header({
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="frutiger-sidebar glass-panel"
+                            className="frutiger-sidebar"
                         >
                             <div className="sidebar-head">
                                 <h3>Menu</h3>
@@ -221,7 +221,7 @@ export default function Header({
                     position: fixed; top: 10px; right: 10px; bottom: 90px; /* Leave space for bottom nav */
                     width: 280px;
                     z-index: 2001; display: flex; flex-direction: column;
-                    background: rgba(15, 13, 21, 0.9);
+                    background: rgba(15, 13, 21, 0.9) !important;
                     backdrop-filter: blur(24px) saturate(180%);
                     -webkit-backdrop-filter: blur(24px) saturate(180%);
                     border: 1px solid rgba(255,255,255,0.1);
