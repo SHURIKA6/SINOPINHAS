@@ -174,32 +174,34 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         </thead>
                         <tbody>
                             {usersList.map((u) => (
-                                <tr key={u.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.6)' }}>
-                                    <td style={{ padding: 12 }}>#{u.id}</td>
-                                    <td
-                                        onClick={() => handleUserClick(u)}
-                                        style={{
-                                            padding: 12,
-                                            cursor: 'pointer',
-                                            color: '#a855f7',
-                                            fontWeight: 'bold',
-                                            textDecoration: 'underline'
-                                        }}
-                                        title="Clique para ver os logs deste usuário"
-                                    >
-                                        {u.username}
+                                <tr key={u.id} style={{ borderBottom: '1px solid rgba(0, 71, 171, 0.1)', transition: 'all 0.2s', background: u.role === 'admin' ? 'rgba(99, 102, 241, 0.05)' : 'transparent' }}>
+                                    <td style={{ padding: 12, color: '#64748b' }}>#{u.id}</td>
+                                    <td style={{ padding: 12 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            <img src={u.avatar || 'https://via.placeholder.com/40'} alt={u.username} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+                                            <span
+                                                onClick={() => handleUserClick(u)}
+                                                style={{
+                                                    fontWeight: 700,
+                                                    color: '#8b5cf6', // Roxo solicitado
+                                                    fontSize: 15,
+                                                    cursor: 'pointer',
+                                                    textDecoration: 'underline',
+                                                    textUnderlineOffset: 3
+                                                }}
+                                                title="Ver Dossiê de Logs"
+                                            >
+                                                {u.username}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td style={{ padding: 12 }}>
                                         <span style={{
-                                            padding: '2px 8px',
-                                            background: u.role === 'admin' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                                            color: u.role === 'admin' ? '#10b981' : 'inherit',
-                                            borderRadius: 4,
-                                            fontSize: 11,
-                                            fontWeight: 700,
-                                            textTransform: 'uppercase'
+                                            padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5,
+                                            background: u.role === 'admin' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(203, 213, 225, 0.4)',
+                                            color: u.role === 'admin' ? '#4f46e5' : '#475569'
                                         }}>
-                                            {u.role || 'user'}
+                                            {u.role}
                                         </span>
                                     </td>
                                     <td style={{ padding: 12, display: 'flex', gap: 8 }}>
@@ -384,86 +386,88 @@ export default function AdminPanel({ adminPassword, showToast }) {
             </div>
 
             {/* Modal de Logs do Usuário */}
-            {selectedUserLog && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(255, 255, 255, 0.1)', zIndex: 10000,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-                    backdropFilter: 'blur(8px)'
-                }} onClick={() => setSelectedUserLog(null)}>
+            {
+                selectedUserLog && (
                     <div style={{
-                        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                        borderRadius: 24, maxWidth: 900, width: '100%', // Aumentei a largura
-                        maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                        border: '1px solid rgba(255, 255, 255, 0.9)',
-                        boxShadow: '0 25px 50px -12px rgba(0, 71, 171, 0.25), inset 0 1px 0 rgba(255,255,255,0.8)'
-                    }} onClick={e => e.stopPropagation()}>
-                        <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: 0, color: '#002244', fontSize: 22, fontWeight: 900, textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
-                                📜 Dossiê: <span style={{ color: '#0047AB' }}>{selectedUserLog.username}</span>
-                            </h3>
-                            <button onClick={() => setSelectedUserLog(null)} style={{ background: 'none', border: 'none', color: '#0047AB', cursor: 'pointer', fontSize: 24, padding: 8, fontWeight: 'bold' }}>✕</button>
-                        </div>
+                        position: 'fixed', inset: 0, background: 'rgba(255, 255, 255, 0.1)', zIndex: 10000,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+                        backdropFilter: 'blur(8px)'
+                    }} onClick={() => setSelectedUserLog(null)}>
+                        <div style={{
+                            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                            borderRadius: 24, maxWidth: 900, width: '100%', // Aumentei a largura
+                            maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                            border: '1px solid rgba(255, 255, 255, 0.9)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 71, 171, 0.25), inset 0 1px 0 rgba(255,255,255,0.8)'
+                        }} onClick={e => e.stopPropagation()}>
+                            <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ margin: 0, color: '#002244', fontSize: 22, fontWeight: 900, textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
+                                    📜 Dossiê: <span style={{ color: '#0047AB' }}>{selectedUserLog.username}</span>
+                                </h3>
+                                <button onClick={() => setSelectedUserLog(null)} style={{ background: 'none', border: 'none', color: '#0047AB', cursor: 'pointer', fontSize: 24, padding: 8, fontWeight: 'bold' }}>✕</button>
+                            </div>
 
-                        <div style={{ padding: 24, overflowY: 'auto' }}>
-                            {loadingUserLogs ? (
-                                <div style={{ padding: 40, textAlign: 'center', color: '#0047AB', fontWeight: 600 }}>Carregando logs...</div>
-                            ) : userLogs.length === 0 ? (
-                                <div style={{ padding: 40, textAlign: 'center', color: '#445566', fontStyle: 'italic' }}>
-                                    Nenhum log encontrado para este usuário.
-                                </div>
-                            ) : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                                    <thead>
-                                        <tr style={{ color: '#003366', borderBottom: '1px solid rgba(0, 71, 171, 0.1)' }}>
-                                            <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Ação</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Data</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Localização (Cloudflare)</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'center', fontWeight: 800 }}>IP Network</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'right', fontWeight: 800 }}>Dispositivo/Sistema</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {userLogs.map((log) => (
-                                            <tr key={log.id} style={{ borderBottom: '1px solid rgba(0, 71, 171, 0.05)', color: '#1e293b' }}>
-                                                <td style={{ padding: '12px 0' }}>
-                                                    <span style={{
-                                                        background: 'rgba(0, 71, 171, 0.1)', color: '#0047AB',
-                                                        padding: '4px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11
-                                                    }}>{log.action}</span>
-                                                </td>
-                                                <td style={{ padding: '12px 0', color: '#334155' }}>
-                                                    {new Date(log.created_at).toLocaleString('pt-BR')}
-                                                </td>
-                                                <td style={{ padding: '12px 0', color: '#334155' }}>
-                                                    {log.city && log.country ? (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                            <span>📍 {log.city}, {log.country}</span>
-                                                            <span style={{ fontSize: 10, opacity: 0.7 }}>({log.asOrganization})</span>
-                                                        </div>
-                                                    ) : <span style={{ opacity: 0.5 }}>-</span>}
-                                                </td>
-                                                <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace', color: '#334155' }}>
-                                                    <div style={{ fontWeight: 'bold' }}>{log.ip || '---'}</div>
-                                                    {log.details?.ray_id && <div style={{ fontSize: 10, opacity: 0.6 }}>Ray: {log.details.ray_id.substring(0, 8)}...</div>}
-                                                </td>
-                                                <td style={{ padding: '12px 0', textAlign: 'right', maxWidth: 200 }}>
-                                                    <div style={{ fontSize: 11, fontWeight: 'bold' }}>
-                                                        {log.details?.platform ? log.details.platform.replace(/"/g, '') : 'Unknown'}
-                                                        {log.details?.is_mobile === '?1' ? ' 📱' : ' 💻'}
-                                                    </div>
-                                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 10, opacity: 0.7 }} title={log.details?.user_agent}>
-                                                        {log.details?.user_agent?.substring(0, 30)}...
-                                                    </div>
-                                                </td>
+                            <div style={{ padding: 24, overflowY: 'auto' }}>
+                                {loadingUserLogs ? (
+                                    <div style={{ padding: 40, textAlign: 'center', color: '#0047AB', fontWeight: 600 }}>Carregando logs...</div>
+                                ) : userLogs.length === 0 ? (
+                                    <div style={{ padding: 40, textAlign: 'center', color: '#445566', fontStyle: 'italic' }}>
+                                        Nenhum log encontrado para este usuário.
+                                    </div>
+                                ) : (
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                                        <thead>
+                                            <tr style={{ color: '#003366', borderBottom: '1px solid rgba(0, 71, 171, 0.1)' }}>
+                                                <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Ação</th>
+                                                <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Data</th>
+                                                <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Localização (Cloudflare)</th>
+                                                <th style={{ padding: '12px 0', textAlign: 'center', fontWeight: 800 }}>IP Network</th>
+                                                <th style={{ padding: '12px 0', textAlign: 'right', fontWeight: 800 }}>Dispositivo/Sistema</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
+                                        </thead>
+                                        <tbody>
+                                            {userLogs.map((log) => (
+                                                <tr key={log.id} style={{ borderBottom: '1px solid rgba(0, 71, 171, 0.05)', color: '#1e293b' }}>
+                                                    <td style={{ padding: '12px 0' }}>
+                                                        <span style={{
+                                                            background: 'rgba(0, 71, 171, 0.1)', color: '#0047AB',
+                                                            padding: '4px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11
+                                                        }}>{log.action}</span>
+                                                    </td>
+                                                    <td style={{ padding: '12px 0', color: '#334155' }}>
+                                                        {new Date(log.created_at).toLocaleString('pt-BR')}
+                                                    </td>
+                                                    <td style={{ padding: '12px 0', color: '#334155' }}>
+                                                        {log.city && log.country ? (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                <span>📍 {log.city}, {log.country}</span>
+                                                                <span style={{ fontSize: 10, opacity: 0.7 }}>({log.asOrganization})</span>
+                                                            </div>
+                                                        ) : <span style={{ opacity: 0.5 }}>-</span>}
+                                                    </td>
+                                                    <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace', color: '#334155' }}>
+                                                        <div style={{ fontWeight: 'bold' }}>{log.ip || '---'}</div>
+                                                        {log.details?.ray_id && <div style={{ fontSize: 10, opacity: 0.6 }}>Ray: {log.details.ray_id.substring(0, 8)}...</div>}
+                                                    </td>
+                                                    <td style={{ padding: '12px 0', textAlign: 'right', maxWidth: 200 }}>
+                                                        <div style={{ fontSize: 11, fontWeight: 'bold' }}>
+                                                            {log.details?.platform ? log.details.platform.replace(/"/g, '') : 'Unknown'}
+                                                            {log.details?.is_mobile === '?1' ? ' 📱' : ' 💻'}
+                                                        </div>
+                                                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 10, opacity: 0.7 }} title={log.details?.user_agent}>
+                                                            {log.details?.user_agent?.substring(0, 30)}...
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </div>
     );
 }
