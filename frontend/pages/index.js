@@ -31,6 +31,8 @@ import PublicProfileModal from '../components/modals/PublicProfileModal';
 import AchievementUsersModal from '../components/modals/AchievementUsersModal';
 import PhotoZoomModal from '../components/modals/PhotoZoomModal';
 
+import ProfileFeed from '../components/feed/ProfileFeed';
+
 import {
   logTermsAcceptance,
   viewVideo
@@ -109,7 +111,7 @@ export default function Home({ initialVideo }) {
   // Hooks Customizados
   const { showInstallBtn, installApp, dismissInstall } = usePWA();
 
-  const tabs = ['feed', 'news', 'eventos', 'lugares', 'weather'];
+  const tabs = ['feed', 'profile', 'news', 'eventos', 'lugares', 'weather'];
   const currentIndex = tabs.indexOf(activeTab);
 
   // useSwipe e setTermsAccepted continuam aqui ou movemos para UIContext também? termos é global
@@ -130,7 +132,10 @@ export default function Home({ initialVideo }) {
 
   useEffect(() => {
     window.subscribeToPush = subscribeToNotifications;
-    window.openPublicProfile = (id) => setPublicProfileId(id);
+    window.openPublicProfile = (id) => {
+      setPublicProfileId(id);
+      setActiveTab('profile'); // Switch to profile tab
+    };
     window.openAchievementList = (ach) => setAchievementToList(ach);
     window.openPhotoZoom = (photo) => setZoomedPhoto(photo);
     window.openChatWithUser = (id) => {
@@ -274,14 +279,7 @@ export default function Home({ initialVideo }) {
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
 
-        {publicProfileId && (
-          <PublicProfileModal
-            userId={publicProfileId}
-            onClose={() => setPublicProfileId(null)}
-            onAchievementClick={(ach) => setAchievementToList(ach)}
-            onPostClick={(video) => openComments(video)}
-          />
-        )}
+        {/* Removed PublicProfileModal as it is now a Tab */}
 
         {achievementToList && (
           <AchievementUsersModal
@@ -290,6 +288,7 @@ export default function Home({ initialVideo }) {
             onUserClick={(id) => {
               setAchievementToList(null);
               setPublicProfileId(id);
+              setActiveTab('profile'); // Switch to profile on click
             }}
           />
         )}
@@ -306,6 +305,19 @@ export default function Home({ initialVideo }) {
         <main className="main-content">
           <TabPane active={activeTab === 'feed'}>
             <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" />
+          </TabPane>
+
+          <TabPane active={activeTab === 'profile'}>
+            {publicProfileId ? (
+              <ProfileFeed
+                userId={publicProfileId}
+                onAchievementClick={(ach) => setAchievementToList(ach)}
+                onPostClick={openComments}
+                onMessageClick={(id) => window.openChatWithUser(id)}
+              />
+            ) : (
+              <div style={{ textAlign: 'center', padding: 50, color: 'white' }}>Selecione um usuário para ver o perfil</div>
+            )}
           </TabPane>
 
           <TabPane active={activeTab === 'news'}><NewsFeed /></TabPane>

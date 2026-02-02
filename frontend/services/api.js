@@ -114,6 +114,14 @@ export const fetchVideos = async (userId = null, limit = 12, offset = 0, type = 
     return res.data;
 };
 
+export const fetchUserVideos = async (authorId, limit = 50) => {
+    const params = new URLSearchParams();
+    params.set('author_id', authorId);
+    params.set('limit', limit);
+    const res = await api.get(`/api/videos?${params.toString()}`);
+    return res.data;
+};
+
 export const fetchSecretVideos = async (userId = null, limit = 12, offset = 0, type = null) => {
     const params = new URLSearchParams();
     if (userId) params.set('user_id', userId);

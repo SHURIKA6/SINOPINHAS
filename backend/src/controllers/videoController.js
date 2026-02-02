@@ -132,11 +132,12 @@ export const listVideos = async (c) => {
     const limit = parseInt(c.req.query("limit") || "12");
     const offset = parseInt(c.req.query("offset") || "0");
     const type = c.req.query("type"); // New: Filter by 'video' or 'photo'
+    const authorId = c.req.query("author_id"); // New: Filter by video creator
 
-    const cacheKey = `videos_public_${type || 'all'}`;
+    const cacheKey = `videos_public_${type || 'all'}_${authorId || 'global'}`;
 
     // Só usar cache na primeira página sem filtro de usuário
-    if (!userId && offset === 0 && limit === 12) {
+    if (!userId && !authorId && offset === 0 && limit === 12) {
         try {
             const cached = await env.MURAL_STORE.get(cacheKey, { type: 'json' });
             if (cached) {
@@ -148,16 +149,6 @@ export const listVideos = async (c) => {
 
     try {
         let sql = `
-      SELECT v.*, u.username,
-      (SELECT count_likes(v.id)) as likes,
-      (SELECT count_views(v.id)) as views
-    `;
-
-        // If helper functions don't exist, we'll use inline counts
-        // But for performance it's better to have them or use a join.
-        // Actually, our schema doesn't have these functions yet. Let's stick to inline or joins.
-
-        sql = `
           SELECT v.*, u.username,
           (SELECT COUNT(*) FROM likes WHERE video_id = v.id) as likes,
           (SELECT COUNT(*) FROM views WHERE video_id = v.id) as views,
@@ -177,6 +168,11 @@ export const listVideos = async (c) => {
       LEFT JOIN users u ON v.user_id = u.id
       WHERE v.is_restricted = false
     `;
+
+        if (authorId) {
+            sql += ` AND v.user_id = $${paramCount++}`;
+            params.push(authorId);
+        }
 
         if (type === 'photo') {
             sql += ` AND v.type = 'photo'`;
