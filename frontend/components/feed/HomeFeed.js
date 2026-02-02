@@ -4,11 +4,6 @@ import FeedSkeleton from './FeedSkeleton';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 import { Search, Flame, Video, Image as ImageIcon } from 'lucide-react';
-import * as ReactWindow from 'react-window';
-import * as AutoSizerPkg from 'react-virtualized-auto-sizer';
-
-const FixedSizeList = ReactWindow.FixedSizeList || ReactWindow.List || ReactWindow.default?.FixedSizeList || ReactWindow.default?.List || ReactWindow.default;
-const AutoSizer = AutoSizerPkg.AutoSizer || AutoSizerPkg.default || AutoSizerPkg;
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
@@ -185,68 +180,19 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                         <p>Seja o primeiro a compartilhar algo legal em Sinop!</p>
                     </div>
                 ) : (
-                    <div style={{ height: 'calc(100vh - 200px)', width: '100%', minHeight: '500px', border: '1px solid red' }}>
-                        {/* Bypassing AutoSizer for diagnosis - Hardcoded dimensions */}
-                        {(() => {
-                            const height = 600;
-                            const width = 380; // Approximate mobile width
-                            const MIN_COL_WIDTH = 280;
-                            const GAP = 20;
-                            const columnCount = Math.floor((width + GAP) / (MIN_COL_WIDTH + GAP)) || 1;
-                            const rowCount = Math.ceil(videos.length / columnCount);
-                            const cardWidth = (width - (columnCount - 1) * GAP) / columnCount;
-                            const CARD_HEIGHT = 450;
-
-                            console.log('[DEBUG] Render List:', {
-                                videosLen: videos.length,
-                                rowCount,
-                                columnCount,
-                                shouldRender: videos.length > 0
-                            });
-
-                            return (
-                                <FixedSizeList
-                                    height={height}
-                                    width={width}
-                                    // Standard Props
-                                    itemCount={rowCount}
-                                    itemSize={CARD_HEIGHT + GAP}
-                                    itemData={videos}
-                                    // Compatibility Props for ReactWindow.List export
-                                    rowCount={rowCount}
-                                    rowHeight={CARD_HEIGHT + GAP}
-                                    rowProps={{}}
-                                    onItemsRendered={({ visibleStopIndex }) => {
-                                        if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
-                                            setOffset(prev => prev + LIMIT);
-                                        }
-                                    }}
-                                >
-                                    {({ index, style }) => {
-                                        const fromIndex = index * columnCount;
-                                        const toIndex = Math.min(fromIndex + columnCount, videos.length);
-                                        const items = videos.slice(fromIndex, toIndex);
-
-                                        return (
-                                            <div style={{ ...style, display: 'flex', gap: GAP }}>
-                                                {items.map(v => (
-                                                    <div key={v.id} style={{ width: cardWidth }}>
-                                                        <VideoCard
-                                                            video={v}
-                                                            onDelete={handleDeleteVideo}
-                                                            onLike={toggleLike}
-                                                            onOpenComments={onVideoClick}
-                                                            canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
-                                                            onShare={(video) => setVideoToShare(video)}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        );
-                                    }}
-                                </FixedSizeList>
-                            );
-                        })()}
+                    <div className="feed-grid">
+                        {videos.map(v => (
+                            <VideoCard
+                                key={v.id}
+                                video={v}
+                                onDelete={handleDeleteVideo}
+                                onLike={toggleLike}
+                                onOpenComments={onVideoClick}
+                                canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
+                                onShare={(video) => setVideoToShare(video)}
+                            />
+                        ))}
+                        {hasMore && <div ref={loadMoreRef} className="feed-loader">Carregando mais...</div>}
                     </div>
                 )}
             </div>
