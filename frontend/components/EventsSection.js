@@ -33,7 +33,15 @@ export default function EventsSection() {
     const [loading, setLoading] = useState(true);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const { toggleFavorite, isFavorite } = useFavorites();
+    const [selectedCategory, setSelectedCategory] = useState('all');
+
+    const categories = [
+        { id: 'all', label: 'Todos' },
+        { id: 'musica', label: 'Música' },
+        { id: 'gastronomia', label: 'Gastronomia' },
+        { id: 'esporte', label: 'Esporte' },
+        { id: 'arte', label: 'Arte & Cultura' }
+    ];
 
     useEffect(() => {
         const loadEvents = async () => {
@@ -55,12 +63,18 @@ export default function EventsSection() {
 
     const filteredEvents = useMemo(() => {
         const q = searchQuery.toLowerCase();
-        return events.filter(e =>
-            (e.title?.toLowerCase() || '').includes(q) ||
-            (e.description?.toLowerCase() || '').includes(q) ||
-            (e.category?.toLowerCase() || '').includes(q)
-        );
-    }, [events, searchQuery]);
+        return events.filter(e => {
+            const matchesSearch = (e.title?.toLowerCase() || '').includes(q) ||
+                (e.description?.toLowerCase() || '').includes(q) ||
+                (e.category?.toLowerCase() || '').includes(q);
+
+            const matchesCategory = selectedCategory === 'all' ||
+                (e.category?.toLowerCase() || '') === selectedCategory ||
+                (e.category?.toLowerCase() || '').includes(selectedCategory);
+
+            return matchesSearch && matchesCategory;
+        });
+    }, [events, searchQuery, selectedCategory]);
 
     const handleToggleFavorite = (e, item) => {
         e.preventDefault();
