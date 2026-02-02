@@ -7,7 +7,7 @@ const parser = new XMLParser({
     attributeNamePrefix: "@_"
 });
 
-// Buscar notícias
+// Função: Buscar e processar feed de notícias RSS
 export const getNews = async (c) => {
     try {
         const cache = caches.default;

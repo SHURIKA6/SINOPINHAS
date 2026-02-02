@@ -3,7 +3,7 @@ import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { videoMetadataSchema } from '../schemas/video.js';
 
-// Upload de vídeo
+// Função: Upload de vídeo para Cloudflare R2
 export const uploadVideo = async (c) => {
     const env = c.env;
     try {
@@ -76,7 +76,7 @@ export const uploadVideo = async (c) => {
     }
 };
 
-// 5. Deletar vídeo
+// Função: Deletar vídeo e remover do armazenamento
 export const deleteVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -125,7 +125,7 @@ export const deleteVideo = async (c) => {
     }
 };
 
-// Listar vídeos públicos
+// Função: Listar vídeos públicos com filtros
 export const listVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
@@ -136,7 +136,7 @@ export const listVideos = async (c) => {
 
     const cacheKey = `videos_public_${type || 'all'}_${authorId || 'global'}`;
 
-    // Só usar cache na primeira página sem filtro de usuário
+    // Cache: Apenas na primeira página global
     if (!userId && !authorId && offset === 0 && limit === 12) {
         try {
             const cached = await env.MURAL_STORE.get(cacheKey, { type: 'json' });
@@ -206,7 +206,7 @@ export const listVideos = async (c) => {
     }
 };
 
-// Listar vídeos restritos
+// Função: Listar vídeos restritos (Secret)
 export const listSecretVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
@@ -276,7 +276,7 @@ export const listSecretVideos = async (c) => {
     }
 };
 
-// Buscar vídeo por ID
+// Função: Buscar detalhes de um vídeo por ID
 export const getVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -308,7 +308,7 @@ export const getVideo = async (c) => {
     }
 };
 
-// Buscar vídeos por texto
+// Função: Pesquisar vídeos por título ou descrição
 export const searchVideos = async (c) => {
     const env = c.env;
     const query = c.req.query("q");

@@ -1,5 +1,6 @@
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 
+// Função Auxiliar: Traduzir descrição do clima
 const translateDescription = (desc) => {
     if (!desc) return "Nublado";
     const d = desc.toLowerCase();
@@ -27,6 +28,7 @@ const translateDescription = (desc) => {
     return desc; // Retorna o original se não houver correspondência
 };
 
+// Função Auxiliar: Obter rótulo WMO para códigos de clima
 const getWmoLabel = (code) => {
     const table = {
         0: "Céu Limpo",
@@ -51,6 +53,7 @@ const getWmoLabel = (code) => {
     return table[code] || "Tempo Instável";
 };
 
+// Função: Obter dados climáticos de Sinop (com cache e fallbacks)
 export const getWeather = async (c) => {
     const env = c.env;
     const cacheKey = 'weather_data_sinop_v16'; // Incrementa a versão do cache

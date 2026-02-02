@@ -1,6 +1,7 @@
 import { queryDB } from '../db/index.js';
 import { createErrorResponse } from '../utils/api-utils.js';
 
+// Função: Listar eventos (com cache)
 export const getEvents = async (c) => {
     const env = c.env;
     const cacheKey = 'events_data_sinop';
@@ -38,6 +39,7 @@ export const getEvents = async (c) => {
     }
 };
 
+// Função: Adicionar novo evento
 export const addEvent = async (c) => {
     try {
         // Simple auth check for admin (based on password in body)
@@ -67,6 +69,7 @@ export const addEvent = async (c) => {
     }
 };
 
+// Função: Deletar evento existente
 export const deleteEvent = async (c) => {
     try {
         const id = c.req.param('id');

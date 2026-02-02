@@ -5,7 +5,7 @@ import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { notifyUser } from '../utils/push-utils.js';
 import { getAchievementList } from '../utils/user-achievements.js';
 
-// Curtir vídeo
+// Função: Alternar like em um vídeo
 export const likeVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -51,7 +51,7 @@ export const likeVideo = async (c) => {
     }
 };
 
-// Visualizar vídeo (Log de visualização)
+// Função: Registrar visualização de vídeo
 export const viewVideo = async (c) => {
     const videoId = c.req.param("id");
     const env = c.env;
@@ -91,7 +91,7 @@ export const viewVideo = async (c) => {
     }
 };
 
-// Postar comentário
+// Função: Postar novo comentário
 export const postComment = async (c) => {
     const env = c.env;
     try {
@@ -172,7 +172,7 @@ export const postComment = async (c) => {
     }
 };
 
-// Buscar comentários
+// Função: Listar comentários de um vídeo
 export const getComments = async (c) => {
     const videoId = c.req.param("videoId");
     const env = c.env;
@@ -250,7 +250,7 @@ export const getComments = async (c) => {
     }
 };
 
-// Deletar comentário
+// Função: Remover um comentário
 export const deleteComment = async (c) => {
     const commentId = c.req.param("id");
     const env = c.env;
@@ -275,7 +275,7 @@ export const deleteComment = async (c) => {
     }
 };
 
-// Buscar notificações
+// Função: Listar notificações do usuário
 export const getNotifications = async (c) => {
     const userIdParam = c.req.param("userId");
     const env = c.env;
@@ -318,7 +318,7 @@ export const getNotifications = async (c) => {
     }
 };
 
-// Listar usuários decorados com conquistas
+// Função: Listar todos os usuários com conquistas
 export const listAllUsers = async (c) => {
     const env = c.env;
     try {
@@ -348,7 +348,7 @@ export const listAllUsers = async (c) => {
     }
 };
 
-// Buscar Perfil Público
+// Função: Obter dados do perfil público
 export const getPublicProfile = async (c) => {
     const userId = c.req.param("id");
     const env = c.env;
@@ -380,7 +380,7 @@ export const getPublicProfile = async (c) => {
     }
 };
 
-// Listar usuários por conquista
+// Função: Filtrar usuários por tipo de conquista
 export const getUsersByAchievement = async (c) => {
     const type = c.req.param("type")?.toLowerCase();
     const env = c.env;
@@ -433,7 +433,7 @@ export const getUsersByAchievement = async (c) => {
     }
 };
 
-// Enviar mensagem
+// Função: Enviar mensagem privada (Inbox)
 export const sendMessage = async (c) => {
     const env = c.env;
     let body;
@@ -543,7 +543,7 @@ export const sendMessage = async (c) => {
     }
 };
 
-// Marcar como lido
+// Função: Marcar mensagens como lidas
 export const markAsRead = async (c) => {
     const fromId = c.req.param("id");
     const env = c.env;
@@ -601,7 +601,7 @@ export const markAsRead = async (c) => {
     }
 };
 
-// Buscar mensagens (Privado)
+// Função: Buscar conversa privada (Inbox)
 export const getInbox = async (c) => {
     const userIdParam = c.req.param("userId");
     const env = c.env;
@@ -639,7 +639,7 @@ export const getInbox = async (c) => {
     }
 };
 
-// Buscar todas as mensagens (Admin)
+// Função: Buscar todas as mensagens (Visão Admin)
 export const getAdminInbox = async (c) => {
     const env = c.env;
     try {
@@ -660,7 +660,7 @@ export const getAdminInbox = async (c) => {
     }
 };
 
-// Criar chamado de suporte
+// Função: Registrar ticket de suporte
 export const createSupportTicket = async (c) => {
     const env = c.env;
     try {
@@ -693,7 +693,7 @@ export const createSupportTicket = async (c) => {
     }
 };
 
-// Log de termos
+// Função: Registrar aceite dos termos
 export const logTerms = async (c) => {
     try {
         const body = await c.req.json();

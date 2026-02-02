@@ -6,7 +6,7 @@ import { sign } from 'hono/jwt';
 
 const getJwtSecret = (env) => env.JWT_SECRET || 'development_secret_123';
 
-// Login administrativo
+// Função: Realizar login administrativo
 export const login = async (c) => {
     const env = c.env;
     try {
@@ -32,7 +32,7 @@ export const login = async (c) => {
     }
 };
 
-// Listar usuários
+// Função: Listar todos os usuários
 export const listUsers = async (c) => {
     const env = c.env;
     try {
@@ -47,7 +47,7 @@ export const listUsers = async (c) => {
     }
 };
 
-// Resetar senha de usuário
+// Função: Resetar senha de um usuário
 export const resetPassword = async (c) => {
     const env = c.env;
     try {
@@ -61,7 +61,7 @@ export const resetPassword = async (c) => {
     }
 };
 
-// Banir usuário
+// Função: Banir e remover dados do usuário
 export const banUser = async (c) => {
     const userId = c.req.param("userId");
     const env = c.env;
@@ -79,7 +79,7 @@ export const banUser = async (c) => {
     }
 };
 
-// Alternar status de admin de um usuário
+// Função: Alternar permissões de administrador
 export const toggleAdmin = async (c) => {
     const env = c.env;
     try {
@@ -107,7 +107,7 @@ export const toggleAdmin = async (c) => {
     }
 };
 
-// Buscar logs do sistema
+// Função: Buscar logs gerais do sistema
 export const getLogs = async (c) => {
     const env = c.env;
     try {
@@ -143,7 +143,7 @@ export const getLogs = async (c) => {
     }
 };
 
-// Buscar logs de um usuário específico
+// Função: Buscar logs de um usuário específico
 export const getUserLogs = async (c) => {
     const env = c.env;
     const userId = c.req.param("userId");

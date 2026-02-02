@@ -1,6 +1,7 @@
 import { queryDB } from '../db/index.js';
 import { createErrorResponse } from '../utils/api-utils.js';
 
+// Função: Listar lugares recomendados
 export const getPlaces = async (c) => {
     try {
         const sql = `SELECT * FROM places ORDER BY title ASC`;
@@ -12,6 +13,7 @@ export const getPlaces = async (c) => {
     }
 };
 
+// Função: Adicionar novo lugar
 export const addPlace = async (c) => {
     try {
         const { title, description, category, image, link, adminPassword } = await c.req.json();
@@ -35,6 +37,7 @@ export const addPlace = async (c) => {
     }
 };
 
+// Função: Remover lugar existente
 export const deletePlace = async (c) => {
     try {
         const id = c.req.param('id');
