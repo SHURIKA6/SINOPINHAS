@@ -288,4 +288,6 @@ export default function EventsSection() {
             `}</style>
         </div >
     );
+
 }
+// Vercel Deploy Trigger
