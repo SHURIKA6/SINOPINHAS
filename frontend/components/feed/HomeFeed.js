@@ -8,7 +8,7 @@ import * as ReactWindow from 'react-window';
 import * as AutoSizerPkg from 'react-virtualized-auto-sizer';
 
 const FixedSizeList = ReactWindow.FixedSizeList || ReactWindow.default?.FixedSizeList || ReactWindow.default;
-const AutoSizer = AutoSizerPkg.default || AutoSizerPkg; // AutoSizer is usually default
+const AutoSizer = AutoSizerPkg.AutoSizer || AutoSizerPkg.default || AutoSizerPkg;
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
