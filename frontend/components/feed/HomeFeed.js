@@ -10,13 +10,6 @@ import * as AutoSizerPkg from 'react-virtualized-auto-sizer';
 const FixedSizeList = ReactWindow.FixedSizeList || ReactWindow.List || ReactWindow.default?.FixedSizeList || ReactWindow.default?.List || ReactWindow.default;
 const AutoSizer = AutoSizerPkg.AutoSizer || AutoSizerPkg.default || AutoSizerPkg;
 
-console.log('[DEBUG] Imports:', {
-    FixedSizeList: !!FixedSizeList,
-    AutoSizer: !!AutoSizer,
-    ReactWindowKeys: Object.keys(ReactWindow),
-    AutoSizerKeys: Object.keys(AutoSizerPkg)
-});
-
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -202,7 +195,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                 const cardWidth = (width - (columnCount - 1) * GAP) / columnCount;
                                 const CARD_HEIGHT = 450; // Aproximado, ideal seria medir
 
-                                console.log('[DEBUG] AutoSizer Render:', { height, width, columnCount, rowCount, videosLength: videos.length });
                                 return (
                                     <FixedSizeList
                                         height={height}
