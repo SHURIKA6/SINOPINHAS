@@ -5,6 +5,7 @@ const nextConfig = {
     images: {
         unoptimized: true,
     },
+    transpilePackages: ['react-window', 'react-virtualized-auto-sizer'],
 };
 
 module.exports = nextConfig;
