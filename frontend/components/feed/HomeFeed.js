@@ -4,8 +4,11 @@ import FeedSkeleton from './FeedSkeleton';
 import ShareModal from '../ShareModal';
 import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
 import { Search, Flame, Video, Image as ImageIcon } from 'lucide-react';
-import { FixedSizeList } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import * as ReactWindow from 'react-window';
+import * as AutoSizerPkg from 'react-virtualized-auto-sizer';
+
+const FixedSizeList = ReactWindow.FixedSizeList || ReactWindow.default?.FixedSizeList || ReactWindow.default;
+const AutoSizer = AutoSizerPkg.default || AutoSizerPkg; // AutoSizer is usually default
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
