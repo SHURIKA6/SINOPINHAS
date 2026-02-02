@@ -203,6 +203,9 @@ export default function AdminPanel({ adminPassword, showToast }) {
                                         </span>
                                     </td>
                                     <td style={{ padding: 12, display: 'flex', gap: 8 }}>
+                                        <button onClick={() => handleUserClick(u)} style={{ padding: '6px 12px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            📄 Logs
+                                        </button>
                                         <button onClick={() => handleToggleRole(u.id, u.role)} style={{
                                             padding: '6px 12px',
                                             background: u.role === 'admin' ? '#6366f1' : '#8b5cf6',
@@ -272,8 +275,9 @@ export default function AdminPanel({ adminPassword, showToast }) {
                                             padding: '4px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11
                                         }}>{log.action}</span>
                                         {log.details && (
-                                            <div style={{ fontSize: 11, color: '#445566', marginTop: 4, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                                {JSON.stringify(log.details)}
+                                            <div style={{ fontSize: 11, color: '#445566', marginTop: 4 }}>
+                                                {log.city && <span style={{ marginRight: 8 }}>📍 {log.city}, {log.country}</span>}
+                                                {log.ip && <span style={{ fontFamily: 'monospace', background: 'rgba(0,0,0,0.05)', padding: '2px 4px', borderRadius: 3 }}>{log.ip}</span>}
                                             </div>
                                         )}
                                     </td>
@@ -388,14 +392,14 @@ export default function AdminPanel({ adminPassword, showToast }) {
                 }} onClick={() => setSelectedUserLog(null)}>
                     <div style={{
                         background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                        borderRadius: 24, maxWidth: 800, width: '100%',
-                        maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                        borderRadius: 24, maxWidth: 900, width: '100%', // Aumentei a largura
+                        maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
                         border: '1px solid rgba(255, 255, 255, 0.9)',
                         boxShadow: '0 25px 50px -12px rgba(0, 71, 171, 0.25), inset 0 1px 0 rgba(255,255,255,0.8)'
                     }} onClick={e => e.stopPropagation()}>
                         <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ margin: 0, color: '#002244', fontSize: 22, fontWeight: 900, textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
-                                📜 Logs: <span style={{ color: '#0047AB' }}>{selectedUserLog.username}</span>
+                                📜 Dossiê: <span style={{ color: '#0047AB' }}>{selectedUserLog.username}</span>
                             </h3>
                             <button onClick={() => setSelectedUserLog(null)} style={{ background: 'none', border: 'none', color: '#0047AB', cursor: 'pointer', fontSize: 24, padding: 8, fontWeight: 'bold' }}>✕</button>
                         </div>
@@ -408,13 +412,14 @@ export default function AdminPanel({ adminPassword, showToast }) {
                                     Nenhum log encontrado para este usuário.
                                 </div>
                             ) : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                                     <thead>
                                         <tr style={{ color: '#003366', borderBottom: '1px solid rgba(0, 71, 171, 0.1)' }}>
                                             <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Ação</th>
                                             <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Data</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'center', fontWeight: 800 }}>IP</th>
-                                            <th style={{ padding: '12px 0', textAlign: 'right', fontWeight: 800 }}>Device</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'left', fontWeight: 800 }}>Localização (Cloudflare)</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'center', fontWeight: 800 }}>IP Network</th>
+                                            <th style={{ padding: '12px 0', textAlign: 'right', fontWeight: 800 }}>Dispositivo/Sistema</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -425,23 +430,29 @@ export default function AdminPanel({ adminPassword, showToast }) {
                                                         background: 'rgba(0, 71, 171, 0.1)', color: '#0047AB',
                                                         padding: '4px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11
                                                     }}>{log.action}</span>
-                                                    {log.details && (
-                                                        <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>
-                                                            {JSON.stringify(log.details).slice(0, 70)}...
-                                                        </div>
-                                                    )}
                                                 </td>
-                                                <td style={{ padding: '12px 0', color: '#334155' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                                                <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace', color: '#334155' }}>{log.ip || '---'}</td>
+                                                <td style={{ padding: '12px 0', color: '#334155' }}>
+                                                    {new Date(log.created_at).toLocaleString('pt-BR')}
+                                                </td>
+                                                <td style={{ padding: '12px 0', color: '#334155' }}>
+                                                    {log.city && log.country ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <span>📍 {log.city}, {log.country}</span>
+                                                            <span style={{ fontSize: 10, opacity: 0.7 }}>({log.asOrganization})</span>
+                                                        </div>
+                                                    ) : <span style={{ opacity: 0.5 }}>-</span>}
+                                                </td>
+                                                <td style={{ padding: '12px 0', textAlign: 'center', fontFamily: 'monospace', color: '#334155' }}>
+                                                    <div style={{ fontWeight: 'bold' }}>{log.ip || '---'}</div>
+                                                    {log.details?.ray_id && <div style={{ fontSize: 10, opacity: 0.6 }}>Ray: {log.details.ray_id.substring(0, 8)}...</div>}
+                                                </td>
                                                 <td style={{ padding: '12px 0', textAlign: 'right', maxWidth: 200 }}>
-                                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={log.fingerprint || log.details?.user_agent}>
-                                                        {log.fingerprint ? (
-                                                            <span style={{ fontFamily: 'monospace', background: 'rgba(255,255,255,0.6)', padding: '2px 6px', borderRadius: 4, border: '1px solid #cbd5e1' }}>
-                                                                {log.fingerprint.substring(0, 16)}...
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{ fontStyle: 'italic', color: '#64748b' }}>Sem fingerprint</span>
-                                                        )}
+                                                    <div style={{ fontSize: 11, fontWeight: 'bold' }}>
+                                                        {log.details?.platform ? log.details.platform.replace(/"/g, '') : 'Unknown'}
+                                                        {log.details?.is_mobile === '?1' ? ' 📱' : ' 💻'}
+                                                    </div>
+                                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 10, opacity: 0.7 }} title={log.details?.user_agent}>
+                                                        {log.details?.user_agent?.substring(0, 30)}...
                                                     </div>
                                                 </td>
                                             </tr>
@@ -452,8 +463,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
                         </div>
                     </div>
                 </div>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
 }

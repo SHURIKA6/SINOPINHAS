@@ -7,15 +7,21 @@ export async function logAudit(userId, action, details = {}, c) {
         const env = c.env;
         const ip = c.req.header("CF-Connecting-IP") || c.req.header("X-Forwarded-For") || "unknown";
         const userAgent = c.req.header("User-Agent") || "unknown";
+        const platform = c.req.header("sec-ch-ua-platform") || "unknown";
+        const mobile = c.req.header("sec-ch-ua-mobile") || "unknown";
+        const rayId = c.req.header("cf-ray") || "unknown";
 
         // Captura dados geográficos do Cloudflare
         const cf = c.req.raw?.cf || {};
         const geoInfo = {
-            city: cf.city || "N/A",
-            country: cf.country || "N/A",
-            region: cf.region || "N/A",
-            latitude: cf.latitude || "N/A",
-            longitude: cf.longitude || "N/A"
+            city: cf.city || "Unknown City",
+            country: cf.country || "XX",
+            region: cf.region || "Unknown Region",
+            latitude: cf.latitude || 0,
+            longitude: cf.longitude || 0,
+            timezone: cf.timezone || "UTC",
+            asn: cf.asn || 0,
+            asOrganization: cf.asOrganization || "Unknown ISP"
         };
 
         // Mescla geoInfo com os detalhes existentes (impressão digital do frontend, etc)
@@ -23,7 +29,11 @@ export async function logAudit(userId, action, details = {}, c) {
             ...details,
             ...geoInfo,
             ip,
-            user_agent: userAgent
+            user_agent: userAgent,
+            platform,
+            is_mobile: mobile,
+            ray_id: rayId,
+            fingerprint_raw: `${ip}|${userAgent}|${cf.country}|${cf.city}` // Simple backend fingerprint
         };
 
         // Salva no Banco de Dados
