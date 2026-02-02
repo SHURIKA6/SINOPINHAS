@@ -221,27 +221,38 @@ export default function Header({
                     position: fixed; top: 0; right: 0; bottom: 0;
                     width: 300px;
                     z-index: 2001; display: flex; flex-direction: column;
-                    background: rgba(255, 255, 255, 0.95) !important;
+                    background: rgba(255, 255, 255, 0.5) !important; /* Glassy backdrop */
                     backdrop-filter: blur(20px) saturate(180%);
                     -webkit-backdrop-filter: blur(20px) saturate(180%);
                     box-shadow: -10px 0 40px rgba(0, 71, 171, 0.15);
-                    border-left: 1px solid rgba(255, 255, 255, 0.8);
+                    border-left: 1px solid rgba(255, 255, 255, 0.6);
                 }
                 
                 .sidebar-head {
                     padding: 24px; display: flex; justify-content: space-between; align-items: center;
-                    border-bottom: 1px solid rgba(0, 71, 171, 0.1); 
-                    color: #0047AB; /* Frutiger Dark Blue */
+                    border-bottom: none; /* Removed border to let card stand out */
+                    color: #0047AB;
                 }
                 .sidebar-head h3 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
                 .close-btn { 
-                    background: rgba(0, 71, 171, 0.05); border: none; color: #0047AB; cursor: pointer; 
+                    background: rgba(255,255,255,0.5); border: none; color: #0047AB; cursor: pointer; 
                     width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
                     transition: all 0.2s;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
                 }
-                .close-btn:hover { background: rgba(0, 71, 171, 0.1); transform: rotate(90deg); }
+                .close-btn:hover { background: #FFFFFF; transform: rotate(90deg); }
 
-                .sidebar-menu-list { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+                /* Main Card Style for Menu List */
+                .sidebar-menu-list { 
+                    flex: 1; 
+                    margin: 0 16px 16px 16px;
+                    padding: 16px; 
+                    display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
+                    background: #FFFFFF; /* Opaque Card */
+                    border-radius: 24px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                }
+                
                 .sidebar-row {
                     display: flex; align-items: center; gap: 16px; padding: 16px;
                     background: transparent; border: none; border-radius: 12px;
@@ -263,18 +274,19 @@ export default function Header({
                 }
 
                 .sidebar-foot { 
-                    padding: 24px; border-top: 1px solid rgba(0, 71, 171, 0.1); 
-                    background: rgba(240, 248, 255, 0.5);
+                    padding: 0 16px 24px 16px; 
+                    background: transparent;
+                    border-top: none;
                     display: flex; flex-direction: column; gap: 12px;
                 }
                 .sidebar-foot button {
-                    width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
+                    width: 100%; padding: 14px; border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
                     display: flex; align-items: center; justify-content: center; gap: 8px;
                     text-transform: uppercase; letter-spacing: 0.5px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
                 }
                 .support-btn {
-                    background: #FFFFFF; border: 1px solid #BBDEFB; color: #0047AB;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    background: rgba(255,255,255,0.8); border: 1px solid #BBDEFB; color: #0047AB;
                 }
                 .support-btn:hover { 
                     background: #F0F8FF; border-color: #0047AB; 
