@@ -41,91 +41,71 @@ export default function Header({
 
     return (
         <>
-            <header className="header-container glass">
+            <header className="xp-header aero-glass">
                 <div className="header-left">
                     <motion.div
                         whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="logo-container"
+                        whileTap={{ scale: 0.95 }}
+                        className="start-button aero-glass"
                         onClick={() => setActiveTab('feed')}
                     >
-                        <h1 className="logo-text">SINOPINHAS</h1>
+                        <img src="/icons/icon-192x192.png" alt="S" className="start-icon" onError={(e) => e.target.style.display = 'none'} />
+                        <span className="start-text">Início</span>
                     </motion.div>
+                    <h1 className="logo-text">SINOPINHAS</h1>
                 </div>
 
                 <div className="header-actions">
                     <div className="desktop-actions">
-                        <button
-                            onClick={toggleTheme}
-                            className="icon-btn theme-toggle"
-                            title={theme === 'dark' ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
-                        >
-                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        <button onClick={toggleTheme} className="xp-button icon-btn" title="Tema">
+                            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
 
-                        <button onClick={() => setShowSecretAuth(true)} className="action-btn restricted-btn">
-                            <Lock size={16} />
-                            <span>Restrito</span>
+                        <button onClick={() => setShowSecretAuth(true)} className="xp-button">
+                            <Lock size={14} /> Restrito
                         </button>
 
-                        <button onClick={() => setShowSupport(true)} className="action-btn support-btn">
-                            <LifeBuoy size={16} />
-                            <span>Suporte</span>
+                        <button onClick={() => setShowSupport(true)} className="xp-button">
+                            <LifeBuoy size={14} /> Suporte
                         </button>
 
                         {isAdmin && (
-                            <div className="admin-status">
-                                <ShieldCheck size={14} />
-                                <span>ADMIN</span>
+                            <div className="admin-badge">
+                                <ShieldCheck size={14} /> ADMIN
                             </div>
                         )}
 
                         {user ? (
-                            <div className="user-section">
-                                <button
-                                    onClick={() => setShowProfile(true)}
-                                    className="profile-trigger"
-                                >
-                                    <div className="avatar-wrapper">
-                                        <img
-                                            src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'}
-                                            className="user-avatar"
-                                            alt={user.username}
-                                        />
-                                    </div>
-                                    <strong className="username">{user.username}</strong>
+                            <div className="user-section aero-glass">
+                                <button onClick={() => setShowProfile(true)} className="user-btn">
+                                    <img
+                                        src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'}
+                                        className="user-avatar"
+                                        alt={user.username}
+                                    />
+                                    <strong>{user.username}</strong>
                                 </button>
-                                <button onClick={logout} className="logout-button" title="Sair">
-                                    <LogOut size={18} />
+                                <button onClick={logout} className="xp-button small-btn" title="Sair">
+                                    <LogOut size={14} />
                                 </button>
                             </div>
                         ) : (
-                            <button onClick={() => setShowAuth(true)} className="action-btn login-btn">
-                                <User size={16} />
-                                <span>Entrar</span>
+                            <button onClick={() => setShowAuth(true)} className="xp-button login-btn">
+                                <User size={14} /> Entrar
                             </button>
                         )}
 
                         {!isAdmin && (
-                            <button onClick={() => setShowAdminAuth(true)} className="admin-trigger-btn" title="Painel Admin">
-                                <Settings size={16} />
+                            <button onClick={() => setShowAdminAuth(true)} className="xp-button icon-btn" title="Admin Panel">
+                                <Settings size={14} />
                             </button>
                         )}
                     </div>
 
-                    <div className="mobile-header-user">
-                        {user ? (
-                            <img
-                                src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'}
-                                className="user-avatar-mobile"
-                                onClick={() => setShowProfile(true)}
-                                alt={user.username}
-                            />
-                        ) : (
-                            <button onClick={() => setShowAuth(true)} className="login-btn-mini">
-                                <User size={20} />
-                            </button>
-                        )}
+                    <div className="mobile-only">
+                        <button onClick={toggleSidebar} className="xp-button mobile-menu-btn">
+                            <Menu size={20} />
+                        </button>
                     </div>
                 </div>
             </header>
@@ -146,444 +126,192 @@ export default function Header({
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="sidebar-drawer"
+                            className="xp-sidebar aero-glass"
                         >
-                            <div className="sidebar-header">
-                                <h2 className="logo-text" style={{ fontSize: 20 }}>SINOPINHAS</h2>
-                                <button onClick={toggleSidebar} className="close-sidebar">
-                                    <X size={24} />
-                                </button>
+                            <div className="sidebar-header xp-title-bar">
+                                <span>Menu Iniciar</span>
+                                <button onClick={toggleSidebar} className="close-btn"><X size={18} /></button>
                             </div>
 
                             <div className="sidebar-content">
-                                <div className="sidebar-section">
-                                    <p className="sidebar-label">Navegação</p>
+                                {user && (
+                                    <div className="sidebar-user-card aero-glass">
+                                        <img src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'} className="sidebar-avatar" />
+                                        <div className="sidebar-user-info">
+                                            <strong>{user.username}</strong>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="sidebar-links">
                                     {menuItems.map(item => (
                                         <button
                                             key={item.id}
                                             onClick={() => { setActiveTab(item.id); toggleSidebar(); }}
                                             className={`sidebar-item ${activeTab === item.id ? 'active' : ''}`}
                                         >
-                                            <span className="item-icon">{item.icon}</span>
-                                            <span className="item-label">{item.label}</span>
-                                            {item.badge > 0 && <span className="item-badge">{item.badge}</span>}
+                                            {item.icon}
+                                            <span>{item.label}</span>
+                                            {item.badge > 0 && <span className="badge">{item.badge}</span>}
                                         </button>
                                     ))}
                                 </div>
 
-                                <div className="sidebar-section">
-                                    <p className="sidebar-label">Sistema</p>
-                                    <button onClick={() => { toggleTheme(); toggleSidebar(); }} className="sidebar-item">
-                                        <span className="item-icon">{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</span>
-                                        <span className="item-label">{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
-                                    </button>
-                                    <button onClick={() => { setShowSupport(true); toggleSidebar(); }} className="sidebar-item">
-                                        <span className="item-icon"><LifeBuoy size={20} /></span>
-                                        <span className="item-label">Suporte</span>
-                                    </button>
-                                    <button onClick={() => { setShowSecretAuth(true); toggleSidebar(); }} className="sidebar-item">
-                                        <span className="item-icon"><Lock size={20} /></span>
-                                        <span className="item-label">Área Restrita</span>
-                                    </button>
-                                </div>
-                            </div>
+                                <div className="sidebar-divider" />
 
-                            <div className="sidebar-footer">
-                                {isAdmin ? (
-                                    <button onClick={() => { logoutAdmin(); toggleSidebar(); }} className="sidebar-action-btn admin-out">
-                                        <ShieldCheck size={18} />
-                                        <span>Encerrar Admin</span>
+                                <div className="sidebar-actions">
+                                    <button onClick={toggleTheme} className="sidebar-item">
+                                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                                        Theme
                                     </button>
-                                ) : (
-                                    <button onClick={() => { setShowAdminAuth(true); toggleSidebar(); }} className="sidebar-action-btn admin-in">
-                                        <Settings size={18} />
-                                        <span>Modo Admin</span>
-                                    </button>
-                                )}
-                                {user && (
-                                    <button onClick={() => { logout(); toggleSidebar(); }} className="sidebar-action-btn logout">
-                                        <LogOut size={18} />
-                                        <span>Sair da Conta</span>
-                                    </button>
-                                )}
+                                    {user ? (
+                                        <button onClick={() => { logout(); toggleSidebar(); }} className="sidebar-item logout">
+                                            <LogOut size={18} /> Logout
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => { setShowAuth(true); toggleSidebar(); }} className="sidebar-item login">
+                                            <User size={18} /> Login
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </motion.aside>
                     </>
                 )}
             </AnimatePresence>
 
-            <nav className="tab-container-desktop">
+            {/* Desktop Tabs Ribbon */}
+            <div className="desktop-tabs-ribbon aero-glass">
                 {menuItems.map(item => (
                     <button
                         key={item.id}
                         onClick={() => setActiveTab(item.id)}
-                        className={`tab-btn ${activeTab === item.id ? 'active' : ''}`}
+                        className={`ribbon-tab ${activeTab === item.id ? 'active' : ''}`}
                     >
                         {item.icon}
                         <span>{item.label}</span>
-                        {item.badge > 0 && <span className="badge">{item.badge}</span>}
+                        {item.badge > 0 && <span className="ribbon-badge">{item.badge}</span>}
                     </button>
                 ))}
-            </nav>
+            </div>
 
             <style jsx>{`
-                .header-container {
+                .xp-header {
+                    position: sticky; top: 0; z-index: 1000;
                     padding: 8px 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    background: rgba(13, 11, 20, 0.7);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                    position: sticky;
-                    top: 0;
-                    z-index: 1000;
-                    backdrop-filter: blur(24px) saturate(180%);
+                    display: flex; align-items: center; justify-content: space-between;
+                    background: linear-gradient(to bottom, rgba(36, 94, 220, 0.9) 0%, rgba(36, 94, 220, 0.6) 100%);
+                    border-bottom: 2px solid rgba(255,255,255,0.3);
+                    height: 60px;
                 }
 
-                .logo-container {
+                .header-left { display: flex; align-items: center; gap: 16px; }
+
+                .start-button {
+                    background: linear-gradient(180deg, #3C8E42 0%, #2E6032 100%);
+                    border: 1px solid #1E4022;
+                    border-radius: 4px 14px 14px 4px;
+                    padding: 4px 16px 4px 8px;
+                    display: flex; align-items: center; gap: 8px;
                     cursor: pointer;
-                    user-select: none;
+                    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+                    font-style: italic; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
                 }
                 
+                .start-icon { width: 24px; height: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+
                 .logo-text {
-                    font-size: 24px;
-                    font-weight: 1000;
+                    font-family: 'Trebuchet MS', 'Tahoma', sans-serif;
+                    font-style: italic; font-size: 22px; color: white;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
                     margin: 0;
-                    background: linear-gradient(135deg, #a855f7 0%, #ff6b9d 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    letter-spacing: -1.2px;
-                    text-transform: uppercase;
-                    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.4));
                 }
 
-                @media (max-width: 768px) {
-                    .logo-text { font-size: 20px; letter-spacing: -0.8px; }
-                }
-
-                .header-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                .desktop-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                @media (max-width: 1024px) {
-                    .desktop-actions { display: none; }
-                }
-
-                .action-btn {
-                    padding: 8px 18px;
-                    border-radius: 14px;
-                    font-size: 14px;
-                    font-weight: 700;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    border: none;
-                    color: white;
-                    cursor: pointer;
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                }
-
-                .restricted-btn { background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); }
-                .support-btn { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); }
-                .login-btn { background: linear-gradient(135deg, #a855f7 0%, #6d28d9 100%); }
-
-                .icon-btn, .admin-trigger-btn, .admin-logout-btn {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: var(--input-bg);
-                    border: 1px solid var(--border-color);
-                    color: var(--text-color);
-                    cursor: pointer;
-                }
-
-                .action-btn:hover {
-                    transform: translateY(-2px);
-                    filter: brightness(1.1);
-                }
-
-                .admin-status {
-                    padding: 6px 12px;
-                    background: #10b981;
-                    color: white;
-                    border-radius: 20px;
-                    font-size: 11px;
-                    font-weight: 800;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
+                .header-actions { display: flex; align-items: center; gap: 10px; }
+                .desktop-actions { display: flex; align-items: center; gap: 10px; }
+                
+                .admin-badge {
+                    background: red; color: white; padding: 2px 8px; border-radius: 4px;
+                    font-size: 10px; font-weight: bold; display: flex; gap: 4px;
                 }
 
                 .user-section {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    background: var(--input-bg);
-                    padding: 4px 4px 4px 12px;
-                    border-radius: 24px;
-                    border: 1px solid var(--border-color);
+                    display: flex; align-items: center; gap: 8px;
+                    padding: 4px 8px; border-radius: 8px;
                 }
 
-                .profile-trigger {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    background: none;
-                    border: none;
-                    color: var(--text-color);
-                    cursor: pointer;
+                .user-btn {
+                    background: none; border: none; display: flex; align-items: center; gap: 8px;
+                    color: inherit; cursor: pointer; font-family: inherit; font-size: 14px;
+                }
+                .user-avatar { width: 24px; height: 24px; border-radius: 4px; border: 1px solid white; }
+                .small-btn { padding: 4px; }
+
+                .mobile-only { display: none; }
+                @media (max-width: 768px) {
+                    .desktop-actions { display: none; }
+                    .mobile-only { display: block; }
+                    .logo-text { font-size: 18px; }
+                    .start-button { padding: 4px 10px; border-radius: 4px; }
+                    .start-text { display: none; }
                 }
 
-                .avatar-wrapper {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    padding: 2px;
-                    background: linear-gradient(135deg, var(--accent-color), #ff6b9d);
+                /* Sidebar */
+                .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; }
+                .xp-sidebar {
+                    position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
+                    z-index: 9999; background: #fff;
+                    display: flex; flex-direction: column;
                 }
+                
+                .close-btn { background: none; border: none; color: white; cursor: pointer; }
 
-                .user-avatar {
-                    width: 100%;
-                    height: 100%;
-                    border-radius: 50%;
-                    object-fit: cover;
-                    border: 1.5px solid var(--bg-color);
+                .sidebar-content { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+                .sidebar-user-card { 
+                    display: flex; align-items: center; gap: 12px; padding: 12px;
+                    border: 1px solid #CCC; margin-bottom: 16px;
                 }
-
-                .username {
-                    font-size: 14px;
-                    max-width: 100px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .logout-button {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: rgba(239, 68, 68, 0.1);
-                    color: #ef4444;
-                    border: none;
-                    cursor: pointer;
-                }
-
-                .mobile-header-user {
-                    display: none;
-                }
-
-                .menu-btn-mobile {
-                    display: none;
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 14px;
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    color: var(--text-color);
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s ease;
-                }
-
-                .menu-btn-mobile:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
-
-                .login-btn-mini {
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 50%;
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    color: var(--text-color);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                }
-
-                @media (max-width: 1024px) {
-                    .menu-btn-mobile, .mobile-header-user { display: flex; align-items: center; gap: 8px; }
-                    .header-container { padding: 10px 16px; }
-                }
-
-                .user-avatar-mobile {
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 50%;
-                    border: 2px solid var(--accent-color);
-                    padding: 2px;
-                    background: var(--bg-color);
-                }
-
-                .sidebar-overlay {
-                    position: fixed;
-                    inset: 0;
-                    background: rgba(0,0,0,0.8);
-                    backdrop-filter: blur(8px);
-                    z-index: 9998;
-                }
-
-                .sidebar-drawer {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    bottom: 0;
-                    width: 300px;
-                    background: var(--bg-color);
-                    z-index: 9999;
-                    display: flex;
-                    flex-direction: column;
-                    border-right: 1px solid var(--border-color);
-                }
-
-                .sidebar-header {
-                    padding: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    border-bottom: 1px solid var(--border-color);
-                }
-
-                .sidebar-content {
-                    flex: 1;
-                    padding: 24px;
-                    overflow-y: auto;
-                }
-
-                .sidebar-section { margin-bottom: 32px; }
-
-                .sidebar-label {
-                    font-size: 11px;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    color: var(--secondary-text);
-                    margin-bottom: 16px;
-                    padding-left: 12px;
-                }
-
+                .sidebar-avatar { width: 48px; height: 48px; border-radius: 4px; border: 1px solid #999; }
+                
                 .sidebar-item {
-                    width: 100%;
-                    display: flex;
-                    align-items: center;
-                    gap: 14px;
-                    padding: 14px;
-                    border-radius: 16px;
-                    border: none;
-                    background: none;
-                    color: var(--text-color);
-                    font-size: 15px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    margin-bottom: 4px;
-                    transition: all 0.2s ease;
+                    width: 100%; border: none; background: none; text-align: left;
+                    padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+                    font-size: 15px; color: #333; border-radius: 4px;
                 }
+                .sidebar-item:hover { background: #245EDC; color: white; }
+                .sidebar-item.active { background: #245EDC; color: white; font-weight: bold; }
+                
+                .sidebar-divider { height: 1px; background: linear-gradient(90deg, transparent, #CCC, transparent); margin: 8px 0; }
 
-                .sidebar-item:hover, .sidebar-item.active {
-                    background: var(--glass-bg);
-                    color: var(--accent-color);
+                /* Desktop Ribbon */
+                .desktop-tabs-ribbon {
+                    display: flex; justify-content: center; gap: 4px; padding: 8px;
+                    margin-top: 10px; margin-bottom: 20px;
                 }
+                @media (max-width: 768px) { .desktop-tabs-ribbon { display: none; } }
 
-                .sidebar-item.active {
-                    background: rgba(168, 85, 247, 0.1);
-                    border: 1px solid rgba(168, 85, 247, 0.2);
+                .ribbon-tab {
+                    background: transparent; border: 1px solid transparent;
+                    padding: 6px 16px; border-radius: 4px 4px 0 0;
+                    cursor: pointer; display: flex; align-items: center; gap: 8px;
+                    color: white; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+                    transition: all 0.2s;
                 }
-
-                .item-badge {
-                    margin-left: auto;
-                    background: #ff4757;
-                    color: white;
-                    padding: 2px 8px;
-                    border-radius: 10px;
-                    font-size: 11px;
+                
+                .ribbon-tab:hover {
+                    background: rgba(255,255,255,0.2);
+                    border-top: 1px solid rgba(255,255,255,0.5);
                 }
-
-                .sidebar-footer {
-                    padding: 24px;
-                    border-top: 1px solid var(--border-color);
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
+                
+                .ribbon-tab.active {
+                    background: rgba(255,255,255,0.3);
+                    border: 1px solid rgba(255,255,255,0.6);
+                    border-bottom: none;
+                    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
                 }
+                
+                .ribbon-badge { font-size: 10px; background: #E68B2C; padding: 2px 6px; border-radius: 10px; border: 1px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
-                .sidebar-action-btn {
-                    padding: 14px;
-                    border-radius: 16px;
-                    border: none;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                    font-weight: 700;
-                    cursor: pointer;
-                }
-
-                .admin-in { background: #10b981; color: white; }
-                .admin-out { background: #ef4444; color: white; }
-                .logout { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
-
-                .close-sidebar {
-                    background: none;
-                    border: none;
-                    color: var(--text-color);
-                    cursor: pointer;
-                }
-
-                .tab-container-desktop {
-                    background: rgba(15, 13, 21, 0.8);
-                    padding: 16px 24px;
-                    display: flex;
-                    justify-content: center;
-                    gap: 12px;
-                    border-bottom: 1px solid var(--border-color);
-                    backdrop-filter: blur(10px);
-                }
-
-                @media (max-width: 1024px) {
-                    .tab-container-desktop { display: none; }
-                }
-
-                .tab-btn {
-                    padding: 10px 20px;
-                    border-radius: 99px;
-                    border: 1px solid var(--border-color);
-                    background: var(--input-bg);
-                    color: var(--secondary-text);
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .tab-btn:hover, .tab-btn.active {
-                    background: linear-gradient(135deg, var(--accent-color) 0%, #6040e6 100%);
-                    color: white;
-                    border-color: transparent;
-                }
-
-                .badge {
-                    background: #ef4444;
-                    color: white;
-                    font-size: 10px;
-                    padding: 2px 6px;
-                    border-radius: 10px;
-                }
             `}</style>
         </>
     );
