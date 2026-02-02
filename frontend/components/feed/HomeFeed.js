@@ -203,6 +203,8 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                                     width={width}
                                     itemCount={rowCount}
                                     itemSize={CARD_HEIGHT + GAP}
+                                    itemData={videos}
+                                    rowProps={{}} // Fix for "Cannot convert undefined to object" in react-window build
                                     onItemsRendered={({ visibleStopIndex }) => {
                                         if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
                                             setOffset(prev => prev + LIMIT);
