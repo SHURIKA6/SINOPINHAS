@@ -7,7 +7,7 @@ import { Search, Flame, Video, Image as ImageIcon } from 'lucide-react';
 import * as ReactWindow from 'react-window';
 import * as AutoSizerPkg from 'react-virtualized-auto-sizer';
 
-const FixedSizeList = ReactWindow.FixedSizeList || ReactWindow.default?.FixedSizeList || ReactWindow.default;
+const FixedSizeList = ReactWindow.FixedSizeList || ReactWindow.List || ReactWindow.default?.FixedSizeList || ReactWindow.default?.List || ReactWindow.default;
 const AutoSizer = AutoSizerPkg.AutoSizer || AutoSizerPkg.default || AutoSizerPkg;
 
 console.log('[DEBUG] Imports:', {
