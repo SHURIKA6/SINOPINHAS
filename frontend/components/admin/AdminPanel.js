@@ -282,7 +282,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
                                         )}
                                     </td>
                                     <td style={{ padding: 12, fontWeight: 600, color: '#002244' }}>
-                                        {log.username || `User #${log.user_id}`}
+                                        {log.username ? log.username : (log.user_id ? `User #${log.user_id}` : 'Sistema')}
                                     </td>
                                     <td style={{ padding: 12, textAlign: 'right', color: '#445566' }}>
                                         {new Date(log.created_at).toLocaleString('pt-BR')}

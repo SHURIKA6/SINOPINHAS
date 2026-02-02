@@ -39,7 +39,7 @@ export async function logAudit(userId, action, details = {}, c) {
         // Salva no Banco de Dados
         await queryDB(
             "INSERT INTO audit_logs (user_id, action, details, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)",
-            [userId, action, JSON.stringify(finalDetails), ip, userAgent],
+            [userId, action, JSON.stringify(finalDetails), ip.substring(0, 45), userAgent.substring(0, 255)],
             env
         );
 
