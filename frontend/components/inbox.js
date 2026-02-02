@@ -216,11 +216,20 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
                       <ArrowLeft size={20} color="#444" />
                     </button>
                   )}
-                  <div className="msn-avatar-frame">
+                  <div
+                    className="msn-avatar-frame"
+                    onClick={() => window.openPublicProfile && window.openPublicProfile(selectedUser.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <img src={selectedUser.avatar || 'https://www.gravatar.com/avatar?d=mp'} style={{ width: '100%', height: '100%' }} alt="Buddy" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#000' }}>{selectedUser.username}</span>
+                    <span
+                      onClick={() => window.openPublicProfile && window.openPublicProfile(selectedUser.id)}
+                      style={{ fontWeight: 'bold', fontSize: '14px', color: '#000', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      {selectedUser.username}
+                    </span>
                     <span style={{ fontSize: '11px', color: '#555' }}>&lt; Digite uma mensagem... &gt;</span>
                   </div>
                 </div>

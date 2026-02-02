@@ -279,6 +279,7 @@ export default function Home({ initialVideo }) {
             userId={publicProfileId}
             onClose={() => setPublicProfileId(null)}
             onAchievementClick={(ach) => setAchievementToList(ach)}
+            onPostClick={(video) => openComments(video)}
           />
         )}
 

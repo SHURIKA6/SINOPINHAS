@@ -177,11 +177,22 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
             {/* Metadata & Actions (Styled as Playlist/Media Info) */}
             <div style={{ background: '#F0F0F0', padding: 12, borderTop: '1px solid #CCC' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <img src={video.avatar || 'https://www.gravatar.com/avatar?d=mp'}
-                        style={{ width: '32px', height: '32px', borderRadius: 4, border: '1px solid #999' }} />
+                    <img
+                        src={video.avatar || 'https://www.gravatar.com/avatar?d=mp'}
+                        onClick={(e) => { e.stopPropagation(); window.openPublicProfile && window.openPublicProfile(video.user_id); }}
+                        style={{ width: '32px', height: '32px', borderRadius: 4, border: '1px solid #999', cursor: 'pointer' }}
+                        alt={video.username}
+                    />
                     <div>
                         <div style={{ fontWeight: 'bold', fontSize: 13, color: '#333' }}>{video.title || 'Untitled Video'}</div>
-                        <div style={{ fontSize: 11, color: '#666' }}>{video.username} • {formattedDate}</div>
+                        <div style={{ fontSize: 11, color: '#666' }}>
+                            <span
+                                onClick={(e) => { e.stopPropagation(); window.openPublicProfile && window.openPublicProfile(video.user_id); }}
+                                style={{ cursor: 'pointer', fontWeight: 'bold', color: '#0044CC' }}
+                            >
+                                {video.username}
+                            </span> • {formattedDate}
+                        </div>
                     </div>
                 </div>
 
