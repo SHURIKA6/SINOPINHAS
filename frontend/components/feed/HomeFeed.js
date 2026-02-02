@@ -9,50 +9,232 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
     const [videos, setVideos] = useState([]);
-    // ... (content skipped) ...
-    return (
-        <FixedSizeList
-            height={height}
-            width={width}
-            itemCount={rowCount}
-            itemSize={CARD_HEIGHT + GAP}
-            onItemsRendered={({ visibleStopIndex }) => {
-                if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
-                    setOffset(prev => prev + LIMIT);
-                }
-            }}
-        >
-            {({ index, style }) => {
-                const fromIndex = index * columnCount;
-                const toIndex = Math.min(fromIndex + columnCount, videos.length);
-                const items = videos.slice(fromIndex, toIndex);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('recent');
+    const [filterType, setFilterType] = useState(initialFilterType);
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const LIMIT = 12;
 
-                return (
-                    <div style={{ ...style, display: 'flex', gap: GAP }}>
-                        {items.map(v => (
-                            <div key={v.id} style={{ width: cardWidth }}>
-                                <VideoCard
-                                    video={v}
-                                    onDelete={handleDeleteVideo}
-                                    onLike={toggleLike}
-                                    onOpenComments={onVideoClick}
-                                    canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
-                                    onShare={(video) => setVideoToShare(video)}
-                                />
-                            </div>
+    const [hearts, setHearts] = useState([]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const loadMoreRef = useRef(null);
+    const [videoToShare, setVideoToShare] = useState(null);
+
+    const sortedVideos = useMemo(() => {
+        let list = [...videos];
+        if (sortBy === 'popular') list.sort((a, b) => (parseInt(b.views) || 0) - (parseInt(a.views) || 0));
+        else if (sortBy === 'liked') list.sort((a, b) => (parseInt(b.likes) || 0) - (parseInt(a.likes) || 0));
+        else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return list;
+    }, [videos, sortBy]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore && !loading) {
+                setOffset(prev => prev + LIMIT);
+            }
+        }, { threshold: 0.1, rootMargin: '200px' });
+
+        if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, loading]);
+
+    useEffect(() => {
+        setOffset(0);
+        setHasMore(true);
+        loadVideos(0, true);
+    }, [debouncedSearchQuery, sortBy, filterType]);
+
+    useEffect(() => {
+        if (offset > 0) {
+            loadVideos(offset, false);
+        }
+    }, [offset]);
+
+    const loadVideos = async (currentOffset, reset = false) => {
+        if (reset) setLoading(true);
+        try {
+            let data = [];
+            if (debouncedSearchQuery.trim().length > 2) {
+                data = await searchVideos(debouncedSearchQuery);
+                setHasMore(false);
+            } else {
+                data = await fetchVideos(user?.id, LIMIT, currentOffset, filterType === 'all' ? null : filterType);
+                if (data.length < LIMIT) setHasMore(false);
+            }
+            setVideos(prev => reset ? data : [...prev, ...data]);
+        } catch (error) {
+            showToast('Erro ao carregar conteúdo', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const spawnHeart = (e) => {
+        const id = Date.now();
+        const x = e.clientX;
+        const y = e.clientY;
+        setHearts(prev => [...prev, { id, x, y }]);
+        setTimeout(() => {
+            setHearts(prev => prev.filter(h => h.id !== id));
+        }, 1000);
+    };
+
+    const toggleLike = async (videoId, e) => {
+        if (!user) return showToast('Faça login para curtir!', 'error');
+        if (e) spawnHeart(e);
+        setVideos(prev => prev.map(v => {
+            if (v.id === videoId) {
+                const isLiked = !v.user_liked;
+                return {
+                    ...v,
+                    user_liked: isLiked,
+                    likes: isLiked ? parseInt(v.likes) + 1 : parseInt(v.likes) - 1
+                };
+            }
+            return v;
+        }));
+        try {
+            await likeVideo(videoId, user.id);
+        } catch (err) {
+            showToast('Erro ao curtir', 'error');
+            loadVideos();
+        }
+    };
+
+    const handleDeleteVideo = async (videoId) => {
+        if (!confirm('Tem certeza que deseja excluir?')) return;
+        try {
+            await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
+            setVideos(prev => prev.filter(v => v.id !== videoId));
+            showToast('success', 'Removido com sucesso!');
+        } catch (err) {
+            showToast('Erro ao excluir', 'error');
+        }
+    };
+
+    return (
+        <div className="home-feed-root">
+            {hearts.map(h => (
+                <div key={h.id} className="floating-heart" style={{ left: h.x, top: h.y }}>❤️</div>
+            ))}
+
+            <div className="home-feed-container">
+                {/* Premium Search & Filter Header */}
+                <div className="feed-header-glass">
+                    <div className="search-row-feed">
+                        <div className="feed-search-input-box">
+                            <Search size={18} className="search-f-icon" />
+                            <input
+                                type="text"
+                                placeholder="O que você quer ver hoje em Sinop?"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="feed-sort-select"
+                        >
+                            <option value="recent">🕒 Recentes</option>
+                            <option value="popular">🔥 Populares</option>
+                            <option value="liked">❤️ Curtidos</option>
+                        </select>
+                    </div>
+
+                    <div className="feed-filter-tabs">
+                        {[
+                            { id: 'all', label: 'Todos', icon: <Flame size={14} /> },
+                            { id: 'video', label: 'Vídeos', icon: <Video size={14} /> },
+                            { id: 'photo', label: 'Fotos', icon: <ImageIcon size={14} /> }
+                        ].map(type => (
+                            <button
+                                key={type.id}
+                                onClick={() => setFilterType(type.id)}
+                                className={`feed-filter-btn ${filterType === type.id ? 'active' : ''}`}
+                            >
+                                {type.icon}
+                                <span>{type.label}</span>
+                            </button>
                         ))}
                     </div>
-                );
-            }}
-        </FixedSizeList>
-    );
-}}
-                        </AutoSizer >
-                    </div >
-                )}
-            </div >
+                </div>
 
-    <style jsx>{`
+                {loading && videos.length === 0 ? (
+                    <div className="feed-grid">
+                        {[...Array(8)].map((_, i) => <FeedSkeleton key={i} />)}
+                    </div>
+                ) : videos.length === 0 ? (
+                    <div className="feed-empty">
+                        <div className="empty-emoji">🏜️</div>
+                        <h3>Nada por aqui ainda</h3>
+                        <p>Seja o primeiro a compartilhar algo legal em Sinop!</p>
+                    </div>
+                ) : (
+                    <div style={{ height: 'calc(100vh - 200px)', width: '100%' }}>
+                        <AutoSizer>
+                            {({ height, width }) => {
+                                const MIN_COL_WIDTH = 280;
+                                const GAP = 20;
+                                const columnCount = Math.floor((width + GAP) / (MIN_COL_WIDTH + GAP)) || 1;
+                                const rowCount = Math.ceil(videos.length / columnCount);
+                                const cardWidth = (width - (columnCount - 1) * GAP) / columnCount;
+                                const CARD_HEIGHT = 450; // Aproximado, ideal seria medir
+
+                                return (
+                                    <FixedSizeList
+                                        height={height}
+                                        width={width}
+                                        itemCount={rowCount}
+                                        itemSize={CARD_HEIGHT + GAP}
+                                        onItemsRendered={({ visibleStopIndex }) => {
+                                            if (visibleStopIndex >= rowCount - 2 && hasMore && !loading) {
+                                                setOffset(prev => prev + LIMIT);
+                                            }
+                                        }}
+                                    >
+                                        {({ index, style }) => {
+                                            const fromIndex = index * columnCount;
+                                            const toIndex = Math.min(fromIndex + columnCount, videos.length);
+                                            const items = videos.slice(fromIndex, toIndex);
+
+                                            return (
+                                                <div style={{ ...style, display: 'flex', gap: GAP }}>
+                                                    {items.map(v => (
+                                                        <div key={v.id} style={{ width: cardWidth }}>
+                                                            <VideoCard
+                                                                video={v}
+                                                                onDelete={handleDeleteVideo}
+                                                                onLike={toggleLike}
+                                                                onOpenComments={onVideoClick}
+                                                                canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
+                                                                onShare={(video) => setVideoToShare(video)}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }}
+                                    </FixedSizeList>
+                                );
+                            }}
+                        </AutoSizer>
+                    </div>
+                )}
+            </div>
+
+            <style jsx>{`
                 .home-feed-root { position: relative; }
                 .home-feed-container { max-width: 1200px; margin: 0 auto; padding: 0 0 100px; }
                 
@@ -134,6 +316,6 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                     100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
                 }
             `}</style>
-        </div >
+        </div>
     );
 }
