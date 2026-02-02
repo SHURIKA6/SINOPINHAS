@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { loginUser, registerUser } from '../../services/api';
+import { X } from 'lucide-react';
 
 export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
     const [isLogin, setIsLogin] = useState(true);
@@ -29,37 +30,106 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
-            alignItems: 'center', justifyContent: 'center', padding: '20px'
+            background: 'rgba(0,0,0,0.4)', zIndex: 9999, display: 'flex',
+            alignItems: 'center', justifyContent: 'center'
         }} onClick={onClose}>
+
+            {/* XP Classic Dialog Window */}
             <div style={{
-                background: 'var(--card-bg)', borderRadius: 12, padding: 32,
-                maxWidth: 400, width: '100%',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-color)',
-                transition: 'background 0.3s ease, border-color 0.3s ease'
+                width: '380px',
+                background: '#ECE9D8',
+                border: '1px solid #0055EA',
+                borderRadius: '8px 8px 0 0',
+                boxShadow: '4px 4px 12px rgba(0,0,0,0.5)',
+                fontFamily: 'Tahoma, sans-serif',
+                display: 'flex', flexDirection: 'column'
             }} onClick={e => e.stopPropagation()}>
-                <h2 style={{ margin: '0 0 24px' }}>{isLogin ? 'Login' : 'Criar Conta'}</h2>
-                <form onSubmit={handleSubmit}>
-                    <input
-                        type="text" placeholder="Username"
-                        value={username} onChange={e => setUsername(e.target.value)}
-                        style={{ width: '100%', padding: 12, marginBottom: 16, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-color)', fontSize: 16 }}
-                    />
-                    <input
-                        type="password" placeholder="Senha"
-                        value={password} onChange={e => setPassword(e.target.value)}
-                        style={{ width: '100%', padding: 12, marginBottom: 16, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-color)', fontSize: 16 }}
-                    />
-                    <button type="submit" style={{ width: '100%', padding: 12, background: 'var(--accent-color)', color: '#fff', border: 'none', borderRadius: 8, marginBottom: 16, cursor: 'pointer', fontWeight: 600, fontSize: 16 }}>
-                        {isLogin ? 'Entrar' : 'Criar Conta'}
-                    </button>
-                    <button type="button" onClick={() => setIsLogin(!isLogin)} style={{ width: '100%', padding: 12, background: 'none', color: 'var(--secondary-text)', border: 'none', cursor: 'pointer', fontSize: 14 }}>
-                        {isLogin ? 'Criar conta' : 'Fazer login'}
-                    </button>
-                </form>
+
+                {/* Title Bar */}
+                <div style={{
+                    height: '30px',
+                    background: 'linear-gradient(to bottom, #0058EE 0%, #3593FF 4%, #288EFF 18%, #127DFF 20%, #0369FC 39%, #0262EE 41%, #0057E5 100%)',
+                    borderRadius: '6px 6px 0 0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0 8px', borderBottom: '1px solid #003C74',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)'
+                }}>
+                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px', textShadow: '1px 1px 0 black' }}>
+                        {isLogin ? 'Login' : 'Criar Conta'}
+                    </span>
+                    <div
+                        onClick={onClose}
+                        style={{
+                            width: '21px', height: '21px', background: '#D8412F', borderRadius: '3px',
+                            border: '1px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)'
+                        }}
+                    >
+                        <X size={14} color="white" strokeWidth={3} />
+                    </div>
+                </div>
+
+                {/* Content Body */}
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+                    {/* XP Header Image/Banner (Optional style element) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
+                        <img src="/icons/icon-192x192.png" width="48" height="48" alt="Logo" style={{ filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0.2))' }} />
+                        <div style={{ fontSize: '12px', color: '#444' }}>
+                            Digite seu nome de usuário e senha para ter acesso ao sistema.
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11px', color: '#333' }}>Usuário:</label>
+                            <input
+                                type="text"
+                                value={username} onChange={e => setUsername(e.target.value)}
+                                style={{
+                                    border: '1px solid #7F9DB9', padding: '4px', fontSize: '13px', outline: 'none'
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '11px', color: '#333' }}>Senha:</label>
+                            <input
+                                type="password"
+                                value={password} onChange={e => setPassword(e.target.value)}
+                                style={{
+                                    border: '1px solid #7F9DB9', padding: '4px', fontSize: '13px', outline: 'none'
+                                }}
+                            />
+                        </div>
+
+                        {/* Button Row */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIsLogin(!isLogin)}
+                                style={{
+                                    minWidth: '75px', height: '23px', fontSize: '11px',
+                                    background: '#ECE9D8', border: '1px solid #7F9DB9', borderRadius: '3px', cursor: 'pointer',
+                                    color: 'black'
+                                }}
+                            >
+                                {isLogin ? 'Criar conta...' : 'Voltar'}
+                            </button>
+                            <button
+                                type="submit"
+                                style={{
+                                    minWidth: '75px', height: '23px', fontSize: '11px',
+                                    background: '#ECE9D8', border: '1px solid #003C74', borderRadius: '3px', cursor: 'pointer',
+                                    color: 'black', boxShadow: 'inset 1px 1px 0 white', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-
     );
 }
