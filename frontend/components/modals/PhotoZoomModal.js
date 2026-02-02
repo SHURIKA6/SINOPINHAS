@@ -23,125 +23,68 @@ const PhotoZoomModal = ({ isOpen, photoUrl, title, onClose }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     zIndex: 10000,
-                    background: 'rgba(0, 0, 0, 0.95)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(10px)',
-                    padding: isInternalZoom ? '0' : '24px',
-                    cursor: isInternalZoom ? 'zoom-out' : 'default'
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
-                onClick={isInternalZoom ? () => setIsInternalZoom(false) : onClose}
+                onClick={onClose}
             >
-                {/* Header Controls */}
-                {!isInternalZoom && (
-                    <div style={{
-                        position: 'absolute',
-                        top: 'max(20px, env(safe-area-inset-top))',
-                        right: 20,
-                        display: 'flex',
-                        gap: 16,
-                        zIndex: 10001
-                    }}>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: 48,
-                                height: 48,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <Download size={24} />
-                        </button>
-                        <button
-                            onClick={onClose}
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: 48,
-                                height: 48,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <X size={24} />
-                        </button>
-                    </div>
-                )}
-
-                {/* Main Content Area */}
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    style={{
-                        position: 'relative',
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: isInternalZoom ? 'auto' : 'hidden'
-                    }}
+                    className="fax-viewer-modal"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <img
-                        src={photoUrl}
-                        alt={title}
-                        onClick={() => setIsInternalZoom(!isInternalZoom)}
-                        style={{
-                            maxWidth: isInternalZoom ? 'none' : '100%',
-                            maxHeight: isInternalZoom ? 'none' : '100%',
-                            objectFit: 'contain',
-                            borderRadius: isInternalZoom ? 0 : 12,
-                            boxShadow: isInternalZoom ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                            cursor: isInternalZoom ? 'zoom-out' : 'zoom-in',
-                            transition: 'all 0.3s ease'
-                        }}
-                    />
-                </motion.div>
+                    {/* Fax Viewer Title Bar */}
+                    <div className="fax-title-bar">
+                        <span>{title || 'Visualizador de Imagens'} - Windows Picture Viewer</span>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                            <button onClick={onClose} style={{ background: '#D44033', border: '1px solid white', color: 'white', width: 20, height: 20, borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <X size={14} strokeWidth={3} />
+                            </button>
+                        </div>
+                    </div>
 
-                {/* Caption / Title */}
-                {title && !isInternalZoom && (
-                    <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        style={{
-                            position: 'absolute',
-                            bottom: 'max(40px, env(safe-area-inset-bottom))',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            padding: '12px 24px',
-                            borderRadius: '20px',
-                            color: 'white',
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            backdropFilter: 'blur(10px)',
-                            maxWidth: '90%',
-                            textAlign: 'center'
-                        }}
-                    >
-                        {title}
-                    </motion.div>
-                )}
+                    {/* Toolbar */}
+                    <div className="fax-toolbar">
+                        <button className="fax-btn" onClick={() => setIsInternalZoom(!isInternalZoom)}>
+                            <ZoomIn size={20} color="#333" />
+                        </button>
+                        <button className="fax-btn" onClick={handleDownload}>
+                            <Download size={20} color="#333" />
+                        </button>
+                        <button className="fax-btn">
+                            <span style={{ fontSize: 18 }}>🖨️</span>
+                        </button>
+                        <button className="fax-btn">
+                            <span style={{ fontSize: 18 }}>💾</span>
+                        </button>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="fax-content">
+                        <img
+                            src={photoUrl}
+                            alt={title}
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                objectFit: 'contain',
+                                cursor: isInternalZoom ? 'zoom-out' : 'zoom-in',
+                                transform: isInternalZoom ? 'scale(1.5)' : 'scale(1)',
+                                transition: 'transform 0.3s ease'
+                            }}
+                            onClick={() => setIsInternalZoom(!isInternalZoom)}
+                        />
+                    </div>
+
+                    <div style={{ background: '#ECE9D8', padding: '4px 12px', fontSize: 11, color: '#666', borderTop: '1px solid #CCC' }}>
+                        Visualizando imagem • {title || 'Sem título'}
+                    </div>
+                </motion.div>
             </motion.div>
         </AnimatePresence>
     );

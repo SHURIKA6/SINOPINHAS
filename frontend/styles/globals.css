@@ -277,6 +277,132 @@ a {
   margin-left: auto;
 }
 
+/* --- Windows Media Player 9 Style --- */
+:root {
+  --wmp-blue-dark: #123456;
+  --wmp-silver: #C0C0C0;
+  --wmp-gradient-top: linear-gradient(180deg, #6688AA 0%, #224466 50%, #001122 100%);
+  --wmp-control-bg: #E0E0E0;
+}
+
+.wmp-container {
+  background: black;
+  border: 1px solid #555;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.wmp-title-bar {
+  background: var(--wmp-gradient-top);
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.wmp-video-screen {
+  background: black;
+  position: relative;
+  border-left: 1px solid #333;
+  border-right: 1px solid #333;
+  min-height: 200px;
+}
+
+.wmp-controls {
+  background: linear-gradient(180deg, #E6E6E6 0%, #C0C0C0 100%);
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #999;
+}
+
+.wmp-btn {
+  background: linear-gradient(180deg, #FFF 0%, #CCC 100%);
+  border: 1px solid #888;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.wmp-btn:active {
+  background: #CCC;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Windows Picture and Fax Viewer Style --- */
+.fax-viewer-modal {
+  background: #ECE9D8;
+  /* Classic Beige */
+  border: 4px solid #0055EA;
+  /* XP Blue */
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.fax-title-bar {
+  background: linear-gradient(180deg, #0058EE 0%, #3593FF 4%, #288EFF 18%, #127DFF 44%, #0369FC 100%);
+  color: white;
+  padding: 6px 12px;
+  font-weight: bold;
+  text-shadow: 1px 1px #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 4px 4px 0 0;
+}
+
+.fax-toolbar {
+  background: #F0F0F0;
+  border-bottom: 1px solid #CCC;
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.fax-btn {
+  background: none;
+  border: 1px solid transparent;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.fax-btn:hover {
+  background: #E1E1E1;
+  border: 1px solid #AAA;
+}
+
+.fax-content {
+  background: white;
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border: 1px solid #888;
+  margin: 10px;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 /* --- MSN Messenger Style for Inbox --- */
 :root {
   --msn-blue-light: #EBF4FC;
