@@ -81,19 +81,22 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
 
                 .ultra-glass-nav {
                     pointer-events: auto;
-                    display: grid; /* Grid layout for perfect centering */
-                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr; /* Center gives more space to the big button */
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr;
                     gap: 0;
                     align-items: center;
                     height: 72px;
-                    background: rgba(15, 13, 21, 0.85); /* Slightly darker for better contrast */
+                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.3) 100%);
                     backdrop-filter: blur(20px) saturate(180%);
                     -webkit-backdrop-filter: blur(20px) saturate(180%);
                     border-radius: 24px;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.9);
+                    border-top: 2px solid rgba(255, 255, 255, 1);
                     box-shadow: 
-                        0 20px 40px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+                        0 20px 40px rgba(0, 71, 171, 0.2),
+                        0 8px 16px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 1),
+                        inset 0 -2px 10px rgba(0, 100, 200, 0.05);
                     padding: 0 2px;
                 }
 
@@ -102,7 +105,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    color: rgba(255, 255, 255, 0.35);
+                    color: rgba(0, 51, 102, 0.5);
                     cursor: pointer;
                     width: 100%;
                     height: 100%;
@@ -111,8 +114,12 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     transition: all 0.3s ease;
                 }
 
+                .ultra-nav-btn:hover {
+                    color: #0047AB;
+                }
+
                 .ultra-nav-btn.active {
-                    color: #fff;
+                    color: #003366;
                 }
 
                 .ultra-icon-box {
@@ -133,25 +140,27 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     position: absolute;
                     width: 44px;
                     height: 44px;
-                    background: rgba(168, 85, 247, 0.15);
+                    background: rgba(0, 150, 255, 0.15);
                     border-radius: 50%;
-                    border: 1px solid rgba(168, 85, 247, 0.3);
+                    border: 1px solid rgba(0, 150, 255, 0.4);
                     z-index: 1;
-                    filter: blur(10px);
+                    filter: blur(8px);
                 }
 
                 .premium-plus-button {
                     width: 58px;
                     height: 58px;
-                    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+                    background: linear-gradient(135deg, #0058EE 0%, #00C6FF 100%);
                     border-radius: 20px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: white;
-                    margin-bottom: 0px; /* Alinhado centralmente */
-                    box-shadow: 0 12px 30px rgba(168, 85, 247, 0.5);
-                    border: 4px solid #0f0d15;
+                    margin-bottom: 0px;
+                    box-shadow: 
+                        0 12px 30px rgba(0, 88, 238, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                    border: 3px solid rgba(255, 255, 255, 0.8);
                     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
 
@@ -173,8 +182,9 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 2px solid #0f0d15;
+                    border: 2px solid rgba(255, 255, 255, 0.8);
                     padding: 0 3px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                 }
     `}</style>
         </div>
