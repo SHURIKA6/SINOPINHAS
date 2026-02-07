@@ -1,109 +1,66 @@
 import { logAudit } from './audit.js';
 
-// Lista Expandida de ASNs (Provedores de Nuvem e VPN conhecidos)
-const VPN_ASNS = [
-    // Existing
-    'AS60068', 'AS20473', 'AS29073', 'AS31109', 'AS32934', 'AS40027', 'AS43350',
-    'AS46844', 'AS49697', 'AS51167', 'AS60781', 'AS61889', 'AS63062', 'AS63949',
+// ============================================================================
+// DETECÇÃO DE VPN - VERSÃO REFINADA
+// Objetivo: Bloquear VPNs comerciais e TOR, mas PERMITIR redes educacionais/corporativas
+// ============================================================================
 
-    // AWS (Amazon) - Major source of VPNs
-    'AS16509', 'AS14618', 'AS8987', 'AS16097', 'AS10260',
-
-    // Google Cloud
-    'AS15169', 'AS396982', 'AS36492', 'AS43515',
-
-    // Azure (Microsoft)
-    'AS8075', 'AS8068', 'AS8069', 'AS12076',
-
-    // DigitalOcean
-    'AS14061', 'AS202018',
-
-    // Linode (Akamai)
-    'AS63949', 'AS21844',
-
-    // OVH
-    'AS16276', 'AS35540',
-
-    // Hetzner
-    'AS24940', 'AS24961',
-
-    // Vultr (Choopa)
-    'AS20473',
-
-    // Oracle Cloud
-    'AS31898',
-
-    // Leaseweb
-    'AS60626', 'AS18779', 'AS16265'
+// ASNs de provedores de VPN COMERCIAIS conhecidos (não datacenters genéricos)
+const VPN_PROVIDER_ASNS = [
+    // ExpressVPN, NordVPN, Surfshark, etc.
+    'AS60068', // CDN77 (usado por muitas VPNs)
+    'AS9009',  // M247 (infraestrutura de VPNs comerciais)
+    'AS20473', // Vultr/Choopa (popular para VPNs)
+    'AS29073', // Quasi Networks (VPNs)
+    'AS43350', // NForce Entertainment
+    'AS49981', // WorldStream
+    'AS60781', // LeaseWeb UK
+    'AS62904', // Eonix
+    'AS51167', // Contabo (popular para VPNs baratas)
+    'AS206092', // IPVanish
+    'AS136787', // Surfshark
 ];
 
-const VPN_KEYWORDS = [
-    'vpn', 'proxy', 'tor', 'anonymizer', 'anonymizing', 'hide', 'mask',
-    'privacy', 'secure', 'shield', 'guard', 'expressvpn', 'nordvpn', 'surfshark',
-    'cyberghost', 'pia', 'private internet', 'windscribe', 'tunnelbear', 'hotspot',
-    'datacenter', 'hosting', 'server', 'cloud', 'aws', 'azure', 'gcp', 'digitalocean',
-    'linode', 'vultr', 'ovh', 'hetzner', 'contabo', 'leaseweb', 'online.net',
-    'host', 'vps', 'dedicated'
+// Palavras-chave ESPECÍFICAS de VPNs comerciais (não termos genéricos)
+const VPN_SPECIFIC_KEYWORDS = [
+    'expressvpn', 'nordvpn', 'surfshark', 'cyberghost', 'ipvanish',
+    'privatevpn', 'protonvpn', 'mullvad', 'windscribe', 'tunnelbear',
+    'hotspot shield', 'hidemyass', 'vyprvpn', 'purevpn', 'strongvpn',
+    'zenmate', 'hide.me', 'torguard', 'astrill', 'privatevpn',
+    'anonymizer', 'anonymizing', 'tor exit', 'tor relay'
 ];
 
+// Verificação via Shodan (apenas tags explícitas de VPN/Proxy/TOR)
 async function checkVPNShodan(ip) {
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // Reduced timeout
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const response = await fetch(`https://internetdb.shodan.io/${ip}`, {
             signal: controller.signal
         });
         clearTimeout(timeoutId);
+
         if (response.ok) {
             const data = await response.json();
-            if (data.tags && (data.tags.includes("vpn") || data.tags.includes("proxy") || data.tags.includes("tor"))) {
-                console.log(`🚫 VPN detectada via Shodan: ${ip}`);
+            // Apenas bloqueia se for EXPLICITAMENTE marcado como VPN, proxy ou TOR
+            if (data.tags && (
+                data.tags.includes("vpn") ||
+                data.tags.includes("proxy") ||
+                data.tags.includes("tor")
+            )) {
+                console.log(`🚫 VPN detectada via Shodan: ${ip} - Tags: ${data.tags.join(', ')}`);
                 return true;
             }
         }
     } catch (err) {
+        // Silencioso - não bloquear se a API falhar
     }
     return false;
 }
 
-// ... helper functions omitted for brevity but would be similar ...
-// To save context, I will implement the core isVPN logic with the stricter rules directly.
-
 export async function isVPN(ip, c) {
     try {
-        // 1. Verificação Estrita de Headers de Proxy
-        const proxyHeaders = [
-            "X-Forwarded-For", "X-ProxyUser-Ip", "X-Proxy-ID", "Via", "Forwarded",
-            "X-Forwarded", "X-Forwarded-Host", "Client-IP", "WL-Proxy-Client-IP",
-            "Proxy-Client-IP", "X-Real-IP", "X-Originating-IP", "X-Remote-IP",
-            "X-Remote-Addr", "Forwarded-For", "X-Te", "X-HTTP-Method-Override"
-        ];
-
-        for (const header of proxyHeaders) {
-            const value = c.req.header(header);
-            if (value) {
-                if (value.includes(",") || value.toLowerCase().includes('proxy') || value.toLowerCase().includes('vpn')) {
-                    console.log(`🚫 VPN detectada via header suspeito ${header}: ${value}`);
-                    return true;
-                }
-            }
-        }
-
-        // 2. Classificação de Ameaça Cloudflare (Bot Protection)
-        const cfThreatScore = c.req.header("CF-Threat-Score");
-        if (cfThreatScore && parseInt(cfThreatScore) > 10) { // Stricter: > 10 is risky
-            console.log(`🚫 VPN/Bot detectado via CF Threat Score: ${cfThreatScore}`);
-            return true;
-        }
-
-        // 3. Detecção de Bots Cloudflare
-        const cfBotScore = c.req.header("CF-Bot-Score");
-        if (cfBotScore && parseInt(cfBotScore) < 30) { // < 30 likely automated
-            console.log(`🚫 Bot detectado via CF Bot Score: ${cfBotScore}`);
-            return true;
-        }
-
-        // 4. Bloqueio de TOR e Países de Risco
+        // 1. BLOQUEIO DE TOR (Absoluto - sempre bloquear)
         const cfIsTor = c.req.header("CF-Is-Tor");
         const cfCountry = c.req.header("CF-IPCountry");
         if (cfIsTor === "1" || cfCountry === 'T1') {
@@ -111,41 +68,49 @@ export async function isVPN(ip, c) {
             return true;
         }
 
-        // 5. Bloqueio por ASN (Datacenters)
+        // 2. CF Threat Score MUITO ALTO (apenas ameaças reais, não proxies normais)
+        const cfThreatScore = c.req.header("CF-Threat-Score");
+        if (cfThreatScore && parseInt(cfThreatScore) > 50) {
+            console.log(`🚫 Ameaça detectada via CF Threat Score: ${cfThreatScore}`);
+            return true;
+        }
+
+        // 3. ASNs de provedores de VPN comerciais conhecidos
         const cfASN = c.req.header("CF-Connecting-ASN");
         if (cfASN) {
             const asnString = `AS${cfASN}`;
-            if (VPN_ASNS.includes(asnString)) {
-                console.log(`🚫 VPN detectada via ASN Datacenter conhecido: ${asnString}`);
+            if (VPN_PROVIDER_ASNS.includes(asnString)) {
+                console.log(`🚫 VPN detectada via ASN de provedor VPN: ${asnString}`);
                 return true;
             }
         }
 
-        // 6. Análise de Nome do ISP (Palavras-chave resilientes)
-        const cfISP = c.req.header("CF-Connecting-ISP") || c.req.header("CF-ISP"); // Check CF headers first if available
+        // 4. Nome do ISP contém nome de VPN comercial
+        const cfISP = c.req.header("CF-Connecting-ISP") || c.req.header("CF-ISP");
         if (cfISP) {
             const ispLower = String(cfISP).toLowerCase();
-            for (const keyword of VPN_KEYWORDS) {
+            for (const keyword of VPN_SPECIFIC_KEYWORDS) {
                 if (ispLower.includes(keyword)) {
-                    console.log(`🚫 VPN detectada via ISP (CF Header): ${cfISP}`);
+                    console.log(`🚫 VPN detectada via ISP: ${cfISP}`);
                     return true;
                 }
             }
         }
 
-        // 7. Verificações Externas (Apenas se passar pelos checks rápidos)
-        // Race condition com timeout curto para não impactar latência
-        const checks = await Promise.race([
+        // 5. Verificação Shodan (apenas para tags explícitas de VPN)
+        const shodanResult = await Promise.race([
             checkVPNShodan(ip),
-            new Promise(resolve => setTimeout(() => resolve(false), 2500)) // Fallback if APIs are slow
+            new Promise(resolve => setTimeout(() => resolve(false), 2000))
         ]);
 
-        if (checks === true) return true;
+        if (shodanResult === true) return true;
 
+        // ✅ Se passou por todos os checks, é provavelmente um usuário legítimo
         return false;
+
     } catch (err) {
         console.error("⚠️ Erro ao verificar VPN:", err.message);
-        // Estratégia: Falha Aberta (Logar erro mas permitir acesso para evitar falsos positivos em caso de erro de API)
+        // Falha aberta - permitir acesso se houver erro
         return false;
     }
 }
@@ -154,24 +119,36 @@ export async function blockVPN(c, next) {
     const cfConnectingIP = c.req.header("CF-Connecting-IP");
     const xForwardedFor = c.req.header("X-Forwarded-For");
     const xRealIP = c.req.header("X-Real-IP");
+
+    // Pegar o IP real (CF-Connecting-IP é o mais confiável quando usando Cloudflare)
     let realIP = cfConnectingIP || xRealIP || "unknown";
 
-    if (xForwardedFor && !cfConnectingIP) {
+    // Se não tiver CF header, usar o primeiro IP do X-Forwarded-For
+    if (!cfConnectingIP && xForwardedFor) {
         realIP = xForwardedFor.split(",")[0].trim();
     }
 
-    // Exceção: Permitir localhost e redes internas para testes e desenvolvimento
-    if (realIP === '127.0.0.1' || realIP.startsWith('192.168.')) {
+    // Exceção: Permitir localhost e redes privadas
+    if (realIP === '127.0.0.1' ||
+        realIP.startsWith('192.168.') ||
+        realIP.startsWith('10.') ||
+        realIP.startsWith('172.16.') ||
+        realIP.startsWith('172.17.') ||
+        realIP.startsWith('172.18.') ||
+        realIP.startsWith('172.19.') ||
+        realIP.startsWith('172.2') ||
+        realIP.startsWith('172.30.') ||
+        realIP.startsWith('172.31.')) {
         return await next();
     }
 
     const vpnDetected = await isVPN(realIP, c);
 
     if (vpnDetected) {
-        await logAudit(null, "VPN_BLOCKED", { ip: realIP, reason: "Strict Security Rules" }, c);
+        await logAudit(null, "VPN_BLOCKED", { ip: realIP }, c);
         return c.json(
             {
-                error: "Acesso negado. VPN, Proxy ou Rede Datacenter detectada.",
+                error: "Acesso negado. VPN ou TOR detectada. Por favor, desative sua VPN para acessar o site.",
                 blocked: true,
             },
             403
