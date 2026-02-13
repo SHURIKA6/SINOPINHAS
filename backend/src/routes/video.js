@@ -16,6 +16,6 @@ app.delete('/videos/:id', authMiddleware, videoController.deleteVideo); // /api/
 
 // Rotas Públicas
 app.get('/videos', videoController.listVideos); // /api/videos
-app.get('/secret-videos', videoController.listSecretVideos); // /api/secret-videos
+app.get('/secret-videos', authMiddleware, videoController.listSecretVideos); // /api/secret-videos (protegido)
 
 export default app;

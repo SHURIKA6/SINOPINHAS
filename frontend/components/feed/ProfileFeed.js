@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchPublicProfile, fetchUserVideos } from '../../services/api';
 import { Play } from 'lucide-react';
+import { isPhotoUrl } from '../../lib/mediaUtils';
 
 export default function ProfileFeed({ userId, onAchievementClick, onPostClick, onMessageClick }) {
     const [user, setUser] = useState(null);
@@ -134,13 +135,13 @@ export default function ProfileFeed({ userId, onAchievementClick, onPostClick, o
                                     boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
                                 }}
                             >
-                                {post.type === 'photo' || (post.video_url && post.video_url.match(/\.(jpeg|jpg|gif|png)$/) != null) ? (
+                                {post.type === 'photo' || isPhotoUrl(post.video_url) ? (
                                     <img src={post.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="zoom-hover" />
                                 ) : (
                                     <video src={post.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 )}
 
-                                {!(post.type === 'photo' || (post.video_url && post.video_url.match(/\.(jpeg|jpg|gif|png)$/) != null)) && (
+                                {!(post.type === 'photo' || isPhotoUrl(post.video_url)) && (
                                     <div style={{ position: 'absolute', top: 8, right: 8, opacity: 0.9 }}>
                                         <Play size={20} fill="white" stroke="white" />
                                     </div>

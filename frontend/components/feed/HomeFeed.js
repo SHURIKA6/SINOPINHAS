@@ -106,7 +106,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             await likeVideo(videoId, user.id);
         } catch (err) {
             showToast('Erro ao curtir', 'error');
-            loadVideos();
+            loadVideos(0, true);
         }
     };
 
@@ -115,7 +115,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
         try {
             await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
             setVideos(prev => prev.filter(v => v.id !== videoId));
-            showToast('success', 'Removido com sucesso!');
+            showToast('Removido com sucesso!', 'success');
         } catch (err) {
             showToast('Erro ao excluir', 'error');
         }
@@ -181,7 +181,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                     </div>
                 ) : (
                     <div className="feed-grid">
-                        {videos.map(v => (
+                        {sortedVideos.map(v => (
                             <VideoCard
                                 key={v.id}
                                 video={v}

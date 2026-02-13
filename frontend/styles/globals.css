@@ -33,7 +33,15 @@
 
   --accent-color: var(--frutiger-accent);
   --font-main: 'Outfit', 'Segoe UI', 'Tahoma', sans-serif;
-  /* Clean modern/aero font */
+
+  /* Z-Index Scale — padronizado para evitar z-index wars */
+  --z-header: 100;
+  --z-bottom-nav: 100;
+  --z-dropdown: 200;
+  --z-modal: 300;
+  --z-drawer: 400;
+  --z-toast: 500;
+  --z-pwa-prompt: 450;
 }
 
 /* Base Reset */
@@ -41,8 +49,6 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-main);
-  background: url('/backgrounds/frutiger-ref.png') no-repeat center center fixed;
-  /* Using user ref as placeholder or existing bliss */
   background: url('/backgrounds/xp-bliss.png') no-repeat center center fixed;
   background-size: cover;
   color: var(--text-color);

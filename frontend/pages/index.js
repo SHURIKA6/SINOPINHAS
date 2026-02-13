@@ -38,6 +38,7 @@ import {
   viewVideo
 } from '../services/api';
 
+// API URL centralizada em services/api.js — importar de lá se necessário
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
 // Componente para persistir o estado das abas
@@ -126,26 +127,25 @@ export default function Home({ initialVideo }) {
 
 
 
+  // Funções de navegação global — usadas por componentes filhos
+  const openPublicProfile = useCallback((id) => {
+    setPublicProfileId(id);
+    setActiveTab('profile');
+  }, [setPublicProfileId, setActiveTab]);
 
+  const openChatWithUser = useCallback((id) => {
+    setActiveTab('inbox');
+    router.push({ pathname: '/', query: { ...router.query, tab: 'inbox', u: id } }, undefined, { shallow: true });
+  }, [setActiveTab, router]);
 
-
-
+  // Manter no window apenas para componentes legados que ainda dependem
   useEffect(() => {
     window.subscribeToPush = subscribeToNotifications;
-    window.openPublicProfile = (id) => {
-      setPublicProfileId(id);
-      setActiveTab('profile'); // Switch to profile tab
-    };
+    window.openPublicProfile = openPublicProfile;
     window.openAchievementList = (ach) => setAchievementToList(ach);
     window.openPhotoZoom = (photo) => setZoomedPhoto(photo);
-    window.openChatWithUser = (id) => {
-      setActiveTab('inbox');
-      // Precisa passar o ID para o componente Inbox de alguma forma, 
-      // mas como ele é um filho do TabPane, podemos usar router query.
-      // router está disponível no hook, mas precisamos dele aqui? Sim, temos o router importado.
-      router.push({ pathname: '/', query: { ...router.query, tab: 'inbox', u: id } }, undefined, { shallow: true });
-    };
-  }, [subscribeToNotifications, router, setPublicProfileId, setAchievementToList, setZoomedPhoto, setActiveTab]);
+    window.openChatWithUser = openChatWithUser;
+  }, [subscribeToNotifications, openPublicProfile, openChatWithUser, setAchievementToList, setZoomedPhoto]);
 
   const [currentVideo, setCurrentVideo] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -206,8 +206,17 @@ export default function Home({ initialVideo }) {
   const headElement = (
     <Head>
       <title>{pageTitle}</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-      <meta name="theme-color" content="#0f0d15" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+      <meta name="theme-color" content="#0E2A47" />
+      <meta name="description" content="SINOPINHAS — A rede social de Sinop, MT. Compartilhe vídeos, fotos, notícias e eventos da cidade." />
+      <meta property="og:title" content="SINOPINHAS by SHURA" />
+      <meta property="og:description" content="A rede social de Sinop, MT. Compartilhe vídeos, fotos, notícias e eventos da cidade." />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://sinopinhas.vercel.app" />
+      <meta property="og:image" content="https://sinopinhas.vercel.app/icons/icon-512x512.png" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="SINOPINHAS by SHURA" />
+      <meta name="twitter:description" content="A rede social de Sinop, MT." />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       <meta name="apple-mobile-web-app-title" content="SINOPINHAS by SHURA" />
@@ -313,7 +322,7 @@ export default function Home({ initialVideo }) {
                 userId={publicProfileId}
                 onAchievementClick={(ach) => setAchievementToList(ach)}
                 onPostClick={openComments}
-                onMessageClick={(id) => window.openChatWithUser(id)}
+                onMessageClick={openChatWithUser}
               />
             ) : (
               <div style={{ textAlign: 'center', padding: 50, color: 'white' }}>Selecione um usuário para ver o perfil</div>

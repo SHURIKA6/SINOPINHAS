@@ -7,7 +7,9 @@ import { AuthProvider } from '../contexts/AuthContext';
 
 function MyApp({ Component, pageProps }) {
     useEffect(() => {
-        const bio = `
+        // Atrasar easter egg para não impactar performance de carregamento
+        const startEasterEgg = () => {
+            const bio = `
 [ SINOPINHAS_OS // DEV_PROFILE ]
 ================================
 
@@ -29,49 +31,53 @@ Mesmo não sendo experiente, tenho uma postura de crescimento: vou atrás de inf
 
 --------------------------------------------------
 PRESS ENTER TO FINALIZE...
-        `;
+            `;
 
-        let i = 0;
-        let currentText = "";
-        const speed = 5;
-        console.log("%c [SISTEMA V4.0] Iniciando descriptografia...", "color: #00ff41; font-weight: bold;");
+            let i = 0;
+            const speed = 5;
+            console.log("%c [SISTEMA V4.0] Iniciando descriptografia...", "color: #00ff41; font-weight: bold;");
 
-        const typingInterval = setInterval(() => {
-            if (i < bio.length) {
-                i++;
-            } else {
-                clearInterval(typingInterval);
-                console.log("%c" + bio, "color: #00ff41; font-family: 'Courier New', monospace;");
+            const typingInterval = setInterval(() => {
+                if (i < bio.length) {
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                    console.log("%c" + bio, "color: #00ff41; font-family: 'Courier New', monospace;");
+                    console.log(
+                        "%c Ei curioso! %c Tem nada de especial aqui... ou será que tem? %c \n\n Digite acessarLogs() para ver a verdade ou explore os arquivos <3",
+                        "background: #00ff41; color: #000; font-weight: bold; font-size: 14px; padding: 4px; border-radius: 4px;",
+                        "color: #00ff41; font-weight: bold;",
+                        "color: #888; font-style: italic;"
+                    );
+                }
+            }, speed);
 
-                console.log(
-                    "%c Ei curioso! %c Tem nada de especial aqui... ou será que tem? %c \n\n Digite acessarLogs() para ver a verdade ou explore os arquivos <3",
-                    "background: #00ff41; color: #000; font-weight: bold; font-size: 14px; padding: 4px; border-radius: 4px;",
-                    "color: #00ff41; font-weight: bold;",
-                    "color: #888; font-style: italic;"
-                );
-            }
-        }, speed);
+            return typingInterval;
+        };
+
+        let typingInterval;
+        // Usar requestIdleCallback para não impactar LCP/FID
+        if (typeof requestIdleCallback !== 'undefined') {
+            requestIdleCallback(() => { typingInterval = startEasterEgg(); });
+        } else {
+            setTimeout(() => { typingInterval = startEasterEgg(); }, 2000);
+        }
 
         window.acessarLogs = () => {
             console.log("%c [ACESSO_AUTORIZADO] Redirecionando...", "color: #00ff41");
             window.location.href = '/shura-logs';
         };
 
-        return () => clearInterval(typingInterval);
+        return () => { if (typingInterval) clearInterval(typingInterval); };
     }, []);
 
     useEffect(() => {
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('/sw.js').then(
-                    function (registration) {
-                        console.log('Service Worker registration successful with scope: ', registration.scope);
-                    },
-                    function (err) {
-                        console.log('Service Worker registration failed: ', err);
-                    }
-                );
-            });
+            // Registrar diretamente — load event pode já ter disparado em SPA
+            navigator.serviceWorker.register('/sw.js').then(
+                (registration) => console.log('SW registrado:', registration.scope),
+                (err) => console.log('SW falhou:', err)
+            );
         }
     }, []);
 
@@ -80,7 +86,6 @@ PRESS ENTER TO FINALIZE...
             <AuthProvider>
                 <Head>
                     <title>SINOPINHAS by SHURA</title>
-                    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
                 </Head>
                 <ProgressBar />
                 <Component {...pageProps} />

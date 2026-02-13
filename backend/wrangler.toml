@@ -17,7 +17,7 @@ BUNNY_HOSTNAME = "vz-fa5ce9b4-0e3.b-cdn.net"
 R2_PUBLIC_DOMAIN = "https://pub-b7b53312e6c44feab756e8163490e341.r2.dev" # PREENCHER COM SEU DOMINIO R2
 # ADMIN_PASSWORD deve ser configurado via 'wrangler secret put ADMIN_PASSWORD'
 VAPID_PUBLIC_KEY = "BM0Z72h-hiwvQg9kWtYpxsYYQncXlyVpEuxpZBrQdlZIkL8_9p-9NltrTH0Uy2GtBaWNoDwLq-gS8xsiVQIO_wA"
-VAPID_PRIVATE_KEY = "vJkbCagRcv4_zDIrqEtiz8Fa0A3U2e3bnsoZsJ8S_L0"
+# VAPID_PRIVATE_KEY deve ser configurado via 'wrangler secret put VAPID_PRIVATE_KEY'
 VAPID_SUBJECT = "mailto:ferna@sinopinhas.com"
 
 # Observability (logs do Cloudflare)

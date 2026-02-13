@@ -5,10 +5,7 @@ export default function Document() {
         <Html lang="pt-BR">
             <Head>
                 <link rel="manifest" href="/manifest.json" />
-                <meta name="theme-color" content="#8d6aff" />
-                <meta name="apple-mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-                <meta name="apple-mobile-web-app-title" content="SINOPINHAS by SHURA" />
+                <meta name="theme-color" content="#0E2A47" />
                 <link rel="apple-touch-icon" href="/favicon.ico" />
                 <script dangerouslySetInnerHTML={{
                     __html: `

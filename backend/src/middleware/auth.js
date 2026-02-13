@@ -2,8 +2,12 @@ import { jwt } from 'hono/jwt';
 import { createErrorResponse } from '../utils/api-utils.js';
 
 export const authMiddleware = async (c, next) => {
+    if (!c.env.JWT_SECRET) {
+        console.error('❌ FATAL: JWT_SECRET não configurado no ambiente!');
+        return c.json({ error: 'Erro interno de configuração do servidor' }, 500);
+    }
     const jwtMiddleware = jwt({
-        secret: c.env.JWT_SECRET || 'development_secret_123',
+        secret: c.env.JWT_SECRET,
     });
     return jwtMiddleware(c, next);
 };

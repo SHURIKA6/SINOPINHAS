@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { corsMiddleware } from './src/middleware/cors.js';
-import { blockVPN } from './src/middleware/vpn.js';
 import { createErrorResponse, corsHeaders } from './src/utils/api-utils.js';
 import authRoutes from './src/routes/auth.js';
 import adminRoutes from './src/routes/admin.js';
@@ -19,8 +18,7 @@ const app = new Hono();
 // Função Middleware: Aplica CORS Centralizado
 app.use('*', corsMiddleware);
 
-// Bloqueio de VPN/Proxy (Segurança)
-app.use('*', blockVPN);
+// blockVPN aplicado apenas nas rotas de escrita (upload, delete, auth) — ver video.js e auth.js
 
 // Montagem das Rotas do Sistema
 app.route('/api', authRoutes);
@@ -35,13 +33,10 @@ app.route('/api/debug', debugRoutes);
 app.route('/api/health', healthRoutes);
 
 app.get("/", (c) => {
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    c.header(key, value);
-  });
   return c.json({
     status: "online",
     service: "SINOPINHAS Backend API",
-    version: "3.2 (Audited)",
+    version: "3.3 (Reviewed)",
     timestamp: new Date().toISOString(),
   });
 });
@@ -70,14 +65,7 @@ export default {
       // Inicializar banco de dados se necessário
       await initDatabase(env);
 
-      // Verificação de preflight OPTIONS Global
-      if (request.method === 'OPTIONS') {
-        return new Response(null, {
-          status: 204,
-          headers: corsHeaders
-        });
-      }
-
+      // OPTIONS já é tratado pelo corsMiddleware — sem duplicação
       return await honoFetch(request, env, ctx);
     } catch (err) {
       console.error("🔥 CRITICAL ENTRYPOINT ERROR:", err);

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isPhotoUrl } from '../lib/mediaUtils';
 
 // Componente de Cartão de Vídeo Principal
 export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare }) {
@@ -81,7 +82,7 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
         day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
     });
 
-    const isPhoto = video.type === 'photo' || (video.video_url && video.video_url.match(/\.(jpeg|jpg|gif|png)$/) != null);
+    const isPhoto = video.type === 'photo' || isPhotoUrl(video.video_url);
 
     return (
         <motion.div

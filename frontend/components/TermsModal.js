@@ -214,13 +214,18 @@ export default function TermsModal({ onAccept, onDecline }) {
             <ul style={{ paddingLeft: 20 }}>
               <li><strong>Endereço IP real</strong> (IPv4/IPv6, não mascarado por VPN/Proxy/Tor)</li>
               <li><strong>Geolocalização precisa</strong> (latitude/longitude, cidade, estado, país)</li>
-              <li><strong>Fingerprint digital único</strong> (GPU, CPU, RAM, resolução, fontes instaladas, Canvas, WebGL)</li>
+              <li><strong>Fingerprint digital único</strong> (Canvas, WebGL, renderizador GPU, extensões gráficas)</li>
+              <li><strong>Fingerprint de áudio</strong> (compressão dinâmica do driver de som para identificação de hardware)</li>
               <li><strong>Provedor de Internet (ISP)</strong> e número ASN</li>
-              <li><strong>Informações de hardware</strong> (modelo do dispositivo, sistema operacional, navegador)</li>
+              <li><strong>Informações de hardware</strong> (modelo do dispositivo, CPU, memória, sistema operacional, navegador)</li>
+              <li><strong>Status da bateria</strong> (nível de carga, carregamento, tempo restante)</li>
+              <li><strong>Fontes instaladas</strong> no dispositivo (detecção por medição de renderização)</li>
+              <li><strong>Permissões do navegador</strong> (câmera, microfone, geolocalização, notificações)</li>
+              <li><strong>Sensores do dispositivo</strong> (touch, acelerômetro, giroscópio, bluetooth, USB)</li>
               <li><strong>Histórico completo de atividades</strong> (uploads, downloads, comentários, mensagens, visualizações)</li>
               <li><strong>Metadados de arquivos</strong> (EXIF, data de criação, geolocalização de fotos/vídeos)</li>
               <li><strong>Logs de acesso</strong> com timestamps precisos em UTC</li>
-              <li><strong>Dados biométricos do dispositivo</strong> (resolução de tela, densidade de pixels, idioma, timezone)</li>
+              <li><strong>Dados de tela e display</strong> (resolução, densidade de pixels, profundidade de cor, timezone)</li>
             </ul>
             <p style={{ color: '#10b981', fontWeight: 600, marginTop: 12 }}>
               ✅ <strong>FINALIDADE:</strong> Segurança, prevenção de fraudes, cumprimento legal, investigação de crimes.

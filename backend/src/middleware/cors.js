@@ -1,21 +1,19 @@
-import { corsHeaders } from '../utils/api-utils.js';
+import { corsHeaders, getCorsOrigin } from '../utils/api-utils.js';
 
 export const corsMiddleware = async (c, next) => {
-    // Função: Adicionar cabeçalhos CORS globais para todas as respostas
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-        c.header(key, value);
-    });
+    // Definir origem dinâmica baseada no request
+    const requestOrigin = c.req.header('Origin');
+    const origin = getCorsOrigin(requestOrigin, c.env);
 
-    // Tratamento de Requisicões Preflight (OPTIONS)
+    c.header('Access-Control-Allow-Origin', origin);
+    c.header('Access-Control-Allow-Methods', corsHeaders['Access-Control-Allow-Methods']);
+    c.header('Access-Control-Allow-Headers', corsHeaders['Access-Control-Allow-Headers']);
+    c.header('Access-Control-Allow-Credentials', corsHeaders['Access-Control-Allow-Credentials']);
+
+    // Tratamento de Requisicões Preflight (OPTIONS) — ponto único
     if (c.req.method === 'OPTIONS') {
         return c.text('', 204);
     }
 
-    try {
-        await next();
-    } catch (err) {
-        // Erro global: Garantir que headers sejam enviados mesmo em falhas não tratadas
-        // O Hono geralmente lida com isso, mas este bloco é uma segurança extra.
-        throw err;
-    }
+    await next();
 };

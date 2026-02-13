@@ -58,8 +58,9 @@ export const viewVideo = async (c) => {
     let userId = null;
 
     try {
-        const body = await c.req.json().catch(() => ({}));
-        userId = body.user_id || null;
+        // Usar JWT payload se disponível — NUNCA confiar no body.user_id (IDOR)
+        const payload = c.get('jwtPayload');
+        userId = payload?.id ?? null;
 
         // Processa em segundo plano para não bloquear o player/UI
         c.executionCtx.waitUntil((async () => {

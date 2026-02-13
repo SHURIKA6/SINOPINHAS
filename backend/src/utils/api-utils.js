@@ -1,3 +1,25 @@
+// Origens permitidas — configurável via env ALLOWED_ORIGINS (separadas por vírgula)
+const DEFAULT_ORIGINS = [
+    'https://sinopinhas.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
+
+export function getCorsOrigin(requestOrigin, env) {
+    const allowedOrigins = env?.ALLOWED_ORIGINS
+        ? env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        : DEFAULT_ORIGINS;
+
+    // Permitir previews do Vercel automaticamente
+    if (requestOrigin && (
+        allowedOrigins.includes(requestOrigin) ||
+        requestOrigin.endsWith('.vercel.app')
+    )) {
+        return requestOrigin;
+    }
+    return allowedOrigins[0]; // Fallback para o domínio principal
+}
+
 export const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://sinopinhas.vercel.app',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
