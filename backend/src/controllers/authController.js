@@ -5,6 +5,7 @@ import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
 import { updateProfileSchema } from '../schemas/auth.js';
 import { getAchievementList } from '../utils/user-achievements.js';
+import { sanitize } from '../utils/sanitize.js';
 
 // Função Auxiliar: Busca usuário completo com conquistas
 const getFullUser = async (userId, env) => {
@@ -44,21 +45,24 @@ export const register = async (c) => {
             return createErrorResponse(c, "INVALID_INPUT", "Nome de usuário deve ter pelo menos 4 caracteres", 400);
         }
 
+        // Sanitizar username contra XSS
+        const cleanUsername = sanitize(username);
+
         const { rows: existing } = await queryDB(
             "SELECT * FROM users WHERE username = $1",
-            [username],
+            [cleanUsername],
             env
         );
 
         if (existing.length > 0) {
-            await logAudit(null, "REGISTER_FAILED_USERNAME_EXISTS", { username }, c);
+            await logAudit(null, "REGISTER_FAILED_USERNAME_EXISTS", { username: cleanUsername }, c);
             return createErrorResponse(c, "USER_EXISTS", "Usuário já existe", 400);
         }
 
         const hashedPassword = await hash(password);
         const { rows } = await queryDB(
             "INSERT INTO users (username, password, role) VALUES ($1, $2, 'user') RETURNING id, username, avatar, bio, role",
-            [username, hashedPassword],
+            [cleanUsername, hashedPassword],
             env
         );
 
@@ -109,11 +113,24 @@ export const login = async (c) => {
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }
 
-        const validPassword = await compare(password, rows[0].password);
+        const { valid: validPassword, needsRehash } = await compare(password, rows[0].password);
 
         if (!validPassword) {
             await logAudit(rows[0].id, "LOGIN_FAILED_WRONG_PASSWORD", { username }, c);
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
+        }
+
+        // Migração transparente: rehash para PBKDF2 se ainda era SHA-256
+        if (needsRehash) {
+            c.executionCtx.waitUntil((async () => {
+                try {
+                    const newHash = await hash(password);
+                    await queryDB("UPDATE users SET password = $1 WHERE id = $2", [newHash, rows[0].id], env);
+                    console.log(`🔒 Senha do usuário ${rows[0].id} migrada para PBKDF2`);
+                } catch (e) {
+                    console.error("Erro ao rehash:", e.message);
+                }
+            })());
         }
 
         try {
@@ -232,7 +249,7 @@ export const updateProfile = async (c) => {
                     return createErrorResponse(c, "REQUIRED_FIELD", "Senha atual é necessária para definir uma nova senha", 400);
                 }
 
-                const isMatch = await compare(currentPassword, userRows[0].password);
+                const { valid: isMatch } = await compare(currentPassword, userRows[0].password);
                 if (!isMatch) {
                     await logAudit(userId, "PASSWORD_UPDATE_FAILED_WRONG_CURRENT", {}, c);
                     return createErrorResponse(c, "AUTH_ERROR", "Senha atual incorreta", 401);
@@ -255,7 +272,7 @@ export const updateProfile = async (c) => {
         }
         if (bio !== null && bio !== undefined) {
             updates.push(`bio = $${paramCount++}`);
-            values.push(bio);
+            values.push(sanitize(bio));
         }
         if (email !== null && email !== undefined) {
             updates.push(`email = $${paramCount++}`);

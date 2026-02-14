@@ -2,6 +2,14 @@ import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { videoMetadataSchema } from '../schemas/video.js';
+import { sanitize } from '../utils/sanitize.js';
+
+// Tipos MIME permitidos para upload
+const ALLOWED_MIME_TYPES = [
+    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo',
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/avif'
+];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 // Função: Upload de vídeo para Cloudflare R2
 export const uploadVideo = async (c) => {
@@ -9,10 +17,25 @@ export const uploadVideo = async (c) => {
     try {
         const formData = await c.req.formData();
         const file = formData.get("file");
-        const userId = formData.get("user_id");
+
+        // Segurança: Usar JWT payload — NUNCA confiar no formData.user_id
+        const payload = c.get('jwtPayload');
+        const userId = payload?.id;
 
         if (!file || !userId) {
-            return createErrorResponse(c, "INVALID_INPUT", "Arquivo e ID de usuário são obrigatórios", 400);
+            return createErrorResponse(c, "INVALID_INPUT", "Arquivo e autenticação são obrigatórios", 400);
+        }
+
+        // Validação de tipo de arquivo
+        if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
+            return createErrorResponse(c, "INVALID_FILE_TYPE",
+                `Tipo de arquivo não permitido: ${file.type}. Use: MP4, WebM, JPEG, PNG, GIF, WebP`, 400);
+        }
+
+        // Validação de tamanho
+        if (file.size && file.size > MAX_FILE_SIZE) {
+            return createErrorResponse(c, "FILE_TOO_LARGE",
+                `Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Máximo: 50MB`, 400);
         }
 
         const validationResult = videoMetadataSchema.safeParse({
@@ -28,6 +51,10 @@ export const uploadVideo = async (c) => {
         }
 
         const { title, description, is_restricted: isRestricted, type } = validationResult.data;
+
+        // Sanitizar título e descrição contra XSS
+        const cleanTitle = sanitize(title);
+        const cleanDescription = description ? sanitize(description) : null;
 
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 10);
@@ -54,7 +81,7 @@ export const uploadVideo = async (c) => {
 
         await queryDB(
             "INSERT INTO videos (title, description, bunny_id, user_id, is_restricted, type) VALUES ($1, $2, $3, $4, $5, $6)",
-            [title, description, r2Key, userId, isRestricted, type],
+            [cleanTitle, cleanDescription, r2Key, userId, isRestricted, type],
             env
         );
 
