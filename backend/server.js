@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { corsMiddleware } from './src/middleware/cors.js';
+import { securityHeaders } from './src/middleware/securityHeaders.js';
 import { createErrorResponse, corsHeaders } from './src/utils/api-utils.js';
 import authRoutes from './src/routes/auth.js';
 import adminRoutes from './src/routes/admin.js';
@@ -17,6 +18,9 @@ const app = new Hono();
 
 // Função Middleware: Aplica CORS Centralizado
 app.use('*', corsMiddleware);
+
+// Função Middleware: Aplica cabeçalhos de segurança (OWASP)
+app.use('*', securityHeaders);
 
 // blockVPN aplicado apenas nas rotas de escrita (upload, delete, auth) — ver video.js e auth.js
 
