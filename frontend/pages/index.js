@@ -120,7 +120,7 @@ export default function Home({ initialVideo }) {
   // Hooks Customizados
   const { showInstallBtn, installApp, dismissInstall } = usePWA();
 
-  const tabs = ['feed', 'explore', 'profile', 'news', 'eventos', 'lugares', 'weather'];
+  const tabs = ['feed', 'profile', 'news', 'eventos', 'lugares', 'weather'];
   const currentIndex = tabs.indexOf(activeTab);
 
   // useSwipe e setTermsAccepted continuam aqui ou movemos para UIContext também? termos é global
@@ -373,18 +373,6 @@ export default function Home({ initialVideo }) {
           <TabPane active={activeTab === 'feed'}>
             {!user && <HeroSection onCreateAccount={() => setShowAuth(true)} onExplore={() => setActiveTab('explore')} />}
             <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" onReport={user ? handleReport : undefined} />
-          </TabPane>
-
-          <TabPane active={activeTab === 'explore'}>
-            <ExploreSection
-              news={exploreData.news}
-              events={exploreData.events}
-              places={exploreData.places}
-              loading={exploreData.loading}
-              error={exploreData.error}
-              onRetry={() => setExploreData(prev => ({ ...prev, loading: true, error: null }))}
-              onOpenTab={(tab) => setActiveTab(tab)}
-            />
           </TabPane>
 
           <TabPane active={activeTab === 'profile'}>

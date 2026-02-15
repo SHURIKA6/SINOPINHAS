@@ -8,7 +8,6 @@ import {
 export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin, showSecretTab }) {
     const navItems = [
         { id: 'feed', label: 'Feed', icon: <LayoutGrid size={20} /> },
-        { id: 'explore', label: 'Explorar', icon: <Compass size={20} /> },
         { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
         { id: 'inbox', label: 'Chat', icon: <MessageCircle size={20} />, badge: unreadCount },
         isAdmin
@@ -82,7 +81,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 .ultra-glass-nav {
                     pointer-events: auto;
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
+                    grid-template-columns: 1fr 1.3fr 1fr 1fr;
                     gap: 0;
                     align-items: center;
                     height: 72px;

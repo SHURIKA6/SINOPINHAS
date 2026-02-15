@@ -33,7 +33,6 @@ export default function Header({
 
     const menuItems = [
         { id: 'feed', label: 'Feed', icon: <LayoutGrid size={18} /> },
-        { id: 'explore', label: 'Explorar', icon: <Compass size={18} /> },
         { id: 'news', label: 'Notícias', icon: <Newspaper size={18} /> },
         { id: 'eventos', label: 'Eventos', icon: <Calendar size={18} /> },
         { id: 'lugares', label: 'Lugares', icon: <MapPin size={18} /> },
