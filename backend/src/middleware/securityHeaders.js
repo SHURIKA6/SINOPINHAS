@@ -5,8 +5,8 @@
  */
 
 const SECURITY_HEADERS = {
-    // Previne clickjacking — ninguém pode embutir o site em iframe
-    'X-Frame-Options': 'DENY',
+    // Permite iframes do mesmo origin (necessário para ads do AdSense)
+    'X-Frame-Options': 'SAMEORIGIN',
 
     // Impede o navegador de adivinhar o tipo MIME
     'X-Content-Type-Options': 'nosniff',
@@ -23,16 +23,17 @@ const SECURITY_HEADERS = {
     // Força HTTPS por 1 ano + incluindo subdomínios
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
 
-    // Content Security Policy — restringe origens de scripts, estilos e mídias
+    // Content Security Policy — permite AdSense + funcionalidades do site
     'Content-Security-Policy': [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://adservice.google.com https://www.googletagservices.com https://tpc.googlesyndication.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: blob: https://*.r2.dev https://www.gravatar.com",
+        "img-src 'self' data: blob: https://*.r2.dev https://www.gravatar.com https://pagead2.googlesyndication.com https://*.doubleclick.net",
         "media-src 'self' blob: https://*.r2.dev",
-        "connect-src 'self' https://*.workers.dev https://api.open-meteo.com https://www.sonoticias.com.br",
-        "frame-ancestors 'none'",
+        "connect-src 'self' https://*.workers.dev https://api.open-meteo.com https://www.sonoticias.com.br https://pagead2.googlesyndication.com",
+        "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com",
+        "frame-ancestors 'self'",
     ].join('; '),
 };
 
