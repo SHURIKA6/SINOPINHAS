@@ -113,7 +113,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     const handleDeleteVideo = async (videoId) => {
         if (!confirm('Tem certeza que deseja excluir?')) return;
         try {
-            await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
+            await removeVideo(videoId);
             setVideos(prev => prev.filter(v => v.id !== videoId));
             showToast('Removido com sucesso!', 'success');
         } catch (err) {

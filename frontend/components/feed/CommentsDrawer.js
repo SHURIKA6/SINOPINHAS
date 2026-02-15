@@ -34,6 +34,9 @@ export default function CommentsDrawer({
 
                     {/* Gaveta de Comentários (Drawer) */}
                     <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Comentários"
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}

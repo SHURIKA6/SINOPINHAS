@@ -184,7 +184,7 @@ export default function Home({ initialVideo }) {
     setShowCommentsModal(true);
     await loadComments(video.id);
     if (user) {
-      try { await viewVideo(video.id, user.id); } catch (e) { }
+      try { await viewVideo(video.id); } catch (e) { }
     }
   }, [loadComments, user]);
 

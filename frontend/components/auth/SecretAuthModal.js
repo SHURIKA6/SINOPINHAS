@@ -15,7 +15,7 @@ export default function SecretAuthModal({ onClose, onSecretAuthSuccess, showToas
     };
 
     return (
-        <div style={{
+        <div role="dialog" aria-modal="true" aria-labelledby="secret-modal-title" style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex',
             alignItems: 'center', justifyContent: 'center', padding: '20px'
@@ -27,12 +27,16 @@ export default function SecretAuthModal({ onClose, onSecretAuthSuccess, showToas
                 color: 'var(--text-color)',
                 transition: 'background 0.3s ease, border-color 0.3s ease'
             }} onClick={e => e.stopPropagation()}>
-                <h2 style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
+                <h2 id="secret-modal-title" style={{ margin: '0 0 24px' }}>🔒 VÍDEOS SAPECAS</h2>
                 <form onSubmit={handleSubmit}>
+                    <label htmlFor="secret-password" className="sr-only">Senha secreta</label>
                     <input
+                        id="secret-password"
                         type="password" placeholder="MESMA SENHA DA SKY"
                         value={secretPassword}
                         onChange={e => setSecretPassword(e.target.value)}
+                        autoComplete="off"
+                        aria-required="true"
                         style={{
                             width: '100%', padding: 12, marginBottom: 16,
                             background: 'var(--input-bg)', border: '1px solid var(--border-color)',

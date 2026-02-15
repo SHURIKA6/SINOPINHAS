@@ -1,13 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Font carregada via <link> no _document.js para não bloquear renderização */
 
 /* --- Frutiger Aero / Vista Glass Theme --- */
+/* TODAS as variáveis CSS consolidadas em um único :root */
 :root {
-  /* Palette: Blue Vista Gloss */
+  /* === Palette: Frutiger Aero === */
   --frutiger-blue-dark: #0047AB;
   --frutiger-blue-light: #4DA6FF;
   --frutiger-accent: #00C6FF;
 
-  /* Glass Gradients based on reference */
+  /* === Glass Gradients === */
   --glass-gradient-main: linear-gradient(180deg,
       rgba(255, 255, 255, 0.65) 0%,
       rgba(255, 255, 255, 0.4) 40%,
@@ -19,9 +20,8 @@
       transparent 51%,
       transparent 100%);
 
-  /* UI Elements */
+  /* === UI Elements === */
   --window-bg: rgba(0, 50, 150, 0.55);
-  /* Deep transparent blue tint */
   --window-border: rgba(255, 255, 255, 0.8);
   --card-bg: rgba(255, 255, 255, 0.4);
 
@@ -34,7 +34,7 @@
   --accent-color: var(--frutiger-accent);
   --font-main: 'Outfit', 'Segoe UI', 'Tahoma', sans-serif;
 
-  /* Z-Index Scale — padronizado para evitar z-index wars */
+  /* === Z-Index Scale === */
   --z-header: 100;
   --z-bottom-nav: 100;
   --z-dropdown: 200;
@@ -42,6 +42,27 @@
   --z-drawer: 400;
   --z-toast: 500;
   --z-pwa-prompt: 450;
+
+  /* === Windows XP Theme === */
+  --xp-blue-title: #0058EE;
+  --xp-blue-gradient: linear-gradient(180deg, #0058EE 0%, #3593FF 4%, #288EFF 18%, #127DFF 44%, #0369FC 100%);
+  --xp-content-bg: #ECE9D8;
+  --xp-border: #00138C;
+
+  /* === Windows Media Player 9 === */
+  --wmp-blue-dark: #123456;
+  --wmp-silver: #C0C0C0;
+  --wmp-gradient-top: linear-gradient(180deg, #6688AA 0%, #224466 50%, #001122 100%);
+  --wmp-control-bg: #E0E0E0;
+
+  /* === MSN Messenger === */
+  --msn-blue-light: #EBF4FC;
+  --msn-blue-medium: #D1E5FB;
+  --msn-blue-dark: #6CA5EA;
+  --msn-border: #7B9EBD;
+  --msn-header-gradient: linear-gradient(180deg, #FFFFFF 0%, #D4E6FC 100%);
+  --msn-contact-hover: #FFFCE5;
+  --msn-contact-selected: #CDE3FA;
 }
 
 /* Base Reset */
@@ -58,6 +79,19 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+/* Utility: visualmente oculto, mas acessível para screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* --- Aero / Vista Utilities --- */
@@ -187,13 +221,6 @@ a {
 }
 
 /* --- Hybrid Mode: XP Style for Video Cards --- */
-:root {
-  --xp-blue-title: #0058EE;
-  --xp-blue-gradient: linear-gradient(180deg, #0058EE 0%, #3593FF 4%, #288EFF 18%, #127DFF 44%, #0369FC 100%);
-  --xp-content-bg: #ECE9D8;
-  /* Authentic XP Beige */
-  --xp-border: #00138C;
-}
 
 .xp-window {
   background: var(--xp-content-bg);
@@ -284,12 +311,6 @@ a {
 }
 
 /* --- Windows Media Player 9 Style --- */
-:root {
-  --wmp-blue-dark: #123456;
-  --wmp-silver: #C0C0C0;
-  --wmp-gradient-top: linear-gradient(180deg, #6688AA 0%, #224466 50%, #001122 100%);
-  --wmp-control-bg: #E0E0E0;
-}
 
 .wmp-container {
   background: black;
@@ -509,15 +530,6 @@ a {
 }
 
 /* --- MSN Messenger Style for Inbox --- */
-:root {
-  --msn-blue-light: #EBF4FC;
-  --msn-blue-medium: #D1E5FB;
-  --msn-blue-dark: #6CA5EA;
-  --msn-border: #7B9EBD;
-  --msn-header-gradient: linear-gradient(180deg, #FFFFFF 0%, #D4E6FC 100%);
-  --msn-contact-hover: #FFFCE5;
-  --msn-contact-selected: #CDE3FA;
-}
 
 .msn-window {
   background: linear-gradient(180deg, #E6F3FF 0%, #B6D9FA 100%);

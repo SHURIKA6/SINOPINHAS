@@ -97,7 +97,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         if (!confirm('Tem certeza que deseja excluir este vídeo secreto?')) return;
 
         try {
-            await removeVideo(videoId, user?.id, isAdmin ? adminPassword : null);
+            await removeVideo(videoId);
             setVideos(prev => prev.filter(v => v.id !== videoId));
             showToast('success', 'Vídeo removido com sucesso!');
         } catch (err) {

@@ -34,7 +34,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
     };
 
     return (
-        <div style={{
+        <div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.4)', zIndex: 9999, display: 'flex',
             alignItems: 'center', justifyContent: 'center'
@@ -60,7 +60,7 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                     padding: '0 8px', borderBottom: '1px solid #003C74',
                     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)'
                 }}>
-                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px', textShadow: '1px 1px 0 black' }}>
+                    <span id="auth-modal-title" style={{ color: 'white', fontWeight: 'bold', fontSize: '13px', textShadow: '1px 1px 0 black' }}>
                         {isLogin ? 'Login' : 'Criar Conta'}
                     </span>
                     {/* Botão Fechar (X) estilo XP */}
@@ -90,23 +90,29 @@ export default function AuthModal({ onClose, onAuthSuccess, showToast }) {
                     {/* Formulário de Credenciais */}
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label style={{ fontSize: '11px', color: '#333' }}>Usuário:</label>
+                            <label htmlFor="auth-username" style={{ fontSize: '11px', color: '#333' }}>Usuário:</label>
                             <input
+                                id="auth-username"
                                 type="text"
                                 value={username} onChange={e => setUsername(e.target.value)}
+                                autoComplete="username"
+                                aria-required="true"
                                 style={{
-                                    border: '1px solid #7F9DB9', padding: '4px', fontSize: '13px', outline: 'none'
+                                    border: '1px solid #7F9DB9', padding: '4px', fontSize: '13px'
                                 }}
                                 autoFocus
                             />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label style={{ fontSize: '11px', color: '#333' }}>Senha:</label>
+                            <label htmlFor="auth-password" style={{ fontSize: '11px', color: '#333' }}>Senha:</label>
                             <input
+                                id="auth-password"
                                 type="password"
                                 value={password} onChange={e => setPassword(e.target.value)}
+                                autoComplete={isLogin ? "current-password" : "new-password"}
+                                aria-required="true"
                                 style={{
-                                    border: '1px solid #7F9DB9', padding: '4px', fontSize: '13px', outline: 'none'
+                                    border: '1px solid #7F9DB9', padding: '4px', fontSize: '13px'
                                 }}
                             />
                         </div>

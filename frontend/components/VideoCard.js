@@ -148,7 +148,8 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
             {/* Controles de Mídia (Apenas para Vídeos) */}
             {!isPhoto && (
                 <div className="wmp-controls">
-                    <button className="wmp-btn" onClick={togglePlay} disabled={videoError}>
+                    <button className="wmp-btn" onClick={togglePlay} disabled={videoError}
+                        aria-label={isPlaying ? "Pausar vídeo" : "Reproduzir vídeo"}>
                         {isPlaying ? <Pause size={14} fill="#333" /> : <Play size={14} fill="#333" style={{ marginLeft: 2 }} />}
                     </button>
 
@@ -212,23 +213,27 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                     <button
                         className={`xp-action-btn ${video.user_liked ? 'liked' : ''}`}
                         onClick={(e) => { e.stopPropagation(); onLike(video.id, e); }}
+                        aria-label={`Curtir (${video.likes || 0} curtidas)`}
                     >
                         <Heart size={14} fill={video.user_liked ? "red" : "none"} />
                         <span>{video.likes || 0}</span>
                     </button>
 
-                    <button className="xp-action-btn" onClick={(e) => { e.stopPropagation(); onOpenComments(video); }}>
+                    <button className="xp-action-btn" onClick={(e) => { e.stopPropagation(); onOpenComments(video); }}
+                        aria-label="Abrir comentários">
                         <MessageCircle size={14} />
                         <span>Comment</span>
                     </button>
 
-                    <button className="xp-action-btn" onClick={(e) => { e.stopPropagation(); onShare(video); }}>
+                    <button className="xp-action-btn" onClick={(e) => { e.stopPropagation(); onShare(video); }}
+                        aria-label="Compartilhar vídeo">
                         <Share2 size={14} />
                         <span>Share</span>
                     </button>
 
                     {canDelete && (
-                        <button className="xp-action-btn delete" onClick={(e) => { e.stopPropagation(); onDelete(video.id); }}>
+                        <button className="xp-action-btn delete" onClick={(e) => { e.stopPropagation(); onDelete(video.id); }}
+                            aria-label="Excluir vídeo">
                             <Trash2 size={14} />
                         </button>
                     )}

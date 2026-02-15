@@ -22,6 +22,18 @@ const SECURITY_HEADERS = {
 
     // Força HTTPS por 1 ano + incluindo subdomínios
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+
+    // Content Security Policy — restringe origens de scripts, estilos e mídias
+    'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob: https://*.r2.dev https://www.gravatar.com",
+        "media-src 'self' blob: https://*.r2.dev",
+        "connect-src 'self' https://*.workers.dev https://api.open-meteo.com https://www.sonoticias.com.br",
+        "frame-ancestors 'none'",
+    ].join('; '),
 };
 
 export const securityHeaders = async (c, next) => {

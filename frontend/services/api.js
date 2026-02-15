@@ -161,8 +161,8 @@ export const fetchComments = async (videoId) => {
     return res.data;
 };
 
-export const viewVideo = (videoId, userId) => {
-    return api.post(`/api/videos/${videoId}/view`, { user_id: userId });
+export const viewVideo = (videoId) => {
+    return api.post(`/api/videos/${videoId}/view`);
 };
 
 export const postComment = (videoId, userId, comment) => {
@@ -173,10 +173,8 @@ export const postComment = (videoId, userId, comment) => {
     });
 };
 
-export const deleteComment = (commentId, userId, adminPassword = null) => {
-    return api.delete(`/api/comments/${commentId}`, {
-        data: { user_id: userId, admin_password: adminPassword }
-    });
+export const deleteComment = (commentId) => {
+    return api.delete(`/api/comments/${commentId}`);
 };
 
 export const fetchAllUsers = () => {
@@ -206,12 +204,12 @@ export const fetchUserLogs = async (userId) => {
     return res.data;
 };
 
-export const resetUserPassword = (userId, adminPassword) => {
-    return api.post(`/api/admin/reset-password`, { user_id: userId, admin_password: adminPassword });
+export const resetUserPassword = (userId) => {
+    return api.post(`/api/admin/reset-password`, { user_id: userId });
 };
 
-export const banUser = (userId, adminPassword) => {
-    return api.delete(`/api/admin/users/${userId}`, { data: { admin_password: adminPassword } });
+export const banUser = (userId) => {
+    return api.delete(`/api/admin/users/${userId}`);
 };
 
 export const toggleUserRole = (userId, role) => {
@@ -257,10 +255,8 @@ export const uploadVideo = (formData, onUploadProgress) => {
     });
 };
 
-export const removeVideo = (videoId, userId, adminPassword = null) => {
-    // Envia ambos os campos. Backend verifica adminPassword primeiro, depois usa userId para verificação de propriedade se não for admin.
-    const deleteData = { userId, adminPassword };
-    return api.delete(`/api/videos/${videoId}`, { data: deleteData });
+export const removeVideo = (videoId) => {
+    return api.delete(`/api/videos/${videoId}`);
 };
 
 export const savePushSubscription = (subscription, deviceInfo) => {

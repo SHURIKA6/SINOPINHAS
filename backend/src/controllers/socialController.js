@@ -256,11 +256,9 @@ export const deleteComment = async (c) => {
     const commentId = c.req.param("id");
     const env = c.env;
     try {
-        const body = await c.req.json().catch(() => ({}));
-        const { admin_password } = body;
         const payload = c.get('jwtPayload');
         const current_user_id = payload?.id;
-        const isAdmin = (admin_password && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
+        const isAdmin = payload?.role === 'admin';
 
         if (!isAdmin) {
             const { rows } = await queryDB("SELECT user_id FROM comments WHERE id = $1", [commentId], env);

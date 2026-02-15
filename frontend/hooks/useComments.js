@@ -57,7 +57,7 @@ export function useComments(showToast, user, isAdmin, adminPassword) {
     const removeComment = useCallback(async (commentId, videoId) => {
         if (!confirm('Deletar este comentário?')) return;
         try {
-            await deleteComment(commentId, user.id, isAdmin ? adminPassword : null);
+            await deleteComment(commentId);
             await loadComments(videoId); // Reload
             showToast('Comentário deletado!', 'success');
         } catch (err) {

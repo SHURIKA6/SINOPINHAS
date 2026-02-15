@@ -66,7 +66,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
     const handleResetPassword = async (userId) => {
         if (!confirm('Resetar a senha deste usuário para "123456"?')) return;
         try {
-            await resetUserPassword(userId, adminPassword);
+            await resetUserPassword(userId);
             showToast('Senha alterada para 123456', 'success');
         } catch (err) { showToast(err.message || 'Erro ao resetar', 'error'); }
     };
@@ -74,7 +74,7 @@ export default function AdminPanel({ adminPassword, showToast }) {
     const handleBanUser = async (userId) => {
         if (!confirm('TEM CERTEZA? Isso apaga o usuário e TODOS os vídeos dele!')) return;
         try {
-            await banUser(userId, adminPassword);
+            await banUser(userId);
             showToast('Usuário banido/apagado!', 'success');
             loadUsers();
         } catch (err) { showToast(err.message || 'Erro ao banir', 'error'); }
