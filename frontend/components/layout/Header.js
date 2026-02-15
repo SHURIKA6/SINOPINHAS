@@ -246,7 +246,16 @@ export default function Header({
 
                 .mobile-only { display: none; }
                 @media (max-width: 768px) {
-                    .aero-ribbon-container { display: none; } /* Esconder abas no celular, mostrar na barra lateral */
+                    .aero-ribbon-container {
+                        justify-content: flex-start;
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                        scrollbar-width: none;
+                        padding-bottom: 4px;
+                        gap: 2px;
+                    }
+                    .aero-ribbon-container::-webkit-scrollbar { display: none; }
+                    .aero-tab { white-space: nowrap; flex-shrink: 0; padding: 6px 10px; font-size: 12px; }
                     .mobile-only { display: flex; }
                     .brand-text { font-size: 18px; }
                 }
