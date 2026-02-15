@@ -1,17 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchPublicProfile, logTermsAcceptance, fetchNotifications, savePushSubscription, sendFingerprint } from '../services/api';
+import { fetchPublicProfile, logTermsAcceptance, fetchNotifications, savePushSubscription, sendFingerprint, checkSession, logoutUser as apiLogout } from '../services/api';
 
 export function useAuth(showToast) {
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [notifications, setNotifications] = useState([]);
     const [adminPassword, setAdminPassword] = useState('');
     const prevUnreadRef = useRef(0);
 
     // Verificação Inicial
     useEffect(() => {
         const checkAuth = async () => {
-            // Autenticação de Usuário
+            // Tentar verificar sessão via cookie primeiro
+            try {
+                const sessionData = await checkSession();
+                if (sessionData?.user) {
+                    setUser(sessionData.user);
+                    localStorage.setItem('user', JSON.stringify(sessionData.user));
+                    loadNotifications(sessionData.user.id);
+                    return;
+                }
+            } catch (e) {
+                // Cookie inválido ou expirado, tentar fallback localStorage
+            }
+
+            // Fallback: Autenticação via localStorage
             const savedUser = localStorage.getItem('user');
             const token = localStorage.getItem('token');
 
@@ -21,7 +35,7 @@ export function useAuth(showToast) {
                     setUser(u);
                     loadNotifications(u.id);
 
-                    // Atualizar Perfil (para obter conquistas/estatísticas mais recentes)
+                    // Atualizar Perfil
                     try {
                         const res = await fetchPublicProfile(u.id);
                         if (res.data) {
@@ -37,7 +51,6 @@ export function useAuth(showToast) {
                     logout();
                 }
             } else {
-                // Limpa resquícios se não tiver token
                 if (savedUser) localStorage.removeItem('user');
             }
         };
@@ -69,11 +82,11 @@ export function useAuth(showToast) {
     const loadNotifications = async (userId) => {
         try {
             const data = await fetchNotifications(userId);
+            setNotifications(data);
             const unread = data.filter(n => !n.is_read).length;
 
             if (unread > prevUnreadRef.current) {
                 showToast(`Você tem ${unread} novas mensagens!`, 'success');
-                // Play sound? Maybe too much, just toast.
             }
 
             setUnreadCount(unread);
@@ -81,7 +94,6 @@ export function useAuth(showToast) {
         } catch (err) {
             console.error('Erro ao carregar notificações:', err);
             if (err.status === 401 || err.response?.status === 401) {
-                // Token inválido ou expirado
                 logout();
             }
         }
@@ -103,12 +115,18 @@ export function useAuth(showToast) {
         showToast('Modo Admin Ativado', 'success');
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await apiLogout(); // Limpa cookie HttpOnly no backend
+        } catch (e) {
+            // Ignora erro se o backend não responder
+        }
         setUser(null);
         setIsAdmin(false);
         setAdminPassword('');
+        setNotifications([]);
         localStorage.removeItem('user');
-        localStorage.removeItem('token'); // Clear token on full logout
+        localStorage.removeItem('token');
         setUnreadCount(0);
         showToast('Logout realizado', 'success');
     };
@@ -158,6 +176,7 @@ export function useAuth(showToast) {
         isAdmin,
         adminPassword,
         unreadCount,
+        notifications,
         handleAuthSuccess,
         handleAdminAuthSuccess,
         logout,

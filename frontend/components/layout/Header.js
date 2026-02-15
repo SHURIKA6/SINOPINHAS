@@ -4,8 +4,9 @@ import {
     Menu, X, Sun, Moon, Lock, LifeBuoy,
     LogOut, User, Settings, LayoutGrid,
     Newspaper, Calendar, MapPin, CloudSun,
-    MessageCircle, ShieldCheck
+    MessageCircle, ShieldCheck, Bell, Compass
 } from 'lucide-react';
+import NotificationsDropdown from '../NotificationsDropdown';
 
 // Componente Principal do Cabeçalho (Header) com navegação e menu lateral
 export default function Header({
@@ -18,6 +19,8 @@ export default function Header({
     setShowAdminAuth,
     showSecretTab,
     unreadCount,
+    notifications,
+    onMarkAllRead,
     setShowProfile,
     logout,
     logoutAdmin,
@@ -26,9 +29,11 @@ export default function Header({
     setShowSupport
 }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     const menuItems = [
-        { id: 'feed', label: 'Explorar', icon: <LayoutGrid size={18} /> },
+        { id: 'feed', label: 'Feed', icon: <LayoutGrid size={18} /> },
+        { id: 'explore', label: 'Explorar', icon: <Compass size={18} /> },
         { id: 'news', label: 'Notícias', icon: <Newspaper size={18} /> },
         { id: 'eventos', label: 'Eventos', icon: <Calendar size={18} /> },
         { id: 'lugares', label: 'Lugares', icon: <MapPin size={18} /> },
@@ -53,6 +58,36 @@ export default function Header({
                 </div>
 
                 <div className="right-tools">
+                    {user && (
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                className="glass-circle-btn"
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                aria-label="Notificações"
+                            >
+                                <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute', top: '-4px', right: '-4px',
+                                        background: '#FF3B30', color: 'white', fontSize: '9px',
+                                        fontWeight: 900, width: '18px', height: '18px',
+                                        borderRadius: '50%', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', border: '2px solid rgba(255,255,255,0.8)',
+                                    }}>
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            <NotificationsDropdown
+                                notifications={notifications || []}
+                                unreadCount={unreadCount}
+                                onMarkAllRead={onMarkAllRead}
+                                onClose={() => setShowNotifications(false)}
+                                isOpen={showNotifications}
+                            />
+                        </div>
+                    )}
+
                     {user ? (
                         <div className="user-profile-glass" onClick={() => setShowProfile(true)}>
                             <img src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'} className="user-img-circle" />

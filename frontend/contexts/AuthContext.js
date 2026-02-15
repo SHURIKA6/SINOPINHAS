@@ -7,7 +7,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
     const { showToast } = useUIContext();
     const {
-        user, setUser, isAdmin, adminPassword, unreadCount,
+        user, setUser, isAdmin, adminPassword, unreadCount, notifications,
         handleAuthSuccess, handleAdminAuthSuccess, logout,
         logoutAdmin, loadNotifications, subscribeToNotifications
     } = useAuthHook(showToast);
@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={{
-            user, setUser, isAdmin, adminPassword, unreadCount,
+            user, setUser, isAdmin, adminPassword, unreadCount, notifications,
             handleAuthSuccess, handleAdminAuthSuccess, logout,
             logoutAdmin, loadNotifications, subscribeToNotifications,
             showAuth, setShowAuth,

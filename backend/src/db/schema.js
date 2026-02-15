@@ -119,7 +119,31 @@ export const SCHEMA_QUERIES = [
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
+    // Tabela de Tokens de Recuperação de Senha
+    `CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        token TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Denúncias de Conteúdo
+    `CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        content_type TEXT NOT NULL,
+        content_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        details TEXT,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
     // Índices
+    "CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)",
+    "CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token)",
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(from_id, to_id)",

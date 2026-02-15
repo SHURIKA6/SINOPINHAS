@@ -28,6 +28,8 @@ app.get('/inbox/:userId', authMiddleware, socialController.getInbox);
 app.post('/conversations/:id/read', authMiddleware, socialController.markAsRead);
 app.get('/admin/inbox', authMiddleware, requireAdmin, socialController.getAdminInbox);
 app.post('/support', socialController.createSupportTicket);
+app.post('/report', authMiddleware, limiter(10, 60), socialController.reportContent);
+app.post('/notifications/read-all', authMiddleware, socialController.markAllNotificationsRead);
 
 // Rotas: Mensagens Shura Logs
 app.post('/shura/messages', authMiddleware, shuraController.submitShuraMessage);

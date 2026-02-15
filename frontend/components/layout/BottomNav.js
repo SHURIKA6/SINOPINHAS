@@ -1,19 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-    LayoutGrid, Newspaper, Calendar,
-    Plus, MessageCircle, MapPin, CloudSun, Settings, Lock
+    LayoutGrid, Compass,
+    Plus, MessageCircle, User, Settings
 } from 'lucide-react';
 
 export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin, showSecretTab }) {
     const navItems = [
         { id: 'feed', label: 'Feed', icon: <LayoutGrid size={20} /> },
-        { id: 'news', label: 'Notícias', icon: <Newspaper size={20} /> },
-        { id: 'eventos', label: 'Agenda', icon: <Calendar size={20} /> },
+        { id: 'explore', label: 'Explorar', icon: <Compass size={20} /> },
         { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
         { id: 'inbox', label: 'Chat', icon: <MessageCircle size={20} />, badge: unreadCount },
-        isAdmin ? { id: 'admin', label: 'Painel', icon: <Settings size={20} /> } : { id: 'lugares', label: 'Guia', icon: <MapPin size={20} /> },
-        { id: 'weather', label: 'Clima', icon: <CloudSun size={20} /> },
+        isAdmin
+            ? { id: 'admin', label: 'Painel', icon: <Settings size={20} /> }
+            : { id: 'profile', label: 'Perfil', icon: <User size={20} /> },
     ];
 
     // Estilos inline para garantir que NENHUMA regra externa crie caixas brancas
@@ -82,7 +82,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 .ultra-glass-nav {
                     pointer-events: auto;
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr;
+                    grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
                     gap: 0;
                     align-items: center;
                     height: 72px;
@@ -129,7 +129,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .ultra-label {
-                    font-size: 8px;
+                    font-size: 9px;
                     font-weight: 800;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;

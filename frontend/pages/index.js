@@ -30,12 +30,20 @@ import CommentsDrawer from '../components/feed/CommentsDrawer';
 import PublicProfileModal from '../components/modals/PublicProfileModal';
 import AchievementUsersModal from '../components/modals/AchievementUsersModal';
 import PhotoZoomModal from '../components/modals/PhotoZoomModal';
+import HeroSection from '../components/HeroSection';
+import ExploreSection from '../components/ExploreSection';
+import ReportModal from '../components/modals/ReportModal';
 
 import ProfileFeed from '../components/feed/ProfileFeed';
 
 import {
   logTermsAcceptance,
-  viewVideo
+  viewVideo,
+  fetchNews,
+  fetchEvents,
+  fetchPlaces,
+  markAllNotificationsRead,
+  reportContent as apiReportContent
 } from '../services/api';
 
 // API URL centralizada em services/api.js — importar de lá se necessário
@@ -101,7 +109,7 @@ export default function Home({ initialVideo }) {
   } = useUIContext();
 
   const {
-    user, setUser, isAdmin, adminPassword, unreadCount,
+    user, setUser, isAdmin, adminPassword, unreadCount, notifications,
     handleAuthSuccess, handleAdminAuthSuccess, logout,
     logoutAdmin, loadNotifications, subscribeToNotifications,
     showAuth, setShowAuth,
@@ -112,7 +120,7 @@ export default function Home({ initialVideo }) {
   // Hooks Customizados
   const { showInstallBtn, installApp, dismissInstall } = usePWA();
 
-  const tabs = ['feed', 'profile', 'news', 'eventos', 'lugares', 'weather'];
+  const tabs = ['feed', 'explore', 'profile', 'news', 'eventos', 'lugares', 'weather'];
   const currentIndex = tabs.indexOf(activeTab);
 
   // useSwipe e setTermsAccepted continuam aqui ou movemos para UIContext também? termos é global
@@ -199,6 +207,54 @@ export default function Home({ initialVideo }) {
     return isAdmin || (user && user.id.toString() === ownerId);
   }, [isAdmin, user]);
 
+  // Estado do ReportModal
+  const [reportTarget, setReportTarget] = useState(null);
+  const handleReport = (contentId, contentType) => {
+    setReportTarget({ contentId, contentType });
+  };
+  const handleReportSubmit = async ({ content_type, content_id, reason, details }) => {
+    try {
+      await apiReportContent(content_type, content_id, reason, details);
+      showToast('Denúncia enviada com sucesso!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Erro ao enviar denúncia', 'error');
+      throw err;
+    }
+  };
+
+  // Estado do Explorar
+  const [exploreData, setExploreData] = useState({ news: [], events: [], places: [], loading: true, error: null });
+  useEffect(() => {
+    if (activeTab === 'explore' && exploreData.loading) {
+      Promise.all([
+        fetchNews().catch(() => []),
+        fetchEvents().catch(() => ({ data: [] })),
+        fetchPlaces().catch(() => ({ data: [] })),
+      ]).then(([newsData, eventsData, placesData]) => {
+        setExploreData({
+          news: Array.isArray(newsData) ? newsData : newsData?.articles || [],
+          events: Array.isArray(eventsData) ? eventsData : eventsData?.data || [],
+          places: Array.isArray(placesData) ? placesData : placesData?.data || [],
+          loading: false,
+          error: null
+        });
+      }).catch(err => {
+        setExploreData(prev => ({ ...prev, loading: false, error: 'Erro ao carregar dados' }));
+      });
+    }
+  }, [activeTab]);
+
+  // Marcar todas notificações como lidas
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      if (user) loadNotifications(user.id);
+      showToast('Notificações marcadas como lidas', 'success');
+    } catch (err) {
+      showToast('Erro ao marcar notificações', 'error');
+    }
+  };
+
   // No servidor, começamos com um estado base para SEO
   const pageTitle = 'SINOPINHAS by SHURA';
 
@@ -268,7 +324,9 @@ export default function Home({ initialVideo }) {
         <Header
           user={user} isAdmin={isAdmin} activeTab={activeTab} setActiveTab={setActiveTab}
           setShowAuth={setShowAuth} setShowSecretAuth={setShowSecretAuth} setShowAdminAuth={setShowAdminAuth}
-          showSecretTab={showSecretTab} unreadCount={unreadCount} setShowProfile={setShowProfile}
+          showSecretTab={showSecretTab} unreadCount={unreadCount}
+          notifications={notifications} onMarkAllRead={handleMarkAllRead}
+          setShowProfile={setShowProfile}
           logout={() => { logout(); setActiveTab('feed'); }} logoutAdmin={logoutAdmin}
           theme={theme} toggleTheme={toggleTheme} setShowSupport={setShowSupport}
         />
@@ -313,7 +371,20 @@ export default function Home({ initialVideo }) {
 
         <main className="main-content">
           <TabPane active={activeTab === 'feed'}>
-            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" />
+            {!user && <HeroSection onCreateAccount={() => setShowAuth(true)} onExplore={() => setActiveTab('explore')} />}
+            <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" onReport={user ? handleReport : undefined} />
+          </TabPane>
+
+          <TabPane active={activeTab === 'explore'}>
+            <ExploreSection
+              news={exploreData.news}
+              events={exploreData.events}
+              places={exploreData.places}
+              loading={exploreData.loading}
+              error={exploreData.error}
+              onRetry={() => setExploreData(prev => ({ ...prev, loading: true, error: null }))}
+              onOpenTab={(tab) => setActiveTab(tab)}
+            />
           </TabPane>
 
           <TabPane active={activeTab === 'profile'}>
@@ -351,6 +422,15 @@ export default function Home({ initialVideo }) {
           onSend={sendComment}
           onDelete={(id) => removeComment(id, currentVideo.id)}
           canDelete={canDelete}
+        />
+
+        {/* ReportModal */}
+        <ReportModal
+          isOpen={!!reportTarget}
+          onClose={() => setReportTarget(null)}
+          onSubmit={handleReportSubmit}
+          contentType={reportTarget?.contentType}
+          contentId={reportTarget?.contentId}
         />
       </div>
 

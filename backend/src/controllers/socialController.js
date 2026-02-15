@@ -702,3 +702,87 @@ export const logTerms = async (c) => {
         throw err;
     }
 };
+
+// Função: Denunciar conteúdo (post, comentário, perfil)
+export const reportContent = async (c) => {
+    const env = c.env;
+    const payload = c.get('jwtPayload');
+
+    if (!payload || !payload.id) {
+        return createErrorResponse(c, "UNAUTHORIZED", "Faça login para denunciar", 401);
+    }
+
+    try {
+        const body = await c.req.json();
+        const { content_type, content_id, reason, details } = body;
+
+        if (!content_type || !content_id || !reason) {
+            return createErrorResponse(c, "INVALID_INPUT", "Tipo, ID e motivo são obrigatórios", 400);
+        }
+
+        const validTypes = ['post', 'comment', 'profile'];
+        if (!validTypes.includes(content_type)) {
+            return createErrorResponse(c, "INVALID_INPUT", "Tipo de conteúdo inválido", 400);
+        }
+
+        const validReasons = ['offensive', 'spam', 'false_info', 'other'];
+        if (!validReasons.includes(reason)) {
+            return createErrorResponse(c, "INVALID_INPUT", "Motivo inválido", 400);
+        }
+
+        await queryDB(
+            `INSERT INTO reports (reporter_id, content_type, content_id, reason, details)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [payload.id, content_type, parseInt(content_id), reason, sanitize(details || '')],
+            env
+        );
+
+        await logAudit(payload.id, "CONTENT_REPORTED", {
+            content_type, content_id, reason
+        }, c);
+
+        return createResponse(c, {
+            success: true,
+            message: 'Denúncia registrada. Nossa equipe vai analisar.'
+        });
+    } catch (err) {
+        // Auto-criar tabela se não existir
+        if (err.code === '42P01') {
+            await queryDB(`
+                CREATE TABLE IF NOT EXISTS reports (
+                    id SERIAL PRIMARY KEY,
+                    reporter_id INTEGER,
+                    content_type TEXT NOT NULL,
+                    content_id INTEGER NOT NULL,
+                    reason TEXT NOT NULL,
+                    details TEXT,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            `, [], env);
+            return createErrorResponse(c, "RETRY", "Tabela criada, tente novamente", 503);
+        }
+        throw err;
+    }
+};
+
+// Função: Marcar todas as notificações como lidas
+export const markAllNotificationsRead = async (c) => {
+    const env = c.env;
+    const payload = c.get('jwtPayload');
+
+    if (!payload || !payload.id) {
+        return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
+    }
+
+    try {
+        await queryDB(
+            "UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE",
+            [payload.id],
+            env
+        );
+        return createResponse(c, { success: true });
+    } catch (err) {
+        throw err;
+    }
+};

@@ -78,6 +78,9 @@ export const register = async (c) => {
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
         }, env.JWT_SECRET);
 
+        // Setar JWT como cookie HttpOnly
+        c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=604800`);
+
         return createResponse(c, { user, token });
     } catch (err) {
         throw err;
@@ -145,6 +148,9 @@ export const login = async (c) => {
             role: user.role || 'user',
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
         }, env.JWT_SECRET);
+
+        // Setar JWT como cookie HttpOnly
+        c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=604800`);
 
         return createResponse(c, {
             user,
@@ -338,3 +344,157 @@ export const discoverLogs = async (c) => {
     }
 };
 
+// Função: Obter dados do usuário logado (via cookie JWT)
+export const getMe = async (c) => {
+    const env = c.env;
+    try {
+        const payload = c.get('jwtPayload');
+        if (!payload || !payload.id) {
+            return createErrorResponse(c, "UNAUTHORIZED", "Sessão inválida", 401);
+        }
+        const user = await getFullUser(payload.id, env);
+        if (!user) {
+            return createErrorResponse(c, "NOT_FOUND", "Usuário não encontrado", 404);
+        }
+        return createResponse(c, { user });
+    } catch (err) {
+        return createErrorResponse(c, "INTERNAL_ERROR", err.message, 500);
+    }
+};
+
+// Função: Logout — limpa o cookie de autenticação
+export const logoutUser = async (c) => {
+    c.header('Set-Cookie', 'token=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0');
+    return createResponse(c, { success: true, message: 'Logout realizado' });
+};
+
+// Função: Solicitar recuperação de senha
+export const requestPasswordReset = async (c) => {
+    const env = c.env;
+    try {
+        const body = await c.req.json();
+        const { username } = body;
+
+        if (!username) {
+            return createErrorResponse(c, "INVALID_INPUT", "Nome de usuário é obrigatório", 400);
+        }
+
+        const { rows } = await queryDB(
+            "SELECT id, username FROM users WHERE username = $1",
+            [username],
+            env
+        );
+
+        // Resposta genérica para não revelar se o usuário existe
+        if (rows.length === 0) {
+            await logAudit(null, "PASSWORD_RESET_FAILED_USER_NOT_FOUND", { username }, c);
+            return createResponse(c, {
+                success: true,
+                message: 'Se o usuário existir, um código de recuperação foi gerado. Solicite ao administrador.'
+            });
+        }
+
+        // Gerar token de reset
+        const tokenBytes = new Uint8Array(32);
+        crypto.getRandomValues(tokenBytes);
+        const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
+        // Invalidar tokens anteriores do mesmo usuário
+        await queryDB(
+            "UPDATE password_resets SET used = TRUE WHERE user_id = $1 AND used = FALSE",
+            [rows[0].id],
+            env
+        );
+
+        // Inserir novo token
+        await queryDB(
+            "INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)",
+            [rows[0].id, token, expiresAt.toISOString()],
+            env
+        );
+
+        await logAudit(rows[0].id, "PASSWORD_RESET_REQUESTED", { username }, c);
+
+        return createResponse(c, {
+            success: true,
+            message: 'Código de recuperação gerado. Solicite ao administrador.',
+            // Em produção com e-mail, esse token seria enviado por e-mail.
+            reset_token: token
+        });
+    } catch (err) {
+        // Auto-criar tabela se não existir
+        if (err.code === '42P01') {
+            await queryDB(`
+                CREATE TABLE IF NOT EXISTS password_resets (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    token TEXT UNIQUE NOT NULL,
+                    expires_at TIMESTAMP NOT NULL,
+                    used BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            `, [], c.env);
+            return createErrorResponse(c, "RETRY", "Tabela criada, tente novamente", 503);
+        }
+        throw err;
+    }
+};
+
+// Função: Resetar senha com token
+export const resetPassword = async (c) => {
+    const env = c.env;
+    try {
+        const body = await c.req.json();
+        const { token, new_password } = body;
+
+        if (!token || !new_password) {
+            return createErrorResponse(c, "INVALID_INPUT", "Token e nova senha são obrigatórios", 400);
+        }
+
+        if (new_password.length < 6) {
+            return createErrorResponse(c, "INVALID_INPUT", "A nova senha deve ter pelo menos 6 caracteres", 400);
+        }
+
+        // Buscar token válido
+        const { rows } = await queryDB(
+            `SELECT pr.*, u.username FROM password_resets pr
+             JOIN users u ON u.id = pr.user_id
+             WHERE pr.token = $1 AND pr.used = FALSE AND pr.expires_at > NOW()`,
+            [token],
+            env
+        );
+
+        if (rows.length === 0) {
+            await logAudit(null, "PASSWORD_RESET_FAILED_INVALID_TOKEN", { token: token.substring(0, 8) + '...' }, c);
+            return createErrorResponse(c, "INVALID_TOKEN", "Token inválido ou expirado", 400);
+        }
+
+        const resetEntry = rows[0];
+
+        // Atualizar senha
+        const hashedPassword = await hash(new_password);
+        await queryDB(
+            "UPDATE users SET password = $1 WHERE id = $2",
+            [hashedPassword, resetEntry.user_id],
+            env
+        );
+
+        // Marcar token como usado
+        await queryDB(
+            "UPDATE password_resets SET used = TRUE WHERE id = $1",
+            [resetEntry.id],
+            env
+        );
+
+        await logAudit(resetEntry.user_id, "PASSWORD_RESET_SUCCESS", { username: resetEntry.username }, c);
+
+        return createResponse(c, {
+            success: true,
+            message: 'Senha alterada com sucesso! Faça login com a nova senha.'
+        });
+    } catch (err) {
+        throw err;
+    }
+};

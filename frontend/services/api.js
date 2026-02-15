@@ -4,10 +4,13 @@ import { getDeviceFingerprint } from '../lib/fingerprint';
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
 
 const api = axios.create({
-    baseURL: API
+    baseURL: API,
+    withCredentials: true // Enviar cookies em todas as requisições
 });
 
-// Interceptador para adicionar Token JWT na requisição
+// Interceptador para adicionar fallback de Token JWT via header
+// O cookie HttpOnly é enviado automaticamente pelo browser.
+// O header Authorization é mantido como fallback de retrocompatibilidade.
 api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');
@@ -222,6 +225,7 @@ export const loginUser = async (username, password) => {
         auth_type: 'login',
     });
     const res = await api.post('/api/login', { username, password, ...fingerprintData });
+    // Token agora vem via cookie HttpOnly, mas mantemos fallback no localStorage
     if (res.data.token) {
         localStorage.setItem('token', res.data.token);
     }
@@ -234,6 +238,7 @@ export const registerUser = async (username, password) => {
         auth_type: 'register',
     });
     const res = await api.post('/api/register', { username, password, ...fingerprintData });
+    // Token agora vem via cookie HttpOnly, mas mantemos fallback no localStorage
     if (res.data.token) {
         localStorage.setItem('token', res.data.token);
     }
@@ -280,5 +285,45 @@ export const submitShuraMessage = (message) => api.post('/api/shura/messages', {
 export const fetchAllShuraMessages = () => api.get('/api/admin/shura/messages');
 export const toggleApproveShuraMessage = (id, approved) => api.post('/api/admin/shura/messages/toggle-approve', { id, approved });
 export const deleteShuraMessage = (id) => api.delete(`/api/admin/shura/messages/${id}`);
+
+// --- Sessão via Cookie ---
+export const checkSession = async () => {
+    const res = await api.get('/api/me');
+    return res.data;
+};
+
+export const logoutUser = async () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return api.post('/api/logout');
+};
+
+// --- Recuperação de Senha ---
+export const requestPasswordReset = async (username) => {
+    const res = await api.post('/api/forgot-password', { username });
+    return res.data;
+};
+
+export const resetPassword = async (token, new_password) => {
+    const res = await api.post('/api/reset-password', { token, new_password });
+    return res.data;
+};
+
+// --- Denúncia de Conteúdo ---
+export const reportContent = async (contentType, contentId, reason, details = '') => {
+    const res = await api.post('/api/report', {
+        content_type: contentType,
+        content_id: contentId,
+        reason,
+        details
+    });
+    return res.data;
+};
+
+// --- Notificações ---
+export const markAllNotificationsRead = async () => {
+    const res = await api.post('/api/notifications/read-all');
+    return res.data;
+};
 
 export default api;

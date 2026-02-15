@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2, Minus } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Trash2, X, Play, Pause, Maximize2, Minus, Flag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isPhotoUrl } from '../lib/mediaUtils';
 
 // Componente de Cartão de Vídeo Principal
-export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare }) {
+export default function VideoCard({ video, onDelete, onLike, onOpenComments, canDelete, onShare, onReport }) {
     const [isHovering, setIsHovering] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -235,6 +235,13 @@ export default function VideoCard({ video, onDelete, onLike, onOpenComments, can
                         <button className="xp-action-btn delete" onClick={(e) => { e.stopPropagation(); onDelete(video.id); }}
                             aria-label="Excluir vídeo">
                             <Trash2 size={14} />
+                        </button>
+                    )}
+
+                    {onReport && (
+                        <button className="xp-action-btn" onClick={(e) => { e.stopPropagation(); onReport(video.id, 'video'); }}
+                            aria-label="Denunciar conteúdo" title="Denunciar">
+                            <Flag size={14} />
                         </button>
                     )}
                 </div>
