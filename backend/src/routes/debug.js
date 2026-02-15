@@ -98,4 +98,50 @@ app.post('/setup-db', async (c) => {
     }
 });
 
+
+app.get('/test-sheets', async (c) => {
+    const env = c.env;
+    const url = env.GOOGLE_SHEETS_URL;
+
+    if (!url) {
+        return createErrorResponse(c, "CONFIG_ERROR", "GOOGLE_SHEETS_URL not set", 500);
+    }
+
+    try {
+        const testData = {
+            sheet: 'audit_logs',
+            data: {
+                timestamp: new Date().toISOString(),
+                action: 'TEST_CONNECTION',
+                user_id: 0,
+                username: 'System Debug',
+                details: 'Testing Google Sheets Integration from Cloudflare Worker'
+            }
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(testData)
+        });
+
+        const text = await response.text();
+        let json;
+        try { json = JSON.parse(text); } catch (e) { }
+
+        return createResponse(c, {
+            success: true,
+            status: response.status,
+            statusText: response.statusText,
+            response_body: json || text,
+            sent_payload: testData
+        });
+    } catch (err) {
+        return createErrorResponse(c, "CONNECTION_ERROR", "Failed to connect to Google Sheets", 500, {
+            message: err.message,
+            stack: err.stack
+        });
+    }
+});
+
 export default app;

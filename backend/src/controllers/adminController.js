@@ -3,6 +3,7 @@ import { hash } from '../utils/hash.js';
 import { logAudit } from '../middleware/audit.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
+import { sendToGoogleSheets } from '../utils/google-sheets.js';
 
 const getJwtSecret = (env) => env.JWT_SECRET || 'development_secret_123';
 
@@ -73,6 +74,10 @@ export const banUser = async (c) => {
         await queryDB("DELETE FROM messages WHERE from_id = $1 OR to_id = $1", [userId], env);
         await queryDB("DELETE FROM users WHERE id = $1", [userId], env);
         await logAudit(null, "ADMIN_USER_BANNED", { target_user_id: userId }, c);
+
+        c.executionCtx.waitUntil(sendToGoogleSheets('admin_actions', {
+            action: 'BAN_USER', target_user_id: userId
+        }, env));
         return createResponse(c, { success: true });
     } catch (err) {
         return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao banir usuário: " + err.message, 500);
@@ -100,6 +105,10 @@ export const toggleAdmin = async (c) => {
         }
 
         await logAudit(null, "ADMIN_ROLE_CHANGED", { target_user: rows[0].username, new_role: newRole }, c);
+
+        c.executionCtx.waitUntil(sendToGoogleSheets('admin_actions', {
+            action: 'ROLE_CHANGE', target_user_id: user_id, new_role: newRole
+        }, env));
 
         return createResponse(c, { success: true, user: rows[0] });
     } catch (err) {

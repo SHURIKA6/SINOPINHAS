@@ -46,7 +46,7 @@ export async function logAudit(userId, action, details = {}, c) {
         // --- Tarefas Assíncronas (Execução em Background) ---
 
         // 1. Integração Google Sheets
-        c.executionCtx.waitUntil(sendToGoogleSheets({
+        c.executionCtx.waitUntil(sendToGoogleSheets('audit_logs', {
             userId,
             action,
             ...finalDetails,

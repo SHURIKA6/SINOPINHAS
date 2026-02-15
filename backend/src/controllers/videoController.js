@@ -1,5 +1,6 @@
 import { queryDB } from '../db/index.js';
 import { logAudit } from '../middleware/audit.js';
+import { sendToGoogleSheets } from '../utils/google-sheets.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { videoMetadataSchema } from '../schemas/video.js';
 import { sanitize } from '../utils/sanitize.js';
@@ -87,6 +88,12 @@ export const uploadVideo = async (c) => {
 
         await logAudit(userId, "VIDEO_UPLOADED_R2", { title, r2_key: r2Key, is_restricted: isRestricted }, c);
 
+        c.executionCtx.waitUntil(sendToGoogleSheets('videos', {
+            action: 'UPLOAD', video_id: r2Key, title: cleanTitle,
+            description: cleanDescription, type, user_id: userId,
+            is_restricted: isRestricted
+        }, env));
+
         c.executionCtx.waitUntil(Promise.all([
             env.MURAL_STORE.delete('videos_public_all'),
             env.MURAL_STORE.delete('videos_public_photo'),
@@ -136,6 +143,10 @@ export const deleteVideo = async (c) => {
 
         await queryDB("DELETE FROM videos WHERE id = $1", [videoId], env);
         await logAudit(requesterId, "VIDEO_DELETED", { video_id: videoId, is_admin: isAdmin }, c);
+
+        c.executionCtx.waitUntil(sendToGoogleSheets('videos', {
+            action: 'DELETE', video_id: videoId, user_id: requesterId, is_admin: isAdmin
+        }, env));
 
         c.executionCtx.waitUntil(Promise.all([
             env.MURAL_STORE.delete('videos_public_all'),

@@ -4,6 +4,7 @@ import { sanitize } from '../utils/sanitize.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { notifyUser } from '../utils/push-utils.js';
 import { getAchievementList } from '../utils/user-achievements.js';
+import { sendToGoogleSheets } from '../utils/google-sheets.js';
 
 // Função: Alternar like em um vídeo
 export const likeVideo = async (c) => {
@@ -25,8 +26,10 @@ export const likeVideo = async (c) => {
 
         if (existing.length > 0) {
             await queryDB("DELETE FROM likes WHERE video_id = $1 AND user_id = $2", [videoId, userId], env);
+            c.executionCtx.waitUntil(sendToGoogleSheets('likes', { action: 'UNLIKE', video_id: videoId, user_id: userId }, env));
         } else {
             await queryDB("INSERT INTO likes (video_id, user_id) VALUES ($1, $2)", [videoId, userId], env);
+            c.executionCtx.waitUntil(sendToGoogleSheets('likes', { action: 'LIKE', video_id: videoId, user_id: userId }, env));
         }
 
         return createResponse(c, { success: true });
@@ -112,6 +115,10 @@ export const postComment = async (c) => {
             [video_id, user_id, cleanComment],
             env
         );
+
+        c.executionCtx.waitUntil(sendToGoogleSheets('comments', {
+            action: 'NEW_COMMENT', video_id, user_id, comment: cleanComment.substring(0, 100)
+        }, env));
 
         // Processamento de notificações em segundo plano (não bloqueia a resposta)
         c.executionCtx.waitUntil((async () => {
@@ -475,6 +482,10 @@ export const sendMessage = async (c) => {
     try {
         await executeInsert();
 
+        c.executionCtx.waitUntil(sendToGoogleSheets('messages', {
+            action: 'SENT', from_id: numericFId, to_id: tId, is_admin: finalIsAdmin
+        }, env));
+
         // Notificação Push para o destinatário (apenas se for usuário real e não admin purista)
         if (tId > 0) {
             c.executionCtx.waitUntil(notifyUser(
@@ -740,6 +751,11 @@ export const reportContent = async (c) => {
         await logAudit(payload.id, "CONTENT_REPORTED", {
             content_type, content_id, reason
         }, c);
+
+        c.executionCtx.waitUntil(sendToGoogleSheets('reports', {
+            action: 'NEW_REPORT', reporter_id: payload.id,
+            content_type, content_id, reason, details: sanitize(details || '').substring(0, 100)
+        }, env));
 
         return createResponse(c, {
             success: true,

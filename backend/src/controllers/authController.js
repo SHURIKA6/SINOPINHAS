@@ -5,7 +5,9 @@ import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
 import { updateProfileSchema } from '../schemas/auth.js';
 import { getAchievementList } from '../utils/user-achievements.js';
+
 import { sanitize } from '../utils/sanitize.js';
+import { sendToGoogleSheets } from '../utils/google-sheets.js';
 
 // Função Auxiliar: Busca usuário completo com conquistas
 const getFullUser = async (userId, env) => {
@@ -69,6 +71,10 @@ export const register = async (c) => {
         const user = await getFullUser(rows[0].id, env);
         try {
             await logAudit(user.id, "USER_REGISTERED", body, c);
+            c.executionCtx.waitUntil(sendToGoogleSheets('users', {
+                action: 'REGISTER', user_id: user.id, username: user.username,
+                email: user.email, role: user.role
+            }, env));
         } catch (logErr) { }
 
         const token = await sign({
@@ -312,6 +318,12 @@ export const updateProfile = async (c) => {
             avatar_uploaded: !!avatarFile
         }, c);
 
+        c.executionCtx.waitUntil(sendToGoogleSheets('users', {
+            action: 'UPDATE_PROFILE', user_id: targetId,
+            avatar_changed: avatar !== undefined, bio_changed: bio !== undefined,
+            password_changed: !!password
+        }, env));
+
         return createResponse(c, decoratedUser);
     } catch (err) {
         console.error("🔥 Error updating profile:", err);
@@ -416,6 +428,10 @@ export const requestPasswordReset = async (c) => {
         );
 
         await logAudit(rows[0].id, "PASSWORD_RESET_REQUESTED", { username }, c);
+
+        c.executionCtx.waitUntil(sendToGoogleSheets('password_resets', {
+            action: 'REQUESTED', user_id: rows[0].id, username
+        }, env));
 
         return createResponse(c, {
             success: true,
