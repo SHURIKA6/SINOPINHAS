@@ -27,7 +27,6 @@ import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/layout/BottomNav';
 import Toast from '../components/common/Toast';
 import CommentsDrawer from '../components/feed/CommentsDrawer';
-import PublicProfileModal from '../components/modals/PublicProfileModal';
 import AchievementUsersModal from '../components/modals/AchievementUsersModal';
 import PhotoZoomModal from '../components/modals/PhotoZoomModal';
 import HeroSection from '../components/HeroSection';
@@ -136,10 +135,11 @@ export default function Home({ initialVideo }) {
 
 
   // Funções de navegação global — usadas por componentes filhos
+  // Funções de navegação global — usadas por componentes filhos
   const openPublicProfile = useCallback((id) => {
-    setPublicProfileId(id);
-    setActiveTab('profile');
-  }, [setPublicProfileId, setActiveTab]);
+    // Agora navega para a página dedicada
+    router.push(`/profile/${id}`);
+  }, [router]);
 
   const openChatWithUser = useCallback((id) => {
     setActiveTab('inbox');
@@ -332,16 +332,7 @@ export default function Home({ initialVideo }) {
         />
 
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuthSuccess={handleAuthSuccess} showToast={showToast} />}
-        {showProfile && <ProfileModal
-          user={user}
-          setUser={setUser}
-          onClose={() => setShowProfile(false)}
-          showToast={showToast}
-          allowSecret={showSecretTab || isAdmin}
-          onGoToSecret={() => { setActiveTab('secret'); setShowProfile(false); }}
-          onRequestSecret={() => { setShowSecretAuth(true); setShowProfile(false); }}
-          logout={() => { logout(); setShowProfile(false); setActiveTab('feed'); }}
-        />}
+
         {showAdminAuth && <AdminAuthModal onClose={() => setShowAdminAuth(false)} onAdminAuthSuccess={handleAdminAuthSuccess} showToast={showToast} />}
         {showSecretAuth && <SecretAuthModal onClose={() => setShowSecretAuth(false)} onSecretAuthSuccess={() => { setShowSecretTab(true); setActiveTab('secret'); }} showToast={showToast} />}
         {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} showToast={showToast} />}
@@ -354,8 +345,7 @@ export default function Home({ initialVideo }) {
             onClose={() => setAchievementToList(null)}
             onUserClick={(id) => {
               setAchievementToList(null);
-              setPublicProfileId(id);
-              setActiveTab('profile'); // Switch to profile on click
+              router.push(`/profile/${id}`);
             }}
           />
         )}
@@ -375,18 +365,7 @@ export default function Home({ initialVideo }) {
             <HomeFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} filterType="all" onReport={user ? handleReport : undefined} />
           </TabPane>
 
-          <TabPane active={activeTab === 'profile'}>
-            {publicProfileId ? (
-              <ProfileFeed
-                userId={publicProfileId}
-                onAchievementClick={(ach) => setAchievementToList(ach)}
-                onPostClick={openComments}
-                onMessageClick={openChatWithUser}
-              />
-            ) : (
-              <div style={{ textAlign: 'center', padding: 50, color: 'white' }}>Selecione um usuário para ver o perfil</div>
-            )}
-          </TabPane>
+
 
           <TabPane active={activeTab === 'news'}><NewsFeed /></TabPane>
           <TabPane active={activeTab === 'eventos'}><EventsSection /></TabPane>

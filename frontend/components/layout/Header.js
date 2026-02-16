@@ -88,7 +88,7 @@ export default function Header({
                     )}
 
                     {user ? (
-                        <div className="user-profile-glass" onClick={() => setShowProfile(true)}>
+                        <div className="user-profile-glass" onClick={() => window.location.href = `/profile/${user.id}`}>
                             <img src={user.avatar || 'https://www.gravatar.com/avatar?d=mp'} className="user-img-circle" />
                             <span>{user.username}</span>
                         </div>
