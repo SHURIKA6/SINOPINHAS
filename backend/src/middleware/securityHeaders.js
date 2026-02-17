@@ -23,6 +23,11 @@ const SECURITY_HEADERS = {
     // Força HTTPS por 1 ano + incluindo subdomínios
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
 
+    // Proteções Cross-Origin
+    'Cross-Origin-Resource-Policy': 'same-origin',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'X-Permitted-Cross-Domain-Policies': 'none',
+
     // Content Security Policy — permite AdSense + funcionalidades do site
     'Content-Security-Policy': [
         "default-src 'self'",

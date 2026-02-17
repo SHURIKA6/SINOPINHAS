@@ -1,16 +1,20 @@
 import { Hono } from 'hono';
 import { queryDB, initDatabase } from '../db/index.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 
 const app = new Hono();
+
+// 🔒 Todas as rotas de debug exigem autenticação admin
+app.use('*', authMiddleware, requireAdmin);
 
 app.get('/health', async (c) => {
     const env = c.env;
     const diagnostics = {
         timestamp: new Date().toISOString(),
         env: {
-            DATABASE_URL: env.DATABASE_URL ? "Defined (Starts with " + env.DATABASE_URL.substring(0, 10) + "...)" : "UNDEFINED ❌",
-            ADMIN_PASSWORD: env.ADMIN_PASSWORD ? "Defined (Length " + env.ADMIN_PASSWORD.length + ")" : "UNDEFINED ❌",
+            DATABASE_URL: env.DATABASE_URL ? "Defined ✅" : "UNDEFINED ❌",
+            ADMIN_PASSWORD: env.ADMIN_PASSWORD ? "Defined ✅" : "UNDEFINED ❌",
             JWT_SECRET: env.JWT_SECRET ? "Defined ✅" : "UNDEFINED ❌",
         },
         db_connection: "Testing..."
@@ -20,13 +24,11 @@ app.get('/health', async (c) => {
         const result = await queryDB("SELECT NOW() as now", [], env);
         diagnostics.db_connection = "SUCCESS ✅";
         diagnostics.db_result = result.rows[0];
-        diagnostics.db_result = result.rows[0];
         return createResponse(c, diagnostics);
     } catch (err) {
         console.error("Health Check DB Error:", err);
         diagnostics.db_connection = "FAILED ❌";
         diagnostics.error = err.message;
-        diagnostics.stack = err.stack;
         return createErrorResponse(c, "HEALTH_CHECK_FAILED", "Falha no diagnóstico", 500, diagnostics);
     }
 });
@@ -138,8 +140,7 @@ app.get('/test-sheets', async (c) => {
         });
     } catch (err) {
         return createErrorResponse(c, "CONNECTION_ERROR", "Failed to connect to Google Sheets", 500, {
-            message: err.message,
-            stack: err.stack
+            message: err.message
         });
     }
 });

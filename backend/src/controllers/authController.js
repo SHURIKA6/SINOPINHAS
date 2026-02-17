@@ -118,6 +118,10 @@ export const login = async (c) => {
         );
 
         if (rows.length === 0) {
+            // Anti-enumeration: simular tempo de hash para não revelar se user existe
+            await hash('dummy_anti_enumeration_padding');
+            const delayMs = Math.floor(Math.random() * 100) + 50;
+            await new Promise(r => setTimeout(r, delayMs));
             await logAudit(null, "LOGIN_FAILED_USER_NOT_FOUND", { username }, c);
             return createErrorResponse(c, "AUTH_ERROR", "Usuário ou senha incorretos", 401);
         }

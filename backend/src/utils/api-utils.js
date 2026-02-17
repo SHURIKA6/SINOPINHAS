@@ -10,11 +10,8 @@ export function getCorsOrigin(requestOrigin, env) {
         ? env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
         : DEFAULT_ORIGINS;
 
-    // Permitir previews do Vercel automaticamente
-    if (requestOrigin && (
-        allowedOrigins.includes(requestOrigin) ||
-        requestOrigin.endsWith('.vercel.app')
-    )) {
+    // Permitir apenas origens explicitamente autorizadas
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
         return requestOrigin;
     }
     return allowedOrigins[0]; // Fallback para o domínio principal

@@ -5,7 +5,37 @@ import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { sign } from 'hono/jwt';
 import { sendToGoogleSheets } from '../utils/google-sheets.js';
 
-const getJwtSecret = (env) => env.JWT_SECRET || 'development_secret_123';
+const getJwtSecret = (env) => {
+    if (!env.JWT_SECRET) {
+        throw new Error('FATAL: JWT_SECRET não configurado');
+    }
+    return env.JWT_SECRET;
+};
+
+// Comparação timing-safe para evitar timing attacks
+async function timingSafeCompare(a, b) {
+    const encoder = new TextEncoder();
+    const aBytes = encoder.encode(a);
+    const bBytes = encoder.encode(b);
+    // Pad para mesmo tamanho (evita leak de comprimento)
+    const maxLen = Math.max(aBytes.length, bBytes.length);
+    const aPadded = new Uint8Array(maxLen);
+    const bPadded = new Uint8Array(maxLen);
+    aPadded.set(aBytes);
+    bPadded.set(bBytes);
+    // Importar como chave HMAC e comparar via crypto.subtle
+    const key = await crypto.subtle.importKey('raw', aPadded, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', key, bPadded);
+    const key2 = await crypto.subtle.importKey('raw', bPadded, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const sig2 = await crypto.subtle.sign('HMAC', key2, aPadded);
+    // Comparar os MACs dos inputs cruzados — se a === b, os resultados serão iguais
+    const s1 = new Uint8Array(sig);
+    const s2 = new Uint8Array(sig2);
+    if (s1.length !== s2.length) return false;
+    let result = 0;
+    for (let i = 0; i < s1.length; i++) result |= s1[i] ^ s2[i];
+    return result === 0 && aBytes.length === bBytes.length;
+}
 
 // Função: Realizar login administrativo
 export const login = async (c) => {
@@ -13,7 +43,8 @@ export const login = async (c) => {
     try {
         const { password } = await c.req.json();
 
-        if (password === env.ADMIN_PASSWORD) {
+        const isValid = await timingSafeCompare(password || '', env.ADMIN_PASSWORD || '');
+        if (isValid) {
             await logAudit(null, "ADMIN_LOGIN_SUCCESS", {}, c);
             const token = await sign({
                 id: 0,

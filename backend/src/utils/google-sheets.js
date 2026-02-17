@@ -12,6 +12,10 @@
 export async function sendToGoogleSheets(sheetName, data, env) {
     const url = env.GOOGLE_SHEETS_URL;
     if (!url) return;
+    if (!url.startsWith('https://')) {
+        console.error('❌ GOOGLE_SHEETS_URL deve usar HTTPS');
+        return;
+    }
 
     try {
         await fetch(url, {
@@ -38,6 +42,10 @@ export async function sendToGoogleSheets(sheetName, data, env) {
 export async function batchSendToSheets(entries, env) {
     const url = env.GOOGLE_SHEETS_URL;
     if (!url || !entries.length) return;
+    if (!url.startsWith('https://')) {
+        console.error('❌ GOOGLE_SHEETS_URL deve usar HTTPS');
+        return;
+    }
 
     try {
         const payload = entries.map(e => ({
