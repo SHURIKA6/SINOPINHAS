@@ -1,5 +1,7 @@
 # SINOPINHAS — Resumo Técnico e Guia de Desenvolvimento
 
+> Criado por **Fernando** ([@SHURIKA6](https://github.com/SHURIKA6)) — Sinop, MT 🇧🇷
+
 Resumo rápido
 - Aplicação: rede social local para Sinop (vídeos, fotos, notícias, eventos, chat, notificações).
 - Arquitetura: Frontend Next.js (React) + Backend Cloudflare Worker (`hono`) com Postgres (Neon Serverless). Armazenamento de mídia em Cloudflare R2. Deploy backend via Wrangler.
@@ -42,21 +44,23 @@ Variáveis de ambiente importantes
 Segurança e melhores práticas (checklist)
 - Não versionar segredos: mover chaves privadas para `wrangler secret put`.
 - Autenticação: usar cookie HttpOnly para sessão; evitar armazenar tokens em `localStorage`.
-- CORS: restringir origens em produção.
-- Uploads: validar magic bytes e limitar tipos e tamanhos no servidor.
+- CORS: restringir origens em produção (dinâmico via `ALLOWED_ORIGINS`).
+- Uploads: validação de magic bytes implementada em `file-validation.js`.
 - Sanitização: já há `xss` e validação com `zod` — manter e expandir testes.
-- Revisar logs e remover prints sensíveis em produção.
+- Logs: `console.log` de debug convertidos para `console.warn`; `console.error` mantido para erros reais.
 
-Correções sugeridas aplicadas neste commit
-- `frontend/services/api.js`: removido fallback inseguro que inseria tokens no header via `localStorage` e removido armazenamento de token no localStorage durante login/registro.
-- `frontend/hooks/useAuth.js`: confiando em `checkSession()` via cookie HttpOnly por padrão; localStorage usado apenas como conveniência para armazenar perfil (sem confiar como fonte de verdade).
+Correções aplicadas
+- ✅ CORS dinâmico por origem do request
+- ✅ Removido fallback inseguro de token em `localStorage`
+- ✅ Validação de magic bytes no upload
+- ✅ Constantes centralizadas em `backend/src/utils/constants.js`
+- ✅ Schema limpo (indexes duplicados removidos)
+- ✅ Log levels corrigidos (`console.log` → `console.warn`)
 
-Tarefas recomendadas (prioridade)
-1. Corrigir CORS para lista de origens em produção.
-2. Validar conteúdo de arquivos (magic bytes) no backend antes de armazenar no R2.
-3. Remover duplicações e limpar `backend/src/db/schema.js`.
-4. Adicionar linter, formatação e CI (GitHub Actions).
-5. Escrever testes unitários para utilitários críticos.
+Tarefas futuras
+1. Adicionar linter, formatação e CI (GitHub Actions).
+2. Escrever testes unitários para utilitários críticos.
+3. Migrar gradualmente para TypeScript.
 
 Como começar a contribuir
 - Rodar a stack localmente (ver seção acima).
@@ -64,4 +68,7 @@ Como começar a contribuir
 - Propor PRs pequenos: ex.: endurecer validações, adicionar testes, ou corrigir problemas de segurança.
 
 Contato
-- Repositório local — use as issues e PRs para discutir alterações estruturais.
+- **Autor:** SHURA ([@SHURIKA6](https://github.com/SHURIKA6))
+- **Instagram:** [@_riad777](https://instagram.com/_riad777)
+- **Repositório:** [github.com/SHURIKA6/SINOPINHAS](https://github.com/SHURIKA6/SINOPINHAS)
+
