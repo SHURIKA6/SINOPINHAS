@@ -22,3 +22,4 @@ vapid_utf8.json
 gen-keys.js
 .dev.vars
 .pnpm-debug.log*
+AUDIT_REPORT*
