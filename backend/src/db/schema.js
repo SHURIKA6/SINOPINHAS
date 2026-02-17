@@ -175,7 +175,33 @@ export const SCHEMA_QUERIES = [
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
+    // Tabela de Stories (24h de duração)
+    `CREATE TABLE IF NOT EXISTS stories (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        bunny_id TEXT NOT NULL,
+        media_type TEXT DEFAULT 'photo',
+        duration INTEGER DEFAULT 5,
+        caption TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '24 hours'
+    )`,
+
+    // Tabela de Visualizações de Stories (para marcar visto e contar views)
+    `CREATE TABLE IF NOT EXISTS story_views (
+        id SERIAL PRIMARY KEY,
+        story_id INTEGER REFERENCES stories(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(story_id, user_id)
+    )`,
+
     // Migrações (colunas adicionadas após criação inicial)
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS discovered_logs BOOLEAN DEFAULT FALSE",
-    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE"
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE",
+
+    // Índices para performance
+    "CREATE INDEX IF NOT EXISTS idx_stories_user_id ON stories(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_stories_expires_at ON stories(expires_at)",
+    "CREATE INDEX IF NOT EXISTS idx_story_views_story_id ON story_views(story_id)"
 ];

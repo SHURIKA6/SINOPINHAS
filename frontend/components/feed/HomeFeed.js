@@ -2,10 +2,13 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import VideoCard from '../VideoCard';
 import FeedSkeleton from './FeedSkeleton';
 import ShareModal from '../ShareModal';
-import { fetchVideos, searchVideos, likeVideo, removeVideo } from '../../services/api';
+import StoriesBar from '../stories/StoriesBar';
+import StoryViewer from '../stories/StoryViewer';
+import { fetchVideos, searchVideos, likeVideo, removeVideo, fetchStories } from '../../services/api';
 import { Search, Flame, Video, Image as ImageIcon } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
-export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all' }) {
+export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, showToast, canDelete, filterType: initialFilterType = 'all', onReport }) {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +20,58 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
     const LIMIT = 12;
 
     const [hearts, setHearts] = useState([]);
+
+    // --- Stories State ---
+    const [stories, setStories] = useState([]);
+    const [viewingStoryGroup, setViewingStoryGroup] = useState(null);
+
+    // Carregar Stories
+    useEffect(() => {
+        const loadStories = async () => {
+            try {
+                const data = await fetchStories();
+                setStories(data);
+            } catch (e) { console.error("Erro stories", e); }
+        };
+        loadStories();
+    }, [user]); // Recarrega se user mudar
+
+    const handleStoryClick = (group) => {
+        setViewingStoryGroup(group);
+    };
+
+    const handleAddStory = () => {
+        // Gambiarra: Clica no botão de upload (se existir globalmente) ou dispara evento
+        // Como o HomeFeed não tem acesso direto ao setActiveTab do Index, 
+        // vamos tentar achar o botão de upload na nav ou redirecionar.
+        // O ideal seria passar uma prop onAddStory.
+        // Vamos usar window.location por enquanto ou tentar um evento customizado?
+        // Melhor: Se o user clica, a gente acha a TabPane de upload? Não.
+        // O index.js passa `setActiveTab`? Não.
+        // VAMOS ASSUMIR QUE O USUÁRIO CLICA NO BOTÃO DA NAV BAR "POSTAR".
+        // Mas aqui queremos que clique no "+ Se Story".
+        // Vou adicionar um evento global temporário ou apenas alertar se não tiver prop.
+        // Update: Index.js não passa setActiveTab.
+        // Vou deixar sem ação por enquanto ou tentar um hack.
+        // Hack: document.querySelector('.is-post')?.click();
+        const uploadBtn = document.querySelector('.is-post');
+        if (uploadBtn) uploadBtn.click();
+    };
+
+    const handleStoryViewed = (userId, storyId) => {
+        // Marca localmente como visto para atualizar o anel
+        setStories(prev => prev.map(group => {
+            if (group.user_id === userId) {
+                const updatedStories = group.stories.map(s =>
+                    s.id === storyId ? { ...s, viewed: true } : s
+                );
+                // Verifica se todos foram vistos
+                const allViewed = updatedStories.every(s => s.viewed);
+                return { ...group, stories: updatedStories, all_viewed: allViewed };
+            }
+            return group;
+        }));
+    };
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -127,7 +182,29 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
                 <div key={h.id} className="floating-heart" style={{ left: h.x, top: h.y }}>❤️</div>
             ))}
 
+            {/* Stories Viewer Modal */}
+            <AnimatePresence>
+                {viewingStoryGroup && (
+                    <StoryViewer
+                        storyGroup={viewingStoryGroup}
+                        onClose={() => setViewingStoryGroup(null)}
+                        onStoryViewed={handleStoryViewed}
+                        currentUserId={user?.id}
+                    />
+                )}
+            </AnimatePresence>
+
             <div className="home-feed-container">
+                {/* Stories Bar (Somente se logado? Não, pode ver público se implementar public stories, mas aqui requer user para adicionar) */}
+                <div style={{ marginBottom: 24 }}>
+                    <StoriesBar
+                        stories={stories}
+                        currentUser={user}
+                        onStoryClick={handleStoryClick}
+                        onAddStory={handleAddStory}
+                    />
+                </div>
+
                 {/* Cabeçalho Premium de Pesquisa e Filtro */}
                 <div className="feed-header-glass">
                     <div className="search-row-feed">

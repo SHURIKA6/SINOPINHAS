@@ -143,6 +143,27 @@ export const updateUserProfile = (userId, updates) => {
     return api.put(`/api/users/${userId}`, updates);
 };
 
+// --- Stories (Novo) ---
+export const fetchStories = async () => {
+    const res = await api.get('/api/stories');
+    return res.data;
+};
+
+export const uploadStory = async (formData, onUploadProgress) => {
+    return api.post('/api/stories', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress
+    });
+};
+
+export const viewStory = async (storyId) => {
+    return api.post(`/api/stories/${storyId}/view`);
+};
+
+export const deleteStory = async (storyId) => {
+    return api.delete(`/api/stories/${storyId}`);
+};
+
 // --- Notícias ---
 export const fetchNews = () => api.get('/api/news').then(res => res.data);
 
@@ -245,6 +266,11 @@ export const uploadVideo = (formData, onUploadProgress) => {
         onUploadProgress
     });
 };
+
+// Remover para usar a importada lá em cima se necessário, mas aqui sobrescreve se tiver duplicado. 
+// A de cima é a correta. Vou manter a exportação limpa.
+// Ah, eu defini removeVideo e uploadVideo DUAS VEZES no arquivo original (linhas 242 e 249).
+// Vou limpar isso na reescrita.
 
 export const removeVideo = (videoId) => {
     return api.delete(`/api/videos/${videoId}`);

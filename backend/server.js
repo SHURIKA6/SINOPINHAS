@@ -32,6 +32,7 @@ app.route('/api', socialRoutes);
 app.route('/api', newsRoutes); // Rota de Notícias
 app.route('/api', localRoutes); // Rotas do Guia Local (Eventos e Lugares)
 app.route('/api', pushRoutes); // Rotas de Notificações Push
+app.route('/api/stories', storiesRoutes); // Rotas de Stories
 app.route('/api/weather', weatherRoutes);
 app.route('/api/debug', debugRoutes);
 app.route('/api/health', healthRoutes);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { uploadVideo } from '../services/api';
+import { uploadVideo, uploadStory } from '../services/api';
 
 export default function UploadSection({ user, setShowAuth, showToast, loadVideos, setActiveTab }) {
     const [file, setFile] = useState(null);
@@ -9,7 +9,10 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
     const [progress, setProgress] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [isRestricted, setIsRestricted] = useState(false);
-    const [uploadType, setUploadType] = useState('video'); // 'video' or 'photo'
+
+    // Config: Destino (Feed vs Story) e Tipo (Video vs Foto)
+    const [destination, setDestination] = useState('feed'); // 'feed' | 'story'
+    const [uploadType, setUploadType] = useState('video'); // 'video' | 'photo'
 
     const upload = async () => {
         if (!user) {
@@ -18,9 +21,9 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
         }
         if (!file) return showToast(`Escolha um ${uploadType === 'video' ? 'vídeo' : 'foto'}!`, 'error');
 
-        const maxSize = 500 * 1024 * 1024;
+        const maxSize = 50 * 1024 * 1024; // 50MB (Story ou Feed)
         if (file.size > maxSize) {
-            return showToast('Arquivo muito grande! Máximo: 500MB', 'error');
+            return showToast('Arquivo muito grande! Máximo: 50MB', 'error');
         }
 
         // Validar tipo de arquivo
@@ -35,38 +38,58 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
             }
         }
 
-        const finalTitle = videoTitle.trim() || file.name;
-
         setProgress(0);
         const form = new FormData();
         form.append('file', file);
-        form.append('title', finalTitle);
-        form.append('description', description);
-        form.append('user_id', user.id.toString());
-        form.append('is_restricted', isRestricted.toString());
-        form.append('type', uploadType);
 
-        if (thumbnailFile && uploadType === 'video') {
-            form.append('thumbnail', thumbnailFile);
+        // Campos específicos por destino
+        if (destination === 'feed') {
+            const finalTitle = videoTitle.trim() || file.name;
+            form.append('title', finalTitle);
+            form.append('description', description);
+            form.append('user_id', user.id.toString());
+            form.append('is_restricted', isRestricted.toString());
+            form.append('type', uploadType);
+            if (thumbnailFile && uploadType === 'video') {
+                form.append('thumbnail', thumbnailFile);
+            }
+        } else {
+            // Story
+            form.append('caption', description); // Reusando campo descrição como legenda
+            form.append('type', uploadType); // O backend detecta mime, mas ok enviar
         }
 
         try {
-            await uploadVideo(form, (e) => {
-                const percent = Math.round((e.loaded * 100) / e.total);
-                setProgress(percent);
-            });
-            showToast(`${uploadType === 'video' ? 'Vídeo' : 'Foto'} enviado! 🎉`, 'success');
+            if (destination === 'feed') {
+                await uploadVideo(form, (e) => {
+                    const percent = Math.round((e.loaded * 100) / e.total);
+                    setProgress(percent);
+                });
+            } else {
+                await uploadStory(form, (e) => {
+                    const percent = Math.round((e.loaded * 100) / e.total);
+                    setProgress(percent);
+                });
+            }
+
+            showToast(`${destination === 'story' ? 'Story' : (uploadType === 'video' ? 'Vídeo' : 'Foto')} enviado! 🎉`, 'success');
             setProgress(0);
             setFile(null);
             setThumbnailFile(null);
             setVideoTitle('');
             setDescription('');
             setIsRestricted(false);
-            if (loadVideos) await loadVideos();
-            if (isRestricted) {
-                setActiveTab('secret');
+
+            // Redirecionar
+            if (destination === 'story') {
+                setActiveTab('feed'); // Volta pro feed pra ver o story
             } else {
-                setActiveTab('feed');
+                if (loadVideos) await loadVideos();
+                if (isRestricted) {
+                    setActiveTab('secret');
+                } else {
+                    setActiveTab('feed');
+                }
             }
         } catch (err) {
             showToast(err.response?.data?.error || 'Erro ao enviar', 'error');
@@ -78,14 +101,50 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
         <div style={{ maxWidth: 600, margin: '0 auto', color: 'var(--text-color)' }}>
             <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 24 }}>📤 Enviar Conteúdo</h2>
 
-            {/* Seletor de Tipo */}
+            {/* Seletor de Destino (Feed ou Story) */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                <button
+                    onClick={() => setDestination('feed')}
+                    style={{
+                        flex: 1,
+                        padding: 12,
+                        background: destination === 'feed' ? 'var(--accent-color)' : 'var(--input-bg)',
+                        color: destination === 'feed' ? '#fff' : 'var(--text-color)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.3s ease'
+                    }}
+                >
+                    📰 No Feed
+                </button>
+                <button
+                    onClick={() => setDestination('story')}
+                    style={{
+                        flex: 1,
+                        padding: 12,
+                        background: destination === 'story' ? '#d62976' : 'var(--input-bg)', // Cor Instagram ish
+                        color: destination === 'story' ? '#fff' : 'var(--text-color)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.3s ease'
+                    }}
+                >
+                    ⭕ No Story (24h)
+                </button>
+            </div>
+
+            {/* Seletor de Tipo (Video vs Foto) */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                 <button
                     onClick={() => setUploadType('video')}
                     style={{
                         flex: 1,
                         padding: 12,
-                        background: uploadType === 'video' ? 'var(--accent-color)' : 'var(--input-bg)',
+                        background: uploadType === 'video' ? '#0078D4' : 'var(--input-bg)',
                         color: '#fff',
                         border: '1px solid var(--border-color)',
                         borderRadius: 8,
@@ -167,71 +226,77 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--secondary-text)', opacity: 0.8 }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
 
-                    <input
-                        type="text"
-                        placeholder={`📁 Nome do arquivo: ${file.name}`}
-                        value={videoTitle}
-                        onChange={(e) => setVideoTitle(e.target.value)}
-                        style={{ width: '100%', padding: 14, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 16, marginBottom: 16 }}
-                    />
+                    {destination === 'feed' && (
+                        <input
+                            type="text"
+                            placeholder={`📁 Nome do arquivo: ${file.name}`}
+                            value={videoTitle}
+                            onChange={(e) => setVideoTitle(e.target.value)}
+                            style={{ width: '100%', padding: 14, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 16, marginBottom: 16 }}
+                        />
+                    )}
 
                     <textarea
-                        placeholder="📝 Descrição"
+                        placeholder={destination === 'story' ? "📝 Legenda (opcional)" : "📝 Descrição"}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={4}
                         style={{ width: '100%', padding: 14, background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-color)', fontSize: 15, marginBottom: 16, resize: 'vertical' }}
                     />
 
-                    <div style={{ marginBottom: 20 }}>
-                        <label style={{ display: 'block', marginBottom: 12, fontSize: 16, fontWeight: 500 }}>
-                            🖼️ Thumbnail personalizada (opcional):
-                        </label>
-                        <button
-                            onClick={() => document.getElementById('thumbnail-input').click()}
-                            style={{
-                                padding: '12px 20px',
-                                background: 'var(--input-bg)',
-                                color: 'var(--text-color)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: 10,
-                                cursor: 'pointer',
-                                fontSize: 14,
-                                fontWeight: 500,
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            Selecionar Thumbnail
-                        </button>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                                const thumb = e.target.files[0];
-                                if (thumb) {
-                                    setThumbnailFile(thumb);
-                                    showToast('Thumbnail selecionada!', 'success');
-                                }
-                            }}
-                            style={{ display: 'none' }}
-                            id="thumbnail-input"
-                        />
-                        {thumbnailFile && (
-                            <p style={{ marginTop: 10, color: '#10b981', fontSize: 14 }}>
-                                ✓ {thumbnailFile.name}
-                            </p>
-                        )}
-                    </div>
+                    {destination === 'feed' && (
+                        <div style={{ marginBottom: 20 }}>
+                            <label style={{ display: 'block', marginBottom: 12, fontSize: 16, fontWeight: 500 }}>
+                                🖼️ Thumbnail personalizada (opcional):
+                            </label>
+                            <button
+                                onClick={() => document.getElementById('thumbnail-input').click()}
+                                style={{
+                                    padding: '12px 20px',
+                                    background: 'var(--input-bg)',
+                                    color: 'var(--text-color)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 10,
+                                    cursor: 'pointer',
+                                    fontSize: 14,
+                                    fontWeight: 500,
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                Selecionar Thumbnail
+                            </button>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const thumb = e.target.files[0];
+                                    if (thumb) {
+                                        setThumbnailFile(thumb);
+                                        showToast('Thumbnail selecionada!', 'success');
+                                    }
+                                }}
+                                style={{ display: 'none' }}
+                                id="thumbnail-input"
+                            />
+                            {thumbnailFile && (
+                                <p style={{ marginTop: 10, color: '#10b981', fontSize: 14 }}>
+                                    ✓ {thumbnailFile.name}
+                                </p>
+                            )}
+                        </div>
+                    )}
 
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, cursor: 'pointer' }}>
-                        <input
-                            type="checkbox"
-                            checked={isRestricted}
-                            onChange={(e) => setIsRestricted(e.target.checked)}
-                            style={{ width: 20, height: 20, cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: 16 }}>🔒 Tornar vídeo privado (apenas +18)</span>
-                    </label>
+                    {destination === 'feed' && (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={isRestricted}
+                                onChange={(e) => setIsRestricted(e.target.checked)}
+                                style={{ width: 20, height: 20, cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: 16 }}>🔒 Tornar vídeo privado (apenas +18)</span>
+                        </label>
+                    )}
 
                     {progress > 0 && (
                         <div style={{ marginBottom: 20 }}>
@@ -260,7 +325,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         style={{
                             width: '100%',
                             padding: 16,
-                            background: progress > 0 ? '#555' : (isRestricted ? '#e53e3e' : 'var(--accent-color)'),
+                            background: progress > 0 ? '#555' : (destination === 'story' ? '#d62976' : (isRestricted ? '#e53e3e' : 'var(--accent-color)')),
                             color: '#fff',
                             border: 'none',
                             borderRadius: 10,
@@ -270,9 +335,10 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                             transition: 'all 0.3s'
                         }}
                     >
-                        {progress > 0 ? `Enviando... ${progress}%` : (isRestricted ? '🔒 Enviar Vídeo Privado' : '🚀 Enviar Conteúdo')}
+                        {progress > 0 ? `Enviando... ${progress}%` : (
+                            destination === 'story' ? '🚀 Postar Story' : (isRestricted ? '🔒 Enviar Vídeo Privado' : '🚀 Enviar Conteúdo')
+                        )}
                     </button>
-
                 </>
             )}
         </div>
