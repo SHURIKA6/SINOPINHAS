@@ -37,7 +37,7 @@ export async function queryDB(sql, params = [], env) {
 
         // Garante que o pool exista em cada tentativa (caso tenha sido resetado na anterior)
         if (!pool) {
-            console.log("🔌 Recriando Pool Neon Serverless para retry...");
+            console.warn("🔌 Recriando Pool Neon Serverless para retry...");
             pool = createPool(env);
         }
 
@@ -102,7 +102,7 @@ let isInitialized = false;
 export async function initDatabase(env) {
     if (isInitialized) return;
 
-    console.log("🛠️ Inicializando banco de dados...");
+    console.warn("🛠️ Inicializando banco de dados...");
     for (const q of SCHEMA_QUERIES) {
         try {
             await queryDB(q, [], env);
@@ -112,5 +112,5 @@ export async function initDatabase(env) {
     }
 
     isInitialized = true;
-    console.log("✅ Banco de dados inicializado.");
+    console.warn("✅ Banco de dados inicializado.");
 }

@@ -9,10 +9,9 @@ export function useAuth(showToast) {
     const [adminPassword, setAdminPassword] = useState('');
     const prevUnreadRef = useRef(0);
 
-    // Verificação Inicial
+    // Verificação Inicial — confiar no cookie HttpOnly via checkSession
     useEffect(() => {
         const checkAuth = async () => {
-            // Tentar verificar sessão via cookie primeiro
             try {
                 const sessionData = await checkSession();
                 if (sessionData?.user) {
@@ -22,20 +21,19 @@ export function useAuth(showToast) {
                     return;
                 }
             } catch (e) {
-                // Cookie inválido ou expirado, tentar fallback localStorage
+                // Cookie inválido ou expirado; qualquer fallback local é apenas informativo
             }
 
-            // Fallback: Autenticação via localStorage
+            // Fallback informativo localStorage: não confiar no token para autenticar automaticamente
             const savedUser = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
 
-            if (savedUser && token) {
+            if (savedUser) {
                 try {
                     const u = JSON.parse(savedUser);
                     setUser(u);
                     loadNotifications(u.id);
 
-                    // Atualizar Perfil
+                    // Atualizar Perfil se possível
                     try {
                         const res = await fetchPublicProfile(u.id);
                         if (res.data) {
@@ -48,10 +46,8 @@ export function useAuth(showToast) {
                     }
                 } catch (e) {
                     console.error("Failed to parse user", e);
-                    logout();
+                    localStorage.removeItem('user');
                 }
-            } else {
-                if (savedUser) localStorage.removeItem('user');
             }
         };
 
@@ -63,7 +59,6 @@ export function useAuth(showToast) {
         if (user?.role === 'admin') {
             setIsAdmin(true);
         } else if (!adminPassword) {
-            // Se não logou manualmente com senha mestre, e não é role admin, reseta
             setIsAdmin(false);
         }
     }, [user?.role, adminPassword]);
@@ -94,7 +89,7 @@ export function useAuth(showToast) {
         } catch (err) {
             console.error('Erro ao carregar notificações:', err);
             if (err.status === 401 || err.response?.status === 401) {
-                logout();
+                logout(true);
             }
         }
     };
@@ -102,20 +97,20 @@ export function useAuth(showToast) {
     const handleAuthSuccess = (userData) => {
         setUser(userData);
         if (userData.role === 'admin') setIsAdmin(true);
+        // Salvar apenas o perfil no localStorage como conveniência (não como fonte de verdade)
         localStorage.setItem('user', JSON.stringify(userData));
         if (userData.id) loadNotifications(userData.id);
         showToast(`Bem-vindo, ${userData.username}!`, 'success');
     };
 
     const handleAdminAuthSuccess = (password) => {
-        // Nós NÃO salvamos mais a senha no localStorage.
+        // Não salvamos senhas no localStorage.
         setIsAdmin(true);
         setAdminPassword(password);
-        // Token já salvo por api.loginAdmin
         showToast('Modo Admin Ativado', 'success');
     };
 
-    const logout = async () => {
+    const logout = async (silent = false) => {
         try {
             await apiLogout(); // Limpa cookie HttpOnly no backend
         } catch (e) {
@@ -128,7 +123,7 @@ export function useAuth(showToast) {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
         setUnreadCount(0);
-        showToast('Logout realizado', 'success');
+        if (!silent) showToast('Logout realizado', 'success');
     };
 
     const logoutAdmin = () => {
@@ -151,11 +146,8 @@ export function useAuth(showToast) {
             let subscription = await registration.pushManager.getSubscription();
 
             if (!subscription) {
-                // Se não houver, pede permissão e cria
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    // ESTA CHAVE DEVE SER GERADA (VAPID PUBLIC KEY)
-                    // Exemplo: npx web-push generate-vapid-keys
                     applicationServerKey: 'BM0Z72h-hiwvQg9kWtYpxsYYQncXlyVpEuxpZBrQdlZIkL8_9p-9NltrTH0Uy2GtBaWNoDwLq-gS8xsiVQIO_wA'
                 });
             }

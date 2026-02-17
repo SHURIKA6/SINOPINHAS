@@ -224,7 +224,7 @@ export const getComments = async (c) => {
         // Coluna ausente ou erro de tipo
         if (err.code === '42703' || err.code === '42804' || err.message.includes('column')) {
             try {
-                console.log("🛠️ Tentando reparar esquema da tabela comments...");
+                console.warn("🛠️ Tentando reparar esquema da tabela comments...");
                 await queryDB("ALTER TABLE comments ADD COLUMN IF NOT EXISTS video_id INTEGER", [], env);
                 await queryDB("ALTER TABLE comments ADD COLUMN IF NOT EXISTS user_id INTEGER", [], env);
                 await queryDB("ALTER TABLE comments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()", [], env);
@@ -537,7 +537,7 @@ export const sendMessage = async (c) => {
         // Ocorre quando tentamos usar ID 0 (Admin) mas a tabela exige um usuário real
         if (err.code === '23503') {
             try {
-                console.log("🔓 Relaxando restrições de messages para permitir Admin (ID 0)...");
+                console.warn("🔓 Relaxando restrições de messages para permitir Admin (ID 0)...");
                 await queryDB("ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_from_id_fkey", [], env);
                 await queryDB("ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_to_id_fkey", [], env);
                 // Tenta novamente após remover a trava

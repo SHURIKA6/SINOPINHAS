@@ -1,6 +1,7 @@
 import { queryDB } from '../db/index.js';
 import { sendToDiscord } from '../utils/discord.js';
 import { sendToGoogleSheets } from '../utils/google-sheets.js';
+import { CRITICAL_AUDIT_ACTIONS } from '../utils/constants.js';
 
 export async function logAudit(userId, action, details = {}, c) {
     try {
@@ -54,7 +55,7 @@ export async function logAudit(userId, action, details = {}, c) {
         }, env));
 
         // 2. Alertas Críticos (Discord)
-        const criticalActions = ['VIDEO_DELETED', 'VIDEO_DELETED_R2', 'ADMIN_LOGIN_SUCCESS', 'ADMIN_USER_BANNED', 'ADMIN_PASSWORD_RESET'];
+        const criticalActions = CRITICAL_AUDIT_ACTIONS;
         if (criticalActions.includes(action)) {
             const emoji = action.includes('DELETE') ? '🗑️' : action.includes('BAN') ? '🚫' : '🛡️';
             const msg = `${emoji} **Audit Alert: ${action}**\nUser: \`${userId || 'System'}\`\nIP: \`${ip}\`\nGeo: \`${geoInfo.city}, ${geoInfo.country}\``;

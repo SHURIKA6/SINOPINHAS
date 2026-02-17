@@ -4,13 +4,8 @@ import { sendToGoogleSheets } from '../utils/google-sheets.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
 import { videoMetadataSchema } from '../schemas/video.js';
 import { sanitize } from '../utils/sanitize.js';
-
-// Tipos MIME permitidos para upload
-const ALLOWED_MIME_TYPES = [
-    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo',
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/avif'
-];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '../utils/constants.js';
+import { validateMagicBytes } from '../utils/file-validation.js';
 
 // Função: Upload de vídeo para Cloudflare R2
 export const uploadVideo = async (c) => {
@@ -27,7 +22,7 @@ export const uploadVideo = async (c) => {
             return createErrorResponse(c, "INVALID_INPUT", "Arquivo e autenticação são obrigatórios", 400);
         }
 
-        // Validação de tipo de arquivo
+        // Validação de tipo de arquivo (MIME declarado)
         if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
             return createErrorResponse(c, "INVALID_FILE_TYPE",
                 `Tipo de arquivo não permitido: ${file.type}. Use: MP4, WebM, JPEG, PNG, GIF, WebP`, 400);
@@ -37,6 +32,16 @@ export const uploadVideo = async (c) => {
         if (file.size && file.size > MAX_FILE_SIZE) {
             return createErrorResponse(c, "FILE_TOO_LARGE",
                 `Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Máximo: 50MB`, 400);
+        }
+
+        // Segurança: Validar magic bytes (conteúdo real do arquivo)
+        if (file.arrayBuffer) {
+            const headerBytes = await file.slice(0, 16).arrayBuffer();
+            const magicResult = validateMagicBytes(headerBytes, file.type);
+            if (!magicResult.valid) {
+                return createErrorResponse(c, "INVALID_FILE_CONTENT",
+                    magicResult.reason || "Conteúdo do arquivo não corresponde ao tipo declarado", 400);
+            }
         }
 
         const validationResult = videoMetadataSchema.safeParse({

@@ -82,7 +82,7 @@ export default {
       }), {
         status: 500,
         headers: {
-          ...corsHeaders,
+          ...corsHeaders(request.headers.get('Origin')),
           'Content-Type': 'application/json'
         }
       });

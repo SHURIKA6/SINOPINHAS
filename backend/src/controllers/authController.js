@@ -135,7 +135,7 @@ export const login = async (c) => {
                 try {
                     const newHash = await hash(password);
                     await queryDB("UPDATE users SET password = $1 WHERE id = $2", [newHash, rows[0].id], env);
-                    console.log(`🔒 Senha do usuário ${rows[0].id} migrada para PBKDF2`);
+                    console.warn(`🔒 Senha do usuário ${rows[0].id} migrada para PBKDF2`);
                 } catch (e) {
                     console.error("Erro ao rehash:", e.message);
                 }

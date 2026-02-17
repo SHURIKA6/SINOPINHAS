@@ -8,16 +8,10 @@ const api = axios.create({
     withCredentials: true // Enviar cookies em todas as requisições
 });
 
-// Interceptador para adicionar fallback de Token JWT via header
-// O cookie HttpOnly é enviado automaticamente pelo browser.
-// O header Authorization é mantido como fallback de retrocompatibilidade.
+// Interceptador para requisições — sem fallback para token em localStorage por questões de segurança
 api.interceptors.request.use((config) => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.set('Authorization', `Bearer ${token}`);
-        }
-    }
+    // Não usar localStorage para armazenar tokens sensíveis (risco XSS).
+    // O cookie HttpOnly deve ser usado como forma principal de autenticação.
     return config;
 });
 
@@ -225,10 +219,7 @@ export const loginUser = async (username, password) => {
         auth_type: 'login',
     });
     const res = await api.post('/api/login', { username, password, ...fingerprintData });
-    // Token agora vem via cookie HttpOnly, mas mantemos fallback no localStorage
-    if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-    }
+    // Token deve vir via cookie HttpOnly; NÃO armazenar token em localStorage por segurança.
     return res.data;
 };
 
@@ -238,18 +229,13 @@ export const registerUser = async (username, password) => {
         auth_type: 'register',
     });
     const res = await api.post('/api/register', { username, password, ...fingerprintData });
-    // Token agora vem via cookie HttpOnly, mas mantemos fallback no localStorage
-    if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-    }
+    // Token deve vir via cookie HttpOnly; NÃO armazenar token em localStorage por segurança.
     return res.data;
 };
 
 export const loginAdmin = async (password) => {
     const res = await api.post('/api/admin/login', { password });
-    if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-    }
+    // Token via cookie HttpOnly
     return res.data;
 };
 

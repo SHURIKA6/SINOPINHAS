@@ -48,7 +48,7 @@ async function checkVPNShodan(ip) {
                 data.tags.includes("proxy") ||
                 data.tags.includes("tor")
             )) {
-                console.log(`🚫 VPN detectada via Shodan: ${ip} - Tags: ${data.tags.join(', ')}`);
+                console.warn(`🚫 VPN detectada via Shodan: ${ip} - Tags: ${data.tags.join(', ')}`);
                 return true;
             }
         }
@@ -64,14 +64,14 @@ export async function isVPN(ip, c) {
         const cfIsTor = c.req.header("CF-Is-Tor");
         const cfCountry = c.req.header("CF-IPCountry");
         if (cfIsTor === "1" || cfCountry === 'T1') {
-            console.log("🚫 Conexão TOR detectada");
+            console.warn("🚫 Conexão TOR detectada");
             return true;
         }
 
         // 2. CF Threat Score MUITO ALTO (apenas ameaças reais, não proxies normais)
         const cfThreatScore = c.req.header("CF-Threat-Score");
         if (cfThreatScore && parseInt(cfThreatScore) > 50) {
-            console.log(`🚫 Ameaça detectada via CF Threat Score: ${cfThreatScore}`);
+            console.warn(`🚫 Ameaça detectada via CF Threat Score: ${cfThreatScore}`);
             return true;
         }
 
@@ -80,7 +80,7 @@ export async function isVPN(ip, c) {
         if (cfASN) {
             const asnString = `AS${cfASN}`;
             if (VPN_PROVIDER_ASNS.includes(asnString)) {
-                console.log(`🚫 VPN detectada via ASN de provedor VPN: ${asnString}`);
+                console.warn(`🚫 VPN detectada via ASN de provedor VPN: ${asnString}`);
                 return true;
             }
         }
@@ -91,7 +91,7 @@ export async function isVPN(ip, c) {
             const ispLower = String(cfISP).toLowerCase();
             for (const keyword of VPN_SPECIFIC_KEYWORDS) {
                 if (ispLower.includes(keyword)) {
-                    console.log(`🚫 VPN detectada via ISP: ${cfISP}`);
+                    console.warn(`🚫 VPN detectada via ISP: ${cfISP}`);
                     return true;
                 }
             }

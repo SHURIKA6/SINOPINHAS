@@ -20,12 +20,12 @@ export function getCorsOrigin(requestOrigin, env) {
     return allowedOrigins[0]; // Fallback para o domínio principal
 }
 
-export const corsHeaders = {
-    'Access-Control-Allow-Origin': 'https://sinopinhas.vercel.app',
+export const corsHeaders = (origin) => ({
+    'Access-Control-Allow-Origin': origin || DEFAULT_ORIGINS[0],
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept',
     'Access-Control-Allow-Credentials': 'true',
-};
+});
 
 /**
  * Helper para padronizar respostas da API
@@ -34,8 +34,9 @@ export const corsHeaders = {
  * @param {number} status 
  */
 export const createResponse = (c, data, status = 200) => {
-    // Garantir que headers sejam aplicados
-    Object.entries(corsHeaders).forEach(([key, value]) => {
+    const origin = getCorsOrigin(c.req.header('Origin'), c.env);
+    const headers = corsHeaders(origin);
+    Object.entries(headers).forEach(([key, value]) => {
         c.header(key, value);
     });
     return c.json(data, status);
@@ -50,7 +51,9 @@ export const createResponse = (c, data, status = 200) => {
  * @param {object} details 
  */
 export const createErrorResponse = (c, code, message, status = 500, details = null) => {
-    Object.entries(corsHeaders).forEach(([key, value]) => {
+    const origin = getCorsOrigin(c.req.header('Origin'), c.env);
+    const headers = corsHeaders(origin);
+    Object.entries(headers).forEach(([key, value]) => {
         c.header(key, value);
     });
 

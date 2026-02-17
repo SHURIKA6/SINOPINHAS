@@ -141,19 +141,21 @@ export const SCHEMA_QUERIES = [
         created_at TIMESTAMP DEFAULT NOW()
     )`,
 
-    // Índices
+    // Índices para performance de queries
     "CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)",
     "CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token)",
     "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(from_id, to_id)",
     "CREATE INDEX IF NOT EXISTS idx_likes_video_user ON likes(video_id, user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id)",
     "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_videos_is_restricted_type ON videos(is_restricted, type)",
     "CREATE INDEX IF NOT EXISTS idx_videos_created_at_desc ON videos(created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)",
     "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint)",
 
     // Tabela de Mensagens do Shura Logs
     `CREATE TABLE IF NOT EXISTS shura_messages (
@@ -172,14 +174,8 @@ export const SCHEMA_QUERIES = [
         device_info JSONB,
         created_at TIMESTAMP DEFAULT NOW()
     )`,
-    "ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS endpoint TEXT",
-    "ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'user'",
+
+    // Migrações (colunas adicionadas após criação inicial)
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS discovered_logs BOOLEAN DEFAULT FALSE",
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint)",
-    "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
-    "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
-    "CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id)",
-    "CREATE INDEX IF NOT EXISTS idx_messages_users ON messages(from_id, to_id)",
-    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE"
 ];

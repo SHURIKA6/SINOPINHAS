@@ -7,7 +7,6 @@ import { AuthProvider } from '../contexts/AuthContext';
 
 function MyApp({ Component, pageProps }) {
     useEffect(() => {
-        // Atrasar easter egg para não impactar performance de carregamento
         const startEasterEgg = () => {
             const bio = `
 [ SINOPINHAS_OS // DEV_PROFILE ]
@@ -56,7 +55,6 @@ PRESS ENTER TO FINALIZE...
         };
 
         let typingInterval;
-        // Usar requestIdleCallback para não impactar LCP/FID
         if (typeof requestIdleCallback !== 'undefined') {
             requestIdleCallback(() => { typingInterval = startEasterEgg(); });
         } else {
@@ -72,8 +70,9 @@ PRESS ENTER TO FINALIZE...
     }, []);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+
         if ('serviceWorker' in navigator) {
-            // Registrar diretamente — load event pode já ter disparado em SPA
             navigator.serviceWorker.register('/sw.js').then(
                 (registration) => console.log('SW registrado:', registration.scope),
                 (err) => console.log('SW falhou:', err)
