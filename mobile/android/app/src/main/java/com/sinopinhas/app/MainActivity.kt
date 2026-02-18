@@ -1,4 +1,4 @@
-package com.anonymous.mobile
+package com.sinopinhas.app
 
 import android.os.Build
 import android.os.Bundle

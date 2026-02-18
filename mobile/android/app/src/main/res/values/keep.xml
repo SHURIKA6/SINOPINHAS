@@ -1,0 +1,2 @@
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@color/colorPrimaryDark,@string/expo_splash_screen_resize_mode,@string/expo_splash_screen_status_bar_translucent,@string/react_native_dev_server_ip,@integer/react_native_dev_server_port" />
