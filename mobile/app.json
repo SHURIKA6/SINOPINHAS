@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "SINOPINHAS",
+    "slug": "sinopinhas",
     "scheme": "sinopinhas",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.mobile"
+      "package": "com.sinopinhas.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { View, ImageBackground } from 'react-native';
 
 export default function Layout() {
     const { user, loading } = useAuth();
@@ -11,33 +11,38 @@ export default function Layout() {
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#0f0d15' }}>
-            <StatusBar style="light" backgroundColor="#0f0d15" />
-            <Stack
-                screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: '#0f0d15' },
-                    animationEnabled: false,
-                }}
+        <View style={{ flex: 1 }}>
+            {/* Background Aero/Bliss Style */}
+            <ImageBackground 
+                source={require('../assets/backgrounds/xp-bliss.png')} 
+                style={{ flex: 1 }}
+                resizeMode="cover"
             >
-                {!user ? (
-                    <Stack.Screen
-                        name="(auth)"
-                        options={{
-                            headerShown: false,
-                            animationEnabled: false,
-                        }}
-                    />
-                ) : (
-                    <Stack.Screen
-                        name="(tabs)"
-                        options={{
-                            headerShown: false,
-                            animationEnabled: false,
-                        }}
-                    />
-                )}
-            </Stack>
+                <StatusBar style="light" transparent />
+                <Stack
+                    screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: 'transparent' },
+                        animationEnabled: true,
+                    }}
+                >
+                    {!user ? (
+                        <Stack.Screen
+                            name="(auth)"
+                            options={{
+                                headerShown: false,
+                            }}
+                        />
+                    ) : (
+                        <Stack.Screen
+                            name="(tabs)"
+                            options={{
+                                headerShown: false,
+                            }}
+                        />
+                    )}
+                </Stack>
+            </ImageBackground>
         </View>
     );
 }
