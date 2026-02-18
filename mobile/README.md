@@ -73,58 +73,58 @@ mobile/
 ✅ **Permissões Android**
 - Internet, câmera, galeria, áudio
 
-## Como Usar
+## 🚀 Como Rodar e Mobilar
 
-### Desenvolvimento
+### 1. Desenvolvimento Local
 ```bash
 cd mobile
 npm install
 npm start
+# Pressione 'a' para Android ou escaneie o QR Code com Expo Go
 ```
 
-### Android
+### 2. Gerar Assets (Ícones e Splash)
+Antes de gerar o build, crie seus ícones em `mobile/assets/`:
+- `icon.png` (1024x1024)
+- `splash-icon.png` (1024x1024)
+- `adaptive-icon.png` (1024x1024)
+
+### 3. Build para Produção (Android)
+Existem duas formas de gerar o APK/AAB:
+
+**Opção A: Via EAS (Recomendado)**
 ```bash
-npm run android
+npm install -g eas-cli
+eas login
+eas build --platform android
 ```
 
-### Build Android
+**Opção B: Build Local (Pre-build)**
 ```bash
-npm run build:android
+# Gera as pastas nativas (android/)
+npx expo prebuild
+
+# Compila o projeto (precisa do Android Studio / SDK configurado)
+npm run android -- --mode release
 ```
 
-## Variáveis de Ambiente
+### 4. Permissões Android
+O `AndroidManifest.xml` já está configurado com:
+- Internet, Câmera, Galeria, Áudio e Gravação.
 
-Copie `.env.example` para `.env` e configure:
-
+### 5. Variáveis de Ambiente
+Copie `.env.example` para `.env` e ajuste a URL da API:
 ```env
-EXPO_PUBLIC_API_URL=https://seu-backend.com
-EXPO_PUBLIC_APP_NAME=SINOPINHAS
-EXPO_PUBLIC_APP_SCHEME=sinopinhas
+EXPO_PUBLIC_API_URL=https://backend.fernandoriaddasilvaribeiro.workers.dev
 ```
 
-## Próximos Passos para Android Studio
+## 📱 Estrutura do App
 
-1. **Gerar Assets**:
-   - Criar ícones em múltiplas resoluções
-   - Gerar splash screen
+- **(auth)/**: Login e Registro (Stack)
+- **(tabs)/**: Feed, Explorar, Upload, Perfil (Tabs)
+- **services/api.js**: Configuração do Axios com interceptors de Token
+- **context/AuthContext.js**: Gerenciamento global de sessão (SecureStore)
+- **nativewind**: Estilização com classes Tailwind
 
-2. **Configurar Build**:
-   - Gerar keystore assinado
-   - Configurar app.json para produção
-
-3. **Testar**:
-   - Rodar no emulador Android
-   - Testar permissões de câmera/galeria
-   - Verificar deep linking
-
-4. **Deploy**:
-   - Google Play Store
-   - EAS (Expo Application Services)
-
-## Notas Importantes
-
-- O App.js não é mais usado, tudo passa pelo Expo Router
-- Autenticação é centralizada no contexto
-- Dark theme é padrão
-- Tailwind com NativeWind para estilização
-- API pode ser customizada no .env
+---
+**Status**: ✅ Pronto para Mobilar (17/02/2026)
