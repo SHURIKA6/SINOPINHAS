@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Send, Trash2 } from 'lucide-react';
-import { api } from '../../services/api';
+import api from '../../services/api';
 
 export default function StoryViewer({ storyGroup, onClose, onStoryViewed, currentUserId }) {
     const [currentIndex, setCurrentIndex] = useState(0);
