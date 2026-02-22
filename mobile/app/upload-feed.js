@@ -47,7 +47,7 @@ export default function UploadFeed() {
     };
 
     return (
-        <StyledView className="flex-1 bg-[#0f0d15] p-5">
+        <StyledView className="flex-1 bg-[#0E2A47] p-5">
             <StyledView className="items-center mt-10 mb-5">
                 <StyledText className="text-white text-xl font-bold">Novo Post</StyledText>
             </StyledView>

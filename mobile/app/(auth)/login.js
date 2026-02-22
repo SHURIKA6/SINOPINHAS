@@ -26,7 +26,7 @@ export default function Login() {
     };
 
     return (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: '#0f0d15' }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: '#0E2A47' }}>
             <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
                 <StyledView className="items-center mb-10">
                     <StyledText className="text-white text-4xl font-bold mb-2 tracking-tighter">SINOPINHAS</StyledText>

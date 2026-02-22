@@ -20,7 +20,7 @@ export default function ProfileScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f0d15]">
+        <SafeAreaView className="flex-1 bg-[#0E2A47]">
             <StatusBar style="light" />
 
             <StyledView className="px-4 py-4 border-b border-white/5">

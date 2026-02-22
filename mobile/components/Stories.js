@@ -25,7 +25,7 @@ export default function Stories({ stories, user, onStoryClick, onAddStory }) {
                                 source={{ uri: user.avatar || 'https://via.placeholder.com/100' }}
                                 className="w-full h-full rounded-full border-2 border-gray-700"
                             />
-                            <StyledView className="absolute bottom-0 right-0 bg-blue-500 rounded-full w-6 h-6 items-center justify-center border-2 border-[#0f0d15]">
+                            <StyledView className="absolute bottom-0 right-0 bg-blue-500 rounded-full w-6 h-6 items-center justify-center border-2 border-[#0E2A47]">
                                 <Plus size={14} color="white" strokeWidth={3} />
                             </StyledView>
                         </StyledView>
@@ -50,14 +50,14 @@ export default function Stories({ stories, user, onStoryClick, onAddStory }) {
                                     >
                                         <StyledImage
                                             source={{ uri: group.avatar || 'https://via.placeholder.com/100' }}
-                                            className="w-16 h-16 rounded-full border-2 border-[#0f0d15]"
+                                            className="w-16 h-16 rounded-full border-2 border-[#0E2A47]"
                                         />
                                     </LinearGradient>
                                 ) : (
                                     <StyledView className="w-[68px] h-[68px] rounded-full border-2 border-gray-600 justify-center items-center p-[2px]">
                                         <StyledImage
                                             source={{ uri: group.avatar || 'https://via.placeholder.com/100' }}
-                                            className="w-16 h-16 rounded-full border-2 border-[#0f0d15]"
+                                            className="w-16 h-16 rounded-full border-2 border-[#0E2A47]"
                                         />
                                     </StyledView>
                                 )}

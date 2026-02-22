@@ -50,9 +50,6 @@ export default function Header({
             {/* Banner Superior / Cabeçalho de Vidro */}
             <div className="aero-header-top">
                 <div className="left-brand">
-                    <motion.div whileHover={{ scale: 1.1 }} className="logo-bubble">
-                        <img src="/icons/icon-192x192.png" alt="S" className="logo-img" onError={(e) => e.target.style.display = 'none'} />
-                    </motion.div>
                     <h1 className="brand-text">SINOPINHAS</h1>
                 </div>
 

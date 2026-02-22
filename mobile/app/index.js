@@ -86,11 +86,11 @@ export default function Home() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f0d15]" edges={['top']}>
+        <SafeAreaView className="flex-1 bg-[#0E2A47]" edges={['top']}>
             <StatusBar style="light" />
 
             {/* Header */}
-            <StyledView className="px-4 py-3 flex-row justify-between items-center bg-[#0f0d15]/90 border-b border-white/5">
+            <StyledView className="px-4 py-3 flex-row justify-between items-center bg-[#0E2A47]/90 border-b border-white/5">
                 <StyledText className="text-white text-2xl font-bold tracking-tighter">SINOPINHAS</StyledText>
                 <StyledView className="flex-row gap-4 items-center">
                     {user ? (

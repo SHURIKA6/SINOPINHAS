@@ -15,10 +15,10 @@ export default function SearchScreen() {
     const [results, setResults] = useState([]);
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0f0d15]">
+        <SafeAreaView className="flex-1 bg-[#0E2A47]">
             <StatusBar style="light" />
 
-            <StyledView className="px-4 py-4 bg-[#0f0d15]">
+            <StyledView className="px-4 py-4 bg-[#0E2A47]">
                 <StyledView className="flex-row items-center bg-gray-800 rounded-full pl-4 pr-2 py-2">
                     <Search size={20} color="#666" />
                     <StyledInput

@@ -7,7 +7,7 @@ const StyledText = styled(Text);
 
 export default function Upload() {
     return (
-        <StyledView className="flex-1 bg-[#0f0d15] justify-center items-center">
+        <StyledView className="flex-1 bg-[#0E2A47] justify-center items-center">
             <StyledText className="text-white">Upload de Feed (Em breve)</StyledText>
         </StyledView>
     );
