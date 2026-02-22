@@ -29,12 +29,24 @@ export default function Home() {
 
     const loadData = async () => {
         try {
-            const [vids, storyData] = await Promise.all([
+            const [videosResult, storiesResult] = await Promise.allSettled([
                 fetchVideos(1, 10),
                 fetchStories()
             ]);
-            setVideos(vids);
-            setStories(storyData);
+
+            if (videosResult.status === 'fulfilled') {
+                setVideos(videosResult.value || []);
+            } else {
+                console.log('Error loading videos', videosResult.reason);
+                setVideos([]);
+            }
+
+            if (storiesResult.status === 'fulfilled') {
+                setStories(storiesResult.value || []);
+            } else {
+                console.log('Stories endpoint unavailable', storiesResult.reason?.response?.status || storiesResult.reason?.message);
+                setStories([]);
+            }
         } catch (e) {
             console.log('Error loading home data', e);
             alert(`Erro ao carregar feed: ${e.message}`);

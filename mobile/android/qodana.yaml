@@ -1,0 +1,176 @@
+#-------------------------------------------------------------------------------#
+#               Qodana analysis is configured by qodana.yaml file               #
+#             https://www.jetbrains.com/help/qodana/qodana-yaml.html            #
+#-------------------------------------------------------------------------------#
+#################################################################################
+#              WARNING: Do not store sensitive information in this file,        #
+#               as its contents will be included in the Qodana report.          #
+#################################################################################
+version: "1.0"
+#Specify inspection profile for code analysis
+profile:
+  name: qodana.starter
+#Enable inspections
+#include:
+#  - name: <SomeEnabledInspectionId>
+#Disable inspections
+#exclude:
+#  - name: <SomeDisabledInspectionId>
+#    paths:
+#      - <path/where/not/run/inspection>
+projectJDK: "17" #(Applied in CI/CD pipeline)
+#Execute shell command before Qodana execution (Applied in CI/CD pipeline)
+#bootstrap: sh ./prepare-qodana.sh
+#Install IDE plugins before Qodana execution (Applied in CI/CD pipeline)
+#plugins:
+#  - id: <plugin.id> #(plugin id can be found at https://plugins.jetbrains.com)
+# Quality gate. Will fail the CI/CD pipeline if any condition is not met
+# severityThresholds - configures maximum thresholds for different problem severities
+# testCoverageThresholds - configures minimum code coverage on a whole project and newly added code
+# Code Coverage is available in Ultimate and Ultimate Plus plans
+#failureConditions:
+#  severityThresholds:
+#    any: 15
+#    critical: 5
+#  testCoverageThresholds:
+#    fresh: 70
+#    total: 50
+#Specify Qodana linter for analysis (Applied in CI/CD pipeline)
+linter: jetbrains/qodana-jvm:2025.3
+exclude:
+  - name: All
+    paths:
+      - ..
+      - ../node_modules
+      - ../node_modules/expo
+      - ../node_modules/expo/android
+      - ../node_modules/expo/android/build.gradle
+      - ../node_modules/expo-constants
+      - ../node_modules/expo-constants/android
+      - ../node_modules/expo-constants/android/src
+      - ../node_modules/expo-constants/android/src/main
+      - ../node_modules/expo-constants/android/src/main/java
+      - ../node_modules/expo-constants/android/src/main/java/expo
+      - ../node_modules/expo-constants/android/src/main/java/expo/modules
+      - ../node_modules/expo-constants/android/src/main/java/expo/modules/constants
+      - ../node_modules/expo-constants/android/src/main/java/expo/modules/constants/ConstantsService.kt
+      - ../node_modules/expo-constants/android/build.gradle
+      - ../node_modules/expo-modules-autolinking
+      - ../node_modules/expo-modules-autolinking/android
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin/build.gradle.kts
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/build.gradle.kts
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin
+      - ../node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/build.gradle.kts
+      - ../node_modules/expo-modules-core
+      - ../node_modules/expo-modules-core/android
+      - ../node_modules/expo-modules-core/android/src
+      - ../node_modules/expo-modules-core/android/src/main
+      - ../node_modules/expo-modules-core/android/src/main/java
+      - ../node_modules/expo-modules-core/android/src/main/java/expo
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/DataPersistor.kt
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/edgeToEdge
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/edgeToEdge/EdgeToEdgePackage.kt
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/tracing
+      - ../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/tracing/ExpoTrace.kt
+      - ../node_modules/expo-modules-core/android/build.gradle
+      - ../node_modules/expo-modules-core/expo-module-gradle-plugin
+      - ../node_modules/expo-modules-core/expo-module-gradle-plugin/build.gradle.kts
+      - ../node_modules/react-native-safe-area-context
+      - ../node_modules/react-native-safe-area-context/android
+      - ../node_modules/react-native-safe-area-context/android/src
+      - ../node_modules/react-native-safe-area-context/android/src/main
+      - ../node_modules/react-native-safe-area-context/android/src/main/java
+      - ../node_modules/react-native-safe-area-context/android/src/main/java/com
+      - ../node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave
+      - ../node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext
+      - ../node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaUtils.kt
+      - ../node_modules/react-native-safe-area-context/android/build.gradle
+      - ../node_modules/react-native-screens
+      - ../node_modules/react-native-screens/android
+      - ../node_modules/react-native-screens/android/src
+      - ../node_modules/react-native-screens/android/src/main
+      - ../node_modules/react-native-screens/android/src/main/java
+      - ../node_modules/react-native-screens/android/src/main/java/com
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/helpers
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/helpers/SystemDrawable.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabScreen.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabScreenViewManager.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabsHost.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack/views
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/stack/views/ScreensCoordinatorLayout.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt
+      - ../node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt
+      - ../node_modules/react-native-screens/android/src/main/res
+      - ../node_modules/react-native-screens/android/src/main/res/base
+      - ../node_modules/react-native-screens/android/src/main/res/base/drawable
+      - ../node_modules/react-native-screens/android/src/main/res/base/drawable/rns_rounder_top_corners_shape.xml
+      - ../node_modules/react-native-screens/android/src/main/res/base/values
+      - ../node_modules/react-native-screens/android/src/main/res/base/values/themes.xml
+      - ../node_modules/react-native-screens/android/build.gradle
+      - ../node_modules/react-native-svg
+      - ../node_modules/react-native-svg/android
+      - ../node_modules/react-native-svg/android/src
+      - ../node_modules/react-native-svg/android/src/main
+      - ../node_modules/react-native-svg/android/src/main/java
+      - ../node_modules/react-native-svg/android/src/main/java/com
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg/GroupView.java
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg/RectView.java
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg/RenderableView.java
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg/RNSVGRenderableManager.java
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg/SvgView.java
+      - ../node_modules/react-native-svg/android/src/main/java/com/horcrux/svg/TSpanView.java
+      - ../node_modules/react-native-svg/android/build.gradle
+      - app
+      - app/src
+      - app/src/main
+      - app/src/main/java
+      - app/src/main/java/com
+      - app/src/main/java/com/sinopinhas
+      - app/src/main/java/com/sinopinhas/app
+      - app/src/main/java/com/sinopinhas/app/MainActivity.kt
+      - app/src/main/java/com/sinopinhas/app/MainApplication.kt
+      - app/src/main/res
+      - app/src/main/res/mipmap-hdpi
+      - app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp
+      - app/src/main/res/mipmap-hdpi/ic_launcher_round.webp
+      - app/src/main/res/mipmap-hdpi/ic_launcher.webp
+      - app/src/main/res/mipmap-mdpi
+      - app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp
+      - app/src/main/res/mipmap-mdpi/ic_launcher_round.webp
+      - app/src/main/res/mipmap-mdpi/ic_launcher.webp
+      - app/src/main/res/mipmap-xhdpi
+      - app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp
+      - app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp
+      - app/src/main/res/mipmap-xhdpi/ic_launcher.webp
+      - app/src/main/res/mipmap-xxhdpi
+      - app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp
+      - app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp
+      - app/src/main/res/mipmap-xxhdpi/ic_launcher.webp
+      - app/src/main/res/mipmap-xxxhdpi
+      - app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp
+      - app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp
+      - app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp
+      - app/src/main/res/values
+      - app/src/main/res/values/colors.xml
+      - app/src/main/res/values/strings.xml
+      - app/src/main/AndroidManifest.xml
+      - app/build.gradle

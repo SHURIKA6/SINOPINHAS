@@ -28,12 +28,24 @@ export default function Home() {
 
     const loadData = async () => {
         try {
-            const [vids, storyData] = await Promise.all([
+            const [videosResult, storiesResult] = await Promise.allSettled([
                 fetchVideos(1, 10),
                 fetchStories()
             ]);
-            setVideos(vids);
-            setStories(storyData);
+
+            if (videosResult.status === 'fulfilled') {
+                setVideos(videosResult.value || []);
+            } else {
+                console.log('Error loading videos', videosResult.reason);
+                setVideos([]);
+            }
+
+            if (storiesResult.status === 'fulfilled') {
+                setStories(storiesResult.value || []);
+            } else {
+                console.log('Stories endpoint unavailable', storiesResult.reason?.response?.status || storiesResult.reason?.message);
+                setStories([]);
+            }
         } catch (e) {
             console.log('Error loading home data', e);
         } finally {
@@ -70,16 +82,6 @@ export default function Home() {
         } catch (e) { }
     };
 
-    if (viewingStoryGroup) {
-        return (
-            <StoryViewer
-                group={viewingStoryGroup}
-                onStoryViewed={handleStoryViewed}
-                onClose={() => setViewingStoryGroup(null)}
-            />
-        );
-    }
-
     return (
         <SafeAreaView className="flex-1 bg-[#0f0d15]" edges={['top']}>
             <StatusBar style="light" />
@@ -111,7 +113,7 @@ export default function Home() {
                     videos.map((video, idx) => (
                         <StyledView key={video.id || idx} className="bg-black mb-2 border-b border-white/5">
                             <Video
-                                source={{ uri: video.url }}
+                                source={{ uri: video.video_url || video.url }}
                                 rate={1.0}
                                 volume={1.0}
                                 isMuted={false}
@@ -148,6 +150,17 @@ export default function Home() {
                     </StyledView>
                 )}
             </ScrollView>
+
+            {viewingStoryGroup && (
+                <StoryViewer
+                    visible={!!viewingStoryGroup}
+                    storyGroup={viewingStoryGroup}
+                    onStoryViewed={handleStoryViewed}
+                    onClose={() => setViewingStoryGroup(null)}
+                    currentUserId={user?.id}
+                    onDelete={() => { }}
+                />
+            )}
         </SafeAreaView>
     );
 }

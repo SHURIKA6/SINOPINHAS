@@ -12,6 +12,7 @@ import newsRoutes from './src/routes/news.js';
 import weatherRoutes from './src/routes/weather.js';
 import localRoutes from './src/routes/local.js';
 import pushRoutes from './src/routes/push.js';
+import storiesRoutes from './src/routes/stories.js';
 import { initDatabase } from './src/db/index.js';
 
 const app = new Hono();

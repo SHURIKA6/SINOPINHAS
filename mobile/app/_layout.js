@@ -1,9 +1,9 @@
-import { useAuth } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ImageBackground } from 'react-native';
 
-export default function Layout() {
+function RootLayoutNav() {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -44,5 +44,13 @@ export default function Layout() {
                 </Stack>
             </ImageBackground>
         </View>
+    );
+}
+
+export default function RootLayout() {
+    return (
+        <AuthProvider>
+            <RootLayoutNav />
+        </AuthProvider>
     );
 }

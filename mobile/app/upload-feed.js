@@ -3,10 +3,9 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { styled } from 'nativewind';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadStory } from '../services/api'; // We need a new uploadVideo endpoint, using uploadStory for now? No, need to check api.js
+import { uploadVideo } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import api from '../services/api';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -36,19 +35,8 @@ export default function UploadFeed() {
         if (!media) return;
         setLoading(true);
 
-        const formData = new FormData();
-        formData.append('file', {
-            uri: media.uri,
-            type: media.type === 'video' ? 'video/mp4' : 'image/jpeg',
-            name: media.fileName || 'post.jpg',
-        });
-        formData.append('title', caption); // Backend expects 'title' for videos/posts
-        formData.append('type', media.type === 'video' ? 'video' : 'photo');
-
         try {
-            await api.post('/api/videos/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            await uploadVideo(media, caption);
             router.replace('/');
         } catch (e) {
             alert('Erro ao enviar post');
