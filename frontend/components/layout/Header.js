@@ -189,11 +189,12 @@ export default function Header({
 
                 .left-brand { display: flex; align-items: center; gap: 12px; }
                 .logo-bubble {
-                    width: 42px; height: 42px; background: rgba(255,255,255,0.2);
-                    border-radius: 50%; padding: 4px; border: 1px solid rgba(255,255,255,0.5);
-                    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+                    width: 42px; height: 42px; background: transparent;
+                    border-radius: 12px; padding: 0; border: none;
+                    box-shadow: 0 2px 10px rgba(0, 88, 238, 0.3);
+                    overflow: hidden;
                 }
-                .logo-img { width: 100%; height: 100%; object-fit: contain; }
+                .logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
                 .brand-text {
                     font-size: 24px; font-weight: 800; color: white; margin: 0;
                     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
