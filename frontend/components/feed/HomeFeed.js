@@ -195,15 +195,17 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             </AnimatePresence>
 
             <div className="home-feed-container">
-                {/* Stories Bar (Somente se logado? Não, pode ver público se implementar public stories, mas aqui requer user para adicionar) */}
-                <div style={{ marginBottom: 24 }}>
-                    <StoriesBar
-                        stories={stories}
-                        currentUser={user}
-                        onStoryClick={handleStoryClick}
-                        onAddStory={handleAddStory}
-                    />
-                </div>
+                {/* Stories Bar (Somente se logado ou se há stories públicos) */}
+                {(user || stories.length > 0) && (
+                    <div style={{ marginBottom: 24 }}>
+                        <StoriesBar
+                            stories={stories}
+                            currentUser={user}
+                            onStoryClick={handleStoryClick}
+                            onAddStory={handleAddStory}
+                        />
+                    </div>
+                )}
 
                 {/* Cabeçalho Premium de Pesquisa e Filtro */}
                 <div className="feed-header-glass">
