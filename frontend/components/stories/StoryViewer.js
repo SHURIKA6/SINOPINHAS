@@ -17,9 +17,11 @@ export default function StoryViewer({ storyGroup, onClose, onStoryViewed, curren
     useEffect(() => {
         if (!story) return;
 
-        // Marcar como visto no backend
-        api.post(`/api/stories/${story.id}/view`).catch(() => { });
-        onStoryViewed(storyGroup.user_id, story.id);
+        // Marcar como visto no backend (apenas se logado)
+        if (currentUserId) {
+            api.post(`/api/stories/${story.id}/view`).catch(() => { });
+            onStoryViewed(storyGroup.user_id, story.id);
+        }
 
         setProgress(0);
         elapsedRef.current = 0;
