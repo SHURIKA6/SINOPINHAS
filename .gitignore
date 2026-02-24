@@ -1,5 +1,6 @@
 node_modules/
 .vs/
+.idea/
 .env
 .env.local
 .env.*.local
