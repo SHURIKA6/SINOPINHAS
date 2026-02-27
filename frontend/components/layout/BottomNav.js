@@ -98,11 +98,11 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr 1fr;
                     gap: 0;
                     align-items: center;
-                    height: 72px;
+                    height: 68px;
                     background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.3) 100%);
                     backdrop-filter: blur(20px) saturate(180%);
                     -webkit-backdrop-filter: blur(20px) saturate(180%);
-                    border-radius: 24px;
+                    border-radius: 20px;
                     border: 1px solid rgba(255, 255, 255, 0.9);
                     border-top: 2px solid rgba(255, 255, 255, 1);
                     box-shadow: 
@@ -122,7 +122,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     cursor: pointer;
                     width: 100%;
                     height: 100%;
-                    gap: 4px;
+                    gap: 3px;
                     position: relative;
                     transition: all 0.3s ease;
                 }
@@ -142,10 +142,10 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .ultra-label {
-                    font-size: 9px;
+                    font-size: 8.5px;
                     font-weight: 800;
                     text-transform: uppercase;
-                    letter-spacing: 0.5px;
+                    letter-spacing: 0.2px;
                     z-index: 2;
                 }
 
@@ -161,10 +161,10 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .premium-plus-button {
-                    width: 58px;
-                    height: 58px;
+                    width: 52px;
+                    height: 52px;
                     background: linear-gradient(135deg, #0058EE 0%, #00C6FF 100%);
-                    border-radius: 20px;
+                    border-radius: 18px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
