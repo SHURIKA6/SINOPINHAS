@@ -62,13 +62,13 @@ export default function EventsSection() {
         const loadEvents = async () => {
             try {
                 const data = await fetchEvents();
-                if (data && data.length > 0) {
+                if (data && Array.isArray(data)) {
                     setEvents(parseEventDates(data));
                 } else {
-                    setEvents(parseEventDates(MOCK_EVENTS));
+                    setEvents([]);
                 }
             } catch (err) {
-                setEvents(parseEventDates(MOCK_EVENTS));
+                setEvents([]);
             } finally {
                 setLoading(false);
             }
