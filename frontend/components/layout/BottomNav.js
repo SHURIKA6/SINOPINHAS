@@ -15,8 +15,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
         { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
         { id: 'eventos', label: 'Eventos', icon: <Calendar size={20} /> },
         { id: 'lugares', label: 'Lugares', icon: <MapPin size={20} /> },
-        { id: 'inbox', label: 'Chat', icon: <MessageCircle size={20} />, badge: unreadCount },
-        { id: 'profile', label: 'Perfil', icon: <User size={20} /> }
+        { id: 'inbox', label: 'Chat', icon: <MessageCircle size={20} />, badge: unreadCount }
     ];
 
     // Estilos inline para garantir que NENHUMA regra externa crie caixas brancas
@@ -38,15 +37,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     <button
                         key={item.id}
                         onClick={() => {
-                            if (item.id === 'profile') {
-                                if (user && user.id) {
-                                    router.push(`/profile/${user.id}`);
-                                } else if (setShowAuth) {
-                                    setShowAuth(true);
-                                }
-                            } else {
-                                setActiveTab(item.id);
-                            }
+                            setActiveTab(item.id);
                         }}
                         style={btnBaseStyle}
                         className={`ultra-nav-btn ${activeTab === item.id ? 'active' : ''} ${item.isCenter ? 'is-post' : ''}`}
@@ -95,10 +86,10 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 .ultra-glass-nav {
                     pointer-events: auto;
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr 1fr;
+                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr;
                     gap: 0;
                     align-items: center;
-                    height: 68px;
+                    height: 72px;
                     background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 40%, rgba(255, 255, 255, 0.3) 100%);
                     backdrop-filter: blur(20px) saturate(180%);
                     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -122,7 +113,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                     cursor: pointer;
                     width: 100%;
                     height: 100%;
-                    gap: 3px;
+                    gap: 4px;
                     position: relative;
                     transition: all 0.3s ease;
                 }
@@ -142,10 +133,10 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .ultra-label {
-                    font-size: 8.5px;
+                    font-size: 9px;
                     font-weight: 800;
                     text-transform: uppercase;
-                    letter-spacing: 0.2px;
+                    letter-spacing: 0.5px;
                     z-index: 2;
                 }
 
@@ -161,10 +152,10 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 }
 
                 .premium-plus-button {
-                    width: 52px;
-                    height: 52px;
+                    width: 58px;
+                    height: 58px;
                     background: linear-gradient(135deg, #0058EE 0%, #00C6FF 100%);
-                    border-radius: 18px;
+                    border-radius: 20px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
