@@ -199,7 +199,7 @@ export default function ProfilePage({ id }) {
             <style jsx>{`
         .profile-page {
             min-height: 100vh;
-            background: #000;
+            background: transparent;
             color: #fff;
             padding-bottom: 20px;
         }
@@ -210,9 +210,12 @@ export default function ProfilePage({ id }) {
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 16px;
             z-index: 100;
-            backdrop-filter: blur(12px);
-            background: rgba(0,0,0,0.6);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
         .back-btn {
@@ -222,6 +225,7 @@ export default function ProfilePage({ id }) {
 
         .username {
             font-size: 16px; font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         .profile-content {
@@ -238,16 +242,18 @@ export default function ProfilePage({ id }) {
             width: 86px; height: 86px;
             flex-shrink: 0;
             border-radius: 50%;
-            padding: 2px;
-            background: linear-gradient(135deg, #FF0080, #7928CA); /* Instagram-like gradient ring */
+            padding: 3px;
+            background: linear-gradient(135deg, #00C6FF, #0058EE); /* Aero blue gradient */
+            box-shadow: 0 4px 15px rgba(0, 88, 238, 0.4);
         }
 
         .avatar-img, .avatar-placeholder {
             width: 100%; height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #000; /* Separator from ring */
-            background: #1a1a1a;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
         }
         
         .avatar-placeholder {
@@ -259,15 +265,15 @@ export default function ProfilePage({ id }) {
             display: flex; gap: 20px; text-align: center; flex: 1; justify-content: space-around;
         }
 
-        .stat-value { display: block; font-size: 18px; font-weight: 700; }
-        .stat-label { font-size: 13px; color: #aaa; }
+        .stat-value { display: block; font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .stat-label { font-size: 13px; color: rgba(255,255,255,0.8); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
         .user-bio-section {
             padding: 12px 20px;
         }
 
-        .display-name { font-size: 15px; font-weight: 700; margin: 0 0 4px 0; }
-        .bio-text { font-size: 14px; line-height: 1.4; color: #eee; white-space: pre-wrap; margin: 0; }
+        .display-name { font-size: 15px; font-weight: 700; margin: 0 0 4px 0; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .bio-text { font-size: 14px; line-height: 1.4; color: rgba(255,255,255,0.9); white-space: pre-wrap; margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
         .achievements-scroll {
             display: flex; gap: 8px; overflow-x: auto; 
@@ -289,14 +295,19 @@ export default function ProfilePage({ id }) {
 
         .action-btn {
             width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            font-weight: 600; font-size: 14px;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: 700; font-size: 14px;
             border: none; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .action-btn.primary {
-            background: #fff; color: #000;
+            background: linear-gradient(135deg, #0058EE 0%, #00C6FF 100%); 
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.4);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
         }
         
         .posts-section {
@@ -325,14 +336,20 @@ export default function ProfilePage({ id }) {
         .posts-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
+            gap: 4px;
+            padding: 0 4px;
         }
 
         .post-item {
             aspect-ratio: 1/1;
             position: relative;
-            background: #111;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
             cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .post-item img, .post-item video {
@@ -347,9 +364,10 @@ export default function ProfilePage({ id }) {
         .empty-posts {
             padding: 60px 20px;
             text-align: center;
-            color: #666;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
-        .camera-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+        .camera-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.6; }
       `}</style>
         </>
     );

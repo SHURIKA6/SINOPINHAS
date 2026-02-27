@@ -37,7 +37,7 @@ export default function UserSearchTab() {
         <div className="search-tab-container">
             <div className="search-header">
                 <div className="search-bar">
-                    <Search size={20} color="#999" />
+                    <Search size={20} color="#0047AB" />
                     <input 
                         type="text" 
                         placeholder="Pesquisar usuários..." 
@@ -56,7 +56,7 @@ export default function UserSearchTab() {
                     </div>
                 ) : query.trim().length > 0 && query.trim().length < 2 ? (
                     <div className="empty-state">
-                        <p>Digite pelo menos 2 letras para buscar.</p>
+                        <p style={{ color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>Digite pelo menos 2 letras para buscar.</p>
                     </div>
                 ) : results.length > 0 ? (
                     results.map(user => (
@@ -79,12 +79,12 @@ export default function UserSearchTab() {
                     ))
                 ) : query.trim().length >= 2 && !loading ? (
                     <div className="empty-state">
-                        <UserX size={40} color="#ccc" />
-                        <p>Nenhum usuário encontrado com "{query}"</p>
+                        <UserX size={40} color="rgba(255,255,255,0.8)" />
+                        <p style={{ color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>Nenhum usuário encontrado com "{query}"</p>
                     </div>
                 ) : (
                     <div className="empty-state initial">
-                        <p>Encontre seus amigos no Sinopinhas!</p>
+                        <p style={{ color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.3)', fontWeight: 600 }}>Encontre seus amigos no Sinopinhas!</p>
                     </div>
                 )}
             </div>
@@ -107,12 +107,14 @@ export default function UserSearchTab() {
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    background: rgba(255, 255, 255, 0.85);
-                    backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.5);
+                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.5) 100%);
+                    backdrop-filter: blur(16px) saturate(120%);
+                    border: 1px solid rgba(255, 255, 255, 0.9);
                     border-radius: 20px;
                     padding: 12px 16px;
-                    box-shadow: 0 8px 24px rgba(0, 71, 171, 0.1);
+                    box-shadow: 
+                        0 8px 24px rgba(0, 71, 171, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 1);
                 }
 
                 .search-bar input {
@@ -120,12 +122,13 @@ export default function UserSearchTab() {
                     border: none;
                     background: transparent;
                     font-size: 16px;
-                    color: #1a1a2e;
+                    color: #003366;
+                    font-weight: 600;
                     outline: none;
                 }
 
                 .search-bar input::placeholder {
-                    color: #999;
+                    color: rgba(0, 51, 102, 0.5);
                 }
 
                 .search-results {
@@ -139,18 +142,20 @@ export default function UserSearchTab() {
                     align-items: center;
                     gap: 16px;
                     padding: 12px;
-                    background: rgba(255, 255, 255, 0.6);
-                    border: 1px solid rgba(255, 255, 255, 0.4);
-                    backdrop-filter: blur(8px);
+                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.2) 100%);
+                    border: 1px solid rgba(255, 255, 255, 0.6);
+                    backdrop-filter: blur(12px);
                     border-radius: 16px;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                 }
 
                 .user-row:hover {
-                    background: rgba(255, 255, 255, 0.9);
+                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
                     transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                    box-shadow: 0 6px 16px rgba(0, 150, 255, 0.2);
+                    border-color: rgba(255, 255, 255, 0.9);
                 }
 
                 .user-avatar {
@@ -158,7 +163,8 @@ export default function UserSearchTab() {
                     height: 50px;
                     border-radius: 50%;
                     object-fit: cover;
-                    border: 2px solid rgba(0, 150, 255, 0.2);
+                    border: 2px solid rgba(255, 255, 255, 0.8);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
                 }
 
                 .user-info {
@@ -168,13 +174,15 @@ export default function UserSearchTab() {
                 }
 
                 .user-info strong {
-                    font-size: 15px;
-                    color: #1a1a2e;
+                    font-size: 16px;
+                    color: #fff;
+                    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
                 }
 
                 .user-info span {
                     font-size: 12px;
-                    color: #666;
+                    color: rgba(255, 255, 255, 0.9);
+                    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
                 }
 
                 .empty-state {
