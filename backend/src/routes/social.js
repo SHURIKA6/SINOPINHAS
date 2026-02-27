@@ -27,13 +27,13 @@ app.post('/send-message', authMiddleware, limiter(20, 60), validate(schemas.send
 app.get('/inbox/:userId', authMiddleware, socialController.getInbox);
 app.post('/conversations/:id/read', authMiddleware, socialController.markAsRead);
 app.get('/admin/inbox', authMiddleware, requireAdmin, socialController.getAdminInbox);
-app.post('/support', socialController.createSupportTicket);
+app.post('/support', limiter(3, 60), socialController.createSupportTicket);
 app.post('/report', authMiddleware, limiter(10, 60), socialController.reportContent);
 app.post('/notifications/read-all', authMiddleware, socialController.markAllNotificationsRead);
 
 // Rotas: Mensagens Shura Logs
 app.post('/shura/messages', authMiddleware, shuraController.submitShuraMessage);
 app.get('/shura/messages/approved', shuraController.getApprovedShuraMessages);
-app.get('/shura/system-logs', shuraController.getSystemAuditLogs);
+app.get('/shura/system-logs', authMiddleware, requireAdmin, shuraController.getSystemAuditLogs);
 
 export default app;

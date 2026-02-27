@@ -16,11 +16,7 @@ export const getPlaces = async (c) => {
 // Função: Adicionar novo lugar
 export const addPlace = async (c) => {
     try {
-        const { title, description, category, image, link, adminPassword } = await c.req.json();
-
-        if (adminPassword !== c.env.ADMIN_PASSWORD) {
-            return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
-        }
+        const { title, description, category, image, link } = await c.req.json();
 
         const sql = `
             INSERT INTO places (title, description, category, image, link)
@@ -41,11 +37,6 @@ export const addPlace = async (c) => {
 export const deletePlace = async (c) => {
     try {
         const id = c.req.param('id');
-        const { adminPassword } = await c.req.json();
-
-        if (adminPassword !== c.env.ADMIN_PASSWORD) {
-            return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
-        }
 
         await queryDB('DELETE FROM places WHERE id = $1', [id], c.env);
         return c.json({ success: true });

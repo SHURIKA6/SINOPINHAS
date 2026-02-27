@@ -100,8 +100,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         from_id: user?.id || 0,
         to_id: selectedUser.id,
         msg: newMessage,
-        is_admin: sendAsAdmin,
-        admin_password: adminPassword
+        is_admin: sendAsAdmin
       });
       setNewMessage('');
       await loadMessages();

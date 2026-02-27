@@ -43,11 +43,7 @@ export const getEvents = async (c) => {
 export const addEvent = async (c) => {
     try {
         // Simple auth check for admin (based on password in body)
-        const { title, description, date, time, location, category, image, adminPassword } = await c.req.json();
-
-        if (adminPassword !== c.env.ADMIN_PASSWORD) {
-            return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
-        }
+        const { title, description, date, time, location, category, image } = await c.req.json();
 
         const sql = `
             INSERT INTO events (title, description, date, time, location, category, image)
@@ -73,11 +69,6 @@ export const addEvent = async (c) => {
 export const deleteEvent = async (c) => {
     try {
         const id = c.req.param('id');
-        const { adminPassword } = await c.req.json();
-
-        if (adminPassword !== c.env.ADMIN_PASSWORD) {
-            return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
-        }
 
         await queryDB('DELETE FROM events WHERE id = $1', [id], c.env);
 

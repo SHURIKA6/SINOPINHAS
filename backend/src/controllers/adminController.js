@@ -54,7 +54,8 @@ export const login = async (c) => {
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24
             }, getJwtSecret(env));
 
-            return createResponse(c, { success: true, token });
+            c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=86400`);
+            return createResponse(c, { success: true });
         }
 
         await logAudit(null, "ADMIN_LOGIN_FAILED", {}, c);

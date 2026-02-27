@@ -2,9 +2,28 @@ import { corsHeaders, getCorsOrigin } from '../utils/api-utils.js';
 
 export const corsMiddleware = async (c, next) => {
     // Definir origem dinâmica baseada no request
-    const requestOrigin = c.req.header('Origin');
-    const origin = getCorsOrigin(requestOrigin, c.env);
+    const requestOrigin = c.req.header('Origin') || c.req.header('Referer');
+    
+    // Extrair apenas a origem do Referer se Origin não estiver presente
+    let originToCheck = requestOrigin;
+    if (originToCheck && originToCheck.startsWith('http')) {
+        try {
+            const url = new URL(originToCheck);
+            originToCheck = url.origin;
+        } catch(e) {}
+    }
+
+    const origin = getCorsOrigin(originToCheck, c.env);
     const headers = corsHeaders(origin);
+
+    const method = c.req.method;
+
+    // Proteção rigorosa contra CSRF para métodos que alteram estado
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+        if (!originToCheck || origin !== originToCheck) {
+            return c.json({ error: "FORBIDDEN", message: "Bloqueado por política CORS/CSRF" }, 403);
+        }
+    }
 
     c.header('Access-Control-Allow-Origin', origin);
     c.header('Access-Control-Allow-Methods', headers['Access-Control-Allow-Methods']);
@@ -12,7 +31,7 @@ export const corsMiddleware = async (c, next) => {
     c.header('Access-Control-Allow-Credentials', headers['Access-Control-Allow-Credentials']);
 
     // Tratamento de Requisicões Preflight (OPTIONS) — ponto único
-    if (c.req.method === 'OPTIONS') {
+    if (method === 'OPTIONS') {
         return c.text('', 204);
     }
 

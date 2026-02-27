@@ -449,14 +449,14 @@ export const sendMessage = async (c) => {
         return createErrorResponse(c, "INVALID_JSON", "Corpo da requisição inválido", 400);
     }
 
-    const { to_id, msg, admin_password, is_admin } = body;
+    const { to_id, msg, is_admin } = body;
     const payload = c.get('jwtPayload');
     const fId = payload?.id;
 
     if (fId === undefined || fId === null) return createErrorResponse(c, "UNAUTHORIZED", "Não autorizado", 401);
 
     const cleanMsg = sanitize(msg);
-    const finalIsAdmin = (is_admin && admin_password === env.ADMIN_PASSWORD) || payload?.role === 'admin';
+    const finalIsAdmin = payload?.role === 'admin';
 
     // Garantir que IDs sejam números para o Postgres e evitar NaN
     // Nota: Administradores puros (sem registro no users) usam ID 0.

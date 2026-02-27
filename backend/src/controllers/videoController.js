@@ -172,7 +172,8 @@ export const deleteVideo = async (c) => {
 export const listVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
-    const limit = parseInt(c.req.query("limit") || "12");
+    const rawLimit = parseInt(c.req.query("limit") || "12");
+    const limit = Math.min(Math.max(rawLimit, 1), 50);
     const offset = parseInt(c.req.query("offset") || "0");
     const type = c.req.query("type"); // New: Filter by 'video' or 'photo'
     const authorId = c.req.query("author_id"); // New: Filter by video creator
@@ -253,7 +254,8 @@ export const listVideos = async (c) => {
 export const listSecretVideos = async (c) => {
     const env = c.env;
     const userId = c.req.query("user_id");
-    const limit = parseInt(c.req.query("limit") || "12");
+    const rawLimit = parseInt(c.req.query("limit") || "12");
+    const limit = Math.min(Math.max(rawLimit, 1), 50);
     const offset = parseInt(c.req.query("offset") || "0");
     const type = c.req.query("type");
 

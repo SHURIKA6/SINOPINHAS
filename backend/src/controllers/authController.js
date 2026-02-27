@@ -87,7 +87,7 @@ export const register = async (c) => {
         // Setar JWT como cookie HttpOnly
         c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=604800`);
 
-        return createResponse(c, { user, token });
+        return createResponse(c, { user });
     } catch (err) {
         throw err;
     }
@@ -163,8 +163,7 @@ export const login = async (c) => {
         c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=604800`);
 
         return createResponse(c, {
-            user,
-            token
+            user
         });
     } catch (err) {
         throw err;
@@ -439,9 +438,7 @@ export const requestPasswordReset = async (c) => {
 
         return createResponse(c, {
             success: true,
-            message: 'Código de recuperação gerado. Solicite ao administrador.',
-            // Em produção com e-mail, esse token seria enviado por e-mail.
-            reset_token: token
+            message: 'Código de recuperação gerado. Solicite ao administrador.'
         });
     } catch (err) {
         // Auto-criar tabela se não existir

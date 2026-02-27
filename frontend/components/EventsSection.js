@@ -44,16 +44,31 @@ export default function EventsSection() {
     ];
 
     useEffect(() => {
+        const parseEventDates = (eventList) => eventList.map(e => {
+            if (typeof e.date === 'string') {
+                const d = new Date(e.date + 'T12:00:00');
+                return {
+                    ...e,
+                    date: {
+                        day: d.getDate().toString().padStart(2, '0'),
+                        month: d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '')
+                    },
+                    rawDate: e.date
+                };
+            }
+            return e;
+        });
+
         const loadEvents = async () => {
             try {
                 const data = await fetchEvents();
                 if (data && data.length > 0) {
-                    setEvents(data);
+                    setEvents(parseEventDates(data));
                 } else {
-                    setEvents(MOCK_EVENTS);
+                    setEvents(parseEventDates(MOCK_EVENTS));
                 }
             } catch (err) {
-                setEvents(MOCK_EVENTS);
+                setEvents(parseEventDates(MOCK_EVENTS));
             } finally {
                 setLoading(false);
             }
