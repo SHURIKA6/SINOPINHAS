@@ -1,5 +1,104 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { uploadVideo, uploadStory } from '../services/api';
+
+function CameraCapture({ type, onCapture, onCancel }) {
+    const videoRef = useRef(null);
+    const mediaRecorderRef = useRef(null);
+    const [recording, setRecording] = useState(false);
+    const [facingMode, setFacingMode] = useState('user');
+    const chunksRef = useRef([]);
+
+    useEffect(() => {
+        let currentStream = null;
+        async function init() {
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode },
+                    audio: type === 'video'
+                });
+                currentStream = s;
+                if (videoRef.current) videoRef.current.srcObject = s;
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao acessar a câmera. Verifique as permissões de vídeo/áudio do seu navegador.");
+                onCancel();
+            }
+        }
+        init();
+        return () => {
+            if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+        };
+    }, [facingMode, type, onCancel]);
+
+    const handleCapturePhoto = () => {
+        if (!videoRef.current) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+            const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            onCapture(file);
+        }, 'image/jpeg', 0.9);
+    };
+
+    const handleStartRecording = () => {
+        if (!videoRef.current || !videoRef.current.srcObject) return;
+        chunksRef.current = [];
+        const recorder = new MediaRecorder(videoRef.current.srcObject, { mimeType: 'video/webm' });
+        recorder.ondataavailable = e => {
+            if (e.data.size > 0) chunksRef.current.push(e.data);
+        };
+        recorder.onstop = () => {
+            const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+            const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
+            onCapture(file);
+        };
+        mediaRecorderRef.current = recorder;
+        recorder.start();
+        setRecording(true);
+    };
+
+    const handleStopRecording = () => {
+        if (mediaRecorderRef.current && recording) {
+            mediaRecorderRef.current.stop();
+            setRecording(false);
+        }
+    };
+
+    return (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+            <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted={type === 'video' ? true : false} 
+                style={{ flex: 1, width: '100%', objectFit: 'contain', background: '#111' }} 
+            />
+            {recording && (
+                <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,0,0,0.8)', color: 'white', padding: '4px 12px', borderRadius: 12, fontWeight: 'bold' }}>
+                    Gravando...
+                </div>
+            )}
+            
+            <div style={{ position: 'absolute', bottom: 40, left: 0, right: 0, display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '0 20px' }}>
+                <button onClick={onCancel} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '50%', width: 50, height: 50, fontSize: 20, cursor: 'pointer' }}>✖</button>
+                
+                {type === 'photo' ? (
+                    <button onClick={handleCapturePhoto} style={{ background: 'white', borderRadius: '50%', width: 70, height: 70, border: '4px solid #aaa', cursor: 'pointer' }}></button>
+                ) : (
+                    <button onClick={recording ? handleStopRecording : handleStartRecording} 
+                        style={{ background: recording ? '#ff4757' : 'white', borderRadius: '50%', width: 70, height: 70, border: '4px solid #aaa', transition: 'all 0.2s', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {recording && <span style={{ width: 24, height: 24, background: 'white', borderRadius: 4 }}/>}
+                    </button>
+                )}
+
+                <button onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '50%', width: 50, height: 50, fontSize: 24, cursor: 'pointer' }}>🔄</button>
+            </div>
+        </div>
+    );
+}
 
 export default function UploadSection({ user, setShowAuth, showToast, loadVideos, setActiveTab }) {
     const [file, setFile] = useState(null);
@@ -9,6 +108,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
     const [progress, setProgress] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [isRestricted, setIsRestricted] = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
 
     // Config: Destino (Feed vs Story) e Tipo (Video vs Foto)
     const [destination, setDestination] = useState('feed'); // 'feed' | 'story'
@@ -96,6 +196,20 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
             setProgress(0);
         }
     };
+
+    if (showCamera) {
+        return (
+            <CameraCapture 
+                type={uploadType} 
+                onCapture={(f) => { 
+                    setFile(f); 
+                    showToast('Arquivo capturado com sucesso!', 'success'); 
+                    setShowCamera(false); 
+                }} 
+                onCancel={() => setShowCamera(false)} 
+            />
+        );
+    }
 
     return (
         <div style={{ maxWidth: 600, margin: '0 auto', color: 'var(--text-color)' }}>
@@ -224,7 +338,7 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                             📁 Galeria
                         </button>
                         <button
-                            onClick={() => document.getElementById('file-input-camera').click()}
+                            onClick={() => setShowCamera(true)}
                             style={{
                                 padding: '12px 24px',
                                 background: '#10b981',
@@ -257,20 +371,6 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                     }}
                     style={{ display: 'none' }}
                     id="file-input-gallery"
-                />
-                <input
-                    type="file"
-                    accept={uploadType === 'video' ? "video/*" : "image/*"}
-                    capture="environment"
-                    onChange={(e) => {
-                        const f = e.target.files[0];
-                        if (f) {
-                            setFile(f);
-                            showToast('Arquivo capturado!', 'success');
-                        }
-                    }}
-                    style={{ display: 'none' }}
-                    id="file-input-camera"
                 />
             </div>
 
