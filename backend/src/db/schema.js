@@ -199,6 +199,7 @@ export const SCHEMA_QUERIES = [
     // Migrações (colunas adicionadas após criação inicial)
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS discovered_logs BOOLEAN DEFAULT FALSE",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE",
+    "ALTER TABLE events ADD COLUMN IF NOT EXISTS ticket_url TEXT",
 
     // Índices para performance
     "CREATE INDEX IF NOT EXISTS idx_stories_user_id ON stories(user_id)",

@@ -19,7 +19,8 @@ export const getEvents = async (c) => {
     }
 
     try {
-        const sql = `SELECT * FROM events ORDER BY date ASC`;
+        // Obter apenas eventos a partir de hoje
+        const sql = `SELECT * FROM events WHERE date >= CURRENT_DATE ORDER BY date ASC`;
         const result = await queryDB(sql, [], env);
         const events = result.rows;
 
@@ -43,14 +44,14 @@ export const getEvents = async (c) => {
 export const addEvent = async (c) => {
     try {
         // Simple auth check for admin (based on password in body)
-        const { title, description, date, time, location, category, image } = await c.req.json();
+        const { title, description, date, time, location, category, image, ticket_url } = await c.req.json();
 
         const sql = `
-            INSERT INTO events (title, description, date, time, location, category, image)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO events (title, description, date, time, location, category, image, ticket_url)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `;
-        const params = [title, description, date, time, location, category, image];
+        const params = [title, description, date, time, location, category, image, ticket_url];
         const result = await queryDB(sql, params, c.env);
 
         // 2. Limpar cache ao adicionar novo evento

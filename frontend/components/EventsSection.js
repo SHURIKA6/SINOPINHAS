@@ -205,7 +205,13 @@ export default function EventsSection() {
                                 </div>
                             </div>
                             <p className="e-modal-desc" style={{ color: '#333' }}>{selectedEvent.description}</p>
-                            <button className="e-modal-action shiny-button">Confirmar Presença</button>
+                            {selectedEvent.ticket_url || selectedEvent.url ? (
+                                <button className="e-modal-action shiny-button" onClick={() => window.open(selectedEvent.ticket_url || selectedEvent.url, '_blank')}>
+                                    🎟️ Comprar Ingresso
+                                </button>
+                            ) : (
+                                <button className="e-modal-action shiny-button">Confirmar Presença</button>
+                            )}
                         </div>
                     </div>
                 </div>
