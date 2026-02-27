@@ -119,16 +119,14 @@ export default function Home({ initialVideo }) {
   // Hooks Customizados
   const { showInstallBtn, installApp, dismissInstall } = usePWA();
 
-  const tabs = ['feed', 'profile', 'news', 'eventos', 'lugares', 'weather'];
+  const tabs = ['feed', 'news', 'eventos', 'lugares'];
   const currentIndex = tabs.indexOf(activeTab);
 
-  // useSwipe e setTermsAccepted continuam aqui ou movemos para UIContext também? termos é global
-  // Vamos manter termos aqui por enquanto para não quebrar muito
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
   const { handleTouchStart, handleTouchEnd } = useSwipe(
-    () => currentIndex < tabs.length - 1 && setActiveTab(tabs[currentIndex + 1]),
+    () => currentIndex >= 0 && currentIndex < tabs.length - 1 && setActiveTab(tabs[currentIndex + 1]),
     () => currentIndex > 0 && setActiveTab(tabs[currentIndex - 1])
   );
 
@@ -430,6 +428,8 @@ export default function Home({ initialVideo }) {
         unreadCount={unreadCount}
         isAdmin={isAdmin}
         showSecretTab={showSecretTab}
+        user={user}
+        setShowAuth={setShowAuth}
       />
 
       <style jsx global>{`

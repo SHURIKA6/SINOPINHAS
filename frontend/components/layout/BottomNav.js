@@ -1,11 +1,13 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import {
     LayoutGrid, Newspaper, Calendar,
     Plus, MapPin, MessageCircle, User, Settings
 } from 'lucide-react';
 
-export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin, showSecretTab }) {
+export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin, showSecretTab, user, setShowAuth }) {
+    const router = useRouter();
     const navItems = [
         { id: 'feed', label: 'Feed', icon: <LayoutGrid size={20} /> },
         { id: 'news', label: 'Notícias', icon: <Newspaper size={20} /> },
@@ -13,10 +15,12 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
         { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
         { id: 'lugares', label: 'Lugares', icon: <MapPin size={20} /> },
         { id: 'inbox', label: 'Chat', icon: <MessageCircle size={20} />, badge: unreadCount },
-        isAdmin
-            ? { id: 'admin', label: 'Painel', icon: <Settings size={20} /> }
-            : { id: 'profile', label: 'Perfil', icon: <User size={20} /> },
+        { id: 'profile', label: 'Perfil', icon: <User size={20} /> }
     ];
+
+    if (isAdmin) {
+        navItems.push({ id: 'admin', label: 'Painel', icon: <Settings size={20} /> });
+    }
 
     // Estilos inline para garantir que NENHUMA regra externa crie caixas brancas
     const btnBaseStyle = {
@@ -36,7 +40,17 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 {navItems.map((item) => (
                     <button
                         key={item.id}
-                        onClick={() => setActiveTab(item.id)}
+                        onClick={() => {
+                            if (item.id === 'profile') {
+                                if (user && user.id) {
+                                    router.push(`/profile/${user.id}`);
+                                } else if (setShowAuth) {
+                                    setShowAuth(true);
+                                }
+                            } else {
+                                setActiveTab(item.id);
+                            }
+                        }}
                         style={btnBaseStyle}
                         className={`ultra-nav-btn ${activeTab === item.id ? 'active' : ''} ${item.isCenter ? 'is-post' : ''}`}
                     >
@@ -84,7 +98,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 .ultra-glass-nav {
                     pointer-events: auto;
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr;
+                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr ${isAdmin ? '1fr' : ''};
                     gap: 0;
                     align-items: center;
                     height: 72px;
