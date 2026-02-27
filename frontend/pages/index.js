@@ -21,6 +21,7 @@ import HomeFeed from '../components/feed/HomeFeed';
 import SecretFeed from '../components/feed/SecretFeed';
 import NewsFeed from '../components/feed/NewsFeed';
 import WeatherSection from '../components/WeatherSection';
+import PlacesSection from '../components/PlacesSection';
 import EventsSection from '../components/EventsSection';
 import UserSearchTab from '../components/UserSearchTab';
 import SupportModal from '../components/SupportModal';
