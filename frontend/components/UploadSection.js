@@ -180,7 +180,6 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                     padding: 48,
                     textAlign: 'center',
                     background: isDragging ? 'rgba(141, 106, 255, 0.1)' : 'var(--card-bg)',
-                    cursor: 'pointer',
                     marginBottom: 24,
                     transition: 'all 0.3s'
                 }}
@@ -195,14 +194,57 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         showToast('Arquivo selecionado!', 'success');
                     }
                 }}
-                onClick={() => document.getElementById('file-input').click()}
             >
                 <div style={{ fontSize: 48, marginBottom: 16 }}>
                     {uploadType === 'video' ? '🎬' : '🖼️'}
                 </div>
-                <p style={{ fontSize: 18, margin: 0, color: 'var(--secondary-text)' }}>
-                    {isDragging ? `Solte o ${uploadType} aqui!` : `Arraste ou clique para selecionar ${uploadType === 'video' ? 'vídeo' : 'foto'}`}
+                <p style={{ fontSize: 18, margin: '0 0 24px', color: 'var(--secondary-text)' }}>
+                    {isDragging ? `Solte o ${uploadType} aqui!` : `Como deseja enviar o ${uploadType === 'video' ? 'vídeo' : 'foto'}?`}
                 </p>
+
+                {!isDragging && (
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                            onClick={() => document.getElementById('file-input-gallery').click()}
+                            style={{
+                                padding: '12px 24px',
+                                background: 'var(--accent-color)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 10,
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: 16,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            📁 Galeria
+                        </button>
+                        <button
+                            onClick={() => document.getElementById('file-input-camera').click()}
+                            style={{
+                                padding: '12px 24px',
+                                background: '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 10,
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: 16,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            {uploadType === 'video' ? '🎥 Gravar Agora' : '📸 Tirar Agora'}
+                        </button>
+                    </div>
+                )}
+
                 <input
                     type="file"
                     accept={uploadType === 'video' ? "video/*" : "image/*"}
@@ -214,7 +256,21 @@ export default function UploadSection({ user, setShowAuth, showToast, loadVideos
                         }
                     }}
                     style={{ display: 'none' }}
-                    id="file-input"
+                    id="file-input-gallery"
+                />
+                <input
+                    type="file"
+                    accept={uploadType === 'video' ? "video/*" : "image/*"}
+                    capture="environment"
+                    onChange={(e) => {
+                        const f = e.target.files[0];
+                        if (f) {
+                            setFile(f);
+                            showToast('Arquivo capturado!', 'success');
+                        }
+                    }}
+                    style={{ display: 'none' }}
+                    id="file-input-camera"
                 />
             </div>
 
