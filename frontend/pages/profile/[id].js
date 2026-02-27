@@ -102,58 +102,60 @@ export default function ProfilePage({ id }) {
                 </header>
 
                 <div className="profile-content">
-                    {/* Info do Usuário */}
-                    <div className="user-info">
-                        <div className="avatar-container">
-                            {user.avatar ? (
-                                <img src={user.avatar} alt={user.username} className="avatar-img" />
-                            ) : (
-                                <div className="avatar-placeholder">
-                                    {user.username.charAt(0).toUpperCase()}
+                    <div className="profile-top-card">
+                        {/* Info do Usuário */}
+                        <div className="user-info">
+                            <div className="avatar-container">
+                                {user.avatar ? (
+                                    <img src={user.avatar} alt={user.username} className="avatar-img" />
+                                ) : (
+                                    <div className="avatar-placeholder">
+                                        {user.username.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="stats-row">
+                                <div className="stat-item">
+                                    <span className="stat-value">{posts.length}</span>
+                                    <span className="stat-label">Posts</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-value">{user.total_likes || 0}</span>
+                                    <span className="stat-label">Curtidas</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-value">{new Date(user.created_at).getFullYear()}</span>
+                                    <span className="stat-label">Membro</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="user-bio-section">
+                            <h2 className="display-name">{user.username}</h2>
+                            {user.bio && <p className="bio-text">{user.bio}</p>}
+
+                            {/* Conquistas (Achievements) */}
+                            {user.achievements && user.achievements.length > 0 && (
+                                <div className="achievements-scroll">
+                                    {user.achievements.map((ach, idx) => (
+                                        <div key={idx} className="achievement-badge" style={{ color: ach.color, background: `${ach.color}15`, borderColor: `${ach.color}30` }}>
+                                            <span>{ach.icon}</span> {ach.label}
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
 
-                        <div className="stats-row">
-                            <div className="stat-item">
-                                <span className="stat-value">{posts.length}</span>
-                                <span className="stat-label">Posts</span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-value">{user.total_likes || 0}</span>
-                                <span className="stat-label">Curtidas</span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-value">{new Date(user.created_at).getFullYear()}</span>
-                                <span className="stat-label">Membro</span>
-                            </div>
+                        {/* Ações */}
+                        <div className="actions-row">
+                            <button
+                                className="action-btn primary"
+                                onClick={() => router.push(`/?tab=inbox&u=${user.id}`)}
+                            >
+                                Enviar Mensagem
+                            </button>
                         </div>
-                    </div>
-
-                    <div className="user-bio-section">
-                        <h2 className="display-name">{user.username}</h2>
-                        {user.bio && <p className="bio-text">{user.bio}</p>}
-
-                        {/* Conquistas (Achievements) */}
-                        {user.achievements && user.achievements.length > 0 && (
-                            <div className="achievements-scroll">
-                                {user.achievements.map((ach, idx) => (
-                                    <div key={idx} className="achievement-badge" style={{ color: ach.color, background: `${ach.color}15`, borderColor: `${ach.color}30` }}>
-                                        <span>{ach.icon}</span> {ach.label}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Ações */}
-                    <div className="actions-row">
-                        <button
-                            className="action-btn primary"
-                            onClick={() => router.push(`/?tab=inbox&u=${user.id}`)}
-                        >
-                            Enviar Mensagem
-                        </button>
                     </div>
 
                     {/* Grid de Posts */}
@@ -232,10 +234,22 @@ export default function ProfilePage({ id }) {
             padding-top: 60px;
         }
 
+        .profile-top-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-top: 1px solid rgba(255,255,255,0.6);
+            border-radius: 20px;
+            margin: 16px;
+            padding-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
         .user-info {
             display: flex; align-items: center;
-            padding: 20px 20px 0 20px;
-            gap: 24px;
+            padding: 24px 20px 0 20px;
+            gap: 20px;
         }
 
         .avatar-container {
@@ -262,14 +276,27 @@ export default function ProfilePage({ id }) {
         }
 
         .stats-row {
-            display: flex; gap: 20px; text-align: center; flex: 1; justify-content: space-around;
+            display: flex; gap: 8px; text-align: center; flex: 1; justify-content: space-between;
+        }
+
+        .stat-item {
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 10px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .stat-value { display: block; font-size: 18px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .stat-label { font-size: 13px; color: rgba(255,255,255,0.8); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
         .user-bio-section {
-            padding: 12px 20px;
+            padding: 16px 20px;
         }
 
         .display-name { font-size: 15px; font-weight: 700; margin: 0 0 4px 0; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
