@@ -199,6 +199,11 @@ export const fetchAllUsers = () => {
     return api.get('/api/users/all');
 };
 
+export const searchUsers = async (query) => {
+    const res = await api.get(`/api/users/search?q=${query}`);
+    return res.data;
+};
+
 export const fetchPublicProfile = (userId) => {
     return api.get(`/api/users/${userId}`);
 };

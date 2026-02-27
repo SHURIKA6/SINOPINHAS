@@ -20,6 +20,7 @@ app.delete('/comments/:id', authMiddleware, socialController.deleteComment);
 
 app.get('/notifications/:userId', authMiddleware, socialController.getNotifications);
 app.get('/users/all', socialController.listAllUsers);
+app.get('/users/search', socialController.searchUsers);
 app.get('/users/:id', socialController.getPublicProfile);
 app.get('/achievements/:type/users', socialController.getUsersByAchievement);
 

@@ -802,3 +802,32 @@ export const markAllNotificationsRead = async (c) => {
         throw err;
     }
 };
+
+// Função: Buscar usuários por nome/username (Para a aba de pesquisa)
+export const searchUsers = async (c) => {
+    const query = c.req.query("q") || "";
+    const env = c.env;
+
+    if (!query.trim() || query.length < 2) {
+        return createResponse(c, []); // Retorna vazio se a busca for muito curta
+    }
+
+    try {
+        const { rows } = await queryDB(
+            `SELECT id, username, avatar, bio, role, discovered_logs, created_at,
+            (SELECT COUNT(*) FROM videos WHERE user_id = users.id) as video_count
+            FROM users 
+            WHERE username ILIKE $1 
+            ORDER BY 
+                CASE WHEN username ILIKE $2 THEN 0 ELSE 1 END,
+                username ASC 
+            LIMIT 30`,
+            [`%${query}%`, `${query}%`],
+            env
+        );
+
+        return createResponse(c, rows);
+    } catch (err) {
+        return createErrorResponse(c, "DB_ERROR", "Erro ao buscar usuários: " + err.message, 500);
+    }
+};

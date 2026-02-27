@@ -21,8 +21,8 @@ import HomeFeed from '../components/feed/HomeFeed';
 import SecretFeed from '../components/feed/SecretFeed';
 import NewsFeed from '../components/feed/NewsFeed';
 import WeatherSection from '../components/WeatherSection';
-import PlacesSection from '../components/PlacesSection';
 import EventsSection from '../components/EventsSection';
+import UserSearchTab from '../components/UserSearchTab';
 import SupportModal from '../components/SupportModal';
 import BottomNav from '../components/layout/BottomNav';
 import Toast from '../components/common/Toast';
@@ -119,7 +119,7 @@ export default function Home({ initialVideo }) {
   // Hooks Customizados
   const { showInstallBtn, installApp, dismissInstall } = usePWA();
 
-  const tabs = ['feed', 'news', 'eventos', 'lugares'];
+  const tabs = ['feed', 'news', 'search', 'eventos', 'lugares'];
   const currentIndex = tabs.indexOf(activeTab);
 
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -366,6 +366,7 @@ export default function Home({ initialVideo }) {
 
 
           <TabPane active={activeTab === 'news'}><NewsFeed /></TabPane>
+          <TabPane active={activeTab === 'search'}><UserSearchTab /></TabPane>
           <TabPane active={activeTab === 'eventos'}><EventsSection /></TabPane>
           <TabPane active={activeTab === 'lugares'}><PlacesSection /></TabPane>
           <TabPane active={activeTab === 'weather'}><WeatherSection /></TabPane>

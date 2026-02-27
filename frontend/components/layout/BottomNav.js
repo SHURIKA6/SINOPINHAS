@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import {
     LayoutGrid, Newspaper, Calendar,
-    Plus, MapPin, MessageCircle, User, Settings
+    Plus, MapPin, MessageCircle, User, Search
 } from 'lucide-react';
 
 export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmin, showSecretTab, user, setShowAuth }) {
@@ -11,16 +11,13 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
     const navItems = [
         { id: 'feed', label: 'Feed', icon: <LayoutGrid size={20} /> },
         { id: 'news', label: 'Notícias', icon: <Newspaper size={20} /> },
-        { id: 'eventos', label: 'Eventos', icon: <Calendar size={20} /> },
+        { id: 'search', label: 'Buscar', icon: <Search size={20} /> },
         { id: 'upload', label: 'Postar', icon: <Plus size={28} />, isCenter: true },
+        { id: 'eventos', label: 'Eventos', icon: <Calendar size={20} /> },
         { id: 'lugares', label: 'Lugares', icon: <MapPin size={20} /> },
         { id: 'inbox', label: 'Chat', icon: <MessageCircle size={20} />, badge: unreadCount },
         { id: 'profile', label: 'Perfil', icon: <User size={20} /> }
     ];
-
-    if (isAdmin) {
-        navItems.push({ id: 'admin', label: 'Painel', icon: <Settings size={20} /> });
-    }
 
     // Estilos inline para garantir que NENHUMA regra externa crie caixas brancas
     const btnBaseStyle = {
@@ -98,7 +95,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount, isAdmi
                 .ultra-glass-nav {
                     pointer-events: auto;
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr ${isAdmin ? '1fr' : ''};
+                    grid-template-columns: 1fr 1fr 1fr 1.3fr 1fr 1fr 1fr 1fr;
                     gap: 0;
                     align-items: center;
                     height: 72px;
