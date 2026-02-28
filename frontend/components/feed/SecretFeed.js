@@ -86,7 +86,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         }));
 
         try {
-            await likeVideo(videoId, user.id);
+            await likeVideo(videoId);
         } catch (err) {
             showToast('error', 'Erro ao curtir vídeo');
             loadVideos();

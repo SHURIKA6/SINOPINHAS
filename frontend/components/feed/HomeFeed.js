@@ -158,7 +158,7 @@ export default function HomeFeed({ user, isAdmin, adminPassword, onVideoClick, s
             return v;
         }));
         try {
-            await likeVideo(videoId, user.id);
+            await likeVideo(videoId);
         } catch (err) {
             showToast('Erro ao curtir', 'error');
             loadVideos(0, true);

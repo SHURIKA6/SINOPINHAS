@@ -75,7 +75,7 @@ export const register = async (c) => {
                 action: 'REGISTER', user_id: user.id, username: user.username,
                 email: user.email, role: user.role
             }, env));
-        } catch (logErr) { }
+        } catch (logErr) { console.warn('Audit log error:', logErr.message); }
 
         const token = await sign({
             id: user.id,
@@ -148,7 +148,7 @@ export const login = async (c) => {
 
         try {
             await logAudit(rows[0].id, "USER_LOGIN_SUCCESS", { username }, c);
-        } catch (logErr) { }
+        } catch (logErr) { console.warn('Audit log error:', logErr.message); }
 
         const user = await getFullUser(rows[0].id, env);
 
@@ -330,8 +330,7 @@ export const updateProfile = async (c) => {
         return createResponse(c, decoratedUser);
     } catch (err) {
         console.error("🔥 Error updating profile:", err);
-        // Retornar um erro mais descritivo se possível
-        return createErrorResponse(c, "INTERNAL_ERROR", `Erro ao atualizar perfil: ${err.message}`, 500);
+        return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao atualizar perfil.", 500);
     }
 };
 

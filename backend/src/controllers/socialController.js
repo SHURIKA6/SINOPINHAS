@@ -90,8 +90,8 @@ export const viewVideo = async (c) => {
 
         return createResponse(c, { success: true });
     } catch (err) {
-        // Erro crítico antes do processamento (raro, ex: JSON inválido)
-        return createResponse(c, { success: true, warning: err.message });
+        console.error("viewVideo critical error:", err.message);
+        return createResponse(c, { success: true });
     }
 };
 
@@ -449,7 +449,7 @@ export const sendMessage = async (c) => {
         return createErrorResponse(c, "INVALID_JSON", "Corpo da requisição inválido", 400);
     }
 
-    const { to_id, msg, is_admin } = body;
+    const { to_id, msg } = body;
     const payload = c.get('jwtPayload');
     const fId = payload?.id;
 

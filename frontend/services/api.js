@@ -134,8 +134,8 @@ export const searchVideos = async (query) => {
     return res.data;
 };
 
-export const likeVideo = (videoId, userId) => {
-    return api.post(`/api/videos/${videoId}/like`, { user_id: userId });
+export const likeVideo = (videoId) => {
+    return api.post(`/api/videos/${videoId}/like`, {});
 };
 
 export const updateUserProfile = (userId, updates) => {
@@ -183,10 +183,9 @@ export const viewVideo = (videoId) => {
     return api.post(`/api/videos/${videoId}/view`);
 };
 
-export const postComment = (videoId, userId, comment) => {
+export const postComment = (videoId, _userId, comment) => {
     return api.post(`/api/comment`, {
         video_id: videoId,
-        user_id: userId,
         comment
     });
 };
@@ -200,7 +199,7 @@ export const fetchAllUsers = () => {
 };
 
 export const searchUsers = async (query) => {
-    const res = await api.get(`/api/users/search?q=${query}`);
+    const res = await api.get(`/api/users/search?q=${encodeURIComponent(query)}`);
     return res.data;
 };
 
@@ -310,8 +309,6 @@ export const checkSession = async () => {
 };
 
 export const logoutUser = async () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     return api.post('/api/logout');
 };
 

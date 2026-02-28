@@ -85,10 +85,14 @@ export const resetPassword = async (c) => {
     const env = c.env;
     try {
         const { user_id } = await c.req.json();
-        const hashedPassword = await hash("123456");
+        // Gerar senha temporária aleatória segura
+        const tempBytes = new Uint8Array(6);
+        crypto.getRandomValues(tempBytes);
+        const tempPassword = Array.from(tempBytes).map(b => b.toString(36).padStart(2, '0')).join('').substring(0, 10);
+        const hashedPassword = await hash(tempPassword);
         await queryDB("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, user_id], env);
         await logAudit(null, "ADMIN_PASSWORD_RESET", { target_user_id: user_id }, c);
-        return createResponse(c, { success: true });
+        return createResponse(c, { success: true, temp_password: tempPassword });
     } catch (err) {
         return createErrorResponse(c, "INTERNAL_ERROR", "Erro ao resetar senha", 500);
     }
@@ -167,7 +171,7 @@ export const getLogs = async (c) => {
             let details = {};
             try {
                 details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
-            } catch (e) { }
+            } catch (e) { /* JSON parse fallback — details ficam como {} */ }
 
             return {
                 ...log,
@@ -204,7 +208,7 @@ export const getUserLogs = async (c) => {
             let details = {};
             try {
                 details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
-            } catch (e) { }
+            } catch (e) { /* JSON parse fallback — details ficam como {} */ }
 
             return {
                 ...log,

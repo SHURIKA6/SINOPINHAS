@@ -13,5 +13,6 @@ export const registerSchema = z.object({
 export const updateProfileSchema = z.object({
     password: z.string().min(6).optional(),
     avatar: z.string().optional(),
-    bio: z.string().max(200).optional()
+    bio: z.string().max(200).optional(),
+    email: z.string().email("Email inválido").optional()
 });

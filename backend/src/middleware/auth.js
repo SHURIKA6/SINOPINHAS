@@ -49,7 +49,7 @@ export const requireAdmin = async (c, next) => {
     if (!payload || payload.role !== 'admin') {
         const role = payload?.role || 'undefined';
         console.warn(`⚠️ Acesso admin negado — Role: ${role}, ID: ${payload?.id}`);
-        return createErrorResponse(c, "FORBIDDEN", `Acesso negado. Role: ${role}.`, 403);
+        return createErrorResponse(c, "FORBIDDEN", "Acesso negado.", 403);
     }
     await next();
 };

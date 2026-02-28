@@ -132,13 +132,15 @@ export async function blockVPN(c, next) {
     if (realIP === '127.0.0.1' ||
         realIP.startsWith('192.168.') ||
         realIP.startsWith('10.') ||
-        realIP.startsWith('172.16.') ||
-        realIP.startsWith('172.17.') ||
-        realIP.startsWith('172.18.') ||
-        realIP.startsWith('172.19.') ||
-        realIP.startsWith('172.2') ||
-        realIP.startsWith('172.30.') ||
-        realIP.startsWith('172.31.')) {
+        (() => {
+            // 172.16.0.0 — 172.31.255.255 (RFC 1918)
+            const parts = realIP.split('.');
+            if (parts[0] === '172') {
+                const second = parseInt(parts[1], 10);
+                return second >= 16 && second <= 31;
+            }
+            return false;
+        })()) {
         return await next();
     }
 

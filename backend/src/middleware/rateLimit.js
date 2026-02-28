@@ -1,4 +1,4 @@
-export async function rateLimit(c, limit = 10, windowSeconds = 60) {
+export async function rateLimit(c, next, limit = 10, windowSeconds = 60) {
     const ip = c.req.header('CF-Connecting-IP') || 'unknown';
     const key = `rate_limit:${ip}`;
 

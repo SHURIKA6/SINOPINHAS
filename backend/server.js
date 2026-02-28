@@ -56,10 +56,11 @@ app.onError((err, c) => {
     return createErrorResponse(c, "REQUEST_ERROR", err.message, err.status);
   }
 
-  // Se for erro de banco Neon, tenta extrair mais info
+  // Log interno completo sem vazar para o cliente
   const dbError = err.code ? `[${err.code}] ${err.message}` : err.message;
+  console.error("DB Error Details:", dbError);
 
-  return createErrorResponse(c, "INTERNAL_ERROR", "O servidor encontrou um erro interno.", 500, dbError);
+  return createErrorResponse(c, "INTERNAL_ERROR", "O servidor encontrou um erro interno.", 500);
 });
 
 // Função: Handler de fetch padrão do Hono

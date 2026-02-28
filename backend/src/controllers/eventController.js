@@ -1,5 +1,6 @@
 import { queryDB } from '../db/index.js';
 import { createErrorResponse } from '../utils/api-utils.js';
+import { sanitize } from '../utils/sanitize.js';
 
 // Função: Listar eventos (com cache)
 export const getEvents = async (c) => {
@@ -51,7 +52,7 @@ export const addEvent = async (c) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `;
-        const params = [title, description, date, time, location, category, image, ticket_url];
+        const params = [sanitize(title), sanitize(description), date, time, sanitize(location), sanitize(category), image, ticket_url];
         const result = await queryDB(sql, params, c.env);
 
         // 2. Limpar cache ao adicionar novo evento

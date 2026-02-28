@@ -1,13 +1,17 @@
 import { z } from 'zod';
 
+// --- Constantes de Validação ---
+const COMMENT_MIN_LENGTH = 1;
+const COMMENT_MAX_LENGTH = 500;
+const MESSAGE_MIN_LENGTH = 1;
+const MESSAGE_MAX_LENGTH = 1000;
+
 export const commentSchema = z.object({
-    video_id: z.string().uuid("ID de vídeo inválido").or(z.number()),
-    user_id: z.string().or(z.number()),
-    comment: z.string().min(1, "Comentário não pode ser vazio").max(500, "Comentário muito longo")
+    video_id: z.coerce.number().int().positive("ID de vídeo inválido"),
+    comment: z.string().min(COMMENT_MIN_LENGTH, "Comentário não pode ser vazio").max(COMMENT_MAX_LENGTH, "Comentário muito longo")
 });
 
 export const sendMessageSchema = z.object({
-    from_id: z.string().or(z.number()),
     to_id: z.string().or(z.number()),
-    msg: z.string().min(1, "Mensagem vazia").max(1000, "Mensagem muito longa")
+    msg: z.string().min(MESSAGE_MIN_LENGTH, "Mensagem vazia").max(MESSAGE_MAX_LENGTH, "Mensagem muito longa")
 });

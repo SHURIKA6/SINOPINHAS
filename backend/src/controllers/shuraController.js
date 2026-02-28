@@ -1,11 +1,13 @@
 import { queryDB } from '../db/index.js';
 import { createResponse, createErrorResponse } from '../utils/api-utils.js';
+import { sanitize } from '../utils/sanitize.js';
 
 // Enviar mensagem para o log do Shura
 export const submitShuraMessage = async (c) => {
     const env = c.env;
     try {
-        const { message } = await c.req.json();
+        let { message } = await c.req.json();
+        message = sanitize(message); // Sanitize the message
         const payload = c.get('jwtPayload');
         const userId = payload?.id;
 

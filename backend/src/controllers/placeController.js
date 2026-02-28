@@ -1,5 +1,6 @@
 import { queryDB } from '../db/index.js';
 import { createErrorResponse } from '../utils/api-utils.js';
+import { sanitize } from '../utils/sanitize.js';
 
 // Função: Listar lugares recomendados
 export const getPlaces = async (c) => {
@@ -23,7 +24,7 @@ export const addPlace = async (c) => {
             VALUES ($1, $2, $3, $4, $5)
             RETURNING *
         `;
-        const params = [title, description, category, image, link];
+        const params = [sanitize(title), sanitize(description), sanitize(category), image, link];
         const result = await queryDB(sql, params, c.env);
 
         return c.json(result.rows[0], 201);
