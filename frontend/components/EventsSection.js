@@ -77,15 +77,25 @@ export default function EventsSection() {
     }, []);
 
     const filteredEvents = useMemo(() => {
-        const q = searchQuery.toLowerCase();
-        return events.filter(e => {
-            const matchesSearch = (e.title?.toLowerCase() || '').includes(q) ||
-                (e.description?.toLowerCase() || '').includes(q) ||
-                (e.category?.toLowerCase() || '').includes(q);
+        const normalize = (str) =>
+            (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-            const matchesCategory = selectedCategory === 'all' ||
-                (e.category?.toLowerCase() || '') === selectedCategory ||
-                (e.category?.toLowerCase() || '').includes(selectedCategory);
+        const q = normalize(searchQuery);
+        const catFilter = normalize(selectedCategory);
+
+        return events.filter(e => {
+            const normalizedTitle = normalize(e.title);
+            const normalizedDesc = normalize(e.description);
+            const normalizedCat = normalize(e.category);
+
+            const matchesSearch = !q ||
+                normalizedTitle.includes(q) ||
+                normalizedDesc.includes(q) ||
+                normalizedCat.includes(q);
+
+            const matchesCategory = catFilter === 'all' ||
+                normalizedCat === catFilter ||
+                normalizedCat.includes(catFilter);
 
             return matchesSearch && matchesCategory;
         });

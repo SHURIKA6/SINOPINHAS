@@ -20,8 +20,8 @@ export const getEvents = async (c) => {
     }
 
     try {
-        // Obter apenas eventos a partir de hoje
-        const sql = `SELECT * FROM events WHERE date >= CURRENT_DATE ORDER BY date ASC`;
+        // Obter eventos futuros ou que ocorreram nos últimos 30 dias (para não ficar vazio se houver atraso no cadastro)
+        const sql = `SELECT * FROM events WHERE date >= (CURRENT_DATE - INTERVAL '30 days') ORDER BY date ASC`;
         const result = await queryDB(sql, [], env);
         const events = result.rows;
 
