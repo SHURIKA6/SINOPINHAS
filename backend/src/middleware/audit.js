@@ -3,6 +3,26 @@ import { sendToDiscord } from '../utils/discord.js';
 import { sendToGoogleSheets } from '../utils/google-sheets.js';
 import { CRITICAL_AUDIT_ACTIONS } from '../utils/constants.js';
 
+const CREATE_AUDIT_TABLE_SQL = `
+    CREATE TABLE IF NOT EXISTS audit_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        action TEXT NOT NULL,
+        details JSONB,
+        ip_address VARCHAR(50),
+        user_agent VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW()
+    )
+`;
+
+async function insertAuditLog(userId, action, detailsJson, ip, userAgent, env) {
+    return queryDB(
+        "INSERT INTO audit_logs (user_id, action, details, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)",
+        [userId, action, detailsJson, ip.substring(0, 45), userAgent.substring(0, 255)],
+        env
+    );
+}
+
 export async function logAudit(userId, action, details = {}, c) {
     try {
         const env = c.env;
@@ -37,12 +57,42 @@ export async function logAudit(userId, action, details = {}, c) {
             fingerprint_raw: `${ip}|${userAgent}|${cf.country}|${cf.city}` // Fingerprint simples de backend
         };
 
-        // Persistência: Banco de Dados Postgres
-        await queryDB(
-            "INSERT INTO audit_logs (user_id, action, details, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)",
-            [userId, action, JSON.stringify(finalDetails), ip.substring(0, 45), userAgent.substring(0, 255)],
-            env
-        );
+        const detailsJson = JSON.stringify(finalDetails);
+
+        // Persistência: Banco de Dados Postgres (com auto-repair)
+        try {
+            await insertAuditLog(userId, action, detailsJson, ip, userAgent, env);
+        } catch (dbErr) {
+            console.warn(`⚠️ Audit INSERT falhou (${dbErr.code}): ${dbErr.message}. Tentando auto-repair...`);
+
+            // Tabela não existe — criar e tentar de novo
+            if (dbErr.code === '42P01') {
+                await queryDB(CREATE_AUDIT_TABLE_SQL, [], env);
+                console.warn('✅ Tabela audit_logs criada automaticamente.');
+                await insertAuditLog(userId, action, detailsJson, ip, userAgent, env);
+            }
+            // Coluna ausente — tentar adicionar colunas comuns e reinserir
+            else if (dbErr.code === '42703') {
+                await queryDB("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details JSONB", [], env);
+                await queryDB("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50)", [], env);
+                await queryDB("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent VARCHAR(255)", [], env);
+                console.warn('✅ Colunas reparadas em audit_logs.');
+                await insertAuditLog(userId, action, detailsJson, ip, userAgent, env);
+            }
+            // Tipo incompatível (ex: details era TEXT e agora é JSONB)
+            else if (dbErr.code === '42804' || dbErr.message?.includes('type')) {
+                console.warn('⚠️ Tentando inserir details como TEXT...');
+                await queryDB(
+                    "INSERT INTO audit_logs (user_id, action, details, ip_address, user_agent) VALUES ($1, $2, $3::text, $4, $5)",
+                    [userId, action, detailsJson, ip.substring(0, 45), userAgent.substring(0, 255)],
+                    env
+                );
+            }
+            else {
+                // Erro desconhecido — logar mas não perder silenciosamente
+                console.error(`🔥 Audit log PERDIDO para action=${action}, user=${userId}:`, dbErr.message);
+            }
+        }
 
         // --- Tarefas Assíncronas (Execução em Background) ---
 
@@ -63,6 +113,7 @@ export async function logAudit(userId, action, details = {}, c) {
         }
 
     } catch (err) {
-        console.error("⚠️ Falha ao salvar log de auditoria:", err);
+        console.error("🔥 Falha CRÍTICA no sistema de auditoria:", err);
     }
 }
+
