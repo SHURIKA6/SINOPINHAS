@@ -300,6 +300,7 @@ export const updateProfile = async (c) => {
 
         // Usar parseInt para garantir que o ID é tratado como número pelo banco
         const targetId = parseInt(userId, 10);
+        if (isNaN(targetId)) return createErrorResponse(c, "INVALID_INPUT", "ID de usuário inválido", 400);
         values.push(targetId);
 
         const { rows } = await queryDB(

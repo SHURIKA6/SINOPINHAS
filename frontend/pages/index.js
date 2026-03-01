@@ -81,7 +81,7 @@ export async function getServerSideProps(context) {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.fernandoriaddasilvaribeiro.workers.dev';
       const res = await fetch(`${apiUrl}/api/videos/${v}`);
       if (res.ok) initialVideo = await res.json();
-    } catch (err) { }
+    } catch (err) { console.warn('SSR: Failed to fetch initial video:', err.message); }
   }
 
   return { props: { initialVideo } };
@@ -142,7 +142,7 @@ export default function Home({ initialVideo }) {
 
   const openChatWithUser = useCallback((id) => {
     setActiveTab('inbox');
-    router.push({ pathname: '/', query: { ...router.query, tab: 'inbox', u: id } }, undefined, { shallow: true });
+    router.push({ pathname: router.pathname, query: { ...router.query, tab: 'inbox', u: id } }, undefined, { shallow: true });
   }, [setActiveTab, router]);
 
   // Manter no window apenas para componentes legados que ainda dependem
@@ -181,7 +181,7 @@ export default function Home({ initialVideo }) {
         user_agent: navigator.userAgent,
         ...locationData
       });
-    } catch (err) { }
+    } catch (err) { /* Telemetria não-crítica — falha silenciosa intencional */ }
   };
 
   const handleDeclineTerms = () => alert("Você precisa aceitar os termos.");
@@ -191,7 +191,7 @@ export default function Home({ initialVideo }) {
     setShowCommentsModal(true);
     await loadComments(video.id);
     if (user) {
-      try { await viewVideo(video.id); } catch (e) { }
+      try { await viewVideo(video.id); } catch (e) { console.warn('View count failed:', e.message); }
     }
   }, [loadComments, user]);
 
@@ -372,7 +372,7 @@ export default function Home({ initialVideo }) {
           <TabPane active={activeTab === 'lugares'}><PlacesSection /></TabPane>
           <TabPane active={activeTab === 'weather'}><WeatherSection /></TabPane>
 
-          {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} />}
+          {activeTab === 'secret' && <SecretFeed user={user} isAdmin={isAdmin} adminPassword={adminPassword} onVideoClick={openComments} showToast={showToast} canDelete={canDelete} onReport={user ? handleReport : undefined} />}
           {activeTab === 'upload' && <UploadSection user={user} setShowAuth={setShowAuth} showToast={showToast} setActiveTab={setActiveTab} />}
           {activeTab === 'inbox' && (user || isAdmin) && <Inbox user={user} API={API} isAdmin={isAdmin} adminPassword={adminPassword} onMessageRead={() => user && loadNotifications(user.id)} initialUserId={router.query.u} />}
           {activeTab === 'admin' && isAdmin && <AdminPanel adminPassword={adminPassword} showToast={showToast} />}

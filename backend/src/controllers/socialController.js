@@ -474,7 +474,7 @@ export const sendMessage = async (c) => {
     const executeInsert = async () => {
         return await queryDB(
             "INSERT INTO messages (from_id, to_id, msg, is_admin) VALUES ($1, $2, $3, $4)",
-            [fId, tId, cleanMsg, finalIsAdmin],
+            [numericFId, tId, cleanMsg, finalIsAdmin],
             env
         );
     };
@@ -596,11 +596,9 @@ export const markAsRead = async (c) => {
         if (err.code === '42703') {
             try {
                 await queryDB("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE", [], env);
-                // Tenta extrair userId novamente de forma segura
-                const body = await c.req.json().catch(() => ({}));
-                const userId = body.userId;
-                if (userId) {
-                    await queryDB("UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2", [fromId, userId], env);
+                const uId = parseInt(userId);
+                if (uId) {
+                    await queryDB("UPDATE messages SET is_read = TRUE WHERE from_id = $1 AND to_id = $2", [fromId, uId], env);
                 }
                 return createResponse(c, { success: true, repaired_column: true });
             } catch (alterErr) {

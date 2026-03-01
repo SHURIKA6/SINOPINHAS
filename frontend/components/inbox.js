@@ -45,7 +45,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       } else {
         setLocalUsersList(usersList);
       }
-    } catch (err) { }
+    } catch (err) { console.warn('Inbox: Erro ao carregar usuários:', err.message); }
     finally { setUsersLoading(false); }
   };
 
@@ -55,7 +55,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
     try {
       await api.post(`/api/conversations/${selectedUser.id}/read`, { userId: user.id });
       if (onMessageRead) onMessageRead();
-    } catch (err) { }
+    } catch (err) { console.warn('Inbox: Erro ao marcar como lido:', err.message); }
   };
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
         return; // Caso admin mas sem modo admin view ativo e sem usuário
       }
       setMessages(res.data);
-    } catch (err) { }
+    } catch (err) { console.warn('Inbox: Erro ao carregar mensagens:', err.message); }
     finally { setLoading(false); }
   };
 
@@ -104,7 +104,7 @@ export default function Inbox({ user, usersList, onMessageRead, API = DEFAULT_AP
       });
       setNewMessage('');
       await loadMessages();
-    } catch (err) { }
+    } catch (err) { console.warn('Inbox: Erro ao enviar mensagem:', err.message); }
   };
 
   const filteredMessages = selectedUser

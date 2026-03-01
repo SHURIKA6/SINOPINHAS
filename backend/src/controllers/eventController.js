@@ -2,6 +2,12 @@ import { queryDB } from '../db/index.js';
 import { createErrorResponse } from '../utils/api-utils.js';
 import { sanitize } from '../utils/sanitize.js';
 
+// Constantes
+const CACHE_TTL_SECONDS = 1800; // 30 minutos
+const EVENTS_LOOKBACK_DAYS = 30;
+const HTTP_CREATED = 201;
+const HTTP_SERVER_ERROR = 500;
+
 // Função: Listar eventos (com cache)
 export const getEvents = async (c) => {
     const env = c.env;
@@ -20,15 +26,14 @@ export const getEvents = async (c) => {
     }
 
     try {
-        // Obter eventos futuros ou que ocorreram nos últimos 30 dias (para não ficar vazio se houver atraso no cadastro)
-        const sql = `SELECT * FROM events WHERE date >= (CURRENT_DATE - INTERVAL '30 days') ORDER BY date ASC`;
+        const sql = `SELECT * FROM events WHERE date >= (CURRENT_DATE - INTERVAL '${EVENTS_LOOKBACK_DAYS} days') ORDER BY date ASC`;
         const result = await queryDB(sql, [], env);
         const events = result.rows;
 
-        // 2. Cachear os resultados (30 minutos)
+        // 2. Cachear os resultados
         if (env?.MURAL_STORE && events.length > 0) {
             try {
-                await env.MURAL_STORE.put(cacheKey, JSON.stringify(events), { expirationTtl: 1800 });
+                await env.MURAL_STORE.put(cacheKey, JSON.stringify(events), { expirationTtl: CACHE_TTL_SECONDS });
             } catch (e) {
                 console.error("KV Write Error (Events):", e);
             }
@@ -37,14 +42,13 @@ export const getEvents = async (c) => {
         return c.json(events);
     } catch (err) {
         console.error("Error fetching events:", err);
-        return createErrorResponse(c, "FETCH_ERROR", "Erro ao carregar eventos", 500);
+        return createErrorResponse(c, "FETCH_ERROR", "Erro ao carregar eventos", HTTP_SERVER_ERROR);
     }
 };
 
 // Função: Adicionar novo evento
 export const addEvent = async (c) => {
     try {
-        // Simple auth check for admin (based on password in body)
         const { title, description, date, time, location, category, image, ticket_url } = await c.req.json();
 
         const sql = `
@@ -60,10 +64,10 @@ export const addEvent = async (c) => {
             await c.env.MURAL_STORE.delete('events_data_sinop').catch(() => { });
         }
 
-        return c.json(result.rows[0], 201);
+        return c.json(result.rows[0], HTTP_CREATED);
     } catch (err) {
         console.error("Error adding event:", err);
-        return createErrorResponse(c, "CREATE_ERROR", "Erro ao criar evento", 500);
+        return createErrorResponse(c, "CREATE_ERROR", "Erro ao criar evento", HTTP_SERVER_ERROR);
     }
 };
 
@@ -81,6 +85,6 @@ export const deleteEvent = async (c) => {
 
         return c.json({ success: true });
     } catch (err) {
-        return createErrorResponse(c, "DELETE_ERROR", "Erro ao deletar evento", 500);
+        return createErrorResponse(c, "DELETE_ERROR", "Erro ao deletar evento", HTTP_SERVER_ERROR);
     }
 };

@@ -64,14 +64,14 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
             setVideos(prev => reset ? data : [...prev, ...data]);
         } catch (error) {
             console.error("Erro ao carregar vídeos secretos:", error);
-            showToast('error', 'Erro ao carregar vídeos secretos');
+            showToast('Erro ao carregar vídeos secretos', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const toggleLike = async (videoId) => {
-        if (!user) return showToast('error', 'Faça login para curtir!');
+        if (!user) return showToast('Faça login para curtir!', 'error');
 
         setVideos(prev => prev.map(v => {
             if (v.id === videoId) {
@@ -88,7 +88,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         try {
             await likeVideo(videoId);
         } catch (err) {
-            showToast('error', 'Erro ao curtir vídeo');
+            showToast('Erro ao curtir vídeo', 'error');
             loadVideos();
         }
     };
@@ -99,10 +99,10 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
         try {
             await removeVideo(videoId);
             setVideos(prev => prev.filter(v => v.id !== videoId));
-            showToast('success', 'Vídeo removido com sucesso!');
+            showToast('Vídeo removido com sucesso!', 'success');
         } catch (err) {
             console.error(err);
-            showToast('error', 'Erro ao excluir vídeo');
+            showToast('Erro ao excluir vídeo', 'error');
         }
     };
 
@@ -174,7 +174,7 @@ export default function SecretFeed({ user, isAdmin, adminPassword, onVideoClick,
                                     onDelete={handleDeleteVideo}
                                     onLike={toggleLike}
                                     onOpenComments={onVideoClick}
-                                    canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id.toString() === v.user_id?.toString()))}
+                                    canDelete={canDelete ? canDelete(v.user_id?.toString()) : (isAdmin || (user && user.id?.toString() === v.user_id?.toString()))}
                                     isSecret={true}
                                     onShare={(video) => setVideoToShare(video)}
                                 />

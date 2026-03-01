@@ -10,7 +10,7 @@ export const corsMiddleware = async (c, next) => {
         try {
             const url = new URL(originToCheck);
             originToCheck = url.origin;
-        } catch(e) {}
+        } catch(e) { console.warn('CORS: Failed to parse origin URL:', e.message); }
     }
 
     const origin = getCorsOrigin(originToCheck, c.env);
