@@ -1,0 +1,208 @@
+export const SCHEMA_QUERIES = [
+    // Tabela de Usuários
+    `CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        avatar TEXT,
+        bio TEXT,
+        role TEXT DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Vídeos/Fotos
+    `CREATE TABLE IF NOT EXISTS videos (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        bunny_id TEXT,
+        url TEXT,
+        thumbnail TEXT,
+        user_id INTEGER REFERENCES users(id),
+        category TEXT,
+        type TEXT DEFAULT 'video',
+        is_restricted BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Comentários
+    `CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        comment TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Curtidas
+    `CREATE TABLE IF NOT EXISTS likes (
+        id SERIAL PRIMARY KEY,
+        video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(video_id, user_id)
+    )`,
+
+    // Tabela de Visualizações (Log de acessos)
+    `CREATE TABLE IF NOT EXISTS views (
+        id SERIAL PRIMARY KEY,
+        video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Notificações
+    `CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        type TEXT,
+        related_id INTEGER,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Mensagens/Chat
+    `CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        from_id INTEGER REFERENCES users(id),
+        to_id INTEGER REFERENCES users(id),
+        msg TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        is_admin BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Suporte
+    `CREATE TABLE IF NOT EXISTS support_tickets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        username TEXT,
+        reason TEXT,
+        message TEXT,
+        status TEXT DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Logs de Auditoria
+    `CREATE TABLE IF NOT EXISTS audit_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        action TEXT NOT NULL,
+        details JSONB,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Eventos
+    `CREATE TABLE IF NOT EXISTS events (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        date DATE NOT NULL,
+        time TEXT,
+        location TEXT,
+        category TEXT,
+        image TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Lugares (Guia Local)
+    `CREATE TABLE IF NOT EXISTS places (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        category TEXT,
+        image TEXT,
+        link TEXT,
+        rating FLOAT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Tokens de Recuperação de Senha
+    `CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        token TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Denúncias de Conteúdo
+    `CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        content_type TEXT NOT NULL,
+        content_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        details TEXT,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Índices para performance de queries
+    "CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)",
+    "CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token)",
+    "CREATE INDEX IF NOT EXISTS idx_comments_video_id ON comments(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_messages_from_to ON messages(from_id, to_id)",
+    "CREATE INDEX IF NOT EXISTS idx_likes_video_user ON likes(video_id, user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_likes_video_id ON likes(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_is_restricted_type ON videos(is_restricted, type)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_created_at_desc ON videos(created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)",
+    "CREATE INDEX IF NOT EXISTS idx_places_category ON places(category)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_endpoint ON push_subscriptions(endpoint)",
+
+    // Tabela de Mensagens do Shura Logs
+    `CREATE TABLE IF NOT EXISTS shura_messages (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        is_approved BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+    // Tabela de Subscrições Push
+    `CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        endpoint TEXT UNIQUE,
+        subscription JSONB NOT NULL,
+        device_info JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`,
+
+    // Tabela de Stories (24h de duração)
+    `CREATE TABLE IF NOT EXISTS stories (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        bunny_id TEXT NOT NULL,
+        media_type TEXT DEFAULT 'photo',
+        duration INTEGER DEFAULT 5,
+        caption TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '24 hours'
+    )`,
+
+    // Tabela de Visualizações de Stories (para marcar visto e contar views)
+    `CREATE TABLE IF NOT EXISTS story_views (
+        id SERIAL PRIMARY KEY,
+        story_id INTEGER REFERENCES stories(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(story_id, user_id)
+    )`,
+
+    // Migrações (colunas adicionadas após criação inicial)
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS discovered_logs BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT UNIQUE",
+    "ALTER TABLE events ADD COLUMN IF NOT EXISTS ticket_url TEXT",
+
+    // Índices para performance
+    "CREATE INDEX IF NOT EXISTS idx_stories_user_id ON stories(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_stories_expires_at ON stories(expires_at)",
+    "CREATE INDEX IF NOT EXISTS idx_story_views_story_id ON story_views(story_id)"
+];

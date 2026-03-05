@@ -1,0 +1,48 @@
+// @ts-nocheck
+import { queryDB } from '../db/index';
+import { createErrorResponse } from '../utils/api-utils';
+import { sanitize } from '../utils/sanitize';
+
+// Função: Listar lugares recomendados
+export const getPlaces = async (c) => {
+    try {
+        const sql = `SELECT * FROM places ORDER BY title ASC`;
+        const result = await queryDB(sql, [], c.env);
+        return c.json(result.rows);
+    } catch (err) {
+        console.error("Error fetching places:", err);
+        return createErrorResponse(c, "FETCH_ERROR", "Erro ao carregar lugares", 500);
+    }
+};
+
+// Função: Adicionar novo lugar
+export const addPlace = async (c) => {
+    try {
+        const { title, description, category, image, link } = await c.req.json();
+
+        const sql = `
+            INSERT INTO places (title, description, category, image, link)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `;
+        const params = [sanitize(title), sanitize(description), sanitize(category), image, link];
+        const result = await queryDB(sql, params, c.env);
+
+        return c.json(result.rows[0], 201);
+    } catch (err) {
+        console.error("Error adding place:", err);
+        return createErrorResponse(c, "CREATE_ERROR", "Erro ao criar lugar", 500);
+    }
+};
+
+// Função: Remover lugar existente
+export const deletePlace = async (c) => {
+    try {
+        const id = c.req.param('id');
+
+        await queryDB('DELETE FROM places WHERE id = $1', [id], c.env);
+        return c.json({ success: true });
+    } catch (err) {
+        return createErrorResponse(c, "DELETE_ERROR", "Erro ao deletar lugar", 500);
+    }
+};

@@ -1,0 +1,32 @@
+import { Hono } from 'hono';
+import { blockVPN } from '../middleware/vpn';
+import { validate } from '../middleware/validate';
+import { authMiddleware, requireAuth } from '../middleware/auth';
+import * as schemas from '../schemas/auth';
+import * as authController from '../controllers/authController';
+import { limiter } from '../middleware/rateLimit';
+
+const app = new Hono();
+
+app.post('/register',
+    blockVPN,
+    limiter(5, 60), // Rate Limit: 5 tentativas/min (Prevenção de Spam)
+    validate(schemas.registerSchema),
+    authController.register
+);
+app.post('/login',
+    blockVPN,
+    limiter(10, 60), // Rate Limit: 10 tentativas/min (Prevenção de Força Bruta)
+    validate(schemas.loginSchema),
+    authController.login
+);
+app.put('/users/:id', authMiddleware, requireAuth, authController.updateProfile);
+app.post('/users/:id/discover-logs', authMiddleware, requireAuth, authController.discoverLogs);
+
+// Sessão e recuperação de senha
+app.get('/me', authMiddleware, authController.getMe);
+app.post('/logout', authController.logoutUser);
+app.post('/forgot-password', limiter(3, 60), authController.requestPasswordReset);
+app.post('/reset-password', limiter(5, 60), authController.resetPassword);
+
+export default app;
