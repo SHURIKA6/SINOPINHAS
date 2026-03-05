@@ -34,7 +34,13 @@ export const corsMiddleware = async (c: AppContext, next: Next): Promise<Respons
 
     // Tratamento de Requisicões Preflight (OPTIONS) — ponto único
     if (method === 'OPTIONS') {
-        return new Response(null, { status: 204 });
+        return new Response(null, { 
+            status: 204,
+            headers: {
+                ...headers,
+                'Access-Control-Max-Age': '86400',
+            }
+        });
     }
 
     await next();
